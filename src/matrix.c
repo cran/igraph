@@ -16,7 +16,8 @@
    
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+   02110-1301 USA
 
 */
 
@@ -39,6 +40,7 @@
  * \function igraph_matrix_init
  * \brief Initializes a matrix.
  * 
+ * </para><para>
  * Every matrix needs to be initialized before using it, this is done
  * by calling this function. A matrix has to be destroyed if it is not
  * needed any more, see \ref igraph_matrix_destroy().
@@ -66,6 +68,7 @@ int igraph_matrix_init(igraph_matrix_t *m, long int nrow, long int ncol) {
  * \function igraph_matrix_destroy
  * \brief Destroys a matrix object.
  * 
+ * </para><para>
  * This function frees all the memory allocated for a matrix
  * object. The destroyed object needs to be reinitialized before using
  * it again.
@@ -87,6 +90,7 @@ void igraph_matrix_destroy(igraph_matrix_t *m) {
  * \function igraph_matrix_resize
  * \brief Resizes a matrix.
  *
+ * </para><para>
  * This function resizes a matrix by adding more elements to it.
  * The matrix contains arbitrary data after resizing it.
  * Ie. after calling this function you cannot expect that element
@@ -159,6 +163,7 @@ long int igraph_matrix_ncol(const igraph_matrix_t *m) {
  * \ingroup matrix
  * \brief Copies a matrix to a regular C array.
  *
+ * </para><para>
  * The matrix is copied columnwise, as this is the format most
  * programs and languages use.
  * The C array should be of sufficient size, there are (of course) not
@@ -172,7 +177,7 @@ long int igraph_matrix_ncol(const igraph_matrix_t *m) {
  * elements in the matrix.
  */
 
-int igraph_matrix_copy_to(const igraph_matrix_t *m, real_t *to) {
+int igraph_matrix_copy_to(const igraph_matrix_t *m, igraph_real_t *to) {
   igraph_vector_copy_to(&m->data, to);
   return 0;
 }
@@ -307,6 +312,7 @@ int igraph_matrix_delete_rows_neg(igraph_matrix_t *m, igraph_vector_t *neg, long
  * \function igraph_matrix_copy
  * \brief Copies a matrix.
  *
+ * </para><para>
  * Creates a matrix object by copying another one.
  * \param to Pointer to an uninitialized matrix object.
  * \param from The initialized matrix object to copy.
@@ -323,3 +329,59 @@ int igraph_matrix_copy(igraph_matrix_t *to, const igraph_matrix_t *from) {
   return igraph_vector_copy(&to->data, &from->data);
 }
 
+/**
+ * \function igraph_matrix_max
+ * 
+ * Returns the maximal element of a matrix.
+ * \param m The matrix object.
+ * \return The maximum element. For empty matrix the returned value is
+ * undefined. 
+ * 
+ * Added in version 0.2.</para><para>
+ *
+ * Time complexity: O(n), the number of elements in the matrix.
+ */
+
+igraph_real_t igraph_matrix_max(const igraph_matrix_t *m) {
+  return igraph_vector_max(&m->data);
+}
+
+/**
+ * \function igraph_matrix_multiply
+ * 
+ * Multiplies each element of the matrix by a constant.
+ * \param m The matrix.
+ * \param by The constant.
+ *
+ * Added in version 0.2.</para><para>
+ * 
+ * Time complexity: O(n), the number of elements in the matrix.
+ */
+
+void igraph_matrix_multiply(igraph_matrix_t *m, igraph_real_t by) {
+  igraph_vector_multiply(&m->data, by);
+}
+
+int igraph_matrix_select_rows(const igraph_matrix_t *m, igraph_matrix_t *res, 
+			      const igraph_vector_t *rows) {
+  long int norows=igraph_vector_size(rows);
+  long int i, j, ncols=igraph_matrix_ncol(m);
+  
+  IGRAPH_CHECK(igraph_matrix_resize(res, norows, ncols));
+  for (i=0; i<norows; i++) {
+    for (j=0; j<ncols; j++) {
+      MATRIX(*res, i, j) = MATRIX(*m, (long int)VECTOR(*rows)[i], j);
+    }
+  }
+  
+  return 0;
+}
+
+int igraph_matrix_get_col(const igraph_matrix_t *m, igraph_vector_t *res,
+			  long int index) {
+  long int nrow=igraph_matrix_nrow(m);
+
+  IGRAPH_CHECK(igraph_vector_get_interval(&m->data, res, 
+					  nrow*index, nrow*(index+1)));
+  return 0;
+}

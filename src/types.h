@@ -16,7 +16,8 @@
    
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA 
+   02110-1301 USA
 
 */
 
@@ -29,9 +30,9 @@
 
 #include "error.h"
 
-typedef double integer_t;
-typedef double real_t;
-typedef int    bool_t;
+typedef double igraph_integer_t;
+typedef double igraph_real_t;
+typedef int    igraph_bool_t;
 
 /* -------------------------------------------------- */
 /* double ended queue, very useful                    */
@@ -43,10 +44,10 @@ typedef int    bool_t;
  */
 
 typedef struct s_dqueue {
-  real_t *begin;
-  real_t *end;
-  real_t *stor_begin;
-  real_t *stor_end;
+  igraph_real_t *begin;
+  igraph_real_t *end;
+  igraph_real_t *stor_begin;
+  igraph_real_t *stor_end;
 } igraph_dqueue_t;
 
 #define IGRAPH_DQUEUE_NULL { 0,0,0,0 }
@@ -56,15 +57,15 @@ typedef struct s_dqueue {
 
 int igraph_dqueue_init    (igraph_dqueue_t* q, long int size);
 void igraph_dqueue_destroy (igraph_dqueue_t* q);
-bool_t igraph_dqueue_empty   (igraph_dqueue_t* q);
+igraph_bool_t igraph_dqueue_empty   (igraph_dqueue_t* q);
 void igraph_dqueue_clear   (igraph_dqueue_t* q);
-bool_t igraph_dqueue_full    (igraph_dqueue_t* q);
+igraph_bool_t igraph_dqueue_full    (igraph_dqueue_t* q);
 long int igraph_dqueue_size    (igraph_dqueue_t* q);
-real_t igraph_dqueue_pop     (igraph_dqueue_t* q);
-real_t igraph_dqueue_pop_back(igraph_dqueue_t* q);
-real_t igraph_dqueue_head    (igraph_dqueue_t* q);
-real_t igraph_dqueue_back    (igraph_dqueue_t* q);
-int igraph_dqueue_push    (igraph_dqueue_t* q, real_t elem);
+igraph_real_t igraph_dqueue_pop     (igraph_dqueue_t* q);
+igraph_real_t igraph_dqueue_pop_back(igraph_dqueue_t* q);
+igraph_real_t igraph_dqueue_head    (igraph_dqueue_t* q);
+igraph_real_t igraph_dqueue_back    (igraph_dqueue_t* q);
+int igraph_dqueue_push    (igraph_dqueue_t* q, igraph_real_t elem);
 
 /* -------------------------------------------------- */
 /* Flexible vector                                    */
@@ -76,9 +77,9 @@ int igraph_dqueue_push    (igraph_dqueue_t* q, real_t elem);
  */
 
 typedef struct s_vector {
-  real_t* stor_begin;
-  real_t* stor_end;
-  real_t* end;
+  igraph_real_t* stor_begin;
+  igraph_real_t* stor_end;
+  igraph_real_t* end;
 } igraph_vector_t;
 
 #define IGRAPH_VECTOR_NULL { 0,0,0 }
@@ -104,47 +105,55 @@ typedef struct s_vector {
  * 
  * Time complexity: O(1).
  */
-#define VECTOR(v) ((v).stor_begin) /* DIRTY */
+#define VECTOR(v) ((v).stor_begin) 
 int igraph_vector_init      (igraph_vector_t* v, long int size);
-int igraph_vector_init_copy (igraph_vector_t* v, real_t* data, long int length);
-int igraph_vector_init_seq(igraph_vector_t *v, real_t from, real_t to);
+int igraph_vector_init_copy (igraph_vector_t* v, igraph_real_t* data, long int length);
+int igraph_vector_init_seq(igraph_vector_t *v, igraph_real_t from, igraph_real_t to);
 int igraph_vector_init_real(igraph_vector_t *v, int no, ...);
 int igraph_vector_init_int(igraph_vector_t *v, int no, ...);
-int igraph_vector_init_real_end(igraph_vector_t *v, real_t endmark, ...);
+int igraph_vector_init_real_end(igraph_vector_t *v, igraph_real_t endmark, ...);
 int igraph_vector_init_int_end(igraph_vector_t *v, int endmark, ...);
-const igraph_vector_t *igraph_vector_view (const igraph_vector_t *v, const real_t *data, 
+const igraph_vector_t *igraph_vector_view (const igraph_vector_t *v, const igraph_real_t *data, 
 			     long int length);
 void igraph_vector_destroy   (igraph_vector_t* v);
 int igraph_vector_reserve   (igraph_vector_t* v, long int size);
-bool_t igraph_vector_empty     (const igraph_vector_t* v);
+igraph_bool_t igraph_vector_empty     (const igraph_vector_t* v);
 long int igraph_vector_size      (const igraph_vector_t* v);
 void igraph_vector_clear     (igraph_vector_t* v);
 void igraph_vector_null      (igraph_vector_t* v);
-int igraph_vector_push_back (igraph_vector_t* v, real_t e);
-real_t igraph_vector_e         (const igraph_vector_t* v, long int pos);
-real_t*igraph_vector_e_ptr  (const igraph_vector_t* v, long int pos);
-void igraph_vector_set       (igraph_vector_t* v, long int pos, real_t value);
-real_t igraph_vector_tail(const igraph_vector_t *v);
-real_t igraph_vector_pop_back(igraph_vector_t* v);
-int igraph_vector_order(const igraph_vector_t* v, igraph_vector_t* res, integer_t maxval);
+int igraph_vector_push_back (igraph_vector_t* v, igraph_real_t e);
+igraph_real_t igraph_vector_e         (const igraph_vector_t* v, long int pos);
+igraph_real_t*igraph_vector_e_ptr  (const igraph_vector_t* v, long int pos);
+void igraph_vector_set       (igraph_vector_t* v, long int pos, igraph_real_t value);
+igraph_real_t igraph_vector_tail(const igraph_vector_t *v);
+igraph_real_t igraph_vector_pop_back(igraph_vector_t* v);
+int igraph_vector_order(const igraph_vector_t* v, igraph_vector_t* res, igraph_integer_t maxval);
+int igraph_vector_order2(igraph_vector_t *v);
 void igraph_vector_sort(igraph_vector_t *v);
 int igraph_vector_resize(igraph_vector_t* v, long int newsize);
-real_t igraph_vector_max(const igraph_vector_t* v);
+igraph_real_t igraph_vector_max(const igraph_vector_t* v);
 long int igraph_vector_which_max(const igraph_vector_t* v);
-void igraph_vector_copy_to(const igraph_vector_t *v, real_t* to);
+void igraph_vector_copy_to(const igraph_vector_t *v, igraph_real_t* to);
 int igraph_vector_copy(igraph_vector_t *to, const igraph_vector_t *from);
-real_t igraph_vector_sum(const igraph_vector_t *v);
-real_t igraph_vector_prod(const igraph_vector_t *v);
+igraph_real_t igraph_vector_sum(const igraph_vector_t *v);
+igraph_real_t igraph_vector_prod(const igraph_vector_t *v);
 void igraph_vector_remove_section(igraph_vector_t *v, long int from, long int to);
 int igraph_vector_move_interval(igraph_vector_t *v, long int begin, long int end, 
 			 long int to);
 void igraph_vector_remove(igraph_vector_t *v, long int elem);
 void igraph_vector_permdelete(igraph_vector_t *v, long int *index, long int nremove);
 void igraph_vector_remove_negidx(igraph_vector_t *v, const igraph_vector_t *neg, long int nremove);
-bool_t igraph_vector_isininterval(const igraph_vector_t *v, real_t low, real_t high);
-bool_t igraph_vector_any_smaller(const igraph_vector_t *v, real_t limit);
-bool_t igraph_vector_is_equal(const igraph_vector_t *lhs, const igraph_vector_t *rhs);
-bool_t igraph_vector_binsearch(const igraph_vector_t *v, real_t what, long int *pos);
+igraph_bool_t igraph_vector_isininterval(const igraph_vector_t *v, igraph_real_t low, igraph_real_t high);
+igraph_bool_t igraph_vector_any_smaller(const igraph_vector_t *v, igraph_real_t limit);
+igraph_bool_t igraph_vector_is_equal(const igraph_vector_t *lhs, const igraph_vector_t *rhs);
+igraph_bool_t igraph_vector_binsearch(const igraph_vector_t *v, igraph_real_t what, long int *pos);
+void igraph_vector_multiply(igraph_vector_t *v, igraph_real_t by);
+igraph_bool_t igraph_vector_search(igraph_vector_t *v, long int from, igraph_real_t what, 
+			    long int *pos);
+int igraph_vector_filter_smaller(igraph_vector_t *v, igraph_real_t elem);
+int igraph_vector_append(igraph_vector_t *to, const igraph_vector_t *from);
+int igraph_vector_get_interval(const igraph_vector_t *v, igraph_vector_t *res,
+			       long int from, long int to);
 
 /* -------------------------------------------------- */
 /* Flexible vector, storing pointers                  */
@@ -174,7 +183,7 @@ void igraph_vector_ptr_destroy   (igraph_vector_ptr_t* v);
 void igraph_vector_ptr_free_all   (igraph_vector_ptr_t* v);
 void igraph_vector_ptr_destroy_all   (igraph_vector_ptr_t* v);
 int igraph_vector_ptr_reserve   (igraph_vector_ptr_t* v, long int size);
-bool_t igraph_vector_ptr_empty     (const igraph_vector_ptr_t* v);
+igraph_bool_t igraph_vector_ptr_empty     (const igraph_vector_ptr_t* v);
 long int igraph_vector_ptr_size      (const igraph_vector_ptr_t* v);
 void igraph_vector_ptr_clear     (igraph_vector_ptr_t* v);
 void igraph_vector_ptr_null      (igraph_vector_ptr_t* v);
@@ -229,7 +238,7 @@ int igraph_matrix_resize(igraph_matrix_t *m, long int nrow, long int ncol);
 long int igraph_matrix_size(const igraph_matrix_t *m);
 long int igraph_matrix_nrow(const igraph_matrix_t *m);
 long int igraph_matrix_ncol(const igraph_matrix_t *m);
-int igraph_matrix_copy_to(const igraph_matrix_t *m, real_t *to);
+int igraph_matrix_copy_to(const igraph_matrix_t *m, igraph_real_t *to);
 int igraph_matrix_null(igraph_matrix_t *m);
 int igraph_matrix_add_cols(igraph_matrix_t *m, long int n);
 int igraph_matrix_add_rows(igraph_matrix_t *m, long int n);
@@ -237,6 +246,31 @@ int igraph_matrix_remove_col(igraph_matrix_t *m, long int col);
 int igraph_matrix_permdelete_rows(igraph_matrix_t *m, long int *index, long int nremove);
 int igraph_matrix_delete_rows_neg(igraph_matrix_t *m, igraph_vector_t *neg, long int nremove);
 int igraph_matrix_copy(igraph_matrix_t *to, const igraph_matrix_t *from);
+igraph_real_t igraph_matrix_max(const igraph_matrix_t *m);
+void igraph_matrix_multiply(igraph_matrix_t *m, igraph_real_t by);
+int igraph_matrix_select_rows(const igraph_matrix_t *m, igraph_matrix_t *res, 
+			      const igraph_vector_t *rows);
+int igraph_matrix_get_col(const igraph_matrix_t *m, igraph_vector_t *res,
+			  long int index);
+
+/* -------------------------------------------------- */
+/* 3D array                                           */
+/* -------------------------------------------------- */
+
+typedef struct s_array3 {
+  igraph_vector_t data;
+  long int n1, n2, n3, n1n2;
+} igraph_array3_t;
+
+#define ARRAY3(m,i,j,k) ((m).data.stor_begin[(m).n1n2*(k)+(m).n1*(j)+(i)])
+int igraph_array3_init(igraph_array3_t *a, long int n1, long int n2, 
+		       long int n3);
+void igraph_array3_destroy(igraph_array3_t *a);
+long int igraph_array3_size(const igraph_array3_t *a);
+long int igraph_array3_n(const igraph_array3_t *a, long int idx);
+int igraph_array3_resize(igraph_array3_t *a, long int n1, long int n2, 
+			 long int n3);
+void igraph_array3_null(igraph_array3_t *a);
 
 /* -------------------------------------------------- */
 /* Plain stack                                        */
@@ -248,9 +282,9 @@ int igraph_matrix_copy(igraph_matrix_t *to, const igraph_matrix_t *from);
  */
 
 typedef struct s_stack {
-  real_t* stor_begin;
-  real_t* stor_end;
-  real_t* end;
+  igraph_real_t* stor_begin;
+  igraph_real_t* stor_end;
+  igraph_real_t* end;
 } igraph_stack_t;
 
 #define IGRAPH_STACK_NULL { 0,0,0 }
@@ -258,11 +292,12 @@ typedef struct s_stack {
 int igraph_stack_init       (igraph_stack_t* s, long int size);
 void igraph_stack_destroy    (igraph_stack_t* s);
 int igraph_stack_reserve    (igraph_stack_t* s, long int size);
-bool_t igraph_stack_empty      (igraph_stack_t* s);
+igraph_bool_t igraph_stack_empty      (igraph_stack_t* s);
 long int igraph_stack_size       (igraph_stack_t* s);
 void igraph_stack_clear      (igraph_stack_t* s);
-int igraph_stack_push       (igraph_stack_t* s, real_t elem);
-real_t igraph_stack_pop        (igraph_stack_t* s);
+int igraph_stack_push       (igraph_stack_t* s, igraph_real_t elem);
+igraph_real_t igraph_stack_pop        (igraph_stack_t* s);
+igraph_real_t igraph_stack_top        (const igraph_stack_t* s);
 
 /* -------------------------------------------------- */
 /* Heap                                               */
@@ -274,28 +309,28 @@ real_t igraph_stack_pop        (igraph_stack_t* s);
  */
 
 typedef struct s_heap {
-  real_t* stor_begin;
-  real_t* stor_end;
-  real_t* end;
+  igraph_real_t* stor_begin;
+  igraph_real_t* stor_end;
+  igraph_real_t* end;
   int destroy;
 } igraph_heap_t;
 
 #define IGRAPH_HEAP_NULL { 0,0,0 }
 
 int igraph_heap_init           (igraph_heap_t* h, long int size);
-int igraph_heap_init_array     (igraph_heap_t *t, real_t* data, long int len);
+int igraph_heap_init_array     (igraph_heap_t *t, igraph_real_t* data, long int len);
 void igraph_heap_destroy        (igraph_heap_t* h);
-bool_t igraph_heap_empty          (igraph_heap_t* h);
-int igraph_heap_push           (igraph_heap_t* h, real_t elem);
-real_t igraph_heap_max       (igraph_heap_t* h);
-real_t igraph_heap_delete_max(igraph_heap_t* h);
+igraph_bool_t igraph_heap_empty          (igraph_heap_t* h);
+int igraph_heap_push           (igraph_heap_t* h, igraph_real_t elem);
+igraph_real_t igraph_heap_max       (igraph_heap_t* h);
+igraph_real_t igraph_heap_delete_max(igraph_heap_t* h);
 long int igraph_heap_size      (igraph_heap_t* h);
 int igraph_heap_reserve        (igraph_heap_t* h, long int size);
 
-void igraph_heap_i_build(real_t* arr, long int size, long int head);
-void igraph_heap_i_shift_up(real_t* arr, long int size, long int elem);
-void igraph_heap_i_sink(real_t* arr, long int size, long int head);
-void igraph_heap_i_switch(real_t* arr, long int e1, long int e2);
+void igraph_heap_i_build(igraph_real_t* arr, long int size, long int head);
+void igraph_heap_i_shift_up(igraph_real_t* arr, long int size, long int elem);
+void igraph_heap_i_sink(igraph_real_t* arr, long int size, long int head);
+void igraph_heap_i_switch(igraph_real_t* arr, long int e1, long int e2);
 
 /* -------------------------------------------------- */
 /* Indexed heap                                       */
@@ -307,9 +342,9 @@ void igraph_heap_i_switch(real_t* arr, long int e1, long int e2);
  */
 
 typedef struct s_indheap {
-  real_t* stor_begin;
-  real_t* stor_end;
-  real_t* end;
+  igraph_real_t* stor_begin;
+  igraph_real_t* stor_end;
+  igraph_real_t* end;
   int destroy;
   long int* index_begin;
 } igraph_indheap_t;
@@ -317,12 +352,12 @@ typedef struct s_indheap {
 #define IGRAPH_INDHEAP_NULL { 0,0,0,0,0 }
 
 int igraph_indheap_init           (igraph_indheap_t* h, long int size);
-int igraph_indheap_init_array     (igraph_indheap_t *t, real_t* data, long int len);
+int igraph_indheap_init_array     (igraph_indheap_t *t, igraph_real_t* data, long int len);
 void igraph_indheap_destroy        (igraph_indheap_t* h);
-bool_t igraph_indheap_empty          (igraph_indheap_t* h);
-int igraph_indheap_push           (igraph_indheap_t* h, real_t elem);
-real_t igraph_indheap_max       (igraph_indheap_t* h);
-real_t igraph_indheap_delete_max(igraph_indheap_t* h);
+igraph_bool_t igraph_indheap_empty          (igraph_indheap_t* h);
+int igraph_indheap_push           (igraph_indheap_t* h, igraph_real_t elem);
+igraph_real_t igraph_indheap_max       (igraph_indheap_t* h);
+igraph_real_t igraph_indheap_delete_max(igraph_indheap_t* h);
 long int igraph_indheap_size      (igraph_indheap_t* h);
 int igraph_indheap_reserve        (igraph_indheap_t* h, long int size);
 long int igraph_indheap_max_index(igraph_indheap_t *h);
@@ -347,9 +382,9 @@ void igraph_indheap_i_switch(igraph_indheap_t* h, long int e1, long int e2);
  */
 
 typedef struct s_indheap_d {
-  real_t* stor_begin;
-  real_t* stor_end;
-  real_t* end;
+  igraph_real_t* stor_begin;
+  igraph_real_t* stor_end;
+  igraph_real_t* end;
   int destroy;
   long int* index_begin;
   long int* index2_begin;
@@ -360,11 +395,11 @@ typedef struct s_indheap_d {
 
 int igraph_d_indheap_init           (igraph_d_indheap_t* h, long int size);
 void igraph_d_indheap_destroy        (igraph_d_indheap_t* h);
-bool_t igraph_d_indheap_empty          (igraph_d_indheap_t* h);
-int igraph_d_indheap_push           (igraph_d_indheap_t* h, real_t elem, 
+igraph_bool_t igraph_d_indheap_empty          (igraph_d_indheap_t* h);
+int igraph_d_indheap_push           (igraph_d_indheap_t* h, igraph_real_t elem, 
 			      long int idx, long int idx2);
-real_t igraph_d_indheap_max       (igraph_d_indheap_t* h);
-real_t igraph_d_indheap_delete_max(igraph_d_indheap_t* h);
+igraph_real_t igraph_d_indheap_max       (igraph_d_indheap_t* h);
+igraph_real_t igraph_d_indheap_delete_max(igraph_d_indheap_t* h);
 long int igraph_d_indheap_size      (igraph_d_indheap_t* h);
 int igraph_d_indheap_reserve        (igraph_d_indheap_t* h, long int size);
 void igraph_d_indheap_max_index(igraph_d_indheap_t *h, long int *idx, long int *idx2);
@@ -426,7 +461,7 @@ typedef struct s_igraph_trie {
   igraph_vector_ptr_t children;
   igraph_vector_t values;
   long int maxvalue;
-  bool_t storekeys;
+  igraph_bool_t storekeys;
   igraph_strvector_t keys;
 } igraph_trie_t;
 
@@ -436,12 +471,120 @@ typedef struct s_igraph_trie {
   do { IGRAPH_CHECK(igraph_trie_init(tr, sk)); \
   IGRAPH_FINALLY(igraph_trie_destroy, tr); } while (0)
 
-int igraph_trie_init(igraph_trie_t *t, bool_t storekeys);
+int igraph_trie_init(igraph_trie_t *t, igraph_bool_t storekeys);
 void igraph_trie_destroy(igraph_trie_t *t);
 int igraph_trie_get(igraph_trie_t *t, const char *key, long int *id);
 int igraph_trie_get2(igraph_trie_t *t, const char *key, long int length, 
 		     long int *id);
 void igraph_trie_idx(igraph_trie_t *t, long int idx, char **str);
+int igraph_trie_getkeys(igraph_trie_t *t, const igraph_strvector_t **strv);
 long int igraph_trie_size(igraph_trie_t *t);
 
+typedef struct {
+  igraph_vector_t v;
+  long int size;
+  long int offset;
+} igraph_psumtree_t;
+int igraph_psumtree_init(igraph_psumtree_t *t, long int size);
+void igraph_psumtree_destroy(igraph_psumtree_t *t);
+igraph_real_t igraph_psumtree_get(const igraph_psumtree_t *t, long int idx);
+long int igraph_psumtree_size(const igraph_psumtree_t *t);
+int igraph_psumtree_search(const igraph_psumtree_t *t, long int *idx,
+			   igraph_real_t elem);
+int igraph_psumtree_update(igraph_psumtree_t *t, long int idx, 
+			   igraph_real_t new_value);
+igraph_real_t igraph_psumtree_sum(const igraph_psumtree_t *t);
+
+/**
+ * 2d grid containing points
+ */
+
+typedef struct igraph_2dgrid_t {
+  igraph_matrix_t *coords;
+  igraph_real_t minx, maxx, deltax;
+  igraph_real_t miny, maxy, deltay;
+  long int stepsx, stepsy;
+  igraph_matrix_t startidx;
+  igraph_vector_t next;
+  igraph_vector_t prev;
+  igraph_real_t massx, massy;		/* The sum of the coordinates */
+  long int vertices;		/* Number of active vertices  */
+} igraph_2dgrid_t;
+
+int igraph_2dgrid_init(igraph_2dgrid_t *grid, igraph_matrix_t *coords, 
+		       igraph_real_t minx, igraph_real_t maxx, igraph_real_t deltax,
+		       igraph_real_t miny, igraph_real_t maxy, igraph_real_t deltay);
+void igraph_2dgrid_destroy(igraph_2dgrid_t *grid);
+void igraph_2dgrid_add(igraph_2dgrid_t *grid, long int elem, 
+		       igraph_real_t xc, igraph_real_t yc);
+void igraph_2dgrid_add2(igraph_2dgrid_t *grid, long int elem);
+void igraph_2dgrid_move(igraph_2dgrid_t *grid, long int elem, 
+			igraph_real_t xc, igraph_real_t yc);
+void igraph_2dgrid_getcenter(const igraph_2dgrid_t *grid, 
+			     igraph_real_t *massx, igraph_real_t *massy);
+igraph_bool_t igraph_2dgrid_in(const igraph_2dgrid_t *grid, long int elem);
+igraph_real_t igraph_2dgrid_dist(const igraph_2dgrid_t *grid, 
+			  long int e1, long int e2);
+int igraph_2dgrid_neighbors(igraph_2dgrid_t *grid, igraph_vector_t *eids, 
+			    igraph_integer_t vid, igraph_real_t r);
+
+typedef struct igraph_2dgrid_iterator_t {
+  long int vid, x, y;
+  long int nei;
+  long int nx[4], ny[4], ncells;
+} igraph_2dgrid_iterator_t;
+
+void igraph_2dgrid_reset(igraph_2dgrid_t *grid, igraph_2dgrid_iterator_t *it);
+igraph_integer_t igraph_2dgrid_next(igraph_2dgrid_t *grid, 
+			      igraph_2dgrid_iterator_t *it);
+igraph_integer_t igraph_2dgrid_next_nei(igraph_2dgrid_t *grid,
+				 igraph_2dgrid_iterator_t *it);
+
+/* Another type of grid, each cell is owned by exactly one graph */
+
+typedef struct igraph_i_layout_mergegrid_t {
+  long int *data;
+  long int stepsx, stepsy;
+  igraph_real_t minx, maxx, deltax;
+  igraph_real_t miny, maxy, deltay;
+} igraph_i_layout_mergegrid_t;
+
+int igraph_i_layout_mergegrid_init(igraph_i_layout_mergegrid_t *grid,
+				   igraph_real_t minx, igraph_real_t maxx, long int stepsx,
+				   igraph_real_t miny, igraph_real_t maxy, long int stepsy);
+void igraph_i_layout_mergegrid_destroy(igraph_i_layout_mergegrid_t *grid);
+
+int igraph_i_layout_merge_place_sphere(igraph_i_layout_mergegrid_t *grid,
+				       igraph_real_t x, igraph_real_t y, igraph_real_t r,
+				       long int id);
+
+long int igraph_i_layout_mergegrid_get(igraph_i_layout_mergegrid_t *grid,
+				       igraph_real_t x, igraph_real_t y);
+
+long int igraph_i_layout_mergegrid_get_sphere(igraph_i_layout_mergegrid_t *g,
+					      igraph_real_t x, igraph_real_t y, igraph_real_t r);
+
+/* string -> string hash table */
+
+typedef struct igraph_hashtable_t {
+  igraph_trie_t keys;
+  igraph_strvector_t elements;
+  igraph_strvector_t defaults;
+} igraph_hashtable_t;
+
+int igraph_hashtable_init(igraph_hashtable_t *ht);
+void igraph_hashtable_destroy(igraph_hashtable_t *ht);
+int igraph_hashtable_addset(igraph_hashtable_t *ht,
+			    const char *key, const char *def, 
+			    const char *elem);
+int igraph_hashtable_addset2(igraph_hashtable_t *ht,
+			     const char *key, const char *def,
+			     const char *elem, int elemlen);
+int igraph_hashtable_get(igraph_hashtable_t *ht,
+			 const char *key, char **elem);
+int igraph_hashtable_getkeys(igraph_hashtable_t *ht, 
+			     const igraph_strvector_t **sv);
+int igraph_hashtable_reset(igraph_hashtable_t *ht);
+
 #endif
+

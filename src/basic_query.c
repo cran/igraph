@@ -16,7 +16,8 @@
    
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+   02110-1301 USA
 
 */
 
@@ -31,37 +32,41 @@
  * \param graph The graph object.
  * \param v1 The first vertex.
  * \param v2 The second vertex.
- * \return Boolean, \c TRUE if there is an edge from
- *         \p v1 to
- *         \p v2. Returns
- *         \c FALSE if there   
- *         is no such edge or at least one of the vertex ids is
- *         invalid (ie. too big or negative).
+ * \param res Boolean, \c TRUE if there is an edge from
+ *         \p v1 to \p v2, \c FALSE otherwise.
+ * \return Error code.
  * 
  * The function is of course symmetric for undirected graphs.
  *
+ * </para><para>
  * Time complexity: O(d),
  * d is the
  * out-degree of \p v1.
  */
-bool_t igraph_are_connected(const igraph_t *graph, 
-			    integer_t v1, integer_t v2) {
-
-  igraph_vs_t it;
-  bool_t res=0;
+int igraph_are_connected(const igraph_t *graph, 
+			 igraph_integer_t v1, igraph_integer_t v2,
+			 igraph_bool_t *res) {
+  igraph_vs_t vs;
+  igraph_vit_t it;
   long int nov=igraph_vcount(graph);
 
   if (v1 < 0 || v2 < 0 || v1 > nov-1 || v2 > nov-1) {
-    return 0;
-/*     IGRAPH_ERROR("are connected", IGRAPH_EINVVID); */
+    IGRAPH_ERROR("are connected", IGRAPH_EINVVID);
   }
 
-  IGRAPH_CHECK(igraph_vs_adj(graph, &it, v1, IGRAPH_OUT));
+  IGRAPH_CHECK(igraph_vs_adj(&vs, v1, IGRAPH_OUT));
+  IGRAPH_CHECK(igraph_vit_create(graph, vs, &it));
+  IGRAPH_FINALLY(igraph_vit_destroy, &it);
   
-  while (!res && !igraph_vs_end(graph, &it)) {
-    res= (igraph_vs_get(graph, &it) == v2);
-    igraph_vs_next(graph, &it);
+  *res=0;
+  IGRAPH_VIT_RESET(it);
+  while (!*res && !IGRAPH_VIT_END(it)) {
+    *res= (IGRAPH_VIT_GET(it) == v2);
+    IGRAPH_VIT_NEXT(it);
   }
   
-  return res;
+  igraph_vit_destroy(&it);
+  IGRAPH_FINALLY_CLEAN(1);
+  
+  return IGRAPH_SUCCESS;
 }

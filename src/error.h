@@ -16,7 +16,8 @@
    
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA 
+   02110-1301 USA
 
 */
 
@@ -241,21 +242,25 @@ igraph_set_error_handler(igraph_error_handler_t new_handler);
  * \enumval IGRAPH_EFILE A file operation failed. Eg. a file doesn't exist,
  *   or the user ha no rights to open it.
  * \enumval IGRAPH_EUNFOLDINF Attempted to unfold an infinite iterator.
+ * \enumval IGRAPH_UNIMPLEMENTED Attempted to call an unimplemented or
+ *   disabled (at compile-time) function.
  */
 
 typedef enum {
-  IGRAPH_SUCCESS    = 0,
-  IGRAPH_FAILURE    = 1,
-  IGRAPH_ENOMEM     = 2,
-  IGRAPH_PARSEERROR = 3,
-  IGRAPH_EINVAL     = 4,
-  IGRAPH_EXISTS     = 5,
-  IGRAPH_EINVEVECTOR= 6,
-  IGRAPH_EINVVID    = 7,
-  IGRAPH_NONSQUARE  = 8,
-  IGRAPH_EINVMODE   = 9,
-  IGRAPH_EFILE      = 10,
-  IGRAPH_EUNFOLDINF = 11
+  IGRAPH_SUCCESS       = 0,
+  IGRAPH_FAILURE       = 1,
+  IGRAPH_ENOMEM        = 2,
+  IGRAPH_PARSEERROR    = 3,
+  IGRAPH_EINVAL        = 4,
+  IGRAPH_EXISTS        = 5,
+  IGRAPH_EINVEVECTOR   = 6,
+  IGRAPH_EINVVID       = 7,
+  IGRAPH_NONSQUARE     = 8,
+  IGRAPH_EINVMODE      = 9,
+  IGRAPH_EFILE         = 10,
+  IGRAPH_EUNFOLDINF    = 11,
+  IGRAPH_UNIMPLEMENTED = 12,
+  IGRAPH_INTERRUPTED   = 13,
 } igraph_i_error_type_t;
 
 /**
@@ -286,7 +291,7 @@ typedef enum {
  * \function igraph_error
  *
  * This is the function which is called (usually via the
- * \ref IGRAPH_ERROR macro if an error is noticed. See the discussion of
+ * \ref IGRAPH_ERROR macro) if an error is noticed. See the discussion of
  * this macro as well.
  *
  * \param reason Textual description of the error.
@@ -388,5 +393,21 @@ void IGRAPH_FINALLY_FREE();
                  if (igraph_i_ret != 0) { \
                     IGRAPH_ERROR("", igraph_i_ret); \
                  } } while(0)
+
+
+typedef igraph_error_handler_t igraph_warning_handler_t;
+
+igraph_warning_handler_t*
+igraph_set_warning_handler(igraph_warning_handler_t new_handler);
+
+extern igraph_warning_handler_t igraph_warning_handler_print;
+
+int igraph_warning(const char *reason, const char *file, int line,
+		   int igraph_errno);
+
+#define IGRAPH_WARNING(reason) \
+       do { \
+         igraph_warning(reason, __FILE__, __LINE__, -1); \
+       } while (0)
 
 #endif

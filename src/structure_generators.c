@@ -16,12 +16,15 @@
    
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+   02110-1301 USA
 
 */
 
 #include "igraph.h"
 #include "memory.h"
+
+#include <stdarg.h>
 
 /** 
  * \section about_generators
@@ -60,9 +63,9 @@
  * |E| the number of edges in the
  * graph. 
  */
-int igraph_create(igraph_t *graph, const igraph_vector_t *edges, integer_t n, 
-		  bool_t directed) {
-  real_t max=igraph_vector_max(edges)+1;
+int igraph_create(igraph_t *graph, const igraph_vector_t *edges, igraph_integer_t n, 
+		  igraph_bool_t directed) {
+  igraph_real_t max=igraph_vector_max(edges)+1;
 
   if (igraph_vector_size(edges) % 2 != 0) {
     IGRAPH_ERROR("Invalid (odd) edges vector", IGRAPH_EINVEVECTOR);
@@ -74,11 +77,11 @@ int igraph_create(igraph_t *graph, const igraph_vector_t *edges, integer_t n,
   IGRAPH_CHECK(igraph_empty(graph, n, directed));
   IGRAPH_FINALLY(igraph_destroy, graph);
   if (igraph_vector_size(edges)>0) {
-    integer_t vc=igraph_vcount(graph);
+    igraph_integer_t vc=igraph_vcount(graph);
     if (vc < max) {
-      IGRAPH_CHECK(igraph_add_vertices(graph, max-vc));
+      IGRAPH_CHECK(igraph_add_vertices(graph, max-vc, 0));
     }
-    IGRAPH_CHECK(igraph_add_edges(graph, edges));
+    IGRAPH_CHECK(igraph_add_edges(graph, edges, 0));
   }
 
   IGRAPH_FINALLY_CLEAN(1);
@@ -319,8 +322,8 @@ int igraph_adjacency(igraph_t *graph, igraph_matrix_t *adjmatrix,
  * for creating other regular structures.
  */
 
-int igraph_star(igraph_t *graph, integer_t n, igraph_star_mode_t mode, 
-		integer_t center) {
+int igraph_star(igraph_t *graph, igraph_integer_t n, igraph_star_mode_t mode, 
+		igraph_integer_t center) {
 
   igraph_vector_t edges=IGRAPH_VECTOR_NULL;
   long int i;
@@ -366,8 +369,8 @@ int igraph_star(igraph_t *graph, integer_t n, igraph_star_mode_t mode,
   return 0;
 }
 
-int igraph_connect_neighborhood(igraph_t *graph, integer_t nei, 
-				bool_t mutual) {
+int igraph_connect_neighborhood(igraph_t *graph, igraph_integer_t nei, 
+				igraph_bool_t mutual) {
   /* TODO */
 /* SEXP REST_connect_neighborhood(SEXP neis, SEXP pradius, SEXP pmutual) { */
 
@@ -462,8 +465,8 @@ int igraph_connect_neighborhood(igraph_t *graph, integer_t nei,
  * |E| are the number of vertices 
  * and edges in the generated graph.
  */
-int igraph_lattice(igraph_t *graph, const igraph_vector_t *dimvector, integer_t nei, 
-		   bool_t directed, bool_t mutual, bool_t circular) {
+int igraph_lattice(igraph_t *graph, const igraph_vector_t *dimvector, igraph_integer_t nei, 
+		   igraph_bool_t directed, igraph_bool_t mutual, igraph_bool_t circular) {
 
   long int dims=igraph_vector_size(dimvector);
   long int no_of_nodes=igraph_vector_prod(dimvector);
@@ -495,9 +498,10 @@ int igraph_lattice(igraph_t *graph, const igraph_vector_t *dimvector, integer_t 
   
   IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
   IGRAPH_CHECK(igraph_vector_reserve(&edges, no_of_nodes*dims +
-			      directed * no_of_nodes*dims));
+				     mutual*directed * no_of_nodes*dims));
 
   for (i=0; i<no_of_nodes; i++) {
+    IGRAPH_ALLOW_INTERRUPTION();
     for (j=0; j<dims; j++) {
       if (circular || coords[j] != VECTOR(*dimvector)[j]-1) {
 	long int new_nei;
@@ -511,7 +515,7 @@ int igraph_lattice(igraph_t *graph, const igraph_vector_t *dimvector, integer_t 
 	  igraph_vector_push_back(&edges, new_nei-1); /* reserved */
 	}
       } /* if circular || coords[j] */
-      if (directed && (circular || coords[j] != 0)) {
+      if (mutual && directed && (circular || coords[j] != 0)) {
 	long int new_nei;
 	if (coords[j]!=0) {
 	  new_nei=i-weights[j]+1;
@@ -573,8 +577,8 @@ int igraph_lattice(igraph_t *graph, const igraph_vector_t *dimvector, integer_t 
  * \sa \ref igraph_lattice() for generating more general lattices.
  */
 
-int igraph_ring(igraph_t *graph, integer_t n, bool_t directed, bool_t mutual,
-		bool_t circular) {
+int igraph_ring(igraph_t *graph, igraph_integer_t n, igraph_bool_t directed, igraph_bool_t mutual,
+		igraph_bool_t circular) {
   
   igraph_vector_t v=IGRAPH_VECTOR_NULL;
 
@@ -625,7 +629,7 @@ int igraph_ring(igraph_t *graph, integer_t n, bool_t directed, bool_t mutual,
  * structures. 
  */
 
-int igraph_tree(igraph_t *graph, integer_t n, integer_t children, 
+int igraph_tree(igraph_t *graph, igraph_integer_t n, igraph_integer_t children, 
 		igraph_tree_mode_t type) {
   
   igraph_vector_t edges=IGRAPH_VECTOR_NULL;
@@ -675,6 +679,7 @@ int igraph_tree(igraph_t *graph, integer_t n, integer_t children,
  * \brief Creates a full graph (directed or undirected, with or
  * without loops). 
  * 
+ * </para><para>
  * In a full graph every possible edge is present, every vertex is
  * connected to every other vertex. 
  * 
@@ -696,7 +701,7 @@ int igraph_tree(igraph_t *graph, integer_t n, integer_t children,
  * for creating other regular structures.
  */
 
-int igraph_full(igraph_t *graph, integer_t n, bool_t directed, bool_t loops) {
+int igraph_full(igraph_t *graph, igraph_integer_t n, igraph_bool_t directed, igraph_bool_t loops) {
   
   igraph_vector_t edges=IGRAPH_VECTOR_NULL;
   long int i, j;
@@ -749,5 +754,56 @@ int igraph_full(igraph_t *graph, integer_t n, bool_t directed, bool_t loops) {
   igraph_vector_destroy(&edges);
   IGRAPH_FINALLY_CLEAN(1);
   
+  return 0;
+}
+
+/**
+ * \function igraph_small
+ * \brief Shortand to create a short graph, giving the edges as agruments
+ * 
+ * </para><para>
+ * This function is handy when a relatively small graph needs to be created. 
+ * Instead giving the edges in vector, they are given simply as
+ * arguments and a '-1' needs to be given after the last meaningful
+ * edge argument. 
+ * 
+ * </para><para>Note that only graphs which have vertices less than
+ * the highest value of the 'int' type can be created this way. If you
+ * give larger values then the result is undefined.
+ * 
+ * \param graph Pointer to an uninitialized graph object, the result
+ *        will be stored here.
+ * \param n The number of vertices in the graph, an integer.
+ * \param directed Logical constant, gives whether the graph should be
+ *        directed. 
+ * \param ... The additional arguments giving the edges of the
+ *        graph. Don't forget to supply an additional '-1' after the last
+ *        (meaningful) argument.
+ * \return Error code.
+ * 
+ * Time complexity: O(|V|+|E|), the number of vertices plus the number
+ * of edges in the graph to create.
+ */
+
+int igraph_small(igraph_t *graph, igraph_integer_t n, igraph_bool_t directed, 
+		 ...) {
+  igraph_vector_t edges;
+  va_list ap;
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
+  
+  va_start(ap, directed);
+  while (1) {
+    int num = va_arg(ap, int);
+    if (num == -1) {
+      break;
+    }
+    igraph_vector_push_back(&edges, num);
+  }
+
+  IGRAPH_CHECK(igraph_create(graph, &edges, n, directed));
+  
+  igraph_vector_destroy(&edges);
+  IGRAPH_FINALLY_CLEAN(1);
   return 0;
 }

@@ -15,12 +15,14 @@
 #   
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301 USA
 #
 ###################################################################
 
-ba.game <- function(n, m=NULL, out.dist=NULL, out.seq=NULL,
-                    out.pref=FALSE, directed=TRUE) {
+ba.game <- function(n, power=1, m=NULL, out.dist=NULL, out.seq=NULL,
+                    out.pref=FALSE, zero.appeal=1,
+                    directed=TRUE, time.window=NULL) {
 
   # Checks
   if (! is.null(out.seq) && (!is.null(m) || !is.null(out.dist))) {
@@ -40,10 +42,21 @@ ba.game <- function(n, m=NULL, out.dist=NULL, out.seq=NULL,
   if (!is.null(m) && m<0) {
     stop("`m' is negative")
   }
+  if (!is.null(time.window) && time.window <= 0) {
+    stop("time window size should be positive")
+  }
+  if (zero.appeal != 1 && power == 1) {
+    warning("`zero.appeal' is set to 1 for traditional BA game")
+  } else if (zero.appeal <= 0) {
+    warning("`zero.appeal' is not positive")
+  }
   if (!is.null(m) && m==0) {
     warning("`m' is zero, graph will be empty")
   }
-
+  if (power < 0) {
+    warning("`power' is negative")
+  }
+  
   if (is.null(m) && is.null(out.dist) && is.null(out.seq)) {
     m <- 1
   }
@@ -51,7 +64,7 @@ ba.game <- function(n, m=NULL, out.dist=NULL, out.seq=NULL,
   n <- as.numeric(n)
   if (!is.null(m)) { m <- as.numeric(m) }
   if (!is.null(out.dist)) { out.dist <- as.numeric(out.dist) }
-  if (!is.null(out.dist)) { out.seq <- as.numeric(out.seq) }
+  if (!is.null(out.seq)) { out.seq <- as.numeric(out.seq) }
   out.pref <- as.logical(out.pref)
 
   if (!is.null(out.dist)) {
@@ -63,8 +76,18 @@ ba.game <- function(n, m=NULL, out.dist=NULL, out.seq=NULL,
     out.seq <- numeric()
   }
 
-  .Call("R_igraph_barabasi_game", n, m, out.seq, out.pref, directed,
-        PACKAGE="igraph")
+  if (!is.null(time.window)) {
+    .Call("R_igraph_recent_degree_game", n, power, time.window, m, out.seq,
+          out.pref, as.numeric(zero.appeal), directed,
+          PACKAGE="igraph")
+  } else if (power==1) {    
+    .Call("R_igraph_barabasi_game", n, m, out.seq, out.pref, directed,
+          PACKAGE="igraph")
+  } else {
+    .Call("R_igraph_nonlinear_barabasi_game", n, power, m, out.seq,
+          out.pref, as.numeric(zero.appeal), directed,
+          PACKAGE="igraph")
+  }
 }
 
 barabasi.game <- ba.game
@@ -99,55 +122,103 @@ growing.random.game <- function(n, m=1, directed=TRUE, citation=FALSE) {
         as.logical(directed), as.logical(citation),
         PACKAGE="igraph")
 }
-  
-aging.prefatt.game <- function(n, m=1, aging.type="exponential",
-                               params=list(), ...) {
 
-  if (! aging.type %in% c("exponential", "powerlaw")) {
-    stop("Invalid aging type.")
+aging.prefatt.game <- function(n, pa.exp, aging.exp, m=NULL, aging.bin=300,
+                               out.dist=NULL, out.seq=NULL,
+                               out.pref=FALSE, directed=TRUE,
+                               zero.deg.appeal=1, zero.age.appeal=0,
+                               deg.coef=1, age.coef=1,
+                               time.window=NULL) {
+  # Checks
+  if (! is.null(out.seq) && (!is.null(m) || !is.null(out.dist))) {
+    warning("if `out.seq' is given `m' and `out.dist' should be NULL")
+    m <- out.dist <- NULL
   }
-  
-  probs <- rep(1, times=n)
-  ind <- rep(0, times=n)
-  born <- 1:n
-  edges <- numeric( (n-1)*m )
-  edgep <- 1
-
-  if (aging.type=="exponential") {
-    aging.exp <- params[["aging.exp"]]
-    if (is.null(aging.exp)) { aging.exp <- 1 }
-  } else if (aging.type=="powerlaw") {
-    aging.exp <- params[["aging.exp"]]
-    if (is.null(aging.exp)) { aging.exp <- 1 }
+  if (is.null(out.seq) && !is.null(out.dist) && !is.null(m)) {
+    warning("if `out.dist' is given `m' will be ignored")
+    m <- NULL
   }
-  
-  for (step in 2:n) {
-
-    # choose neighbors
-    newneis <- sample(1:(step-1), m, replace=TRUE,
-                      prob=probs[1:(step-1)])
-    
-    # aging in probs
-    if (aging.type=="exponential") {
-      probs[1:(step-1)] <- probs[1:(step-1)] * exp(-aging.exp)
-    } else if (aging.type=="powerlaw") {
-      probs[1:(step-1)] <- probs[1:(step-1)] *
-        ((step:2)/((step-1):1))^-aging.exp
-    }
-      
-    # add the edges, recalculate probs
-    for (nei in newneis) {
-      if (aging.type=="exponential") {
-        probs[nei] <- probs[nei] * ((ind[nei]+1)+1)/(ind[nei]+1)
-      } else if (aging.type=="powerlaw") {
-        probs[nei] <- probs[nei] * ((ind[nei]+1)+1)/(ind[nei]+1)
-      }
-      ind[nei] <- ind[nei]+1
-      edges[edgep] <- step; edgep <- edgep + 1
-      edges[edgep] <- nei ; edgep <- edgep + 1
-    }
-    
+  if (!is.null(out.seq) && length(out.seq) != n) {
+    stop("`out.seq' should be of length `n'")
+  }
+  if (!is.null(out.seq) && min(out.seq)<0) {
+    stop("negative elements in `out.seq'");
+  }
+  if (!is.null(m) && m<0) {
+    stop("`m' is negative")
+  }
+  if (!is.null(time.window) && time.window <= 0) {
+    stop("time window size should be positive")
+  }
+  if (!is.null(m) && m==0) {
+    warning("`m' is zero, graph will be empty")
+  }
+  if (pa.exp < 0) {
+    warning("preferential attachment is negative")
+  }
+  if (aging.exp > 0) {
+    warning("aging exponent is positive")
+  }
+  if (zero.deg.appeal <=0 ) {
+    warning("initial attractiveness is not positive")
   }
 
-  graph(edges-1, n=n, ...)
+  if (is.null(m) && is.null(out.dist) && is.null(out.seq)) {
+    m <- 1
+  }
+  
+  n <- as.numeric(n)
+  if (!is.null(m)) { m <- as.numeric(m) }
+  if (!is.null(out.dist)) { out.dist <- as.numeric(out.dist) }
+  if (!is.null(out.seq)) { out.seq <- as.numeric(out.seq) }
+  out.pref <- as.logical(out.pref)
+
+  if (!is.null(out.dist)) {
+    out.seq <- as.numeric(sample(0:(length(out.dist)-1), n,
+                                 replace=TRUE, prob=out.dist))
+  }
+
+  if (is.null(out.seq)) {
+    out.seq <- numeric()
+  }
+
+  if (is.null(time.window)) {
+    .Call("R_igraph_barabasi_aging_game", as.numeric(n),
+          as.numeric(pa.exp), as.numeric(aging.exp),
+          as.numeric(aging.bin), m, out.seq,
+          out.pref, as.numeric(zero.deg.appeal), as.numeric(zero.age.appeal),
+          as.numeric(deg.coef), as.numeric(age.coef), directed, 
+          PACKAGE="igraph")
+  } else {
+    .Call("R_igraph_recent_degree_aging_game", as.numeric(n),
+          as.numeric(pa.exp), as.numeric(aging.exp),
+          as.numeric(aging.bin), m, out.seq, out.pref, as.numeric(zero.deg.appeal),
+          directed,
+          time.window,
+          PACKAGE="igraph")
+  }
+}
+
+aging.barabasi.game <- aging.ba.game <- aging.prefatt.game
+
+callaway.traits.game <- function(nodes, types, edge.per.step=1,
+                                type.dist=rep(1, types),
+                                pref.matrix=matrix(1, types, types),
+                                directed=FALSE) {
+
+  .Call("R_igraph_callaway_traits_game", as.double(nodes),
+        as.double(types), as.double(edge.per.step),
+        as.double(type.dist), matrix(as.double(pref.matrix), types, types),
+        as.logical(directed),
+        PACKAGE="igraph")
+}
+
+establishment.game <- function(nodes, types, k=1, type.dist=rep(1, types),
+                               pref.matrix=matrix(1, types, types),
+                               directed=FALSE) {
+  .Call("R_igraph_establishment_game", as.double(nodes),
+        as.double(types), as.double(k), as.double(type.dist),
+        matrix(as.double(pref.matrix), types, types),
+        as.logical(directed),
+        PACKAGE="igraph")
 }

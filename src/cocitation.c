@@ -16,7 +16,8 @@
    
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+   02110-1301 USA
 
 */
 
@@ -24,7 +25,7 @@
 #include "memory.h"
 
 int igraph_cocitation_real(const igraph_t *graph, igraph_matrix_t *res, 
-			   const igraph_vs_t *vids, 
+			   igraph_vs_t vids, 
 			   igraph_neimode_t mode);
 
 /**
@@ -32,6 +33,7 @@ int igraph_cocitation_real(const igraph_t *graph, igraph_matrix_t *res,
  * \function igraph_cocitation
  * \brief Cocitation coupling.
  * 
+ * </para><para>
  * Two vertices are cocited if there is another vertex citing both of
  * them. \ref igraph_cocitation() simply counts how many types two vertices are
  * cocited.
@@ -56,7 +58,7 @@ int igraph_cocitation_real(const igraph_t *graph, igraph_matrix_t *res,
  */
 
 int igraph_cocitation(const igraph_t *graph, igraph_matrix_t *res, 
-		      const igraph_vs_t *vids) {
+		      igraph_vs_t vids) {
   return igraph_cocitation_real(graph, res, vids, IGRAPH_OUT);
 }
 
@@ -65,6 +67,7 @@ int igraph_cocitation(const igraph_t *graph, igraph_matrix_t *res,
  * \function igraph_bibcoupling
  * \brief Bibliographic coupling.
  * 
+ * </para><para>
  * The bibliographic coupling of two vertices is the number
  * of other vertices they both cite, \ref igraph_bibcoupling() calculates
  * this.
@@ -89,47 +92,42 @@ int igraph_cocitation(const igraph_t *graph, igraph_matrix_t *res,
  */
 
 int igraph_bibcoupling(const igraph_t *graph, igraph_matrix_t *res, 
-		       const igraph_vs_t *vids) {
+		       igraph_vs_t vids) {
   return igraph_cocitation_real(graph, res, vids, IGRAPH_IN);
 }
 
 int igraph_cocitation_real(const igraph_t *graph, igraph_matrix_t *res, 
-			   const igraph_vs_t *vids,
+			   igraph_vs_t vids,
 			   igraph_neimode_t mode) {
 
   long int no_of_nodes=igraph_vcount(graph);
   long int from, i, j;
-  bool_t *calc;
+  igraph_bool_t *calc;
   igraph_matrix_t tmpres=IGRAPH_MATRIX_NULL;
   igraph_vector_t neis=IGRAPH_VECTOR_NULL;
-  igraph_vs_t myvids;
-  const igraph_vector_t *myvidsv;
+  igraph_vit_t vit;
   
-  IGRAPH_CHECK(igraph_vs_vectorview_it(graph, vids, &myvids));
-  IGRAPH_FINALLY(igraph_vs_destroy, &myvids);
-  myvidsv=igraph_vs_vector_getvector(graph, &myvids);
+  IGRAPH_CHECK(igraph_vit_create(graph, vids, &vit));
+  IGRAPH_FINALLY(igraph_vit_destroy, &vit);
 
-  if (!igraph_vector_isininterval(myvidsv, 0, no_of_nodes-1)) {
-    IGRAPH_ERROR("", IGRAPH_EINVVID);
-  }
-  
-  calc=Calloc(no_of_nodes, bool_t);
+  calc=Calloc(no_of_nodes, igraph_bool_t);
   if (calc==0) {
     IGRAPH_ERROR("cannot calculate cocitation/bibcoupling", IGRAPH_ENOMEM);
   }  
   IGRAPH_FINALLY(free, calc); 	/* TODO: hack */
 
-  for (i=0; i<igraph_vector_size(myvidsv); i++) {
-    calc[ (long int) VECTOR(*myvidsv)[i] ] = 1;
+  for (IGRAPH_VIT_RESET(vit); !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit)) {
+    calc[ (long int) IGRAPH_VIT_GET(vit) ] = 1;
   }
   
   IGRAPH_MATRIX_INIT_FINALLY(&tmpres, no_of_nodes, no_of_nodes);
   IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
-  IGRAPH_CHECK(igraph_matrix_resize(res, igraph_vector_size(myvidsv), no_of_nodes));
+  IGRAPH_CHECK(igraph_matrix_resize(res, IGRAPH_VIT_SIZE(vit), no_of_nodes));
 
   /* The result */
   
   for (from=0; from<no_of_nodes; from++) {
+    IGRAPH_ALLOW_INTERRUPTION();
     IGRAPH_CHECK(igraph_neighbors(graph, &neis, from, mode));
     for (i=0; i < igraph_vector_size(&neis)-1; i++) {
       if (calc[ (long int)VECTOR(neis)[i] ]) {
@@ -144,9 +142,11 @@ int igraph_cocitation_real(const igraph_t *graph, igraph_matrix_t *res,
   }
 
   /* Copy result */
-  for (i=0; i<igraph_vector_size(myvidsv); i++) {
+  for (IGRAPH_VIT_RESET(vit), i=0; 
+       !IGRAPH_VIT_END(vit); 
+       IGRAPH_VIT_NEXT(vit), i++) {
     for (j=0; j<no_of_nodes; j++) {
-      MATRIX(*res, i, j) = MATRIX(tmpres, (long int) VECTOR(*myvidsv)[i], j);
+      MATRIX(*res, i, j) = MATRIX(tmpres, (long int) IGRAPH_VIT_GET(vit), j);
     }
   }  
   
@@ -154,9 +154,8 @@ int igraph_cocitation_real(const igraph_t *graph, igraph_matrix_t *res,
   igraph_matrix_destroy(&tmpres);
   igraph_vector_destroy(&neis);
   Free(calc);
-  igraph_vs_destroy(&myvids);
+  igraph_vit_destroy(&vit);
   IGRAPH_FINALLY_CLEAN(4);
 
-  if (vids->shorthand) { igraph_vs_destroy((igraph_vs_t*)vids); }  
   return 0;
 }

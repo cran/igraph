@@ -15,7 +15,8 @@
 #   
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301 USA
 #
 ###################################################################
 
@@ -28,6 +29,28 @@ is.igraph <- function(graph) {
 
 is.directed <- function(graph) {
 
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   .Call("R_igraph_is_directed", graph,
         PACKAGE="igraph")
 }
+
+get.edge <- function(graph, id) {
+
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+
+  id <- as.numeric(id)
+  ec <- ecount(graph)
+  
+  if (id < 0 || id >= ec) {
+    stop("No such edge")
+  }
+
+  .Call("R_igraph_get_edge", graph, as.numeric(id),
+        PACKAGE="igraph")
+}
+
+

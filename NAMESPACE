@@ -6,57 +6,47 @@ export(graph.empty, add.edges, add.vertices, delete.edges,
 
 # Attributes
 
-export(add.graph.attribute, remove.graph.attribute,
-       get.graph.attribute, set.graph.attribute, g.a, "g.a<-",
-       add.vertex.attribute, remove.vertex.attribute,
-       get.vertex.attribute, set.vertex.attribute, v.a, "v.a<-",
-       add.edge.attribute, remove.edge.attribute,
-       get.edge.attribute, set.edge.attribute, e.a, "e.a<-")
+export(get.graph.attribute, set.graph.attribute,
+       get.vertex.attribute, set.vertex.attribute,
+       get.edge.attribute, set.edge.attribute,
+       list.graph.attributes, list.vertex.attributes,
+       list.edge.attributes, remove.graph.attribute,
+       remove.vertex.attribute, remove.edge.attribute)
 
 # iterators
 
-export(igraph.vs.all, igraph.vs.adj, igraph.vs.vector,
-       igraph.es.all, igraph.es.fromorder, igraph.es.adj,
-       igraph.es.vector,
-       igraph.vs.next, igraph.vs.end, igraph.vs.reset, igraph.vs.get,
-       igraph.es.next, igraph.es.end, igraph.es.reset, igraph.es.get,
-       igraph.es.from, igraph.es.to)
+export(V, E, "$.igraph.vs", "$.igraph.es",
+       "[.igraph.vs", "[.igraph.es", "[<-.igraph.vs", "[<-.igraph.es",
+       "$<-.igraph.vs", "$<-.igraph.es", "V<-", "E<-",
+       print.igraph.vs, print.igraph.es, "%--%", "%->%", "%<-%")
 
-S3method(igraph.vs.get, igraphvsseq)
-S3method(igraph.vs.get, igraphvsvector)
-S3method(igraph.es.get, igraphesseq)
-S3method(igraph.es.get, igraphesvector)
-S3method(igraph.es.from, igraphesseq)
-S3method(igraph.es.from, igraphesvector)
-S3method(igraph.es.to, igraphesseq)
-S3method(igraph.es.to, igraphesvector)
-
-S3method(as.vector, igraphvsseq)
-S3method(as.vector, igraphvsvector)
-S3method(as.vector, igraphesseq)
-S3method(as.vector, igraphesvector)
-
-export ("$.igraphvsseq", "$.igraphvsvector",
-        "$.igraphesseq", "$.igraphesvector")
-
-S3method("$", "igraphvsseq")
-S3method("$", "igraphvsvector")
-S3method("$", "igraphesseq")
-S3method("$", "igraphesvector")
-
+S3method("$", igraph.vs)
+S3method("[", igraph.vs)
+S3method("[<-", igraph.vs)
+S3method("$<-", igraph.vs)
+S3method("$", igraph.es)
+S3method("[", igraph.es)
+S3method("[<-", igraph.es)
+S3method("$<-", igraph.es)
+S3method(print, igraph.vs)
+S3method(print, igraph.es)
+  
 # basic functions, printing
 
-export(is.igraph, are.connected, print.igraph, summary.igraph, is.directed)
+export(is.igraph, are.connected, print.igraph, summary.igraph, is.directed,
+       get.edge)
 
 # structure generators
 
 export(graph, graph.adjacency, graph.star, graph.tree, graph.lattice,
-       graph.ring, graph.full)
+       graph.ring, graph.full, graph.atlas)
 
 # games
 
 export(erdos.renyi.game, random.graph.game, degree.sequence.game,
-       aging.prefatt.game, growing.random.game, barabasi.game)
+       aging.prefatt.game, aging.barabasi.game, aging.ba.game,
+       growing.random.game, barabasi.game, ba.game,
+       callaway.traits.game, establishment.game)
 
 # community structure
 
@@ -65,7 +55,7 @@ export(community.eb, community.cut, edge.type.matrix,
 
 # conversion
 
-export(get.adjacency, get.edgelist)
+export(get.adjacency, get.edgelist, as.directed, as.undirected)
 
 # fitting, other
 
@@ -78,24 +68,31 @@ export(read.graph, write.graph)
 # layouts
 
 export(layout.random, layout.circle, layout.fruchterman.reingold,
-       layout.spring, layout.kamada.kawai)
+       layout.spring, layout.kamada.kawai, layout.lgl,
+       layout.fruchterman.reingold.grid, layout.sphere, layout.merge,
+       layout.reingold.tilford)
+
 
 # structural properties
 
 export(subgraph, simplify, degree, degree.distribution, diameter,
        closeness, subcomponent, betweenness, bibcoupling, cocitation,
        shortest.paths, minimum.spanning.tree, edge.betweenness,
-       get.shortest.paths, average.path.length, transitivity)
+       get.shortest.paths, average.path.length, transitivity,
+       get.all.shortest.paths, get.diameter, farthest.nodes,
+       graph.laplacian, constraint, page.rank, reciprocity, rewire)
 
 # plotting
 
 export(plot.igraph, tkplot, tkplot.close, tkplot.off, tkplot.fit.to.screen,
        tkplot.reshape, tkplot.export.postscript, tkplot.getcoords,
-       tkplot.center, tkplot.rotate)
+       tkplot.center, tkplot.rotate, rglplot.igraph, rglplot)
+
+S3method(rglplot, igraph)
 
 # components
 
-export(clusters, cluster.distribution, is.connected)
+export(clusters, cluster.distribution, is.connected, decompose.graph)
 
 # centrality
 
@@ -103,5 +100,20 @@ export(evcent)
 
 # dynamics measurement
 
-export(measure.dynamics.idage)
+export(measure.dynamics.id, measure.dynamics.idage, measure.dynamics.d.d,
+       measure.dynamics.citedcat.id.age, measure.dynamics.citingcat.id.age)
 
+# isomorphism, motifs
+
+export(graph.isoclass, graph.isomorphic, graph.motifs,
+       graph.motifs.est, graph.isocreate, graph.motifs.no)
+
+# operators
+
+export(graph.disjoint.union, "%du%", graph.intersection, "%s%",
+       graph.union, "%u%", graph.difference, "%m%",
+       graph.complementer, graph.compose, "%c%")
+
+# parameters, config
+
+export(igraph.par)

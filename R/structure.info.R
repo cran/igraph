@@ -15,11 +15,15 @@
 #   
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301 USA
 #
 ###################################################################
 
 are.connected <- function(graph, v1, v2) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   .Call("R_igraph_are_connected", graph, as.numeric(v1),
         as.numeric(v2),
         PACKAGE="igraph")

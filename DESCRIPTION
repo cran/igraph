@@ -1,12 +1,10 @@
 Package: igraph
-Version: 0.1.2
+Version: 0.2
 Date: Januar 25, 2005
-Title:  Routines for network analysis.
+Title:  IGraph class
 Author: Gabor Csardi <csardi@rmki.kfki.hu>
 Maintainer: Gabor Csardi <csardi@rmki.kfki.hu>
-Description: The igraph package contains routines for creating and 
-  manipulating graphs, and graph visualization. It can handle graphs with
-  millions of vertices and edges.
+Description: Routines for simple graphs.
 License: GPL version 2 or later (June, 1991)
 URL: http://cneurocvs.rmki.kfki.hu/igraph
-Packaged: Tue Mar 28 12:36:18 2006; csardi
+Packaged: Wed Aug 23 19:56:56 2006; csardi

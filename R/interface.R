@@ -15,7 +15,8 @@
 #   
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301 USA
 #
 ###################################################################
 
@@ -29,22 +30,34 @@ graph.empty <- function(n=0, directed=TRUE) {
 }
 
 add.edges <- function(graph, edges) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   .Call("R_igraph_add_edges", graph, as.numeric(edges),
         PACKAGE="igraph")
 }
 
 add.vertices <- function(graph, nv) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   .Call("R_igraph_add_vertices", graph, as.numeric(nv),
         PACKAGE="igraph")
 }
 
 delete.edges <- function(graph, edges) {
-  .Call("R_igraph_delete_edges", graph, as.numeric(edges),
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  .Call("R_igraph_delete_edges", graph, as.igraph.es(edges),
         PACKAGE="igraph")
 }
 
 delete.vertices <- function(graph, v) {
-  .Call("R_igraph_delete_vertices", graph, as.igraph.vs(graph, v),
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  .Call("R_igraph_delete_vertices", graph, as.igraph.vs(v),
         PACKAGE="igraph")
 }
 
@@ -53,16 +66,25 @@ delete.vertices <- function(graph, v) {
 ###################################################################
   
 vcount <- function(graph) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   .Call("R_igraph_vcount", graph,
         PACKAGE="igraph")
 }
   
 ecount <- function(graph) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   .Call("R_igraph_ecount", graph,
         PACKAGE="igraph")
 }
  
 neighbors <- function(graph, v, mode=1) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   if (is.character(mode)) {
     mode <- switch(mode, "out"=1, "in"=2, "all"=3, "total"=3)
   }
@@ -72,6 +94,9 @@ neighbors <- function(graph, v, mode=1) {
 }
 
 is.directed <- function(graph) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   .Call("R_igraph_is_directed", graph,
         PACKAGE="igraph")
 }

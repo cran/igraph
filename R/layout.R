@@ -15,7 +15,8 @@
 #   
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301 USA
 #
 ###################################################################
 
@@ -23,18 +24,76 @@
 # Layouts
 ###################################################################
 
-layout.random <- function(graph, params) {
-  .Call("R_igraph_layout_random", graph,
-        PACKAGE="igraph")
+layout.random <- function(graph, params, dim=2) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  if (dim==2) {
+    .Call("R_igraph_layout_random", graph,
+          PACKAGE="igraph")
+  } else if (dim==3) {
+    .Call("R_igraph_layout_random_3d", graph,
+          PACKAGE="igraph")
+  } else {
+    stop("Invalid `dim' value");
+  }
 }
 
 layout.circle <- function(graph, params) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   .Call("R_igraph_layout_circle", graph,
         PACKAGE="igraph")
 }
 
-layout.fruchterman.reingold <- function(graph, ..., params=list()) {
+layout.sphere <- function(graph, params) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  .Call("R_igraph_layout_sphere", graph,
+        PACKAGE="igraph")
+}
 
+layout.fruchterman.reingold <- function(graph, ..., dim=2,
+                                        verbose=igraph.par("verbose"),
+                                        params=list()) {
+
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  if (length(params)==0) {
+    params <- list(...)
+  }
+
+  if (dim==2) {
+    fn <- "R_igraph_layout_fruchterman_reingold"
+  } else if (dim==3 ){
+    fn <- "R_igraph_layout_fruchterman_reingold_3d"
+  } else {
+    stop("Invalid `dim' argument");
+  }
+  
+  vc <- vcount(graph)
+  if (is.null(params$niter))     { params$niter      <- 500  }
+  if (is.null(params$maxdelta))  { params$maxdelta   <- vc   }
+  if (is.null(params$area))      { params$area       <- vc^2 }
+  if (is.null(params$coolexp))   { params$coolexp    <- 1.5  }
+  if (is.null(params$repulserad)){ params$repulserad <- params$area * vc }
+
+  .Call(fn, graph,
+        as.double(params$niter), as.double(params$maxdelta),
+        as.double(params$area), as.double(params$coolexp),
+        as.double(params$repulserad), as.logical(verbose),
+        PACKAGE="igraph")
+}
+
+layout.fruchterman.reingold.grid <- function(graph, ...,
+                                             verbose=igraph.par("verbose"),
+                                             params=list()) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   if (length(params)==0) {
     params <- list(...)
   }
@@ -45,33 +104,109 @@ layout.fruchterman.reingold <- function(graph, ..., params=list()) {
   if (is.null(params$area))      { params$area       <- vc^2 }
   if (is.null(params$coolexp))   { params$coolexp    <- 1.5  }
   if (is.null(params$repulserad)){ params$repulserad <- params$area * vc }
+  if (is.null(params$cellsize))  { params$cellsize   <-
+                                     (sqrt(sqrt(params$area))) }
   
-  .Call("R_igraph_layout_fruchterman_reingold", graph,
+  .Call("R_igraph_layout_fruchterman_reingold_grid", graph,
+        as.numeric(params$seed),
         as.double(params$niter), as.double(params$maxdelta),
         as.double(params$area), as.double(params$coolexp),
-        as.double(params$repulserad),
+        as.double(params$repulserad), as.double(params$cellsize),
+        as.logical(!is.null(params$seed)),
+        as.logical(verbose),
         PACKAGE="igraph")
 }
+  
 
 # FROM SNA 0.5
 
-layout.kamada.kawai<-function(graph, ..., params=list()) {
+layout.kamada.kawai<-function(graph, ..., dim=2, verbose=igraph.par("verbose"),
+                              params=list()) {
 
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   if (length(params)==0) {
     params <- list(...)
   }
 
+  if (dim==2) {
+    fn <- "R_igraph_layout_kamada_kawai"
+  } else if (dim==3) {
+    fn <- "R_igraph_layout_kamada_kawai_3d"
+  } else {
+    stop("Invalid `dim' parameter")
+  }
+  
   vc <- vcount(graph)
   if (is.null(params$niter))      { params$niter   <- 1000 }
   if (is.null(params$sigma))      { params$sigma   <- vc/4 }
   if (is.null(params$initemp))    { params$initemp <- 10   }
   if (is.null(params$coolexp))    { params$coolexp <- 0.99 }
   if (is.null(params$kkconst))    { params$kkconst <- vc^2 }
-  .Call("R_igraph_layout_kamada_kawai", graph,
+  .Call(fn, graph,
         as.double(params$niter), as.double(params$initemp),
         as.double(params$coolexp), as.double(params$kkconst),
-        as.double(params$sigma),
+        as.double(params$sigma), as.logical(verbose),
         PACKAGE="igraph")
+}
+
+layout.lgl <- function(graph, ..., params=list()) {
+
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  if (length(params)==0) {
+    params <- list(...)
+  }
+
+  vc <- vcount(graph)
+  if (is.null(params$maxiter))   { params$maxiter    <- 150  }
+  if (is.null(params$maxdelta))  { params$maxdelta   <- vc   }
+  if (is.null(params$area))      { params$area       <- vc^2 }
+  if (is.null(params$coolexp))   { params$coolexp    <- 1.5  }
+  if (is.null(params$repulserad)){ params$repulserad <- params$area * vc }
+  if (is.null(params$cellsize))  { params$cellsize   <-
+                                     (sqrt(sqrt(params$area))) }
+  if (is.null(params$root))      { params$root       <- -1   }
+  
+  .Call("R_igraph_layout_lgl", graph, as.double(params$maxiter),
+        as.double(params$maxdelta), as.double(params$area),
+        as.double(params$coolexp), as.double(params$repulserad),
+        as.double(params$cellsize), as.double(params$root),
+        PACKAGE="igraph")
+}
+
+layout.reingold.tilford <- function(graph, ..., params=list()) {
+
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  if (length(params)==0) {
+    params <- list(...)
+  }
+
+  if (is.null(params$root)) { params$root <- 0 }
+
+  .Call("R_igraph_layout_reingold_tilford", graph, as.double(params$root),
+        PACKAGE="igraph")
+}
+
+layout.merge <- function(graphs, layouts, method="dla",
+                         verbose=igraph.par("verbose")) {
+
+  if (!all(sapply(graphs, is.igraph))) {
+    stop("Not a graph object")
+  }
+  if (method == "dla") {
+    res <- .Call("R_igraph_layout_merge_dla",
+                 graphs,
+                 layouts, as.logical(verbose),
+                 PACKAGE="igraph")
+  } else {
+    stop("Invalid `method'.")
+  }
+  res
 }
 
 # FROM SNA 0.5
@@ -120,6 +255,9 @@ symmetrize.mat <- function(mats,rule="weak"){
 
 layout.spring<-function(graph, ..., params=list()) {
 
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   if (length(params)==0) {
     params <- list(...)
   }  
@@ -197,7 +335,7 @@ layout.spring<-function(graph, ..., params=list()) {
 }
 
 i.layout.norm <- function(layout, xmin=NULL, xmax=NULL, ymin=NULL, ymax=NULL,
-                          zmin=NULL, zmax=NUL) {
+                          zmin=NULL, zmax=NULL) {
 
   if (!is.null(xmin) && !is.null(xmax)) {
     layout[,1] <- .layout.norm.col(layout[,1], xmin, xmax)

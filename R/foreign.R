@@ -15,7 +15,8 @@
 #   
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301 USA
 #
 ###################################################################
 
@@ -78,10 +79,11 @@ read.graph <- function(file, format="edgelist", ...) {
   }
   
   res <- switch(format,
-#                "pajek"=read.graph.pajek(file, ...),
+                "pajek"=read.graph.pajek(file, ...),
                 "ncol"=read.graph.ncol(file, ...),
                 "edgelist"=read.graph.edgelist(file, ...),
                 "lgl"=read.graph.lgl(file, ...),
+                "graphml"=read.graph.graphml(file, ...),
                 stop(paste("Unknown file format:",format))
                 )
   res
@@ -89,6 +91,9 @@ read.graph <- function(file, format="edgelist", ...) {
 
 write.graph <- function(graph, file, format="edgelist", ...) {
 
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   if (!igraph.i.have.open.memstream) {
     if (!is.character(file) || length(grep("://", file, fixed=TRUE))>0) {
       tmpfile <- TRUE
@@ -100,9 +105,11 @@ write.graph <- function(graph, file, format="edgelist", ...) {
   }
   
   res <- switch(format,
-#                "pajek"=write.graph.pajek(graph, file, ...),
+                "pajek"=write.graph.pajek(graph, file, ...),
                 "edgelist"=write.graph.edgelist(graph, file, ...),
                 "ncol"=write.graph.ncol(graph, file, ...),
+                "lgl"=write.graph.lgl(graph, file, ...),
+                "graphml"=write.graph.graphml(graph, file, ...),
                 stop(paste("Unknown file format:",format))
                 )
 
@@ -141,11 +148,11 @@ write.graph.edgelist <- function(graph, file,
 # NCOL and LGL formats, quite simple
 ################################################################
 
-read.graph.ncol <- function(file, names=TRUE,
-                           weights=TRUE, ...) {
+read.graph.ncol <- function(file, predef=character(0), names=TRUE,
+                           weights=TRUE, directed=FALSE, ...) {
 
-  .Call("R_igraph_read_graph_ncol", file,
-        as.logical(names), as.logical(weights),
+  .Call("R_igraph_read_graph_ncol", file, as.character(predef),
+        as.logical(names), as.logical(weights), as.logical(directed),
         PACKAGE="igraph")
 }
 
@@ -153,8 +160,8 @@ write.graph.ncol <- function(graph, file,
                              names="name", weights="weight", ...) {
   names <- as.character(names)
   weights <- as.character(weights)
-  if (length(names)==0 || ! names %in% v.a(graph)) { names <- NULL }
-  if (length(weights)==0 || ! weights %in% e.a(graph)) { weights <- NULL }
+  if (length(names)==0 || ! names %in% list.vertex.attributes(graph)) { names <- NULL }
+  if (length(weights)==0 || ! weights %in% list.edge.attributes(graph)) { weights <- NULL }
   
   .Call("R_igraph_write_graph_ncol", graph, file,
         names, weights,
@@ -174,10 +181,38 @@ write.graph.lgl <- function(graph, file,
                             isolates=FALSE, ...) {
   names <- as.character(names)
   weights <- as.character(weights)
-  if (length(names)==0 || ! names %in% v.a(graph)) { names <- NULL }
-  if (length(weights)==0 || ! weights %in% e.a(graph)) { weights <- NULL }
+  if (length(names)==0 || ! names %in% list.vertex.attributes(graph)) { names <- NULL }
+  if (length(weights)==0 || ! weights %in% list.edge.attributes(graph)) { weights <- NULL }
   
-  .Call("R_igraph_write_graph_lgl", graph,
+  .Call("R_igraph_write_graph_lgl", graph, file,
         names, weights, as.logical(isolates),
         PACKAGE="igraph")
 }  
+
+read.graph.pajek <- function(file, ...) {
+
+  .Call("R_igraph_read_graph_pajek", file,
+        PACKAGE="igraph")
+}
+
+write.graph.pajek <- function(graph, file, ...) {
+
+  .Call("R_igraph_write_graph_pajek", graph, file,
+        PACKAGE="igraph")
+}
+
+################################################################
+# GraphML
+################################################################
+
+read.graph.graphml <- function(file, index=0, ...) {
+
+  .Call("R_igraph_read_graph_graphml", file, as.numeric(index),
+        PACKAGE="igraph")
+}
+
+write.graph.graphml <- function(graph, file, ...) {
+
+  .Call("R_igraph_write_graph_graphml", graph, file,
+        PACKAGE="igraph")
+}

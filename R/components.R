@@ -15,7 +15,8 @@
 #   
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301 USA
 #
 ###################################################################
 
@@ -24,6 +25,9 @@
 ###################################################################
 
 clusters <- function(graph, mode="weak") {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   if (is.character(mode)) {
     mode <- switch(mode, "weak"=1, "strong"=2)
   }
@@ -33,6 +37,9 @@ clusters <- function(graph, mode="weak") {
   
 cluster.distribution <- function(graph, cumulative=FALSE, mul.size=FALSE,
                                  ...) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   
   cs <- clusters(graph, ...)$csize;
   hi <- hist(cs, -1:max(cs), plot=FALSE)$intensities;
@@ -50,6 +57,9 @@ cluster.distribution <- function(graph, cumulative=FALSE, mul.size=FALSE,
 }
 
 is.connected <- function(graph, mode="weak") {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   if (is.character(mode)) {
     mode <- switch(mode, "weak"=1, "strong"=2)
   }
@@ -57,3 +67,19 @@ is.connected <- function(graph, mode="weak") {
         PACKAGE="igraph")
 }
 
+decompose.graph <- function(graph, mode="weak", max.comps=NA,
+                      min.vertices=0) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  if (is.character(mode)) {
+    mode <- switch(mode, "weak"=1, "strong"=2)
+  }
+  if (is.na(max.comps)) {
+    max.comps=-1
+  }
+  .Call("R_igraph_decompose", graph, as.numeric(mode),
+        as.numeric(max.comps), as.numeric(min.vertices),
+        PACKAGE="igraph"
+        )
+}

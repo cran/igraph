@@ -15,7 +15,8 @@
 #   
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301 USA
 #
 ###################################################################
 
@@ -24,6 +25,9 @@
 ###################################################################
 
 community.eb <- function(graph, directed=TRUE) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
 
   all.nodes <- vcount(graph)
   all.edges <- ecount(graph)
@@ -44,6 +48,9 @@ community.eb <- function(graph, directed=TRUE) {
 }
 
 community.cut <- function(graph, edges, after.removing) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
 
   if (after.removing >= nrow(edges)) { 
     res <- graph.empty(directed=is.directed(graph))
@@ -56,6 +63,9 @@ community.cut <- function(graph, edges, after.removing) {
 }
 
 edge.type.matrix <- function(graph, types) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
 
   if (vcount(graph) != length(types)) {
     stop("'graph' and/or 'types' invalid, they should be of the same length")
@@ -77,6 +87,9 @@ edge.type.matrix <- function(graph, types) {
 }
 
 modularity <- function(graph, types) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
 
   etm <- edge.type.matrix(graph, types)
 
@@ -86,6 +99,9 @@ modularity <- function(graph, types) {
 }
 
 community.eb2 <- function(graph, directed=TRUE) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
 
   all.nodes <- vcount(graph)
   all.edges <- ecount(graph)

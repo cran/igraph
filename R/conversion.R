@@ -15,11 +15,15 @@
 #   
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301 USA
 #
 ###################################################################
 
 get.adjacency <- function(graph, type="both") {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   if (is.character(type)) {
     type <- switch(type, "upper"=0, "lower"=1, "both"=2)
   }
@@ -29,6 +33,35 @@ get.adjacency <- function(graph, type="both") {
 }
 
 get.edgelist <- function(graph) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
   matrix(.Call("R_igraph_get_edgelist", graph, TRUE,
                PACKAGE="igraph"), nc=2)
+}
+
+as.directed <- function(graph, mode="mutual") {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+
+  if (is.character(mode)) {
+    mode <- switch(mode, "arbitrary"=0, "mutual"=1)
+  }
+  
+  .Call("R_igraph_to_directed", graph, as.numeric(mode),
+        PACKAGE="igraph")
+}
+
+as.undirected <- function(graph, mode="collapse") {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+
+  if (is.character(mode)) {
+    mode <- switch(mode, "each"=0, "collapse"=1)
+  }
+  
+  .Call("R_igraph_to_undirected", graph, as.numeric(mode),
+        PACKAGE="igraph")  
 }

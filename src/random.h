@@ -16,7 +16,8 @@
    
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA 
+   02110-1301 USA
 
 */
 
@@ -49,12 +50,13 @@ double  Rf_rgeom(double);
 
 double igraph_norm_rand(void);
 double igraph_rgeom(double);
+extern int igraph_rng_inited;
 
-#define RNG_BEGIN()       srand(time(0))
+#define RNG_BEGIN()       if (!igraph_rng_inited) { srand(time(0)); igraph_rng_inited=1; }
 #define RNG_END()  
 #define RNG_INTEGER(l, h) ((long int)((rand())/((double)RAND_MAX+1)*((h)-(l)+1)+(l)))
 #define RNG_NORMAL(m, s)  (igraph_norm_rand()*(s)+(m))
-#define RNG_UNIF(l, h)    (rand()/((double)RAND_MAX+1)*(double)((h)-(l))+l)
+#define RNG_UNIF(l, h)    (rand()/((double)RAND_MAX+1)*(double)((h)-(l))+(l))
 #define RNG_UNIF01()      (RNG_UNIF(0,1))
 #define RNG_GEOM(p)       (igraph_rgeom(p))
 

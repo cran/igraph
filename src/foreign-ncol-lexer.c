@@ -324,7 +324,7 @@ void igraph_ncol_yyfree (void *  );
 
 /* Begin user sect3 */
 
-#define igraph_ncol_yywrap(n) 1
+#define igraph_ncol_yywrap() 1
 #define YY_SKIP_YYWRAP
 
 typedef unsigned char YY_CHAR;
@@ -443,10 +443,58 @@ int igraph_ncol_yy_flex_debug = 0;
 #define YY_RESTORE_YY_MORE_OFFSET
 char *igraph_ncol_yytext;
 #line 1 "foreign-ncol-lexer.l"
-#line 2 "foreign-ncol-lexer.l"
+/* 
+   IGraph library.
+   Copyright (C) 2006  Gabor Csardi <csardi@rmki.kfki.hu>
+   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA 
+   02110-1301 USA
+
+*/
+#line 24 "foreign-ncol-lexer.l"
+
+/* 
+   IGraph library.
+   Copyright (C) 2006  Gabor Csardi <csardi@rmki.kfki.hu>
+   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA 
+   02110-1301 USA
+
+*/
+
 #include "foreign-ncol-parser.h"
-long int igraph_ncol_mylineno;
-#line 450 "foreign-ncol-lexer.c"
+extern long int igraph_ncol_mylineno;
+int igraph_i_ncol_eof;
+void igraph_i_ncol_reset_scanner() {
+  YY_FLUSH_BUFFER;
+}
+#line 498 "foreign-ncol-lexer.c"
 
 #define INITIAL 0
 
@@ -597,11 +645,11 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 12 "foreign-ncol-lexer.l"
+#line 61 "foreign-ncol-lexer.l"
 
 
  /* ------------------------------------------------whitespace------*/
-#line 605 "foreign-ncol-lexer.c"
+#line 653 "foreign-ncol-lexer.c"
 
 	if ( (yy_init) )
 		{
@@ -686,30 +734,38 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 15 "foreign-ncol-lexer.l"
+#line 64 "foreign-ncol-lexer.l"
 { }
 	YY_BREAK
 /* ---------------------------------------------------newline------*/
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 18 "foreign-ncol-lexer.l"
+#line 67 "foreign-ncol-lexer.l"
 { igraph_ncol_mylineno++; return NEWLINE; }
 	YY_BREAK
 /* ----------------------------------------------alphanumeric------*/
 case 3:
 YY_RULE_SETUP
-#line 21 "foreign-ncol-lexer.l"
+#line 70 "foreign-ncol-lexer.l"
 { return ALNUM; }
+	YY_BREAK
+case YY_STATE_EOF(INITIAL):
+#line 72 "foreign-ncol-lexer.l"
+{ if (igraph_i_ncol_eof) {
+                       yyterminate();
+                    } else {
+                       igraph_i_ncol_eof=1;
+                       return NEWLINE; 
+                    }
+                  }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 23 "foreign-ncol-lexer.l"
+#line 80 "foreign-ncol-lexer.l"
 ECHO;
 	YY_BREAK
-#line 711 "foreign-ncol-lexer.c"
-case YY_STATE_EOF(INITIAL):
-	yyterminate();
+#line 769 "foreign-ncol-lexer.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -893,7 +949,7 @@ static int yy_get_next_buffer (void)
 
 	else
 		{
-			size_t num_to_read =
+			int num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
@@ -1673,7 +1729,7 @@ void igraph_ncol_yyfree (void * ptr )
 #undef YY_DECL_IS_OURS
 #undef YY_DECL
 #endif
-#line 23 "foreign-ncol-lexer.l"
+#line 80 "foreign-ncol-lexer.l"
 
 
 

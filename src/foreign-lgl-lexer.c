@@ -324,7 +324,7 @@ void igraph_lgl_yyfree (void *  );
 
 /* Begin user sect3 */
 
-#define igraph_lgl_yywrap(n) 1
+#define igraph_lgl_yywrap() 1
 #define YY_SKIP_YYWRAP
 
 typedef unsigned char YY_CHAR;
@@ -445,10 +445,58 @@ int igraph_lgl_yy_flex_debug = 0;
 #define YY_RESTORE_YY_MORE_OFFSET
 char *igraph_lgl_yytext;
 #line 1 "foreign-lgl-lexer.l"
-#line 2 "foreign-lgl-lexer.l"
+/* 
+   IGraph library.
+   Copyright (C) 2006  Gabor Csardi <csardi@rmki.kfki.hu>
+   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA 
+   02110-1301 USA
+
+*/
+#line 24 "foreign-lgl-lexer.l"
+
+/* 
+   IGraph library.
+   Copyright (C) 2006  Gabor Csardi <csardi@rmki.kfki.hu>
+   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA 
+   02110-1301 USA
+
+*/
+
 #include "foreign-lgl-parser.h"
-long int igraph_lgl_mylineno;
-#line 452 "foreign-lgl-lexer.c"
+extern long int igraph_lgl_mylineno;
+int igraph_i_lgl_eof;
+void igraph_i_lgl_reset_scanner() {
+  YY_FLUSH_BUFFER;
+}
+#line 500 "foreign-lgl-lexer.c"
 
 #define INITIAL 0
 
@@ -599,11 +647,11 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 12 "foreign-lgl-lexer.l"
+#line 61 "foreign-lgl-lexer.l"
 
 
  /* --------------------------------------------------hashmark------*/
-#line 607 "foreign-lgl-lexer.c"
+#line 655 "foreign-lgl-lexer.c"
 
 	if ( (yy_init) )
 		{
@@ -688,36 +736,44 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 15 "foreign-lgl-lexer.l"
+#line 64 "foreign-lgl-lexer.l"
 { return HASH; }
 	YY_BREAK
 /* ------------------------------------------------whitespace------*/
 case 2:
 YY_RULE_SETUP
-#line 18 "foreign-lgl-lexer.l"
+#line 67 "foreign-lgl-lexer.l"
 { }
 	YY_BREAK
 /* ---------------------------------------------------newline------*/
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 21 "foreign-lgl-lexer.l"
+#line 70 "foreign-lgl-lexer.l"
 { igraph_lgl_mylineno++; return NEWLINE; }
 	YY_BREAK
 /* ----------------------------------------------alphanumeric------*/
 case 4:
 YY_RULE_SETUP
-#line 24 "foreign-lgl-lexer.l"
+#line 73 "foreign-lgl-lexer.l"
 { return ALNUM; }
+	YY_BREAK
+case YY_STATE_EOF(INITIAL):
+#line 75 "foreign-lgl-lexer.l"
+{ if (igraph_i_lgl_eof) {
+                       yyterminate();
+                    } else {
+                       igraph_i_lgl_eof=1;
+                       return NEWLINE; 
+                    }
+                  }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 26 "foreign-lgl-lexer.l"
+#line 83 "foreign-lgl-lexer.l"
 ECHO;
 	YY_BREAK
-#line 719 "foreign-lgl-lexer.c"
-case YY_STATE_EOF(INITIAL):
-	yyterminate();
+#line 777 "foreign-lgl-lexer.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -901,7 +957,7 @@ static int yy_get_next_buffer (void)
 
 	else
 		{
-			size_t num_to_read =
+			int num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
@@ -1681,7 +1737,7 @@ void igraph_lgl_yyfree (void * ptr )
 #undef YY_DECL_IS_OURS
 #undef YY_DECL
 #endif
-#line 26 "foreign-lgl-lexer.l"
+#line 83 "foreign-lgl-lexer.l"
 
 
 

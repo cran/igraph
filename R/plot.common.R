@@ -15,7 +15,8 @@
 #   
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301 USA
 #
 ###################################################################
 
@@ -50,6 +51,24 @@ i.get.vertex.color <- function(graph, vertex.color) {
   }
 
   vertex.color  
+}
+
+i.get.vertex.frame.color <- function(graph, vertex.frame.color) {
+
+  if (length(vertex.frame.color)==1 &&
+      substr(vertex.frame.color, 1, 2)=="a:") {
+    vertex.frame.color <-
+      unlist(get.vertex.attribute(graph,
+                                  substring(vertex.frame.color,3)))
+  }
+
+  if (is.numeric(vertex.frame.color)) {
+    vertex.frame.color <- vertex.frame.color %% length(palette())
+    vertex.frame.color[vertex.frame.color==0] <- length(palette())
+    vertex.frame.color <- palette()[vertex.frame.color]
+  }
+
+  vertex.frame.color  
 }
 
 i.get.vertex.size <- function(graph, vertex.size) {

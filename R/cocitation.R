@@ -15,17 +15,24 @@
 #   
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301 USA
 #
 ###################################################################
 
-cocitation <- function(graph, v=igraph.vs.all(graph)) {
+cocitation <- function(graph, v=V(graph)) {
 
-  .Call("R_igraph_cocitation", graph, as.igraph.vs(graph, v),
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  .Call("R_igraph_cocitation", graph, as.igraph.vs(v),
         PACKAGE="igraph")
 }
 
-bibcoupling <- function(graph, v=igraph.vs.all(graph)) {
-  .Call("R_igraph_bibcoupling", graph, as.igraph.vs(graph, v),
+bibcoupling <- function(graph, v=V(graph)) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  .Call("R_igraph_bibcoupling", graph, as.igraph.vs(v),
         PACKAGE="igraph")
 }
