@@ -447,7 +447,7 @@ char *igraph_lgl_yytext;
 #line 1 "foreign-lgl-lexer.l"
 #line 2 "foreign-lgl-lexer.l"
 #include "foreign-lgl-parser.h"
-long int mylineno;
+long int igraph_lgl_mylineno;
 #line 452 "foreign-lgl-lexer.c"
 
 #define INITIAL 0
@@ -702,7 +702,7 @@ case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
 #line 21 "foreign-lgl-lexer.l"
-{ mylineno++; return NEWLINE; }
+{ igraph_lgl_mylineno++; return NEWLINE; }
 	YY_BREAK
 /* ----------------------------------------------alphanumeric------*/
 case 4:

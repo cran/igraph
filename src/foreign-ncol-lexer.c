@@ -445,7 +445,7 @@ char *igraph_ncol_yytext;
 #line 1 "foreign-ncol-lexer.l"
 #line 2 "foreign-ncol-lexer.l"
 #include "foreign-ncol-parser.h"
-long int mylineno;
+long int igraph_ncol_mylineno;
 #line 450 "foreign-ncol-lexer.c"
 
 #define INITIAL 0
@@ -694,7 +694,7 @@ case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
 #line 18 "foreign-ncol-lexer.l"
-{ mylineno++; return NEWLINE; }
+{ igraph_ncol_mylineno++; return NEWLINE; }
 	YY_BREAK
 /* ----------------------------------------------alphanumeric------*/
 case 3:
