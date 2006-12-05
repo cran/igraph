@@ -1733,3 +1733,4 @@ void igraph_ncol_yyfree (void * ptr )
 
 
 
+

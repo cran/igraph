@@ -127,8 +127,6 @@ typedef enum { IGRAPH_GET_ADJACENCY_UPPER=0,
 
 typedef enum { IGRAPH_DEGSEQ_SIMPLE=0 } igraph_degseq_t;
 
-typedef enum { IGRAPH_TRANSITIVITY_UNDIRECTED=0 } igraph_transitivity_type_t;
-
 typedef enum { IGRAPH_FILEFORMAT_EDGELIST=0,
 	       IGRAPH_FILEFORMAT_NCOL,
 	       IGRAPH_FILEFORMAT_PAJEK,
@@ -146,6 +144,13 @@ typedef enum { IGRAPH_TO_DIRECTED_ARBITRARY=0,
 
 typedef enum { IGRAPH_TO_UNDIRECTED_EACH=0,
 	       IGRAPH_TO_UNDIRECTED_COLLAPSE } igraph_to_undirected_t;
+
+typedef enum { IGRAPH_VCONN_NEI_ERROR=0,
+	       IGRAPH_VCONN_NEI_INFINITY,
+	       IGRAPH_VCONN_NEI_IGNORE }igraph_vconn_nei_t;
+
+typedef enum { IGRAPH_SPINCOMM_UPDATE_SIMPLE=0,
+	       IGRAPH_SPINCOMM_UPDATE_CONFIG } igraph_spincomm_update_t; 
 
 /* -------------------------------------------------- */
 /* Vertex selectors                                   */
@@ -177,7 +182,7 @@ typedef struct igraph_vs_t {
 } igraph_vs_t;
     
 int igraph_vs_all(igraph_vs_t *vs);
-igraph_vs_t igraph_vss_all();
+igraph_vs_t igraph_vss_all(void);
 
 int igraph_vs_adj(igraph_vs_t *vs, 
 		  igraph_integer_t vid, igraph_neimode_t mode);
@@ -187,7 +192,7 @@ int igraph_vs_nonadj(igraph_vs_t *vs, igraph_integer_t vid,
 		     igraph_neimode_t mode);
 
 int igraph_vs_none(igraph_vs_t *vs);
-igraph_vs_t igraph_vss_none();
+igraph_vs_t igraph_vss_none(void);
 
 int igraph_vs_1(igraph_vs_t *vs, igraph_integer_t vid);
 igraph_vs_t igraph_vss_1(igraph_integer_t vid);
@@ -197,6 +202,9 @@ int igraph_vs_vector(igraph_vs_t *vs,
 igraph_vs_t igraph_vss_vector(const igraph_vector_t *v);
 
 int igraph_vs_vector_small(igraph_vs_t *vs, ...);			   
+
+int igraph_vs_vector_copy(igraph_vs_t *vs,
+			  const igraph_vector_t *v);
 
 int igraph_vs_seq(igraph_vs_t *vs, igraph_integer_t from, igraph_integer_t to);
 igraph_vs_t igraph_vss_seq(igraph_integer_t from, igraph_integer_t to);
@@ -227,7 +235,7 @@ typedef struct igraph_vit_t {
 /**
  * \section IGRAPH_VIT Stepping over the vertices
  *
- * <para>After creating an iterator with \ref igraph_eit_create(), it
+ * <para>After creating an iterator with \ref igraph_vit_create(), it
  * points to the first vertex in the vertex determined by the vertex
  * selector (if there is any). The \ref IGRAPH_VIT_NEXT() macro steps
  * to the next vertex, \ref IGRAPH_VIT_END() checks whether there are
@@ -365,7 +373,7 @@ int igraph_es_adj(igraph_es_t *es,
 		  igraph_integer_t vid, igraph_neimode_t mode);
 
 int igraph_es_none(igraph_es_t *es);
-igraph_es_t igraph_ess_none();
+igraph_es_t igraph_ess_none(void);
 
 int igraph_es_1(igraph_es_t *es, igraph_integer_t eid);
 igraph_es_t igraph_ess_1(igraph_integer_t eid);
@@ -537,6 +545,8 @@ int igraph_tree(igraph_t *graph, igraph_integer_t n, igraph_integer_t children,
 		igraph_tree_mode_t type);
 int igraph_full(igraph_t *graph, igraph_integer_t n, igraph_bool_t directed, igraph_bool_t loops);
 int igraph_atlas(igraph_t *graph, int number);
+int igraph_extended_chordal_ring(igraph_t *graph, igraph_integer_t nodes, 
+				 const igraph_matrix_t *W);
 
 /* -------------------------------------------------- */
 /* Constructors, games (=stochastic)                  */
@@ -604,6 +614,18 @@ int igraph_establishment_game(igraph_t *graph, igraph_integer_t nodes,
 			      igraph_vector_t *type_dist,
 			      igraph_matrix_t *pref_matrix,
 			      igraph_bool_t directed);
+int igraph_grg_game(igraph_t *graph, igraph_integer_t nodes,
+		    igraph_real_t radius, igraph_bool_t torus);
+int igraph_preference_game(igraph_t *graph, igraph_integer_t nodes,
+			   igraph_integer_t types, igraph_vector_t *type_dist,
+			   igraph_matrix_t *pref_matrix,
+			   igraph_bool_t directed, igraph_bool_t loops);
+int igraph_asymmetric_preference_game(igraph_t *graph, igraph_integer_t nodes,
+				      igraph_integer_t types,
+				      igraph_matrix_t *type_dist_matrix,
+				      igraph_matrix_t *pref_matrix,
+				      igraph_bool_t loops);
+
 
 /* -------------------------------------------------- */
 /* Basic query functions                              */
@@ -650,22 +672,50 @@ int igraph_subgraph(const igraph_t *graph, igraph_t *res,
 int igraph_average_path_length(const igraph_t *graph, igraph_real_t *res,
 			       igraph_bool_t directed, igraph_bool_t unconn);
 int igraph_simplify(igraph_t *graph, igraph_bool_t multiple, igraph_bool_t loops);
-int igraph_transitivity(const igraph_t *graph, igraph_vector_t *res, 
-			igraph_transitivity_type_t type); /* vvv + add */
+int igraph_transitivity_undirected(const igraph_t *graph, 
+				   igraph_real_t *res);
+int igraph_transitivity_local_undirected(const igraph_t *graph, 
+					 igraph_vector_t *res,
+					 const igraph_vs_t vids);
+int igraph_transitivity_avglocal_undirected(const igraph_t *graph,
+					    igraph_real_t *res);
 int igraph_reciprocity(const igraph_t *graph, igraph_real_t *res,
 		       igraph_bool_t ignore_loops);
 
 int igraph_constraint(const igraph_t *graph, igraph_vector_t *res,
-		      igraph_vs_t vids);
+		      igraph_vs_t vids, const igraph_vector_t *weights);
+int igraph_maxdegree(const igraph_t *graph, igraph_integer_t *res,
+		     igraph_vs_t vids, igraph_neimode_t mode, 
+		     igraph_bool_t loops);
+int igraph_density(const igraph_t *graph, igraph_real_t *res, 
+		   igraph_bool_t loops);
+
+int igraph_neighborhood_size(const igraph_t *graph, igraph_vector_t *res,
+			     igraph_vs_t vids, igraph_integer_t order, 
+			     igraph_neimode_t mode);
+int igraph_neighborhood(const igraph_t *graph, igraph_vector_ptr_t *res,
+			igraph_vs_t vids, igraph_integer_t order,
+			igraph_neimode_t mode);
+int igraph_neighborhood_graphs(const igraph_t *graph, igraph_vector_ptr_t *res,
+			       igraph_vs_t vids, igraph_integer_t order,
+			       igraph_neimode_t mode);
 
 /* TODO: degree.distribution (?) */
+
+/* -------------------------------------------------- */
+/* Spectral Properties                                */
+/* -------------------------------------------------- */
+
+int igraph_laplacian(const igraph_t *graph, igraph_matrix_t *res,
+		     igraph_bool_t normalized);
 
 /* -------------------------------------------------- */
 /* Components                                         */
 /* -------------------------------------------------- */
 
 int igraph_clusters(const igraph_t *graph, igraph_vector_t *membership, 
-		    igraph_vector_t *csize, igraph_connectedness_t mode);
+		    igraph_vector_t *csize, igraph_integer_t *no,
+		    igraph_connectedness_t mode);
 int igraph_is_connected(const igraph_t *graph, igraph_bool_t *res, 
 			igraph_connectedness_t mode);
 int igraph_decompose(const igraph_t *graph, igraph_vector_ptr_t *components, 
@@ -754,6 +804,32 @@ int igraph_bibcoupling(const igraph_t *graph, igraph_matrix_t *res,
 /* TODO: modularity */
 /* TODO:  */
 
+int igraph_spinglass_community(const igraph_t *graph,
+			       const igraph_vector_t *weights,
+			       igraph_real_t *modularity,
+			       igraph_real_t *temperature,
+			       igraph_vector_t *membership, 
+			       igraph_vector_t *csize, 
+			       igraph_integer_t spins,
+			       igraph_bool_t parupdate,
+			       igraph_real_t starttemp,
+			       igraph_real_t stoptemp,
+			       igraph_real_t coolfact,
+			       igraph_spincomm_update_t update_rule,
+			       igraph_real_t gamma);
+
+int igraph_spinglass_my_community(const igraph_t *graph,
+				  const igraph_vector_t *weights,
+				  igraph_integer_t vertex,
+				  igraph_vector_t *community,
+				  igraph_real_t *cohesion,
+				  igraph_real_t *adhesion,
+				  igraph_integer_t *inner_links,
+				  igraph_integer_t *outer_links,
+				  igraph_integer_t spins,
+				  igraph_spincomm_update_t update_rule,
+				  igraph_real_t gamma);
+
 /* -------------------------------------------------- */
 /* Conversion                                         */
 /* -------------------------------------------------- */
@@ -781,6 +857,11 @@ int igraph_read_graph_lgl(igraph_t *graph, FILE *instream,
 int igraph_read_graph_pajek(igraph_t *graph, FILE *instream);
 int igraph_read_graph_graphml(igraph_t *graph, FILE *instream,
 			      int index);
+int igraph_read_graph_dimacs(igraph_t *graph, FILE *instream,
+			     igraph_integer_t *source, 
+			     igraph_integer_t *target, 
+			     igraph_vector_t *capacity, 
+			     igraph_bool_t directed);
 
 int igraph_write_graph_edgelist(const igraph_t *graph, FILE *outstream);
 int igraph_write_graph_ncol(const igraph_t *graph, FILE *outstream,
@@ -790,6 +871,9 @@ int igraph_write_graph_lgl(const igraph_t *graph, FILE *outstream,
 			   igraph_bool_t isolates);
 int igraph_write_graph_graphml(const igraph_t *graph, FILE *outstream);
 int igraph_write_graph_pajek(const igraph_t *graph, FILE *outstream);
+int igraph_write_graph_dimacs(const igraph_t *graph, FILE *outstream,
+			      long int source, long int target,
+			      const igraph_vector_t *capacity);
 
 /* -------------------------------------------------- */
 /* Graph isomorphisms                                 */
@@ -829,6 +913,8 @@ extern igraph_progress_handler_t igraph_progress_handler_stderr;
 igraph_progress_handler_t *
 igraph_set_progress_handler(igraph_progress_handler_t new_handler);
 
+int igraph_progress(const char *message, igraph_real_t percent, void *data);
+
 /* -------------------------------------------------- */
 /* Graph operators                                    */
 /* -------------------------------------------------- */
@@ -847,6 +933,38 @@ int igraph_difference(igraph_t *res,
 int igraph_complementer(igraph_t *res, const igraph_t *graph, 
 			igraph_bool_t loops);
 int igraph_compose(igraph_t *res, const igraph_t *g1, const igraph_t *g2);
+
+/* -------------------------------------------------- */
+/* MAximum flows, minimum cuts & such                 */
+/* -------------------------------------------------- */
+
+int igraph_maxflow_value(const igraph_t *graph, igraph_real_t *value,
+			 igraph_integer_t source, igraph_integer_t target,
+			 const igraph_vector_t *capacity);
+int igraph_mincut_value(const igraph_t *graph, igraph_real_t *res, 
+			const igraph_vector_t *capacity);
+int igraph_st_mincut_value(const igraph_t *graph, igraph_real_t *res,
+                           igraph_integer_t source, igraph_integer_t target,
+			   const igraph_vector_t *capacity);
+
+int igraph_st_vertex_connectivity(const igraph_t *graph, 
+				  igraph_integer_t *res,
+				  igraph_integer_t source,
+				  igraph_integer_t target,
+				  igraph_vconn_nei_t neighbors);
+int igraph_vertex_connectivity(const igraph_t *graph, igraph_integer_t *res);
+int igraph_st_edge_connectivity(const igraph_t *graph, igraph_integer_t *res,
+				igraph_integer_t source, 
+				igraph_integer_t target);
+int igraph_edge_connectivity(const igraph_t *graph, igraph_integer_t *res);
+int igraph_edge_disjoint_paths(const igraph_t *graph, igraph_integer_t *res,
+			       igraph_integer_t source, 
+			       igraph_integer_t target);
+int igraph_vertex_disjoint_paths(const igraph_t *graph, igraph_integer_t *res,
+				 igraph_integer_t source,
+				 igraph_integer_t target);
+int igraph_adhesion(const igraph_t *graph, igraph_integer_t *res);
+int igraph_cohesion(const igraph_t *graph, igraph_integer_t *res);
 
 /* -------------------------------------------------- */
 /* Dynamics measurement                               */

@@ -24,6 +24,41 @@
 # Community structure
 ###################################################################
 
+spinglass.community <- function(graph, weights=NULL, vertex=NULL, spins=25,
+                                parupdate=FALSE, start.temp=1,
+                                stop.temp=0.01, cool.fact=0.99,
+                                update.rule="config", gamma=1.0) {
+
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+
+  if (is.null(weights)) {
+    if ("weight" %in% list.edge.attributes(graph)) {
+      weights <- as.numeric(E(g)$weight)
+    } else {
+      weights <- as.numeric(rep(1, ecount(graph)))
+    }
+  }
+
+  if (is.character(update.rule)) {
+    update.rule <- switch(update.rule, "simple"=0, "random"=0, "config"=1)
+  }
+
+  if (is.null(vertex)) {    
+    .Call("R_igraph_spinglass_community", graph, weights,
+          as.numeric(spins), as.logical(parupdate), as.numeric(start.temp),
+          as.numeric(stop.temp), as.numeric(cool.fact),
+          as.numeric(update.rule), as.numeric(gamma),
+          PACKAGE="igraph")
+  } else {
+    .Call("R_igraph_spinglass_my_community", graph, weights,
+          as.numeric(vertex), as.numeric(spins), 
+          as.numeric(update.rule), as.numeric(gamma),
+          PACKAGE="igraph")
+  }    
+}
+
 community.eb <- function(graph, directed=TRUE) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
@@ -74,7 +109,7 @@ edge.type.matrix <- function(graph, types) {
   no.of.types <- max(types)
   res <- matrix(0, nr=no.of.types, nc=no.of.types)
 
-  el <- get.edgelist(graph)
+  el <- get.edgelist(graph, names=FALSE)
   if (length(el) != 0) {
     for (i in 1:nrow(el)) {
       res[ types[el[i,1]], types[el[i,2]] ] <-

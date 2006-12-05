@@ -39,19 +39,21 @@ export(is.igraph, are.connected, print.igraph, summary.igraph, is.directed,
 # structure generators
 
 export(graph, graph.adjacency, graph.star, graph.tree, graph.lattice,
-       graph.ring, graph.full, graph.atlas)
+       graph.ring, graph.full, graph.atlas, graph.data.frame, graph.edgelist,
+       graph.extended.chordal.ring)
 
 # games
 
 export(erdos.renyi.game, random.graph.game, degree.sequence.game,
        aging.prefatt.game, aging.barabasi.game, aging.ba.game,
        growing.random.game, barabasi.game, ba.game,
-       callaway.traits.game, establishment.game)
+       callaway.traits.game, establishment.game, grg.game,
+       preference.game, asymmetric.preference.game)
 
 # community structure
 
 export(community.eb, community.cut, edge.type.matrix,
-       modularity, community.eb2)
+       modularity, community.eb2, spinglass.community)
 
 # conversion
 
@@ -80,7 +82,8 @@ export(subgraph, simplify, degree, degree.distribution, diameter,
        shortest.paths, minimum.spanning.tree, edge.betweenness,
        get.shortest.paths, average.path.length, transitivity,
        get.all.shortest.paths, get.diameter, farthest.nodes,
-       graph.laplacian, constraint, page.rank, reciprocity, rewire)
+       graph.laplacian, constraint, page.rank, reciprocity, rewire,
+       graph.density, neighborhood.size, neighborhood, graph.neighborhood)
 
 # plotting
 
@@ -92,11 +95,12 @@ S3method(rglplot, igraph)
 
 # components
 
-export(clusters, cluster.distribution, is.connected, decompose.graph)
+export(clusters, cluster.distribution, is.connected, decompose.graph,
+       no.clusters)
 
 # centrality
 
-export(evcent)
+export(evcent, bonpow)
 
 # dynamics measurement
 
@@ -117,3 +121,9 @@ export(graph.disjoint.union, "%du%", graph.intersection, "%s%",
 # parameters, config
 
 export(igraph.par)
+
+# flows, cuts, etc.
+
+export(graph.maxflow, graph.mincut, vertex.connectivity, edge.connectivity,
+       edge.disjoint.paths, vertex.disjoint.paths, graph.adhesion,
+       graph.cohesion)

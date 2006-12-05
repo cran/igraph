@@ -8,6 +8,9 @@
 \alias{graph.tree}
 \alias{graph.full}
 \alias{graph.atlas}
+\alias{graph.edgelist}
+\alias{graph.data.frame}
+\alias{graph.extended.chordal.ring}
 \title{Various methods for creating graphs}
 \description{These method can create various (mostly regular) graphs:
   empty graphs, graphs with the given edges, graphs from adjacency
@@ -19,7 +22,7 @@ graph.lattice(dimvector = NULL, length = NULL, dim = NULL, nei = 1,
 \usage{
 graph.empty(n=0, directed=TRUE)
 graph(edges, n=max(edges)+1, directed=TRUE)
-graph.adjacency(adjmatrix, mode="directed")
+graph.adjacency(adjmatrix, mode="directed", weighted=NULL)
 graph.star(n, mode = "in", center = 0)
 graph.lattice(dimvector, nei = 1, directed = FALSE, mutual = FALSE, 
               circular = FALSE)
@@ -29,6 +32,9 @@ graph.ring(n, directed = FALSE, mutual = FALSE, circular=TRUE)
 graph.tree(n, children = 2, mode="out")
 graph.full(n, directed = FALSE, loops = FALSE)
 graph.atlas(n)
+graph.edgelist(el, directed=TRUE)
+graph.data.frame(d, directed=TRUE)
+graph.extended.chordal.ring(n, w)
 }
 \arguments{
   \item{edges}{Numeric vector defining the edges, the first edge points
@@ -85,13 +91,21 @@ graph.atlas(n)
     to their parents, while \code{undirected} creates an undirected
     graph. 
   }
+  \item{weighted}{This argument specifies whether to create a weighted
+    graph from an adjacency matrix. If it is \code{NULL} then an
+    unweighted graph is created and the elements of the adjacency matrix
+    gives the number of edges between the vertices. If it is a character
+    constant then for every non-zero matrix entry an edge is created and
+    the value of the entry is added as an edge attribute named by the
+    \code{weighted} argument. If it is \code{TRUE} then the name of the
+    edge attribute will be \code{weight}.}
   \item{center}{For \code{graph.star} the center vertex of the graph, by
     default the first vertex.}
   \item{dimvector}{A vector giving the size of the lattice in each
     dimension, for \code{graph.lattice}.}
   \item{nei}{The distance within which (inclusive) the neighbors on the
     lattice will be connected. This parameter is not used right now.}
-  \item{mutual}{Logical, if TRUE directed lattices we be mutually
+  \item{mutual}{Logical, if TRUE directed lattices will be mutually
     connected.} 
   \item{circular}{Logical, if TRUE the lattice or ring will be circular.}
   \item{length}{Integer constant, for regular lattices, the size of the
@@ -101,6 +115,11 @@ graph.atlas(n)
     (except for leafs) for \code{graph.tree}.}
   \item{loops}{If TRUE also loops edges (self edges) are added.}
   \item{graph}{An object.}
+  \item{el}{An edge list, a two column matrix, character or numeric. See
+    details below.}
+  \item{d}{A data frame object, this will be converted to a graph.}
+  \item{w}{A matrix which specifies the extended chordal ring. See
+    details below.}
 }
 \details{All these functions create graphs in a deterministic way.
 
@@ -137,6 +156,31 @@ graph.atlas(n)
       automorphisms.}
   }
 
+  \code{graph.edgelist} creates a graph from an edge list. Its argument
+  is a two-column matrix, each row defines one edge. If it is 
+  a numeric matrix then its elements are interpreted as vertex ids. If
+  it is a character matrix then it is interpreted as symbolic vertex
+  names and a vertex id will be assigned to each name, and also a
+  \code{name} vertex attribute will be added.
+  
+  \code{graph.data.frame} creates a graph from a data frame. The data
+  frame should have at least two columns. The first two columns will be
+  used as a symbolic edge list and the other columns will be added as
+  edge attributes.
+
+  \code{graph.extended.chordal.ring} creates an extended chordal ring.
+  An extended chordal ring is regular graph, each node has the same
+  degree. It can be obtained from a simple ring by adding some extra
+  edges specified by a matrix. Let p denote the number of columns in
+  the \sQuote{\code{W}} matrix. The extra edges of vertex \code{i}
+  are added according to column \code{i mod p} in
+  \sQuote{\code{W}}. The number of extra edges is the number
+  of rows in \sQuote{\code{W}}: for each row \code{j} an edge
+  \code{i->i+w[ij]} is added if \code{i+w[ij]} is less than the number
+  of total nodes. See also Kotsis, G: Interconnection Topologies for
+  Parallel Processing Systems, PARS Mitteilungen 11, 1-6, 1993.
+
+  
 }
 \value{Every function documented here returns a \code{graph} object.}
 %\references{}
@@ -147,12 +191,22 @@ g1 <- graph.empty()
 g2 <- graph( c(1,2,2,3,3,4,5,6), directed=FALSE )
 adjm <- matrix(sample(0:1, 100, replace=TRUE, prob=c(0.9,0.1)), nc=10)
 g3 <- graph.adjacency( adjm )
-g4 <- graph.star(10, mode="out")
-g5 <- graph.lattice(c(5,5,5))
-g6 <- graph.lattice(length=5, dim=3)
-g7 <- graph.ring(10)
-g8 <- graph.tree(10, 2)
-g9 <- graph.full(5, loops=TRUE)
-g10 <- graph.atlas(sample(0:1252, 1))
+adjm <- matrix(sample(0:5, 100, replace=TRUE,
+                      prob=c(0.9,0.02,0.02,0.02,0.02,0.02)), nc=10)
+g4 <- graph.adjacency(adjm, weighted=TRUE)
+E(g4)$weight
+g5 <- graph.star(10, mode="out")
+g6 <- graph.lattice(c(5,5,5))
+g7 <- graph.lattice(length=5, dim=3)
+g8 <- graph.ring(10)
+g9 <- graph.tree(10, 2)
+g10 <- graph.full(5, loops=TRUE)
+g11 <- graph.atlas(sample(0:1252, 1))
+el <- matrix( c("foo", "bar", "bar", "foobar"), nc=2, byrow=TRUE)
+g12 <- graph.edgelist(el)
+d <- as.data.frame(el)
+d$weight <- 1:2
+g13 <- graph.data.frame(d)
+g14 <- graph.extended.chordal.ring(15, matrix(c(3,12,4,7,8,11), nr=2))
 }
 \keyword{graphs}

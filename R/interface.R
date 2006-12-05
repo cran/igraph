@@ -29,20 +29,62 @@ graph.empty <- function(n=0, directed=TRUE) {
         PACKAGE="igraph")
 }
 
-add.edges <- function(graph, edges) {
+add.edges <- function(graph, edges, ..., attr=list()) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
-  .Call("R_igraph_add_edges", graph, as.numeric(edges),
-        PACKAGE="igraph")
+
+  attrs <- list(...)
+  attrs <- append(attrs, attr)
+  nam <- names(attrs)
+  if (length(attrs) != 0 && (is.null(nam) || any(nam==""))) {
+    stop("please supply names for attributes")
+  }
+  
+  edges.orig <- ecount(graph)  
+  graph <- .Call("R_igraph_add_edges", graph, as.numeric(edges),
+                 PACKAGE="igraph")
+  edges.new <- ecount(graph)
+  
+  if (edges.new-edges.orig != 0) {
+    idx <- seq(edges.orig+1, edges.new)
+  } else {
+    idx <- numeric()
+  }
+  for (i in seq(attrs)) {
+    graph[[9]][[4]][[nam[i]]][idx] <- attrs[[nam[i]]]
+  }  
+  
+  graph
 }
 
-add.vertices <- function(graph, nv) {
+add.vertices <- function(graph, nv, ..., attr=list()) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
-  .Call("R_igraph_add_vertices", graph, as.numeric(nv),
-        PACKAGE="igraph")
+
+  attrs <- list(...)
+  attrs <- append(attrs, attr)
+  nam <- names(attrs)
+  if (length(attrs) != 0 && (is.null(nam) || any(nam==""))) {
+    stop("please supply names for attributes")
+  }
+
+  vertices.orig <- vcount(graph)  
+  graph <- .Call("R_igraph_add_vertices", graph, as.numeric(nv),
+                 PACKAGE="igraph")
+  vertices.new <- vcount(graph)
+
+  if (vertices.new-vertices.orig != 0) {
+    idx <- seq(vertices.orig+1, vertices.new)
+  } else {
+    idx <- numeric()
+  }
+  for (i in seq(attrs)) {
+    graph[[9]][[3]][[nam[i]]][idx] <- attrs[[nam[i]]]
+  }
+                  
+  graph
 }
 
 delete.edges <- function(graph, edges) {

@@ -223,16 +223,26 @@ edge.betweenness <- function(graph, e=E(graph), directed=TRUE) {
         PACKAGE="igraph")[ as.numeric(e)+1 ]  
 }
 
-transitivity <- function(graph, type="undirected") {
+transitivity <- function(graph, type="undirected", vids=V(graph)) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
   if (is.character(type)) {
-    type <- switch(type, "undirected"=0)
+    type <- switch(type, "undirected"=0, "global"=0, "globalundirected"=0,
+                   "localundirected"=1, "local"=1, "average"=2,
+                   "localaverage"=2, "localaverageundirected"=2)
   }
-
-  .Call("R_igraph_transitivity", graph, as.numeric(type),
-        PACKAGE="igraph")
+  
+  if (type==0) {
+    .Call("R_igraph_transitivity_undirected", graph,
+          PACKAGE="igraph")
+  } else if (type==1) {
+    .Call("R_igraph_transitivity_local_undirected", graph, as.numeric(vids),
+          PACKAGE="igraph")
+  } else if (type==2) {
+    .Call("R_igraph_transitivity_avglocal_undirected", graph,
+          PACKAGE="igraph")
+  }
 }
 
 graph.laplacian <- function(graph, normalized=FALSE) {
@@ -240,43 +250,54 @@ graph.laplacian <- function(graph, normalized=FALSE) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
-  if (is.directed(graph)) {
-    warning("Laplacian of a directed graph???")
-  }
-
-  M <- get.adjacency(graph)
-  if (!normalized) {
-    M <- structure(ifelse(M>0, -1, 0), dim=dim(M))
-    diag(M) <- degree(graph)
-  } else {
-    deg <- degree(graph)
-    deg <- outer(deg, deg, "*")
-    M <- structure(ifelse(M>0, -1/deg, 0))
-    diag(M) <- 1
-  }
   
-  M
+  .Call("R_igraph_laplacian", graph, as.logical(normalized),
+        PACKAGE="igraph")
 }
+  
+## OLD implementation
+## graph.laplacian <- function(graph, normalized=FALSE) {
+
+##   if (!is.igraph(graph)) {
+##     stop("Not a graph object")
+##   }
+##   if (is.directed(graph)) {
+##     warning("Laplacian of a directed graph???")
+##   }
+
+##   M <- get.adjacency(graph)
+##   if (!normalized) {
+##     M <- structure(ifelse(M>0, -1, 0), dim=dim(M))
+##     diag(M) <- degree(graph)
+##   } else {
+##     deg <- degree(graph)
+##     deg <- outer(deg, deg, "*")
+##     M <- structure(ifelse(M>0, -1/deg, 0))
+##     diag(M) <- 1
+##   }
+  
+##   M
+## }
 
 ## Structural holes a'la Burt, code contributed by
 ## Jeroen Bruggeman
 
-## constraint <- function(graph, nodes=V(graph)) {
+## constraint.orig <- function(graph, nodes=V(graph), attr=NULL) {
 
 ##   if (!is.igraph(graph)) {
 ##     stop("Not a graph object")
 ##   }
 
 ##   idx <- degree(graph) != 0
-##   A <- get.adjacency(graph)
+##   A <- get.adjacency(graph, attr=attr)
 ##   A <- A[idx, idx]
 ##   n <- sum(idx)
   
 ##   one <- c(rep(1,n))
 ##   CZ <- A + t(A)
-##   cs <- CZ %*% one
+##   cs <- CZ %*% one                      # degree of vertices
 ##   ics <- 1/cs
-##   CS <- ics %*% t(one)
+##   CS <- ics %*% t(one)                  # 1/degree of vertices
 ##   P <- CZ * CS  #intermediate result: proportionate tie strengths
 ##   PSQ <- P%*%P #sum paths of length two
 ##   P.bi <- as.numeric(P>0)  #exclude paths to non-contacts (& reflexive):
@@ -290,39 +311,65 @@ graph.laplacian <- function(graph, normalized=FALSE) {
 ##   ci2[nodes+1]
 ## }
 
-## Second implementation
+## Newest implementation, hopefully correct, there is a C implementation
+## now so we don't need this
 
-## constraint <- function(graph, nodes=V(graph)) {
+## constraint.old <- function(graph, nodes=V(graph)) {
 
 ##   if (!is.igraph(graph)) {
 ##     stop("Not a graph object")
 ##   }
 
-##   nodes <-as.numeric(nodes)
-  
-##   weights <- 1/degree(graph)
+##   nodes <- as.numeric(nodes)
 ##   res <- numeric(length(nodes))
-##   for (i in seq(along=nodes)) {
-##     res[i] <- res[i] + weights[nodes[i]+1]
-##     first <- neighbors(graph, nodes[i], mode="all")
-##     first <- first [ first != nodes[i] ]
-##     for (j in seq(along=first)) {
-##       second <- neighbors(graph, first[j], mode="all")
-##       second <- second [ second %in% first ]
-##       res[i] <- res[i] + sum(weights[first[j]+1] * weights[second+1])
+##   deg <- degree(graph, mode="all", loops=FALSE)
+
+##   not <- function(i, v) v[ v!=i ]
+
+##   for (a in seq(along=nodes)) {
+##     i <- nodes[a]
+    
+##     first <- not(i, neighbors(graph, i, mode="all"))
+##     first <- unique(first)
+##     for (b in seq(along=first)) {
+##       j <- first[b]
+
+##       ## cj is the contribution of j
+##       cj <- are.connected(graph, i, j)      / deg[i+1]
+##       cj <- cj + are.connected(graph, j, i) / deg[i+1]
+
+##       second <- not(i, not(j, neighbors(graph, j, mode="all")))
+##       for (c in seq(along=second)) {
+##         q <- second[c]
+##         cj <- cj + are.connected(graph, i, q) / deg[q+1] / deg[i+1]
+##         cj <- cj + are.connected(graph, q, i) / deg[q+1] / deg[i+1]
+##       }
+                            
+##       ## Ok, we have the total contribution of j
+##       res[a] <- res[a] + cj*cj
 ##     }
 ##   }
-##   res [ res == Inf ] <- NaN
+
+##   if (!is.directed(graph)) {
+##     res <- res/4
+##   }
 ##   res
 ## }
 
-constraint <- function(graph, nodes=V(graph)) {
+constraint <- function(graph, nodes=V(graph), weights=NULL) {
 
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
 
+  if (is.null(weights)) {
+    if ("weight" %in% list.edge.attributes(graph)) {
+      weights <- E(g)$weight
+    }
+  }
+  
   .Call("R_igraph_constraint", graph, as.igraph.vs(nodes),
+        as.numeric(weights),        
         PACKAGE="igraph")
 }
 
@@ -360,5 +407,76 @@ rewire <- function(graph, mode="simple", niter=100) {
   }
   
   .Call("R_igraph_rewire", graph, as.numeric(niter), as.numeric(mode),
+        PACKAGE="igraph")
+}
+
+bonpow <- function(graph, nodes=V(graph),
+                   loops=FALSE, exponent=1,
+                   rescale=FALSE, tol=1e-7){
+
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }  
+  
+  d <- get.adjacency(graph)
+  if (!loops) {
+    diag(d) <- 0
+  }
+  n <- vcount(graph)
+  id <- matrix(0,nrow=n,ncol=n)
+  diag(id) <- 1
+
+  ev <- apply(solve(id-exponent*d,tol=tol)%*%d,1,sum)
+  if(rescale) {
+    ev <- ev/sum(ev)
+  } else {
+    ev <- ev*sqrt(n/sum((ev)^2))
+  } 
+  ev[as.numeric(nodes)+1]
+}
+
+graph.density <- function(graph, loops=FALSE) {
+
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }  
+  
+  .Call("R_igraph_density", graph, as.logical(loops),
+        PACKAGE="igraph")
+}
+
+neighborhood.size <- function(graph, order, nodes=V(graph), mode="all") {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  if (is.character(mode)) {
+    mode <- switch(mode, "out"=1, "in"=2, "all"=3)
+  }
+  .Call("R_igraph_neighborhood_size", graph, 
+        as.igraph.vs(nodes), as.numeric(order), as.numeric(mode),
+        PACKAGE="igraph")
+}
+
+neighborhood <- function(graph, order, nodes=V(graph), mode="all") {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  if (is.character(mode)) {
+    mode <- switch(mode, "out"=1, "in"=2, "all"=3)
+  }
+  .Call("R_igraph_neighborhood", graph, 
+        as.igraph.vs(nodes), as.numeric(order), as.numeric(mode),
+        PACKAGE="igraph")
+}
+
+graph.neighborhood <- function(graph, order, nodes=V(graph), mode="all") {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  if (is.character(mode)) {
+    mode <- switch(mode, "out"=1, "in"=2, "all"=3)
+  }
+  .Call("R_igraph_neighborhood_graphs", graph, 
+        as.igraph.vs(nodes), as.numeric(order), as.numeric(mode),
         PACKAGE="igraph")
 }

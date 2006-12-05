@@ -104,7 +104,7 @@
 */
 #include <stdio.h>
 #include <string.h>
-extern int igraph_lgl_yylex();
+extern int igraph_lgl_yylex(void);
 extern long int igraph_lgl_mylineno;
 extern char *igraph_lgl_yytext;
 extern int igraph_lgl_yyleng;
@@ -116,7 +116,7 @@ extern igraph_vector_t *igraph_lgl_vector;
 extern igraph_vector_t *igraph_lgl_weights;
 extern igraph_trie_t *igraph_lgl_trie;
 igraph_real_t igraph_lgl_get_number(const char *str, long int len);
-void igraph_i_lgl_reset_scanner();
+void igraph_i_lgl_reset_scanner(void);
 long int igraph_lgl_actvertex;
 
 

@@ -1,3 +1,219 @@
+2006-12-05  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/src/rinterface.c (R_igraph_laplacian) :
+	bug corrected
+
+2006-12-04  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/src/rinterface.c 
+	(R_igraph_get_all_shortest_paths) : memory leak corrected
+	(R_igraph_neighborhood, R_igraph_neighborhood_graphs) : bug corrected
+
+	* interfaces/R/igraph/R/games.c (preference.game)
+	(asymmetric.preference.game) : 'PACKAGE' argument added to .Call
+
+2006-12-01  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/igraph/games,R (preference.game)
+	(asymmetric.preference.game) : added
+	* interfaces/R/igraph/R/src/rinterface.c 
+	(R_igraph_preference_game, R_igraph_asymmetric_preference_game) :
+	added
+
+	* interfaces/R/igraph/R/igraph/structural.properties.R 
+	(graph.laplacian) : updated to use the C version
+	* interfaces/R/src/rinterface.c (R_igraph_laplacian) : added
+
+2006-11-28  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structural.properties.R (transitivity) :
+	added local average type
+	* interfaces/R/src/rinterface.c 
+	(R_igraph_transitivity_avglocal_undirected) : added
+
+2006-11-24  Gabor Csardi  <csardi@kzoo.edu>
+
+	* interfaces/R/igraph/R/structural.properties.R (neighborhood.size)
+	(neighborhood, graph.neighborhood) : added
+	* interfaces/R/src/rinterface.c (R_igraph_neighborhood_size)
+	(R_igraph_neighborhood, R_igraph_neighborhood_graphs) : added
+	
+
+2006-11-19  Gabor Csardi  <csardi@kzoo.edu>
+
+	* interfaces/R/igraph/R/structural.properties.R (transitivity) :
+	slightly rewritten, updated, more types are supported now
+	* interfaces/R/src/rinterface.c (R_igraph_transitivity) : removed
+	(R_igraph_transitivity_undirected)
+	(R_igraph_transitivity_local_undirected) : added
+	
+
+2006-11-18  Gabor Csardi  <csardi@kzoo.edu>
+
+	* interfaces/R/igraph/R/components.R (no.clusters) : added
+	* interfaces/R/src/rinterface.c (R_igraph_no_clusters) : added
+
+	* interfaces/R/igraph/R/minimum.spannin.tree.R (minimum.spanning.tree)
+	: use 'weight' edge attribute automatically if present
+	
+2006-11-14  Gabor Csardi  <csardi@kzoo.edu>
+
+	* interfaces/R/igraph/R/structure.generators.R 
+	(graph.extended.chordal.ring) : added
+	* interfaces/R/src/rinterface.c (R_igraph_extended_chordal_ring) :
+	added
+
+2006-11-09  Gabor Csardi  <csardi@kzoo.edu>
+
+	* interfaces/R/src/rinterface.c (R_igraph_spinglass_my_community) :
+	return more data: cohesion, adhesion, inner & outer links
+
+2006-11-07  Gabor Csardi  <csardi@kzoo.edu>
+
+	* interfaces/R/igraph/R/community.R (spinglass.community) :
+	removed unneccesary arguments from .Call
+	* interfaces/R/src/rinterface.c (R_igraph_spinglass_my_community) :
+	removed unneccesary arguments
+
+2006-11-06  Gabor Csardi  <csardi@kzoo.edu>
+
+	* interfaces/R/igraph/R/community.R (spinglass.community) : added
+	* interfaces/R/src/rinterface.c (R_igraph_spinglass_community) 
+	(R_igraph_spinglass_my_community) : added
+
+2006-10-21  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structure.generators.R (graph.adjacency) :
+	added 'weighted' argument to create weighted graphs
+
+2006-10-18  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structural.properties.R (constraint) :
+	weight parameter added
+	* interfaces/R/igraph/src/rinterface.c (R_igraph_constraint) :
+	weight parameter added
+
+2006-10-08  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/flow.R (graph.vertex.mincut) : removed
+	(graph.maxflow, graph.mincut, vertex.connectivity, edge.connectivity)
+	(edge.disjoint.paths, vertex.disjoint.paths, graph.adhesion)
+	(graph.cohesion) : rewritten
+	* interfaces/R/src/rinterface.c (R_igraph_edge_connectivity_pair)
+	(R_igraph_vertex_connectivity_pair, R_igraph_minimum_cut) 
+	(R_igraph_minimum_vertex_cut_pair, R_igraph_minimum_vertex_cut) :
+	removed
+	(R_igraph_mincut_value, R_igraph_st_vertex_connectivity)
+	(R_igraph_vertex_connectivity, R_igraph_st_edge_connectivity)
+	(R_igraph_edge_connectivity, R_igraph_st_mincut_value)
+	(R_igraph_edge_disjoint_paths, R_igraph_vertex_disjoint_paths)
+	(R_igraph_adhesion, R_igraph_cohesion) : added
+
+2006-10-06  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/src/rinterface.c (R_igraph_attribute_permute_edges) :
+	added
+
+2006-10-05  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/flow.R (graph.mincut, graph.vertex.mincut) :
+	added
+	* interfaces/R/src/rinterface.c (R_igraph_minimum_cut)
+	(R_igraph_minimum_vertex_cut_pair, R_igraph_minimum_vertex_cut)
+
+2006-09-28  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/flow.R (edge.connectivity, graph.adhesion)
+	(edge.dosjoint.paths, vertex.connectivity, graph.cohesion)
+	(vertex.disjoint.paths) : added
+	* interfaces/R/src/rinterface.c (R_igraph_edge_connectivity_pair)
+	(R_igraph_edge_connectivity, R_igraph_vertex_connectivity_pair)
+	(R_igraph_vertex_connectivity) : added
+
+2006-09-27  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/flow.R (graph.maxflow) : bug corrected
+
+2006-09-26  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/foreign.R (read.graph, write.graph) : 
+	dimacs format added
+	(read.graph.dimacs, write.graph.dimacs) : added
+	* interfaces/R/src/rinterface.c (R_igraph_read_graph_dimacs)
+	(R_igraph_write_graph_dimacs) : added
+
+2006-09-25  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structural.properties.R (graph.density) :
+	added loops argument
+	* interfaces/R/src/rinterface.c (R_igraph_density) : added loops 
+	argument
+
+	* interfaces/R/igraph/R/conversion.R (get.edgelist) : bug corrected
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : removed unused 
+	argument 'loop.cex'
+
+	* interfaces/R/igraph/R/structural.properties.R (bonpow) : removed
+	unused argument 'tmaxdev'
+
+2006-09-24  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structure.generators.R (graph.edgelist) : added
+
+	* interfaces/R/igraph/R/conversion.R (get.edgelist) : names argument 
+	added
+	* interfaces/R/igraph/R/print.R (print.igraph) : updated
+	* interfaces/R/igraph/R/community.R (edge.type.matrix) : updated
+	* interfaces/R/igraph/R/plot.R (rglplot) : updated
+
+	* interfaces/R/igraph/R/flow.R (graph.maxflow) : added
+	* interfaces/R/src/rinterface.c (R_igraph_maxflow) : added
+	
+2006-09-22  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : loop edges added
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : more advanced loops
+	* interfaces/R/igraph/R/tkplot.R (tkplot, .tkplot.update.edge)
+	(.tkplot.create.edge) : loop edges added
+	
+2006-09-21  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/interace.R (add.vertices, add.edges) :
+	attr argument added
+	* interfaces/R/igraph/R/structure.generators.R (graph.data.frame) : 
+	added
+
+	* interfaces/R/igraph/R/structure.generators.R (graph.data.frame) : 
+	directed argument added
+	
+2006-09-15  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structural.properties.R (graph.density) : added
+	* interfaces/R/src/rinterface.c (R_igraph_density) : added
+
+	* interfaces/R/igraph/R/interface.R (add.edges) : attribute handling
+	added
+
+	* interfaces/R/igraph/R/interface.R (add.vertices) : attribute handling
+	added
+	
+2006-09-05  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/games.R (grg.game) : added
+	* interfaces/R/src/rinterface.c (R_igraph_grg_game) : added
+
+2006-09-03  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/conversion.R (get.adjacency) : added 'attr', 
+	'names' and 'binary' arguments
+
+2006-08-29  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structural.properties.R (bonpow) : added, 
+	ported from SNA
+
 2006-08-21  Gabor Csardi  <csardi@rmki.kfki.hu>
 
 	* interfaces/R/igraph/R/iterators.R (E<-) : value is last argument,

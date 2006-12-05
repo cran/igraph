@@ -24,6 +24,18 @@
 #ifndef REST_TYPES_H
 #define REST_TYPES_H
 
+#undef __BEGIN_DECLS
+#undef __END_DECLS
+#ifdef __cplusplus
+# define __BEGIN_DECLS extern "C" {
+# define __END_DECLS }
+#else
+# define __BEGIN_DECLS /* empty */
+# define __END_DECLS /* empty */
+#endif
+
+__BEGIN_DECLS
+
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE
 #endif
@@ -154,6 +166,8 @@ int igraph_vector_filter_smaller(igraph_vector_t *v, igraph_real_t elem);
 int igraph_vector_append(igraph_vector_t *to, const igraph_vector_t *from);
 int igraph_vector_get_interval(const igraph_vector_t *v, igraph_vector_t *res,
 			       long int from, long int to);
+int igraph_vector_rank(const igraph_vector_t *v, igraph_vector_t *res, 
+		       long int nodes);
 
 /* -------------------------------------------------- */
 /* Flexible vector, storing pointers                  */
@@ -585,6 +599,43 @@ int igraph_hashtable_get(igraph_hashtable_t *ht,
 int igraph_hashtable_getkeys(igraph_hashtable_t *ht, 
 			     const igraph_strvector_t **sv);
 int igraph_hashtable_reset(igraph_hashtable_t *ht);
+
+/* Buckets, needed for the maximum flow algorithm */
+
+typedef struct igraph_buckets_t {
+  igraph_vector_t bptr;
+  igraph_vector_t buckets;
+  igraph_integer_t max, no;
+} igraph_buckets_t;
+
+int igraph_buckets_init(igraph_buckets_t *b, long int bsize, long int size);
+void igraph_buckets_destroy(igraph_buckets_t *b);
+long int igraph_buckets_popmax(igraph_buckets_t *b);
+igraph_bool_t igraph_buckets_empty(const igraph_buckets_t *b);
+void igraph_buckets_add(igraph_buckets_t *b, long int bucket,
+		       igraph_real_t elem);
+
+/* Special maximum heap, needed for the minimum cut algorithm */
+
+typedef struct igraph_i_cutheap_t {
+  igraph_vector_t heap;
+  igraph_vector_t index;
+  igraph_vector_t hptr;
+  long int dnodes;
+} igraph_i_cutheap_t;
+
+int igraph_i_cutheap_init(igraph_i_cutheap_t *ch, igraph_integer_t nodes);
+void igraph_i_cutheap_destroy(igraph_i_cutheap_t *ch);
+igraph_bool_t igraph_i_cutheap_empty(igraph_i_cutheap_t *ch);
+igraph_integer_t igraph_i_cutheap_active_size(igraph_i_cutheap_t *ch);
+igraph_integer_t igraph_i_cutheap_size(igraph_i_cutheap_t *ch);
+igraph_real_t igraph_i_cutheap_maxvalue(igraph_i_cutheap_t *ch);
+igraph_integer_t igraph_i_cutheap_popmax(igraph_i_cutheap_t *ch);
+int igraph_i_cutheap_update(igraph_i_cutheap_t *ch, igraph_integer_t index,
+			    igraph_real_t add);
+int igraph_i_cutheap_reset_undefine(igraph_i_cutheap_t *ch, long int vertex);
+
+__END_DECLS
 
 #endif
 

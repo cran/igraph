@@ -26,7 +26,7 @@ graph <- function( edges, n=max(edges)+1, directed=TRUE ) {
         PACKAGE="igraph")
 }
 
-graph.adjacency <- function( adjmatrix, mode="directed" ) {
+graph.adjacency <- function( adjmatrix, mode="directed", weighted=NULL ) {
   mode <- switch(mode,
                  "directed"=0,
                  "undirected"=1,
@@ -35,11 +35,54 @@ graph.adjacency <- function( adjmatrix, mode="directed" ) {
                  "lower"=3,
                  "min"=4,
                  "plus"=5)
-  attrs <- attributes(adjmatrix)
-  adjmatrix <- as.numeric(adjmatrix)
-  attributes(adjmatrix) <- attrs
-  .Call("R_igraph_graph_adjacency", adjmatrix, as.numeric(mode),
-        PACKAGE="igraph")
+  if (!is.null(weighted)) {
+    if (is.logical(weighted) && weighted) {
+      weighted <- "weight"
+    }
+    if (!is.character(weighted)) {
+      stop("invalid value supplied for `weighted' argument, please see docs.")
+    }
+
+    if (nrow(adjmatrix) != ncol(adjmatrix)) {
+      stop("not a square matrix")
+    }
+    
+    no.edges <- sum(adjmatrix > 0)
+    edges <- numeric(2*no.edges)
+    weight <- numeric(no.edges)
+    ptr <- 1
+    if (no.edges == 0) {
+      res <- graph.empty(directed=(mode==0))
+      res <- set.edge.attribute(res, weighted, value=1)
+      res
+    } else {
+      for (i in 1:nrow(adjmatrix)) {
+        for (j in 1:ncol(adjmatrix)) {
+          if (adjmatrix[i,j] != 0) {
+            edges[2*ptr-1] <- i-1
+            edges[2*ptr] <- j-1
+            weight[ptr] <- adjmatrix[i,j]
+            ptr <- ptr + 1
+          }          
+        }
+      }
+      res <- graph.empty(n=nrow(adjmatrix), directed=(mode==0))
+      weight <- list(weight)
+      names(weight) <- weighted
+      res <- add.edges(res, edges, attr=weight)
+      res
+    }
+    
+  } else {
+  
+    adjmatrix <- as.matrix(adjmatrix)
+    attrs <- attributes(adjmatrix)
+    adjmatrix <- as.numeric(adjmatrix)
+    attributes(adjmatrix) <- attrs
+    
+    .Call("R_igraph_graph_adjacency", adjmatrix, as.numeric(mode),
+          PACKAGE="igraph")
+  }
 }
   
 
@@ -146,5 +189,79 @@ graph.tree <- function(n, children=2, mode="out") {
 graph.atlas <- function(n) {
 
   .Call("R_igraph_atlas", as.numeric(n),
+        PACKAGE="igraph")
+}
+
+###################################################################
+# Create a graph from a data frame
+###################################################################
+
+graph.data.frame <- function(d, directed=TRUE) {
+
+  if (ncol(d) < 2) {
+    stop("the data frame should contain at least two columns")
+  }
+
+  # assign vertex ids
+  names <- unique( c(as.character(d[,1]), as.character(d[,2])) )
+  ids <- seq(along=names)-1
+  names(ids) <- names
+
+  # create graph
+  g <- graph.empty(n=0, directed=directed)
+  g <- add.vertices(g, length(ids), name=names)
+
+  # create edge list
+  from <- as.character(d[,1])
+  to <- as.character(d[,2])
+  edges <- t(matrix(c(ids[from], ids[to]), nc=2))
+
+  # edge attributes
+  attrs <- list()
+  if (ncol(d) > 2) {
+    for (i in 3:ncol(d)) {
+      newval <- d[,i]
+      if (class(newval) == "factor") {
+        newval <- as.character(newval)
+      }
+      attrs[[ names(d)[i] ]] <- newval
+    }
+  }
+  
+  # add the edges
+  g <- add.edges(g, edges, attr=attrs)
+  g
+}
+
+graph.edgelist <- function(el, directed=TRUE) {
+
+  if (!is.matrix(el) || ncol(el) != 2) {
+    stop("graph.edgelist expects a matrix with two columns")
+  }
+
+  if (nrow(el) == 0) {
+    res <- graph.empty(directed=directed)
+  } else {  
+    if (is.character(el)) {
+      ## symbolic edge list
+      names <- unique(as.character(t(el)))
+      ids <- seq(names)-1
+      names(ids) <- names
+      res <- graph( unname(ids[t(el)]), directed=directed)
+      rm(ids)
+      V(res)$name <- names
+    } else {
+      ## normal edge list
+      res <- graph( t(el), directed=directed )
+    }
+  }
+
+  res
+}
+
+graph.extended.chordal.ring <- function(n, w) {
+  
+  .Call("R_igraph_extended_chordal_ring", as.numeric(n),
+        as.matrix(w),
         PACKAGE="igraph")
 }

@@ -126,6 +126,7 @@ int igraph_get_adjacency(const igraph_t *graph, igraph_matrix_t *res,
  * \function igraph_get_edgelist
  * \brief Returns the list of edges in a graph
  * 
+ * </para><para>The order of the edges is given by the edge ids.
  * \param graph Pointer to the graph object
  * \param res Pointer to an initialized vector object, it will be
  *        resized.
@@ -147,7 +148,8 @@ int igraph_get_edgelist(const igraph_t *graph, igraph_vector_t *res, igraph_bool
   igraph_integer_t from, to;
   
   IGRAPH_CHECK(igraph_vector_resize(res, no_of_edges*2));
-  IGRAPH_CHECK(igraph_eit_create(graph, igraph_ess_all(0), &edgeit));
+  IGRAPH_CHECK(igraph_eit_create(graph, igraph_ess_all(IGRAPH_EDGEORDER_ID),
+				 &edgeit));
   IGRAPH_FINALLY(igraph_eit_destroy, &edgeit);
   
   if (bycol) {
@@ -214,11 +216,6 @@ int igraph_get_edgelist(const igraph_t *graph, igraph_vector_t *res, igraph_bool
 
 int igraph_to_directed(igraph_t *graph,
 		       igraph_to_directed_t mode) {
-  long int no_of_nodes=igraph_vcount(graph);
-  long int no_of_edges=igraph_ecount(graph);
-  igraph_vector_t edges;
-  long int size;
-  igraph_t orig;
 
   if (mode != IGRAPH_TO_DIRECTED_ARBITRARY &&
       mode != IGRAPH_TO_DIRECTED_MUTUAL) {
@@ -230,94 +227,68 @@ int igraph_to_directed(igraph_t *graph,
   }
 
   if (mode==IGRAPH_TO_DIRECTED_ARBITRARY) {
-    size=no_of_edges*2;
-  } else if (mode==IGRAPH_TO_DIRECTED_MUTUAL) {
-    size=no_of_edges*4;
-  }
 
-  IGRAPH_VECTOR_INIT_FINALLY(&edges, size);
-  size=0;
+    igraph_t newgraph;
+    igraph_vector_t edges;
+    long int no_of_edges=igraph_ecount(graph);
+    long int no_of_nodes=igraph_vcount(graph);
+    long int size=no_of_edges*2;
+    IGRAPH_VECTOR_INIT_FINALLY(&edges, size);
+    IGRAPH_CHECK(igraph_get_edgelist(graph, &edges, 0));
 
-  if (mode==IGRAPH_TO_DIRECTED_ARBITRARY) {
-    igraph_es_t es;
-    igraph_eit_t eit;
-    IGRAPH_CHECK(igraph_es_all(&es, IGRAPH_EDGEORDER_ID));
-    IGRAPH_FINALLY(igraph_es_destroy, &es);
-    IGRAPH_CHECK(igraph_eit_create(graph, es, &eit));
-    IGRAPH_FINALLY(igraph_eit_destroy, &eit);
-    
-    while (!IGRAPH_EIT_END(eit)) {
-      long int edge=IGRAPH_EIT_GET(eit);
-      igraph_integer_t from, to;
-      igraph_edge(graph, edge, &from, &to);
-      VECTOR(edges)[size++] = from;
-      VECTOR(edges)[size++] = to;
-      IGRAPH_EIT_NEXT(eit);
-    }
-    
-    igraph_eit_destroy(&eit);
-    igraph_es_destroy(&es);
+    IGRAPH_CHECK(igraph_create(&newgraph, &edges, no_of_nodes,
+			       IGRAPH_DIRECTED));
+    IGRAPH_FINALLY(igraph_destroy, &newgraph);
+    igraph_vector_destroy(&edges);
+    IGRAPH_I_ATTRIBUTE_DESTROY(&newgraph);
+    IGRAPH_I_ATTRIBUTE_COPY(&newgraph, graph);
     IGRAPH_FINALLY_CLEAN(2);
-  } else if (mode==IGRAPH_TO_DIRECTED_MUTUAL) {
-    igraph_es_t es;
-    igraph_eit_t eit;
-    IGRAPH_CHECK(igraph_es_all(&es, IGRAPH_EDGEORDER_ID));
-    IGRAPH_FINALLY(igraph_es_destroy, &es);
-    IGRAPH_CHECK(igraph_eit_create(graph, es, &eit));
-    IGRAPH_FINALLY(igraph_eit_destroy, &eit);
+    igraph_destroy(graph);
+    *graph=newgraph;
 
-    while (!IGRAPH_EIT_END(eit)) {
-      long int edge=IGRAPH_EIT_GET(eit);
-      igraph_integer_t from, to;
-      igraph_edge(graph, edge, &from, &to);
-      VECTOR(edges)[size++] = from;
-      VECTOR(edges)[size++] = to;
-      VECTOR(edges)[size++] = to;
-      VECTOR(edges)[size++] = from;
-      IGRAPH_EIT_NEXT(eit);
-    }
+  } else if (mode==IGRAPH_TO_DIRECTED_MUTUAL) {
     
-    igraph_eit_destroy(&eit);
-    igraph_es_destroy(&es);
-    IGRAPH_FINALLY_CLEAN(2);
+    igraph_t newgraph;
+    igraph_vector_t edges;
+    igraph_vector_t index;
+    long int no_of_edges=igraph_ecount(graph);
+    long int no_of_nodes=igraph_vcount(graph);
+    long int size=no_of_edges*4;
+    long int i;
+    IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
+    IGRAPH_CHECK(igraph_vector_reserve(&edges, size));
+    IGRAPH_CHECK(igraph_get_edgelist(graph, &edges, 0));
+    IGRAPH_CHECK(igraph_vector_resize(&edges, no_of_edges*4));
+    IGRAPH_VECTOR_INIT_FINALLY(&index, no_of_edges*2);
+    for (i=0; i<no_of_edges; i++) {
+      VECTOR(edges)[no_of_edges*2+i*2]  =VECTOR(edges)[i*2+1];
+      VECTOR(edges)[no_of_edges*2+i*2+1]=VECTOR(edges)[i*2];
+      VECTOR(index)[i] = VECTOR(index)[no_of_edges+i] = i+1;
+    }
+
+    IGRAPH_CHECK(igraph_create(&newgraph, &edges, no_of_nodes,
+			       IGRAPH_DIRECTED));
+    IGRAPH_FINALLY(igraph_destroy, &newgraph);
+    IGRAPH_I_ATTRIBUTE_DESTROY(&newgraph);
+    IGRAPH_I_ATTRIBUTE_COPY(&newgraph, graph);
+    IGRAPH_CHECK(igraph_i_attribute_permute_edges(&newgraph, &index));
+    
+    igraph_vector_destroy(&index);
+    igraph_vector_destroy(&edges);
+    igraph_destroy(graph);
+    IGRAPH_FINALLY_CLEAN(3);
+    *graph=newgraph;
   }
   
-  orig=*graph;
-  IGRAPH_CHECK(igraph_create(graph, &edges, no_of_nodes, IGRAPH_DIRECTED));
-  igraph_destroy(&orig);
-  igraph_vector_destroy(&edges);
-  IGRAPH_FINALLY_CLEAN(1);
   return 0;
 }
 
 /**
  * \function igraph_to_undirected
- * \brief Convert a directed graph to and undirected one.
+ * \brief Convert a directed graph to an undirected one.
  * 
  * </para><para>
- * If the supplied graph is undirected, this function not nothing.
- * \param graph The graph object to convert.
- * \param mode Constant, specifies the details of how exactly the
- *        convesion is done. Possible values: \c 
- *        IGRAPH_TO_UNDIRECTED_EACH: the number of edges remains
- *        constant, an undirected edge is created for each directed
- *        one, this version might create graphs with multiple edges; 
- *        \c IGRAPH_TO_UNDIRECTED_COLLAPSE: one undirected edge will
- *        be created for each pair of vertices which are connected
- *        with at least one directed edge, no multiple edges will be
- *        created. 
- * \return Error code.
- * 
- * Time complexity: O(|V|+|E|), the number of vertices plus the number
- * of edges. 
- */
-
-/**
- * \function igraph_to_undirected
- * \brief Convert a directed graph to and undirected one.
- * 
- * </para><para>
- * If the supplied graph is undirected, this function not nothing.
+ * If the supplied graph is undirected, this function does nothing.
  * \param graph The graph object to convert.
  * \param mode Constant, specifies the details of how exactly the
  *        convesion is done. Possible values: \c 

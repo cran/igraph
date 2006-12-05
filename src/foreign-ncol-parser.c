@@ -103,7 +103,7 @@
 
 #include <stdio.h>
 #include <string.h>
-extern int igraph_ncol_yylex();
+extern int igraph_ncol_yylex(void);
 extern long int igraph_ncol_mylineno;
 extern char *igraph_ncol_yytext;
 extern int igraph_ncol_yyleng;
@@ -115,7 +115,7 @@ extern igraph_vector_t *igraph_ncol_vector;
 extern igraph_vector_t *igraph_ncol_weights;
 extern igraph_trie_t *igraph_ncol_trie;
 igraph_real_t igraph_ncol_get_number(const char *str, long int len);
-void igraph_i_ncol_reset_scanner();
+void igraph_i_ncol_reset_scanner(void);
 
 
 /* Enabling traces.  */
