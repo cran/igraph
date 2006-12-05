@@ -223,7 +223,7 @@ edge.betweenness <- function(graph, e=E(graph), directed=TRUE) {
         PACKAGE="igraph")[ as.numeric(e)+1 ]  
 }
 
-transitivity <- function(graph, type="undirected", vids=V(graph)) {
+transitivity <- function(graph, type="undirected", vids=NULL) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
@@ -237,8 +237,14 @@ transitivity <- function(graph, type="undirected", vids=V(graph)) {
     .Call("R_igraph_transitivity_undirected", graph,
           PACKAGE="igraph")
   } else if (type==1) {
-    .Call("R_igraph_transitivity_local_undirected", graph, as.numeric(vids),
-          PACKAGE="igraph")
+    if (is.null(vids)) {
+      .Call("R_igraph_transitivity_local_undirected_all", graph,
+            PACKAGE="igraph")
+    } else {
+      vids <- as.igraph.vs(vids)
+      .Call("R_igraph_transitivity_local_undirected", graph, as.numeric(vids),
+            PACKAGE="igraph")
+    }
   } else if (type==2) {
     .Call("R_igraph_transitivity_avglocal_undirected", graph,
           PACKAGE="igraph")
@@ -426,12 +432,35 @@ bonpow <- function(graph, nodes=V(graph),
   id <- matrix(0,nrow=n,ncol=n)
   diag(id) <- 1
 
-  ev <- apply(solve(id-exponent*d,tol=tol)%*%d,1,sum)
+#  ev <- apply(solve(id-exponent*d,tol=tol)%*%d,1,sum)
+  ev <- solve(id-exponent*d, tol=tol) %*% apply(d,1,sum)
   if(rescale) {
     ev <- ev/sum(ev)
   } else {
     ev <- ev*sqrt(n/sum((ev)^2))
   } 
+  ev[as.numeric(nodes)+1]
+}
+
+alpha.centrality <- function(graph, nodes=V(graph), alpha=1,
+                             loops=FALSE, exo=1,
+                             tol=1e-7) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+
+  exo <- rep(exo, length=vcount(graph))
+  exo <- matrix(exo, nc=1)
+
+  d <- t(get.adjacency(graph))
+  if (!loops) {
+    diag(d) <- 0
+  }
+  n <- vcount(graph)
+  id <- matrix(0, nrow=n, ncol=n)
+  diag(id) <- 1
+  
+  ev <- solve(id-alpha*d, tol=tol) %*% exo
   ev[as.numeric(nodes)+1]
 }
 
@@ -480,3 +509,15 @@ graph.neighborhood <- function(graph, order, nodes=V(graph), mode="all") {
         as.igraph.vs(nodes), as.numeric(order), as.numeric(mode),
         PACKAGE="igraph")
 }
+
+graph.coreness <- function(graph, mode="all") {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+  if (is.character(mode)) {
+    mode <- switch(mode, "out"=1, "in"=2, "all"=3)
+  }
+  .Call("R_igraph_coreness", graph, as.numeric(mode),
+        PACKAGE="igraph")
+}
+

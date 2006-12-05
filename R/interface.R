@@ -25,7 +25,16 @@
 ###################################################################
 
 graph.empty <- function(n=0, directed=TRUE) {
-  .Call("R_igraph_empty", as.numeric(n), as.logical(directed),
+  n <- as.numeric(n);
+  directed <- as.logical(directed);
+  .Call("R_igraph_empty", n, directed,
+        PACKAGE="igraph")
+}
+
+graph.empty <- function(n=0, directed=TRUE) {
+  n <- as.numeric(n);
+  directed <- as.logical(directed);
+  .Call("R_igraph_empty", n, directed,
         PACKAGE="igraph")
 }
 

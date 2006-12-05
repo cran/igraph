@@ -488,6 +488,7 @@ typedef struct s_igraph_trie {
 int igraph_trie_init(igraph_trie_t *t, igraph_bool_t storekeys);
 void igraph_trie_destroy(igraph_trie_t *t);
 int igraph_trie_get(igraph_trie_t *t, const char *key, long int *id);
+int igraph_trie_check(igraph_trie_t *t, const char *key, long int *id);
 int igraph_trie_get2(igraph_trie_t *t, const char *key, long int length, 
 		     long int *id);
 void igraph_trie_idx(igraph_trie_t *t, long int idx, char **str);
@@ -634,6 +635,38 @@ igraph_integer_t igraph_i_cutheap_popmax(igraph_i_cutheap_t *ch);
 int igraph_i_cutheap_update(igraph_i_cutheap_t *ch, igraph_integer_t index,
 			    igraph_real_t add);
 int igraph_i_cutheap_reset_undefine(igraph_i_cutheap_t *ch, long int vertex);
+
+/* -------------------------------------------------- */
+/* Flexible set                                       */
+/* -------------------------------------------------- */
+
+/** 
+ * Set containing integer numbers regardless of the order
+ * \ingroup types
+ */
+
+typedef struct s_set {
+  igraph_real_t* stor_begin;
+  igraph_real_t* stor_end;
+  igraph_real_t* end;
+} igraph_set_t;
+
+#define IGRAPH_SET_NULL { 0,0,0 }
+#define IGRAPH_SET_INIT_FINALLY(v, size) \
+  do { IGRAPH_CHECK(igraph_set_init(v, size)); \
+  IGRAPH_FINALLY(igraph_set_destroy, v); } while (0)
+
+int igraph_set_init      (igraph_set_t* set, long int size);
+void igraph_set_destroy   (igraph_set_t* set);
+igraph_bool_t igraph_set_inited   (igraph_set_t* set);
+int igraph_set_reserve   (igraph_set_t* set, long int size);
+igraph_bool_t igraph_set_empty     (const igraph_set_t* set);
+void igraph_set_clear      (igraph_set_t* set);
+long int igraph_set_size      (const igraph_set_t* set);
+int igraph_set_add (igraph_set_t* v, igraph_integer_t e);
+igraph_bool_t igraph_set_contains (igraph_set_t* set, igraph_integer_t e);
+igraph_bool_t igraph_set_iterate (igraph_set_t* set, long int* state,
+				  igraph_integer_t* element);
 
 __END_DECLS
 

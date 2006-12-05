@@ -152,6 +152,11 @@ typedef enum { IGRAPH_VCONN_NEI_ERROR=0,
 typedef enum { IGRAPH_SPINCOMM_UPDATE_SIMPLE=0,
 	       IGRAPH_SPINCOMM_UPDATE_CONFIG } igraph_spincomm_update_t; 
 
+typedef enum { IGRAPH_I_DONT_SIMPLIFY=0,
+	       IGRAPH_I_SIMPLIFY,
+	       IGRAPH_I_SORT_SIMPLIFY } igraph_i_lazy_adlist_simplify_t;
+	       
+
 /* -------------------------------------------------- */
 /* Vertex selectors                                   */
 /* -------------------------------------------------- */
@@ -499,6 +504,7 @@ int igraph_eit_as_vector(const igraph_eit_t *eit, igraph_vector_t *v);
 /* -------------------------------------------------- */
 
 int igraph_empty(igraph_t *graph, igraph_integer_t n, igraph_bool_t directed);
+int igraph_empty_attrs(igraph_t *graph, igraph_integer_t n, igraph_bool_t directed, void *attr);
 int igraph_destroy(igraph_t *graph);
 int igraph_copy(igraph_t *to, const igraph_t *from);
 int igraph_add_edges(igraph_t *graph, const igraph_vector_t *edges, 
@@ -547,6 +553,8 @@ int igraph_full(igraph_t *graph, igraph_integer_t n, igraph_bool_t directed, igr
 int igraph_atlas(igraph_t *graph, int number);
 int igraph_extended_chordal_ring(igraph_t *graph, igraph_integer_t nodes, 
 				 const igraph_matrix_t *W);
+int igraph_connect_neighborhood(igraph_t *graph, igraph_integer_t order,
+				igraph_neimode_t mode);
 
 /* -------------------------------------------------- */
 /* Constructors, games (=stochastic)                  */
@@ -629,6 +637,11 @@ int igraph_asymmetric_preference_game(igraph_t *graph, igraph_integer_t nodes,
 				      igraph_vector_t *node_type_out_vec,
 				      igraph_bool_t loops);
 
+int igraph_rewire_edges(igraph_t *graph, igraph_real_t prob);
+int igraph_watts_strogatz_game(igraph_t *graph, igraph_integer_t dim,
+			       igraph_integer_t size, igraph_integer_t nei,
+			       igraph_real_t p);
+
 
 /* -------------------------------------------------- */
 /* Basic query functions                              */
@@ -680,6 +693,15 @@ int igraph_transitivity_undirected(const igraph_t *graph,
 int igraph_transitivity_local_undirected(const igraph_t *graph, 
 					 igraph_vector_t *res,
 					 const igraph_vs_t vids);
+int igraph_transitivity_local_undirected1(const igraph_t *graph, 
+					  igraph_vector_t *res,
+					  const igraph_vs_t vids);
+int igraph_transitivity_local_undirected2(const igraph_t *graph, 
+					  igraph_vector_t *res,
+					  const igraph_vs_t vids);
+int igraph_transitivity_local_undirected4(const igraph_t *graph, 
+					  igraph_vector_t *res,
+					  const igraph_vs_t vids);
 int igraph_transitivity_avglocal_undirected(const igraph_t *graph,
 					    igraph_real_t *res);
 int igraph_reciprocity(const igraph_t *graph, igraph_real_t *res,
@@ -726,6 +748,27 @@ int igraph_decompose(const igraph_t *graph, igraph_vector_ptr_t *components,
 		     long int maxcompno, long int minelements);
 
 /* TODO: cluster.distribution (?) */
+
+/* -------------------------------------------------- */
+/* Cliques, maximal independent vertex sets           */
+/* -------------------------------------------------- */
+
+int igraph_cliques(const igraph_t *graph, igraph_vector_ptr_t *res,
+                   igraph_integer_t min_size, igraph_integer_t max_size);
+int igraph_largest_cliques(const igraph_t *graph, 
+			   igraph_vector_ptr_t *cliques);
+int igraph_maximal_cliques(const igraph_t *graph,
+			   igraph_vector_ptr_t *res);
+int igraph_clique_number(const igraph_t *graph, igraph_integer_t *no);
+int igraph_independent_vertex_sets(const igraph_t *graph,
+				   igraph_vector_ptr_t *res,
+				   igraph_integer_t min_size,
+				   igraph_integer_t max_size);
+int igraph_largest_independent_vertex_sets(const igraph_t *graph,
+					   igraph_vector_ptr_t *res);
+int igraph_maximal_independent_vertex_sets(const igraph_t *graph,
+					   igraph_vector_ptr_t *res);
+int igraph_independence_number(const igraph_t *graph, igraph_integer_t *no);
 
 /* -------------------------------------------------- */
 /* Layouts                                            */
@@ -970,6 +1013,13 @@ int igraph_adhesion(const igraph_t *graph, igraph_integer_t *res);
 int igraph_cohesion(const igraph_t *graph, igraph_integer_t *res);
 
 /* -------------------------------------------------- */
+/* K-Cores                                            */
+/* -------------------------------------------------- */
+
+int igraph_coreness(const igraph_t *graph, igraph_vector_t *cores,
+		    igraph_neimode_t mode);
+
+/* -------------------------------------------------- */
 /* Dynamics measurement                               */
 /* -------------------------------------------------- */
 
@@ -1111,7 +1161,13 @@ typedef struct igraph_i_adjlist_t {
 
 int igraph_i_adjlist_init(const igraph_t *graph, igraph_i_adjlist_t *al, 
 			  igraph_neimode_t mode);
+int igraph_i_adjlist_init_complementer(const igraph_t *graph,
+				       igraph_i_adjlist_t *al, 
+				       igraph_neimode_t mode,
+				       igraph_bool_t loops);
 void igraph_i_adjlist_destroy(igraph_i_adjlist_t *al);
+void igraph_i_adjlist_sort(igraph_i_adjlist_t *al);
+int igraph_i_adjlist_simplify(igraph_i_adjlist_t *al);
 /* igraph_vector_t *igraph_i_adjlist_get(const igraph_i_adjlist_t *al,  */
 /* 			       igraph_integer_t no); */
 #define igraph_i_adjlist_get(al, no) (&(al)->adjs[(long int)(no)])
@@ -1126,6 +1182,28 @@ int igraph_i_adjedgelist_init(const igraph_t *graph,
 			      igraph_neimode_t mode);
 void igraph_i_adjedgelist_destroy(igraph_i_adjedgelist_t *ael);
 #define igraph_i_adjedgelist_get(ael, no) (&(ael)->adjs[(long int)(no)])
+
+typedef struct igraph_i_lazy_adjlist_t {
+  const igraph_t *graph;
+  igraph_integer_t length;
+  igraph_vector_t **adjs;
+  igraph_neimode_t mode;
+  igraph_i_lazy_adlist_simplify_t simplify;
+  igraph_vector_t svect;
+} igraph_i_lazy_adjlist_t;
+
+int igraph_i_lazy_adjlist_init(const igraph_t *graph,
+			       igraph_i_lazy_adjlist_t *al,
+			       igraph_neimode_t mode,
+			       igraph_i_lazy_adlist_simplify_t simplify);
+void igraph_i_lazy_adjlist_destroy(igraph_i_lazy_adjlist_t *al);
+/* igraph_vector_t *igraph_i_lazy_adjlist_get(igraph_i_lazy_adjlist_t *al, */
+/* 					   igraph_integer_t no); */
+#define igraph_i_lazy_adjlist_get(al, no) \
+  ((al)->adjs[(long int)(no)] != 0 ? ((al)->adjs[(long int)(no)]) : \
+   (igraph_i_lazy_adjlist_get_real(al, no)))
+igraph_vector_t *igraph_i_lazy_adjlist_get_real(igraph_i_lazy_adjlist_t *al,
+						igraph_integer_t no);
 
 extern unsigned int igraph_i_isoclass_3[];
 extern unsigned int igraph_i_isoclass_4[];

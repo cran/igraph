@@ -369,73 +369,6 @@ int igraph_star(igraph_t *graph, igraph_integer_t n, igraph_star_mode_t mode,
   return 0;
 }
 
-int igraph_connect_neighborhood(igraph_t *graph, igraph_integer_t nei, 
-				igraph_bool_t mutual) {
-  /* TODO */
-/* SEXP REST_connect_neighborhood(SEXP neis, SEXP pradius, SEXP pmutual) { */
-
-/*   SEXP result; */
-  
-/*   long int no_of_nodes; */
-/*   long int radius; */
-/*   igraph_dqueue_t q; */
-/*   long int *already_visited; */
-/*   igraph_vector_t add; */
-/*   long int i,j; */
-/*   int mutual; */
-
-/*   no_of_nodes=GET_LENGTH(neis); */
-/*   radius=R(pradius); */
-/*   mutual=LOGICAL(pmutual)[0]; */
-
-/*   already_visited=(long int*) R_alloc(no_of_nodes, sizeof(long int)); */
-/*   memset(already_visited, 0, no_of_nodes*sizeof(long int)); */
-
-/*   igraph_dqueue_init(&q, 100); */
-/*   igraph_vector_init(&add, 0); */
-/*   igraph_vector_reserve(&add, radius*no_of_nodes); */
-  
-/*   for (i=1; i<=no_of_nodes; i++) { */
-/*     igraph_dqueue_push(&q, i); */
-/*     igraph_dqueue_push(&q, 0); */
-/*     already_visited[i-1]=i; */
-    
-/*     while (!igraph_dqueue_empty(&q)) { */
-/*       long int actnode=igraph_dqueue_pop(&q); */
-/*       long int actdist=igraph_dqueue_pop(&q); */
-/*       if (actdist >= 2 && (actnode > i || mutual)) { */
-/* 	igraph_vector_push_back(&add, i); */
-/* 	igraph_vector_push_back(&add, actnode); */
-/*       } */
-      
-/*       if (actdist+1 <= radius) { */
-/* 	for (j=0; j<GET_LENGTH(VECTOR_ELT(neis, actnode-1)); j++) { */
-/* 	  long int neighbor=REAL(VECTOR_ELT(neis, actnode-1))[j]; */
-/* 	  if (already_visited[neighbor-1] == i) { continue; } */
-/* 	  already_visited[neighbor-1] = i; */
-/* 	  igraph_dqueue_push(&q, neighbor); */
-/* 	  igraph_dqueue_push(&q, actdist+1); */
-/* 	} */
-/*       } */
-/*     } /\* while !igraph_dqueue_empty(q) *\/ */
-/*     R_CheckUserInterrupt(); */
-/*   } /\* for i<=no_of_nodes *\/ */
-
-/*   igraph_dqueue_destroy(&q); */
-  
-/*   /\* Copy vector to result *\/ */
-/*   j=igraph_vector_size(&add); */
-/*   PROTECT(result=NEW_NUMERIC(j)); */
-/*   for (i=0; i<j; i++) { */
-/*     REAL(result)[i]=igraph_vector_e(&add, i); */
-/*   } */
-
-/*   /\* Clean and return *\/ */
-/*   igraph_vector_destroy(&add); */
-/*   UNPROTECT(1); */
-  return 0;
-}
-
 /**
  * \ingroup generators 
  * \function igraph_lattice
@@ -460,10 +393,10 @@ int igraph_connect_neighborhood(igraph_t *graph, igraph_integer_t nei,
  *         \c IGRAPH_EINVAL: invalid (negative)
  *         dimension vector. 
  *
- * Time complexity: O(|V|+|E|) (as
- * far as i remember), |V| and
- * |E| are the number of vertices 
- * and edges in the generated graph.
+ * Time complexity: if \p nei is less than two then it is O(|V|+|E|) (as
+ * far as i remember), |V| and |E| are the number of vertices 
+ * and edges in the generated graph. Otherwise it is O(|V|*d^o+|E|), d
+ * is the average degree of the graph, o is the \p nei argument.
  */
 int igraph_lattice(igraph_t *graph, const igraph_vector_t *dimvector, igraph_integer_t nei, 
 		   igraph_bool_t directed, igraph_bool_t mutual, igraph_bool_t circular) {
@@ -546,6 +479,9 @@ int igraph_lattice(igraph_t *graph, const igraph_vector_t *dimvector, igraph_int
   } /* for i<no_of_nodes */
 
   IGRAPH_CHECK(igraph_create(graph, &edges, 0, directed));
+  if (nei >= 2) {
+    IGRAPH_CHECK(igraph_connect_neighborhood(graph, nei, IGRAPH_ALL));
+  }
 
   /* clean up */
   Free(coords);
@@ -885,4 +821,140 @@ int igraph_extended_chordal_ring(igraph_t *graph, igraph_integer_t nodes,
   igraph_vector_destroy(&edges);
   IGRAPH_FINALLY_CLEAN(1);
   return 0;  
+}
+
+/**
+ * \function igraph_connect_neighborhood
+ * \brief Connects every vertex to its neighborhood
+ * 
+ * This function adds new edges to graph. For each vertex 
+ * vertices reachable by at most \p order steps and not yet connected
+ * to the vertex a new edge is created.
+ * 
+ * </para><para> Note that the input graph is modified in place, no
+ * new graph is created, call \ref igraph_copy() if you want to keep
+ * the original graph as well.
+ * 
+ * </para><para> For undirected graphs reachability is always
+ * symmetric, if vertex A can be reached from vertex B in at
+ * most \p order steps, then the opposite is also true. Only one
+ * undirected (A,B) edge will be added in this case.
+ * \param graph The input graph, this is the output graph as well.
+ * \param order Integer constant, it gives the distance within which
+ *    the vertices will be connected to the source vertex.
+ * \param mode Constant, it specifies how the neighborhood search is
+ *    performed for directed graphs. If \c IGRAPH_OUT then vertices
+ *    reachable from the source vertex will be connected, \c IGRAPH_IN
+ *    is the opposite. If \c IGRAPH_ALL then the directed graph is
+ *    considered as an undirected one.
+ * \return Error code.
+ * 
+ * \sa \ref igraph_lattice() uses this function to connect the
+ * neighborhood of the vertices.
+ * 
+ * Time complexity: O(|V|*d^o), |V| is the number of vertices in the
+ * graph, d is the average degree and o is the \p order argument.
+ */
+
+int igraph_connect_neighborhood(igraph_t *graph, igraph_integer_t order,
+				igraph_neimode_t mode) {
+  
+  long int no_of_nodes=igraph_vcount(graph);
+  igraph_dqueue_t q;
+  igraph_vector_t edges;
+  long int i, j, in;
+  long int *added;
+  igraph_vector_t neis;
+  
+  if (order<0) {
+    IGRAPH_ERROR("Negative order, cannot connect neighborhood", IGRAPH_EINVAL);
+  }
+
+  if (order<2) { 
+    IGRAPH_WARNING("Order smaller than two, graph will be unchanged");
+  }
+
+  if (!igraph_is_directed(graph)) {
+    mode=IGRAPH_ALL;
+  }
+
+  IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
+  added=Calloc(no_of_nodes, long int);
+  if (added==0) {
+    IGRAPH_ERROR("Cannot connect neighborhood", IGRAPH_ENOMEM);
+  }
+  IGRAPH_FINALLY(igraph_free, added);
+  IGRAPH_DQUEUE_INIT_FINALLY(&q, 100);
+  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  
+  for (i=0; i<no_of_nodes; i++) {
+    added[i]=i+1;
+    igraph_neighbors(graph, &neis, i, mode);
+    in=igraph_vector_size(&neis);
+    if (order > 1) {
+      for (j=0; j<in; j++) {
+	long int nei=VECTOR(neis)[j];
+	added[nei]=i+1;
+	igraph_dqueue_push(&q, nei);
+	igraph_dqueue_push(&q, 1);
+      }
+    }
+    
+    while (!igraph_dqueue_empty(&q)) {
+      long int actnode=igraph_dqueue_pop(&q);
+      long int actdist=igraph_dqueue_pop(&q);
+      long int n;
+      igraph_neighbors(graph, &neis, actnode, mode);
+      n=igraph_vector_size(&neis);
+      
+      if (actdist<order-1) {
+	for (j=0; j<n; j++) {
+	  long int nei=VECTOR(neis)[j];
+	  if (added[nei] != i+1) {
+	    added[nei]=i+1;
+	    IGRAPH_CHECK(igraph_dqueue_push(&q, nei));
+	    IGRAPH_CHECK(igraph_dqueue_push(&q, actdist+1));
+	    if (mode != IGRAPH_ALL || i < nei) {
+	      if (mode == IGRAPH_IN) {
+		IGRAPH_CHECK(igraph_vector_push_back(&edges, nei));
+		IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
+	      } else {
+		IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
+		IGRAPH_CHECK(igraph_vector_push_back(&edges, nei));
+	      }
+	    }
+	  }
+	}
+      } else { 
+	for (j=0; j<n; j++) {
+	  long int nei=VECTOR(neis)[j];
+	  if (added[nei] != i+1) {
+	    added[nei]=i+1;
+	    if (mode != IGRAPH_ALL || i < nei) {
+	      if (mode == IGRAPH_IN) {
+		IGRAPH_CHECK(igraph_vector_push_back(&edges, nei));
+		IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
+	      } else {
+		IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
+		IGRAPH_CHECK(igraph_vector_push_back(&edges, nei));
+	      }
+	    }
+	  }
+	}
+      }
+      
+    } /* while q not empty */
+  } /* for i < no_of_nodes */
+  
+  igraph_vector_destroy(&neis);
+  igraph_dqueue_destroy(&q);
+  igraph_free(added);
+  IGRAPH_FINALLY_CLEAN(3);
+  
+  IGRAPH_CHECK(igraph_add_edges(graph, &edges, 0));
+  
+  igraph_vector_destroy(&edges);
+  IGRAPH_FINALLY_CLEAN(1);
+  
+  return 0;
 }

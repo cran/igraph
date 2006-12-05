@@ -1749,3 +1749,149 @@ int igraph_asymmetric_preference_game(igraph_t *graph, igraph_integer_t nodes,
   IGRAPH_FINALLY_CLEAN(1);
   return 0;
 }
+
+/**
+ * \function igraph_rewire_edges
+ * \brief Rewire the edges of a graph with constant probability
+ * 
+ * This function rewires the edges of a graph with a constant
+ * probability. More precisely each end point of each edge is rewired
+ * to an uniformly randomly chosen vertex with constant probability \p
+ * prob.
+ * 
+ * </para><para> Note that this function modifies the input \p graph,
+ * call \ref igraph_copy() if you want to keep it.
+ * 
+ * \param graph The input graph, this will be rewired, it can be
+ *    directed or undirected.
+ * \param prob The rewiring probability a constant between zero and
+ *    one (inclusive).
+ * \return Error code.
+ * 
+ * \sa \ref igraph_watts_strogatz_game() uses this function for the
+ * rewiring.
+ * 
+ * Time complexity: O(|V|+|E|).
+ */
+
+int igraph_rewire_edges(igraph_t *graph, igraph_real_t prob) {
+
+  igraph_t newgraph;
+  igraph_vector_t edges;
+  long int no_of_edges=igraph_ecount(graph);
+  long int no_of_nodes=igraph_vcount(graph);
+  long int endpoints=no_of_edges*2;
+  long int to_rewire;
+
+  if (prob < 0 || prob > 1) {
+    IGRAPH_ERROR("Rewiring probability should be between zero and one",
+		 IGRAPH_EINVAL);
+  }
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&edges, endpoints);
+  IGRAPH_CHECK(igraph_get_edgelist(graph, &edges, 0));
+  
+  /* Now do the rewiring, fast method. 
+     Each endpoint of an edge is rewired with probability p.
+     So the "skips" between the really rewired endpoints follow a 
+     geometric distribution.
+  */
+
+  RNG_BEGIN();
+
+  if (prob != 0) {
+    to_rewire=RNG_GEOM(prob)+1;
+    while (to_rewire <= endpoints) {
+      VECTOR(edges)[ to_rewire-1 ] = RNG_INTEGER(0, no_of_nodes-1);
+      to_rewire += RNG_GEOM(prob)+1;
+    }
+  }
+  
+  RNG_END();
+  
+  IGRAPH_CHECK(igraph_create(&newgraph, &edges, no_of_nodes, 
+			     igraph_is_directed(graph)));
+  igraph_vector_destroy(&edges);
+  IGRAPH_FINALLY_CLEAN(1); 
+  
+  IGRAPH_FINALLY(igraph_destroy, &newgraph);
+  IGRAPH_I_ATTRIBUTE_DESTROY(&newgraph);
+  IGRAPH_I_ATTRIBUTE_COPY(&newgraph, graph);
+  IGRAPH_FINALLY_CLEAN(1);
+  igraph_destroy(graph);
+  *graph=newgraph;
+  
+  return 0;
+}
+
+/**
+ * \function igraph_watts_strogatz_game
+ * \brief The Watts-Strogatz small-world model
+ * 
+ * This function generates a graph according to the Watts-Strogatz
+ * model of small-world networks. The graph is obtained by creating a
+ * circular undirected lattice and then rewire the edges randomly with
+ * a constant probability.
+ * 
+ * </para><para>See also: Duncan J Watts and Steven H Strogatz:
+ * Collective dynamics of <quote>small world</quote> networks, Nature
+ * 393, 440-442, 1998.
+ * \param graph The graph to initialize.
+ * \param dim The dimension of the lattice.
+ * \param size The size of the lattice along each dimension.
+ * \param nei The size of the neighborhood for each vertex. This is
+ *    the same as the \p nei argument of \ref
+ *    igraph_connect_neighborhood(). 
+ * \param p The rewiring probability. A real number between zero and
+ *   one (inclusive). 
+ * \return Error code.
+ * 
+ * \sa \ref igraph_lattice(), \ref igraph_connect_neighborhood() and
+ * \ref igraph_rewire_edges() can be used if more flexibility is
+ * needed, eg. a different type of lattice.
+ * 
+ * Time complexity: O(|V|*d^o+|E|), |V| ans |E| are the number of
+ * vertices and edges, d is the average degree, o is the \p nei
+ * argument.
+ */
+
+int igraph_watts_strogatz_game(igraph_t *graph, igraph_integer_t dim,
+			       igraph_integer_t size, igraph_integer_t nei,
+			       igraph_real_t p) {
+  
+  igraph_vector_t dimvector;
+  long int i;
+
+  if (dim < 1) {
+    IGRAPH_ERROR("WS game: dimension should be at least one", IGRAPH_EINVAL);
+  }
+  if (size < 1) { 
+    IGRAPH_ERROR("WS game: lattice size should be at least one", 
+		 IGRAPH_EINVAL);
+  }
+  if (p < 0 || p > 1) {
+    IGRAPH_ERROR("WS game: rewiring probability should be between 0 and 1",
+		 IGRAPH_EINVAL);
+  }
+
+  /* Create the lattice first */
+
+  IGRAPH_VECTOR_INIT_FINALLY(&dimvector, dim);
+  for (i=0; i<dim; i++) {
+    VECTOR(dimvector)[i] = size;
+  }
+  
+  IGRAPH_CHECK(igraph_lattice(graph, &dimvector, nei, IGRAPH_UNDIRECTED,
+			      0 /* mutual */, 1 /* circular */));
+  igraph_vector_destroy(&dimvector);
+  IGRAPH_FINALLY_CLEAN(1);
+  IGRAPH_FINALLY(igraph_destroy, graph);
+  
+  /* Rewire the edges then */
+
+  IGRAPH_CHECK(igraph_rewire_edges(graph, p));
+
+  IGRAPH_FINALLY_CLEAN(1);
+  return 0;
+}
+  
