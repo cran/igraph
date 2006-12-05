@@ -23,7 +23,6 @@
 
 #include "igraph.h"
 #include "error.h"
-#include "memory.h"
 
 #include "config.h"
 
@@ -33,6 +32,8 @@
 #include <Rinternals.h>
 
 #include <stdio.h>
+
+int igraph_free(void *p);
 
 SEXP R_igraph_matrix_to_SEXP(igraph_matrix_t *m);
 SEXP R_igraph_strvector_to_SEXP(const igraph_strvector_t *m);
@@ -127,7 +128,7 @@ int R_igraph_attribute_add_vertices(igraph_t *graph, long int nv,
   } else {
     nattrno=igraph_vector_ptr_size(nattr); 
   }
-  origlen=igraph_vcount(graph);
+  origlen=igraph_vcount(graph)-nv;
 
   /* First add the new attributes, if any */
   newattrs=0;
@@ -961,8 +962,7 @@ int R_igraph_SEXP_to_strvector(SEXP rval, igraph_strvector_t *sv) {
 
 int R_igraph_SEXP_to_strvector_copy(SEXP rval, igraph_strvector_t *sv) {
   long int i;
-  sv->len=GET_LENGTH(rval);
-  sv->data=Calloc(sv->len, char*);
+  igraph_strvector_init(sv, GET_LENGTH(rval));
   for (i=0; i<sv->len; i++) {
     igraph_strvector_set(sv, i, CHAR(STRING_ELT(rval, i)));
   }
@@ -4821,7 +4821,7 @@ SEXP R_igraph_preference_game(SEXP pnodes, SEXP ptypes,
   
   R_SEXP_to_vector(ptype_dist, &type_dist);
   R_SEXP_to_matrix(pmatrix, &matrix);
-  igraph_preference_game(&g, nodes, types, &type_dist, &matrix,
+  igraph_preference_game(&g, nodes, types, &type_dist, &matrix, 0,
 			 directed, loops);
   PROTECT(result=R_igraph_to_SEXP(&g));
   igraph_destroy(&g);
@@ -4849,7 +4849,7 @@ SEXP R_igraph_asymmetric_preference_game(SEXP pnodes, SEXP ptypes,
   R_SEXP_to_matrix(ptype_dist_matrix, &type_dist_matrix);
   R_SEXP_to_matrix(pmatrix, &matrix);
   igraph_asymmetric_preference_game(&g, nodes, types, &type_dist_matrix,
-				    &matrix, loops);
+				    &matrix, 0, 0, loops);
   PROTECT(result=R_igraph_to_SEXP(&g));
   igraph_destroy(&g);
   
