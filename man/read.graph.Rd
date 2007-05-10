@@ -3,6 +3,7 @@
 \alias{LGL}
 \alias{Pajek}
 \alias{GraphML}
+\alias{GML}
 \title{Reading foreign file formats}
 \description{The \code{read.graph} function is able to read graphs in
   various representations from a file, or from a http
@@ -15,8 +16,11 @@ read.graph(file, format = "edgelist", \dots)
     a \code{http} or \code{ftp} connection. It can also be a character
     string  with the file name or URI.}
   \item{format}{Character constant giving the file format. Right now
-    \code{edgelist}, \code{pajek}, \code{graphml}, \code{ncol} and
-    \code{lgl} are supported, the default is \code{edgelist}. }
+    \code{edgelist}, \code{pajek}, \code{graphml}, \code{gml},
+    \code{ncol}, \code{lgl}, \code{dimacs} and \code{graphdb}
+    are supported, the default is \code{edgelist}. As of igraph 0.4 this
+    argument is case insensitive.
+  }
   \item{\dots}{Additional arguments, see below.}
 }
 \details{
@@ -152,6 +156,34 @@ read.graph(file, format = "edgelist", \dots)
 	  default the first graph is read (index 0).}
       }
     }
+    \item{GML}{
+      GML is a simple textual format, see
+      \url{http://www.infosun.fim.uni-passau.de/Graphlet/GML/} for details.
+ 
+      Although all syntactically correct GML can be parsed, 
+      we implement only a subset of this format, some attributes might be
+      ignored. Here is a list of all the differences:
+      \itemize{
+	\item{}{Only \code{node} and \code{edge} attributes are 
+	  used, and only if they have a simple type: integer, real or
+	  string. So if an attribute is an array or a record, then it is 
+	  ignored. This is also true if only some values of the
+	  attribute are complex.}
+	\item{}{Top level attributes except for \code{Version} and the
+	  first \code{graph} attribute are completely ignored.}
+	\item{}{Graph attributes except for \code{node} and
+	  \code{edge} are completely ignored.}
+	\item{}{ There is no maximum line length.}
+	\item{}{ There is no maximum keyword length.}
+	\item{}{ Character entities in strings are not interpreted.}
+	\item{}{ We allow \code{inf} (infinity) and \code{nan}
+	  (not a number) as a real number. This is case insensitive, so
+	  \code{nan}, \code{NaN} and \code{NAN} are equal.}
+      }
+      
+      Please contact us if you cannot live with these
+      limitations of the GML parser.
+    }
     \item{ncol}{
       This format is used by the Large Graph Layout program
       (\url{http://bioinformatics.icmb.utexas.edu/lgl}), and it is
@@ -207,6 +239,65 @@ read.graph(file, format = "edgelist", \dots)
 	  the edges as edge attribute \sQuote{weight}.
 	}
       }      
+    }
+    \item{dimacs}{
+      The DIMACS file format, more specifically the 
+      version for network flow problems, see the files at
+      \url{ftp://dimacs.rutgers.edu/pub/netflow/general-info/}
+
+      This is a line-oriented text file (ASCII) format. The first
+      character of each line defines the type of the line. If the first
+      character is \code{c} the line is a comment line and it is
+      ignored. There is one problem line (\code{p}) in the file, it
+      must appear before any node and arc descriptor lines. The problem
+      line has three fields separated by spaces: the problem type
+      (\code{min}, \code{max} or \code{asn}), the
+      number of vertices and number of edges in the graph.
+      Exactly two node identification lines are expected
+      (\code{n}), one for the source, one for the target vertex.
+      These have two fields: the id of the vertex and the type of the
+      vertex, either \code{s} (=source) or \code{t}
+      (=target). Arc lines start with \code{a} and have three
+      fields: the source vertex, the target vertex and the edge capacity.
+      
+      Vertex ids are numbered from 1.
+
+      The source vertex is assigned to the \code{source}, the target
+      vertex to the \code{target} graph attribute. The edge capacities
+      are assigned to the \code{capacity} edge attribute.
+
+      Additional arguments:
+      \itemize{
+	\item{directed}{Logical scalar, whether to create a directed
+	  graph. By default a directed graph is created.
+	}
+      }
+    }
+    \item{graphdb}{This is a binary format, used in the graph database
+      for isomorphism testing (\url{http://amalfi.dis.unina.it/graph/})
+      From the graph database homepage
+      (\url{http://amalfi.dis.unina.it/graph/db/doc/graphdbat-2.html}):
+
+      \emph{The graphs are stored in a compact binary format, one graph per
+	file. The file is composed of 16 bit words, which are represented
+	using the so-called little-endian convention, i.e. the least
+	significant byte of the word is stored first.}
+      
+      \emph{Then, for each node, the file contains the list of edges coming
+	out of the node itself. The list is represented by a word encoding
+	its length, followed by a word for each edge, representing the
+	destination node of the edge. Node numeration is 0-based, so the
+	first node of the graph has index 0.}
+
+      See also \code{\link{graph.graphdb}}.
+      
+      Only unlabelled graphs are implemented.
+
+      Additional attributes:
+      \itemize{
+	\item{directed}{Logical scalar. Whether to create a directed
+	  graph.}
+      }
     }
   }
 }

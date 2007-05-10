@@ -1,8 +1,10 @@
 
+importFrom(stats, as.dendrogram)
+
 # The igraph interface
 
 export(add.edges, add.vertices, delete.edges,
-       delete.vertices, vcount, ecount, neighbors)
+       delete.vertices, vcount, ecount, neighbors, get.edges)
 
 # Attributes
 
@@ -49,12 +51,20 @@ export(erdos.renyi.game, random.graph.game, degree.sequence.game,
        growing.random.game, barabasi.game, ba.game,
        callaway.traits.game, establishment.game, grg.game,
        preference.game, asymmetric.preference.game, connect.neighborhood,
-       rewire.edges, watts.strogatz.game)
+       rewire.edges, watts.strogatz.game, lastcit.game, cited.type.game,
+       citing.cited.type.game)
 
 # community structure
 
-export(community.eb, community.cut, edge.type.matrix,
-       modularity, community.eb2, spinglass.community)
+export(edge.betweenness.community,
+       modularity, spinglass.community, walktrap.community,
+       edge.betweenness.community.merges, fastgreedy.community,
+       community.to.membership, leading.eigenvector.community,
+       leading.eigenvector.community.step)
+
+S3method("as.dendrogram", igraph.walktrap)
+S3method("as.dendrogram", igraph.ebc)
+S3method("as.dendrogram", igraph.eigenc)
 
 # conversion
 
@@ -66,7 +76,7 @@ export(power.law.fit, running.mean, igraph.sample)
 
 # foreign formats
 
-export(read.graph, write.graph)
+export(read.graph, write.graph, graph.graphdb)
 
 # layouts
 
@@ -85,7 +95,7 @@ export(subgraph, simplify, degree, degree.distribution, diameter,
        get.all.shortest.paths, get.diameter, farthest.nodes,
        graph.laplacian, constraint, page.rank, reciprocity, rewire,
        graph.density, neighborhood.size, neighborhood, graph.neighborhood,
-       graph.coreness)
+       graph.coreness, topological.sort, girth)
 
 # plotting
 
@@ -107,12 +117,22 @@ export(evcent, bonpow, alpha.centrality)
 # dynamics measurement
 
 export(measure.dynamics.id, measure.dynamics.idage, measure.dynamics.d.d,
-       measure.dynamics.citedcat.id.age, measure.dynamics.citingcat.id.age)
+       measure.dynamics.citedcat.id.age, measure.dynamics.citingcat.id.age,
+       measure.dynamics.lastcit, measure.dynamics.age, measure.dynamics.citedcat,
+       measure.dynamics.citingcat.citedcat)
+
+export(revolver.d, revolver.ad, revolver.ade, revolver.e, revolver.de, revolver.l,
+       revolver.dl, revolver.el, revolver.r, revolver.ar, revolver.di, revolver.adi,
+       revolver.il, revolver.ir, revolver.air)
+
+export (revolver.d.d, revolver.p.p)
+
+export (evolver.d)
 
 # isomorphism, motifs
 
 export(graph.isoclass, graph.isomorphic, graph.motifs,
-       graph.motifs.est, graph.isocreate, graph.motifs.no)
+       graph.motifs.est, graph.isocreate, graph.motifs.no, graph.isomorphic.vf2)
 
 # operators
 

@@ -1,7 +1,480 @@
+2007-05-17  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/interface.R (get.edges) : return a matrix
+	* interfaces/R/igraph/R/iterators.R (print.igraph.es) : updated
+
+	* interfaces/R/igraph/R/iterators.R (print.igraph.es, print.igraph.vs) :
+	pretty printing
+
+	* interfaces/R/igraph/R/interface.R (get.edges) : added
+	* interfaces/R/src/rinterface.c (R_igraph_get_edges) : added
+
+2007-05-16  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/foreign.R (write.graph) : convert format name to
+	lowercase
+
+	* interfaces/R/igraph/R/foreign.R (write.graph, write.graph.gml) :
+	GML format added
+	* interfaces/R/src/rinterface.c (R_igraph_write_graph_gml) : added
+
+2007-05-12  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/foreign.R (read.graph, read.graph.gml) :
+	GML format added
+	* interfaces/R/src/rinterface.c (R_igraph_read_graph_gml) : added
+
+2007-05-11  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/revolver.R (revolver.p.p) : added
+	* interfaces/R/src/rinterface.c (R_igraph_revolver_p_p) : added
+
+2007-05-09  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/revolver.R (evolver.d) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_d) : added
+
+	* interfaces/R/igraph/R/revolver.R (revolver.d.d) : added
+	* interfaces/R/src/rinterface.c (R_igraph_revolver_d_d) : added
+
+2007-05-07  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/revolver.R : evolver.* renamed to revolver.*
+	* interfaces/R/src/rinterface.c : R_igraph_evolver_* renamed to
+	R_igraph_revolver_*
+
+2007-05-06  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/flow.R (vertex.connectivity, edge.connectivity)
+	(graph.cohesion, graph.adhesion) : added 'checks' argument
+	* interfaces/R/src/rinterface.c (R_igraph_vertex_connectivity)
+	(R_igraph_edge_connectivity, R_igraph_cohesion, R_igraph_adhesion) :
+	updated
+
+	* interfaces/R/igraph/R/structural.properties.R (girth) : added
+	* interfaces/R/src/rinterface.c (R_igraph_girth) : added
+
+	* interfaces/R/igraph/R/print.R (print.igraph) : format edge list better
+
+	* interfaces/R/igraph/R/print.R (print.igraph) : handle 
+	getOption("max.print")
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph)
+	* interfaces/R/igraph/R/tkplot.R (tkplot, tkplot.fit.to.screen) :
+	better margin
+
+	* interfaces/R/igraph/R/plot.R (rglplot.igraph) : arrow head size
+	depends on edge width now
+
+	* interfaces/R/igraph/R/plot.R (igraph.Arrows) : code argument
+	reimplemented, now works properly even if lty!=1 & arrow.mode=3
+
+	* interfaces/R/igraph/R/tkplot.R (tkplot, i.tkplot.get.edge.lty) :
+	the latter was added
+
+	* interfaces/R/igraph/R/plot.common.R (i.get.edge.lty) : removed
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : some simplification, 
+	we don't need to plot arrow heads separately if lty!=1 any more
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : edge width bug for 
+	edges without an arrow corrected
+
+2007-05-04  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : a loop plotting bug 
+	corrected
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : plot better looking edges
+	(igraph.Arrow) : added
+
+	* interfaces/R/igraph/R/tkplot.R (tkplot) : mirror the y coordinate to
+	have the sample plot as for plot.igraph
+
+	* interfaces/R/igraph/R/plot.R
+	* interfaces/R/igraph/R/plot.common.R
+	* interfaces/R/igraph/R/tkplot.R : different parameters for 
+	vertex and edge labels
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : uniform font handling
+	* interfaces/R/igraph/plot.common.R (i.default.values) : font options added
+	* interfaces/R/igraph/tkplot.R (tkplot) : uniform font handling
+	(.tkplot.convert.font) : added
+
+2007-04-30  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/revolver.R (evolver.air) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_air) : added
+
+	* interfaces/R/igraph/R/revolver.R (evolver.ir) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_ir) : added
+
+	* interfaces/R/igraph/R/revolver.R (evolver.il) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_il) : added
+
+2007-04-23  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/src/rinterface.c (R_igraph_progress_handler)
+	(R_igraph_before2) : new progress handler
+	(R_igraph_layout_kamada_kawai, R_igraph_layout_kamada_kawai_3d)
+	(R_igraph_layout_fruchterman_reingold_grid)
+	(R_igraph_layout_fruchterman_reingold)
+	(R_igraph_layout_fruchterman_reingold_3d)
+	(R_igraph_layout_merge_dla) : updated to new progress handler
+
+	* interfaces/R/igraph/R/revolver.R (evolver.d, evolver.ad)
+	(evolver.ade, evolver.e, evolver.de, evolver.l, evolver.dl)
+	(evolver.el, evolver.r, evolver.ar, evolver.di, evolvecr.adi) :
+	verbose option added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_d)
+	(R_igraph_evolver_ad, R_igraph_evolver_ade, R_igraph_evolver_e)
+	(R_igraph_evolver_de, R_igraph_evolver_l, R_igraph_evolver_dl)
+	(R_igraph_evolver_el, R_igraph_evolver_r, R_igraph_evolver_ar)
+	(R_igraph_evolver_r, R_igraph_evolver_ar, R_igraph_evolver_di)
+	(R_igraph_evolver_adi) : verbose option added
+	
+	* interfaces/R/src/rinterface.c 
+	(R_igraph_before2, R_igraph_after2): added
+
+2007-04-21  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/revolver.R (evolver.adi) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_adi) : added
+
+2007-04-20  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/revolver.R (evolver.di) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_di) : added	
+
+	* interfaces/R/igraph/R/revolver.R (evolver.ar) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_ar) : added	
+
+	* interfaces/R/igraph/R/revolver.R (evolver.r) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_r) : added	
+
+	* interfaces/R/igraph/R/revolver.R (evolver.d, evolver.ad) : 
+	default parameter values changed 
+
+	* interfaces/R/igraph/R/revolver.R (evolver.el) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_el) : added	
+
+2007-04-19  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/revolver.R (evolver.dl) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_dl) : added	
+
+	* interfaces/R/igraph/R/revolver.R (evolver.l) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_l) : added
+
+	* interfaces/R/igraph/R/revolver.R (evolver.de) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_de) : added
+
+	* interfaces/R/igraph/R/revolver.R (evolver.e) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_e) : added
+
+	* interfaces/R/igraph/R/revolver.R (evolver.ade) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_ade) : added
+
+	* interfaces/R/src/rinterface.c (R_igraph_0orarray3_to_SEXP) : added
+
+2007-04-18  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/basic.R (is.igraph) : modified to conform the
+	R rules
+
+	* interfaces/R/igraph/R/revolver.R (evolver.ad) 
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_ad) :
+	error calculation added
+
+	* interfaces/R/igraph/R/revolver.R (evolver.d) : error argument added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_d) : error calculation
+	added
+
+2007-04-17  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/community.R (leading.eigenvector.community)
+	(leading.eigenvector.community.step) 
+	(as.dendrogram.igraph.eigenc) : added
+	* interfaces/R/src/rinterface.c (R_igraph_leading_eigenvector_community)
+	(R_igraph_leading_eigenvector_community_step) : added
+
+	* interfaces/R/igraph/R/community.R (community.cut)
+	(edge.type.matrix) : removed
+
+2007-04-12  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/tkplot.R (.tkplot.update.edge) :
+	bug corrected, edge endpoints were calculated with wrong vertex size
+
+2007-04-07  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/community.R (modularity) : rewritten to call
+	C function
+	* interfaces/R/src/rinterface.c (R_igraph_modularity) : added
+
+2007-04-06  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/community.R (community.to.membership) : added
+	* interfaces/R/src/rinterface.c (R_igraph_community_to_membership) : 
+	added
+
+	* interfaces/R/igraph/community.R (fastgreedy.community) : added
+	* interfaces/R/src/rinterface.c (R_igraph_community_fastgreedy) : added
+
+2007-04-04  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/community.R (.memberDend)
+	(as.dendrogram.igraph.walktrap, as.dendrogram.igraph.ebc) : added
+
+	* interfaces/R/igraph/community.R (edge.betweenness.community)
+	(walktrap.community) : 'labels' argument added
+	
+	* interfaces/R/igraph/R/community.R (edge.betweenness.community) : 
+	'merges' and 'bridges' options added
+	(edge.betweenness.community.merges) : added
+	* interfaces/R/src/rinterface.c 
+	(R_igraph_community_edge_betweenness) : 'merges' and 'bridges' 
+	arguments added
+	(R_igraph_community_eb_get_merges) : added
+
+2007-04-03  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/src/rinterface.c (R_igraph_spinglass_community)
+	(R_igraph_spinglass_my_community, R_igraph_walktrap_community) : updated
+	after renames
+	
+	* interfaces/R/igraph/R/community.R 
+	(edge.betweenness.community) : optionally return eb values
+	* interfaces/R/src/rinterface.c 
+	(R_igraph_community_edge_betweenness) : updated
+
+2007-04-02  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/community.R 
+	(edge.betweenness.community) : added
+	* interfaces/R/src/rinterface.c 
+	(R_igraph_community_edge_betweenness) : added
+
+	* interfaces/R/igraph/R/structural.properties.R 
+	(topological.sort) : added
+	* interfaces/R/src/rinterface.c (R_igraph_topological_sorting) : added
+
+	* interfaces/R/igraph/R/community.R (walktrap.community) : added
+	* interfaces/R/src/rinterface.c (R_igraph_walktrap_community) : added
+
+2007-03-31  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/foreign.R (read.graph, read.graph.graphdb) :
+	support added for graphdb format
+
+	* interfaces/R/igraph/R/foreign.R (graph.graphdb) : read the 
+	graph using the C level function
+	* interfaces/R/src/rinterface.c (R_igraph_read_graph_graphdb) : added
+
+	* interfaces/R/igraph/R/foreign.R (read.graph.toraw) : modified to
+	read the file in binary mode
+	
+2007-03-30  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/foreign.R (graph.graphdb) : added
+
+	* interfaces/R/igraph/R/topology.R (graph.isomorphic.vf2) : added
+	* interfaces/R/src/rinterface.c (R_igraph_isomorphic_vf2) : added
+
+2007-03-29  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/revolver.R (evolver.d, evolver.ad) : added
+	* interfaces/R/src/rinterface.c (R_igraph_evolver_d)
+	(R_igraph_evolver_ad) : added
+
+	* interfaces/R/src/rinterface.c (R_igraph_vector_to_SEXP)
+	(R_igraph_0orvector_to_SEXP, R_igraph_0ormatrix_to_SEXP) : added	
+
+2007-03-26  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/measure.dynamics.R (measure.dynamics.id) :
+	which argument added to choose from the two expected citations
+	calculation versions
+	* interfaces/R/src/rinterface.c
+	(R_igraph_measure_dynamics_id_expected) : updated accordingly
+
+2007-03-25  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/measure.dynamics.R (measure.dynamics.id)
+	(measure.dynamics.idage) : 'error' argument added
+	* interfaces/R/src/rinterface.c (R_igraph_measure_dynamics_id_expected)
+	(R_igraph_measure_dynamics_idage_expected) : added
+	
+	* interfaces/R/igraph/R/measure.dynamics.R (measure.dynamics.id)
+	(measure.dynamics.idage) : 'cites' argument added
+	* interfaces/R/src/rinterface.c (R_igraph_measure_dynamics_id)
+	(R_igraph_measure_dynamics_idage) : updated to have 'cites'
+
+	* interfaces/R/igraph/R/measure.dynamics.R (measure.dynamics.id) :
+	'debug' and 'debugdeg' added
+	* interfaces/R/src/rinterface.c (R_igraph_measure_dynamics_id) :
+	updated to have 'debug' and 'debugdeg'
+	
+	* interfaces/R/igraph/R/measure.dynamics.R (measure.dynamics.id)
+	(measure.dynamics.idage) : some reorganization to return
+	consistent 'st'
+
+2007-03-23  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/tkplot.R (.tkplot.convert.color) : drop
+	alpha channel if present
+
+	* interfaces/R/igraph/R/tkplot.R (.tkplot.convert.color, tkplot) : 
+	added, convert numeric colors to color names 
+
+2007-03-22  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/plot.R (rglplot) : edge plotting rewritten
+
+2007-03-21  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/plot.R (rglplot) : support for loop edges
+
+	* interfaces/R/igraph/R/plot.common.R (i.default.values) 
+	* interfaces/R/igraph/R/plot.R (rglplot) : loop.angle2 argument added
+
+2007-03-20  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/plot.R (rglplot) : new parameter handling
+	style added
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph)
+	* interfaces/R/igraph/R/plot.common.R (i.default.values) : 
+	loop.angle edge parameter added
+
+	* interfaces/R/igraph/R/tkplot.R (tkplot) : new parameter handling 
+	style added
+
+	* interfaces/R/igraph/R/tkplot.R (tkplot) : added support for
+	arrow.mode argument
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : modified for the 
+	new parameter handling
+	* interfaces/R/igraph/R/plot.common.R (i.parse.plot.params)
+	(i.default.values) : added, new parameter handling
+
+	* interfaces/R/igraph/R/plot.common.R (plot.igraph) : make the margin
+	bigger with the size of the vertices
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) :
+	bug corrected, arrows were drawn improperly when any(edge.lty!=1)
+
+2007-03-19  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/plot.R (rglplot.igraph) :
+	suspend updating while plotting the graph
+
+	* interfaces/R/igraph/R/plot.R (rglplot.igraph) :
+	1) plotting edges as boxes
+	2) plotting arrows 
+	3) arrow.mode argument added
+	4) layout argument can be a 2d layout as well
+	5) warnings about labels and edge.labels eliminated
+	6) the '00' label bug corrected 
+
+2007-03-17  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/games.R (barabasi.game) : bug corrected,
+	call nonlinear game is zero.appeal is not 1
+
+	* interfaces/R/src/rinterface.c (R_igraph_measure_dynamics_ditedcat) :
+	bug corrected, sd was never calculated
+
+2007-03-16  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/measure.dynamics.R 
+	(measure.dynamics.citingcat.citedcat) : added
+	* interfaces/R/src/rinterface.c
+	(R_igraph_measure_dynamics_citingcat_citedcat)
+	(R_igraph_measure_dynamics_citingcat_citedcat_st) : added
+
+2007-03-14  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/games.R (citing.cited.type.game) : added
+	* interfaces/R/src/rinterface.c (R_igraph_citing_cited_type_game)
+	: added
+
+	* interfaces/R/igraph/R/games.R (cited.type.game) : added
+	* interfaces/R/src/rinterface.c (R_igraph_cited_type_game) : added
+
+	* interfaces/R/igraph/R/measure.dynamics.R (measure.dynamics.citedcat) :
+	added
+	* interfaces/R/src/rinterface.c (R_igraph_measure_dynamics_citedcat)
+	(R_igraph_measure_dynamics_citedcat_st) : added
+
+2007-03-12  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/measure.dynamics.R (measure.dynamics.id)
+	(measure.dynamics.idage, measure.dynamics.lastcit) : (re)added 'number'
+	argument
+	(measure.dynamics.lastcit) : added 'norm.method' argument
+
+	* interfaces/R/src/rinterface.c (R_igraph_measure_dynamics_id)
+	(R_igraph_measure_dynamics_idage, R_igraph_measure_dynamics_lastcit) :
+	updated
+
+	* interfaces/R/igraph/R/measure.dynamics.R (measure.dynamics.age) :
+	added
+	* interfaces/R/src/rinterface.c (R_igraph_measure_dynamics_age)
+	(R_igraph_measure_dynamics_age_st) : added
+	
+2007-03-11  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/measure.dynamics.R (measure.dynamics.id) :
+	'start.vertex', 'significance', 'estind', 'estage', 'number'
+	arguments removed, 'norm.method' added
+	(measure.dynamics.idage) : 'start.vertex', 'significance',
+	'estind', 'estage', 'number' arguments removec, 'norm.method'
+	added
+	(measure.dynamics.citedcat.id.age) : 'number' argument removed
+	(measure.dynamics.citingcat.id.age) : 'number' argument removed
+	(measure.dynamics.d.d) : 'sd' and 'no' arguments removed
+	* interfaces/R/src/rinterface.c (R_igraph_measure_dynamics_id)
+	(R_igraph_measure_dynamics_idwindow)
+	(R_igraph_measure_dynamics_idage)
+	(R_igraph_measure_dynamics_citedcat_id_age)
+	(R_igraph_mesaure_dynamics_citingcat_id_age)
+	(R_igraph_measure_dynamics_d_d) : updated
+	(R_igrpah_measure_dynamics_idage_debug) : removed
+	
+
+2007-03-09  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : 'arrow.mode' argument added
+	* interfaces/R/igraph/R/plot.common.R (i.get.arrow.mode) : added
+
+2007-03-08  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/games.R (lastcit.game) : added
+	* interfaces/R/igraph/R/measure.dynamics.R (measure.dynamics.lastcit) : added
+	* interfaces/R/src/rinterface.c (R_igraph_measure_dynamics_lastcit)
+	(R_igraph_measure_dynamics_lastcit_st, R_igraph_lastcit_game) : added
+
+	* interfaces/R/igraph/R/games.R (lastcit.game) : added 'directed' argument
+	* interfaces/R/src/rinterface.c (R_igraph_lastcit_game) : 'directed' arg. added
+	
+2007-03-06  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/measure.dynamics.R 
+	(mesasure.dynamics.citingcat.id.age, measure.dynamics.citedcat.id.age) :
+	* interfaces/R/src/rinterface.c (R_igraph_measure_dynamics_citedcat_id_age)
+	(R_igraph_measure_dynamics_citingcat_id_age) : 	standard deviation 
+	calculation corrected 	
+
 2007-02-27  Gabor Csardi  <csardi@rmki.kfki.hu>
 
 	* interfaces/R/igraph/R/structural.properties.R (alpha.centrality) : 
 	added
+
+	* interfaces/R/igraph/R/print.R (print.igraph) : better printing of 
+	vertex and edge arguments 
+
+	* interfaces/R/igraph/R/print.R (summary.igraph) : print attribute names
 
 2007-02-18  Gabor Csardi  <csardi@rmki.kfki.hu>
 

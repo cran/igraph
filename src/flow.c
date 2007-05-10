@@ -23,6 +23,7 @@
 
 #include "igraph.h"
 #include "error.h"
+#include "memory.h"
 
 #include <limits.h>
 #include <stdio.h>
@@ -411,24 +412,36 @@ int igraph_st_mincut_value(const igraph_t *graph, igraph_real_t *value,
 /*   return 0; */
 /* } */
 
-int igraph_i_mincut_value_undirected(const igraph_t *graph, 
-				     igraph_integer_t *res,
-				     const igraph_vector_t *capacity) {
+int igraph_i_mincut_undirected(const igraph_t *graph, 
+			       igraph_integer_t *res,
+			       igraph_vector_t *partition,
+			       igraph_vector_t *partition2,
+			       igraph_vector_t *cut,
+			       const igraph_vector_t *capacity) {
   
   long int no_of_nodes=igraph_vcount(graph);
-  long int no_of_edges=igraph_ecount(graph);
+  long int no_of_edges=igraph_ecount(graph);  
 
   igraph_i_cutheap_t heap;
-  igraph_real_t mincut=1.0/0.0;	/* infinity */
+  igraph_real_t mincut=IGRAPH_INFINITY;	/* infinity */
   long int i;
   
   igraph_i_adjlist_t adjlist;
   igraph_i_adjedgelist_t adjedgelist;
+
+  igraph_vector_t mergehist;
+  igraph_bool_t calc_cut=partition || partition2 || cut;
+  long int act_step=0, mincut_step=0;
   
   if (igraph_vector_size(capacity) != no_of_edges) {
     IGRAPH_ERROR("Invalid capacity vector size", IGRAPH_EINVAL);
   }
-  
+
+  if (calc_cut) {
+    IGRAPH_VECTOR_INIT_FINALLY(&mergehist, 0);
+    IGRAPH_CHECK(igraph_vector_reserve(&mergehist, no_of_nodes*2));
+  }
+
   IGRAPH_CHECK(igraph_i_cutheap_init(&heap, no_of_nodes));
   IGRAPH_FINALLY(igraph_i_cutheap_destroy, &heap);
 
@@ -469,6 +482,7 @@ int igraph_i_mincut_value_undirected(const igraph_t *graph,
 
     if (acut < mincut) {
       mincut=acut;
+      mincut_step=act_step;
     }    
 
     if (mincut == 0) {
@@ -476,6 +490,12 @@ int igraph_i_mincut_value_undirected(const igraph_t *graph,
     }
 
     /* And contract the last and the remaining vertex (a and last) */
+    /* Before actually doing that, make some notes */
+    act_step++;
+    if (calc_cut) {
+      IGRAPH_CHECK(igraph_vector_push_back(&mergehist, a));
+      IGRAPH_CHECK(igraph_vector_push_back(&mergehist, last));
+    }
     /* First remove the a--last edge if there is one, a is still the
        last deactivated vertex */
     edges=igraph_i_adjedgelist_get(&adjedgelist, a);
@@ -543,7 +563,145 @@ int igraph_i_mincut_value_undirected(const igraph_t *graph,
   igraph_i_adjlist_destroy(&adjlist);
   igraph_i_cutheap_destroy(&heap);
   IGRAPH_FINALLY_CLEAN(3);
+
+  if (calc_cut) {
+    long int bignode=VECTOR(mergehist)[2*mincut_step+1];
+    long int i, idx;
+    long int size=1;
+    char *mark;
+    mark=Calloc(no_of_nodes, char);
+    if (!mark) { 
+      IGRAPH_ERROR("Not enough memory for minumum cut", IGRAPH_ENOMEM);
+    }
+    IGRAPH_FINALLY(igraph_free, mark);
+    
+    /* first count the vertices in the partition */
+    mark[bignode]=1;
+    for (i=mincut_step-1; i>=0; i--) {
+      if ( mark[ (long int) VECTOR(mergehist)[2*i] ] ) {
+	size++;
+	mark [ (long int) VECTOR(mergehist)[2*i+1] ]=1;
+      }
+    }
+	
+    /* now store them, if requested */
+    if (partition) {
+      IGRAPH_CHECK(igraph_vector_resize(partition, size));
+      idx=0;
+      VECTOR(*partition)[idx++]=bignode;
+      for (i=mincut_step-1; i>=0; i--) {
+	if (mark[ (long int) VECTOR(mergehist)[2*i] ]) {
+	  VECTOR(*partition)[idx++] = VECTOR(mergehist)[2*i+1];
+	}
+      }
+    }
+
+    /* The other partition too? */
+    if (partition2) {
+      IGRAPH_CHECK(igraph_vector_resize(partition2, no_of_nodes-size));
+      idx=0;
+      for (i=0; i<no_of_nodes; i++) {
+	if (!mark[i]) {
+	  VECTOR(*partition2)[idx++]=i;
+	}
+      }
+    }
+    
+    /* The edges in the cut are also requested? */
+    /* We want as few memory allocated for 'cut' as possible,
+       so we first collect the edges in mergehist, we don't 
+       need that anymore. Then we copy it to 'cut';  */
+    if (cut) {
+      igraph_integer_t from, to;
+      igraph_vector_clear(&mergehist);
+      for (i=0; i<no_of_edges; i++) {
+	igraph_edge(graph, i, &from, &to);
+	if ((mark[(long int)from] && !mark[(long int)to]) ||
+	    (mark[(long int)to] && !mark[(long int)from])) {
+	  IGRAPH_CHECK(igraph_vector_push_back(&mergehist, i));
+	}
+      }
+      igraph_vector_clear(cut);
+      IGRAPH_CHECK(igraph_vector_append(cut, &mergehist));
+    }
+
+    igraph_free(mark);
+    igraph_vector_destroy(&mergehist);
+    IGRAPH_FINALLY_CLEAN(2);
+  }
+  
   return 0;
+}
+
+/** 
+ * \function igraph_mincut
+ * Calculates the minimum cut in a graph.
+ * 
+ * This function calculates the minimum cut in a graph. Right now it
+ * is implemented only for undirected graphs, in which case it uses
+ * the Stoer-Wagner algorithm, as described in M. Stoer and F. Wagner: 
+ * A simple min-cut algorithm, Journal of the ACM, 44 585-591, 1997. 
+ * 
+ * </para><para>
+ * The minimum cut is the mimimum set of edges which needs to be
+ * removed to disconnect the graph. The minimum is calculated using
+ * the weigths (\p capacity) of the edges, so the cut with the minimum
+ * total capacity is calculated. 
+ * 
+ * </para><para>
+ * The first implementation of the actual cut calculation was made by 
+ * Gregory Benison, thanks Greg.
+ * \param graph The input graph.
+ * \param value Pointer to an integer, the value of the cut will be
+ *    stored here.
+ * \param partition Pointer to an initialized vector, the ids
+ *    of the vertices in the first partition after separating the
+ *    graph will be stored here. The vector will be resized as
+ *    needed. This argument is ignored if it is a NULL pointer. 
+ * \param partition2 Pointer to an initialized vector the ids
+ *    of the vertices in the second partition will be stored here. 
+ *    The vector will be resized as needed. This argument is ignored
+ *    if it is a NULL pointer.
+ * \param cut Pointer to an initialized vector, the ids of the edges
+ *    in the cut will be stored here. This argument is ignored if it
+ *    is a NULL pointer.
+ * \param capacity A numeric vector giving the capacities of the
+ *    edges. 
+ * \return Error code.
+ * 
+ * \sa \ref igraph_mincut_value(), a simpler interface for calculating
+ * the value of the cut only.
+ *
+ * Time complexity: for undirected graphs it is O(|V|E|+|V|^2 log|V|),
+ * |V| and |E| are the number of vertices and edges respectively.
+ */
+
+int igraph_mincut(const igraph_t *graph,
+		  igraph_integer_t *value,
+		  igraph_vector_t *partition,
+		  igraph_vector_t *partition2,
+		  igraph_vector_t *cut,
+		  const igraph_vector_t *capacity) {
+  
+  if (igraph_is_directed(graph) && 
+      (partition || partition2 || cut)) {
+    IGRAPH_ERROR("Minimum cut for directed graph not yet implemented", 
+		 IGRAPH_UNIMPLEMENTED);
+  } else if (!partition && !partition2 && !cut) {
+    return igraph_mincut_value(graph, value, capacity);
+  } else {
+    return igraph_i_mincut_undirected(graph, value, partition, 
+				      partition2, cut, capacity);
+  }
+  
+  return 0;
+}
+    
+
+int igraph_i_mincut_value_undirected(const igraph_t *graph, 
+				     igraph_integer_t *res,
+				     const igraph_vector_t *capacity) {
+  return igraph_i_mincut_undirected(graph, res, 0, 0, 0, capacity);
 }
 
 /** 
@@ -574,7 +732,8 @@ int igraph_i_mincut_value_undirected(const igraph_t *graph,
  *    the graph.
  * \return Error code.
  *
- * \sa \ref igraph_maxflow_value(), \ref igraph_st_mincut_value().
+ * \sa \ref igraph_mincut(), \ref igraph_maxflow_value(), \ref
+ * igraph_st_mincut_value(). 
  * 
  * Time complexity: O(log(|V|)*|V|^2) for undirected graphs and 
  * O(|V|^4) for directed graphs, but see also the discussion at the
@@ -588,7 +747,7 @@ int igraph_mincut_value(const igraph_t *graph, igraph_real_t *res,
   igraph_real_t minmaxflow, flow;
   long int i;
 
-  minmaxflow=1.0/0.0;
+  minmaxflow=IGRAPH_INFINITY;
 
   if (!igraph_is_directed(graph)) {
     IGRAPH_CHECK(igraph_i_mincut_value_undirected(graph, res, capacity));
@@ -645,7 +804,7 @@ int igraph_i_st_vertex_connectivity_directed(const igraph_t *graph,
     IGRAPH_CHECK(igraph_are_connected(graph, source, target, &conn1));
     if (conn1) {
 /*       fprintf(stderr, "%li -> %li connected\n", (long int)source, (long int) target); */
-      *res=1.0/0.0;
+      *res=IGRAPH_INFINITY;
       return 0;
 /*     } else { */
 /*       fprintf(stderr, "not connected\n"); */
@@ -729,7 +888,7 @@ int igraph_i_st_vertex_connectivity_undirected(const igraph_t *graph,
   case IGRAPH_VCONN_NEI_INFINITY:
     IGRAPH_CHECK(igraph_are_connected(graph, source, target, &conn));
     if (conn) {
-      *res=1.0/0.0;
+      *res=IGRAPH_INFINITY;
       return 0;
     }
     break;
@@ -857,6 +1016,48 @@ int igraph_i_vertex_connectivity_undirected(const igraph_t *graph,
   return 0;  
 }
 
+/* Use that vertex.connectivity(G) <= edge.connectivity(G) <= min(degree(G)) */
+int igraph_i_connectivity_checks(const igraph_t *graph,
+				 igraph_integer_t *res,
+				 igraph_bool_t *found) {
+  igraph_bool_t conn;
+  *found=0;
+  IGRAPH_CHECK(igraph_is_connected(graph, &conn, IGRAPH_STRONG));
+  if (!conn) {
+    *res=0;
+    *found=1;
+  } else {
+    igraph_vector_t degree;
+    IGRAPH_VECTOR_INIT_FINALLY(&degree, 0);
+    if (!igraph_is_directed(graph)) {
+      IGRAPH_CHECK(igraph_degree(graph, &degree, igraph_vss_all(),
+				 IGRAPH_OUT, IGRAPH_LOOPS));
+      if (igraph_vector_min(&degree)==1) {
+	*res=1;
+	*found=1;
+      }
+    } else {
+      /* directed, check both in- & out-degree */
+      IGRAPH_CHECK(igraph_degree(graph, &degree, igraph_vss_all(),
+				 IGRAPH_OUT, IGRAPH_LOOPS));
+      if (igraph_vector_min(&degree)==1) {
+	*res=1;
+	*found=1;
+      } else {
+	IGRAPH_CHECK(igraph_degree(graph, &degree, igraph_vss_all(),
+				   IGRAPH_IN, IGRAPH_LOOPS));
+	if (igraph_vector_min(&degree)==1) {
+	  *res=1;
+	  *found=1;
+	}
+      }
+    }
+    igraph_vector_destroy(&degree);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  return 0;
+}
+
 /**
  * \function igraph_vertex_connectivity
  * The vertex connectivity of a graph
@@ -870,6 +1071,13 @@ int igraph_i_vertex_connectivity_undirected(const igraph_t *graph,
  * conditional density, Sociological Methodology 31:305--359, 2001.
  * \param graph The input graph.
  * \param res Pointer to an integer, the result will be stored here. 
+ * \param checks Logical constant. Whether to check that the graph is
+ *    connected and also the degree of the vertices. If the graph is
+ *    not (strongly) connected then the connectivity is obviously zero. Otherwise
+ *    if the minimum degree is one then the vertex connectivity is also
+ *    one. It is a good idea to perform these checks, as they can be
+ *    done quickly compared to the connectivity calculation itself. 
+ *    They were suggested by Peter McMahan, thanks Peter.
  * \return Error code.
  * 
  * Time complecity: O(|V|^5).
@@ -878,13 +1086,24 @@ int igraph_i_vertex_connectivity_undirected(const igraph_t *graph,
  * and \ref igraph_edge_connectivity(). 
  */
 
-int igraph_vertex_connectivity(const igraph_t *graph, igraph_integer_t *res) {
-  
-  if (igraph_is_directed(graph)) {
-    IGRAPH_CHECK(igraph_i_vertex_connectivity_directed(graph, res));
-  } else {
-    IGRAPH_CHECK(igraph_i_vertex_connectivity_undirected(graph, res));
+int igraph_vertex_connectivity(const igraph_t *graph, igraph_integer_t *res, 
+			       igraph_bool_t checks) {
+
+  igraph_bool_t ret=0;
+
+  if (checks) {
+    IGRAPH_CHECK(igraph_i_connectivity_checks(graph, res, &ret));
   }
+  
+  /* Are we done yet? */
+  if (!ret) {
+    if (igraph_is_directed(graph)) {
+      IGRAPH_CHECK(igraph_i_vertex_connectivity_directed(graph, res));
+    } else {
+      IGRAPH_CHECK(igraph_i_vertex_connectivity_undirected(graph, res));
+    }
+  }
+
   return 0;
 }
 
@@ -953,6 +1172,13 @@ int igraph_st_edge_connectivity(const igraph_t *graph, igraph_integer_t *res,
  * density, Sociological Methodology 31:305--359, 2001.
  * \param graph The input graph.
  * \param res Pointer to an integer, the result will be stored here.
+ * \param checks Logical constant. Whether to check that the graph is
+ *    connected and also the degree of the vertices. If the graph is
+ *    not (strongly) connected then the connectivity is obviously zero. Otherwise
+ *    if the minimum degree is one then the edge connectivity is also
+ *    one. It is a good idea to perform these checks, as they can be
+ *    done quickly compared to the connectivity calculation itself. 
+ *    They were suggested by Peter McMahan, thanks Peter.
  * \return Error code.
  * 
  * Time complexity: O(log(|V|)*|V|^2) for undirected graphs and 
@@ -963,21 +1189,31 @@ int igraph_st_edge_connectivity(const igraph_t *graph, igraph_integer_t *res,
  * \ref igraph_vertex_connectivity().
  */
 
-int igraph_edge_connectivity(const igraph_t *graph, igraph_integer_t *res) {
+int igraph_edge_connectivity(const igraph_t *graph, igraph_integer_t *res,
+			     igraph_bool_t checks) {
   
   long int no_of_edges=igraph_ecount(graph);
   igraph_vector_t capacity;
   long int i;
+  igraph_bool_t ret;
+  
+  /* Use that vertex.connectivity(G) <= edge.connectivity(G) <= min(degree(G)) */
+  if (checks) {
+    IGRAPH_CHECK(igraph_i_connectivity_checks(graph, res, &ret));
+  }  
 
-  IGRAPH_VECTOR_INIT_FINALLY(&capacity, no_of_edges);
-  for (i=0; i<no_of_edges; i++) {
-    VECTOR(capacity)[i]=1.0;
+  if (!ret) {
+    IGRAPH_VECTOR_INIT_FINALLY(&capacity, no_of_edges);
+    for (i=0; i<no_of_edges; i++) {
+      VECTOR(capacity)[i]=1.0;
+    }
+    
+    IGRAPH_CHECK(igraph_mincut_value(graph, res, &capacity));
+    
+    igraph_vector_destroy(&capacity);
+    IGRAPH_FINALLY_CLEAN(1);
   }
-  
-  IGRAPH_CHECK(igraph_mincut_value(graph, res, &capacity));
-  
-  igraph_vector_destroy(&capacity);
-  IGRAPH_FINALLY_CLEAN(1);
+
   return 0;
 }
 
@@ -1136,7 +1372,14 @@ int igraph_vertex_disjoint_paths(const igraph_t *graph, igraph_integer_t *res,
  * with uniform edge weights.
  * \param graph The input graph, either directed or undirected.
  * \param res Pointer to an integer, the result will be stored here.
- * \return Error code.
+ * \param checks Logical constant. Whether to check that the graph is
+ *    connected and also the degree of the vertices. If the graph is
+ *    not (strongly) connected then the adhesion is obviously zero. Otherwise
+ *    if the minimum degree is one then the adhesion is also
+ *    one. It is a good idea to perform these checks, as they can be
+ *    done quickly compared to the edge connectivity calculation itself. 
+ *    They were suggested by Peter McMahan, thanks Peter.
+* \return Error code.
  * 
  * Time complexity: O(log(|V|)*|V|^2) for undirected graphs and 
  * O(|V|^4) for directed graphs, but see also the discussion at the
@@ -1146,22 +1389,9 @@ int igraph_vertex_disjoint_paths(const igraph_t *graph, igraph_integer_t *res,
  * igraph_edge_connectivity(), \ref igraph_mincut_value().
  */
 
-int igraph_adhesion(const igraph_t *graph, igraph_integer_t *res) {
-  
-  long int no_of_edges=igraph_ecount(graph);
-  igraph_vector_t capacity;
-  long int i;
-  
-  IGRAPH_VECTOR_INIT_FINALLY(&capacity, no_of_edges);
-  for (i=0; i<no_of_edges; i++) {
-    VECTOR(capacity)[i]=1.0;
-  }
-
-  IGRAPH_CHECK(igraph_mincut_value(graph, res, &capacity));
-  
-  igraph_vector_destroy(&capacity);
-  IGRAPH_FINALLY_CLEAN(1);
-  return 0;
+int igraph_adhesion(const igraph_t *graph, igraph_integer_t *res,
+		    igraph_bool_t checks) {
+  return igraph_edge_connectivity(graph, res, checks);
 }
 
 /**
@@ -1177,6 +1407,13 @@ int igraph_adhesion(const igraph_t *graph, igraph_integer_t *res) {
  * \param graph The input graph.
  * \param res Pointer to an integer variable, the result will be
  *        stored here.
+ * \param checks Logical constant. Whether to check that the graph is
+ *    connected and also the degree of the vertices. If the graph is
+ *    not (strongly) connected then the cohesion is obviously zero. Otherwise
+ *    if the minimum degree is one then the cohesion is also
+ *    one. It is a good idea to perform these checks, as they can be
+ *    done quickly compared to the vertex connectivity calculation itself. 
+ *    They were suggested by Peter McMahan, thanks Peter.
  * \return Error code.
  * 
  * Time complexity: O(|V|^4), |V| is the number of vertices. In
@@ -1186,8 +1423,9 @@ int igraph_adhesion(const igraph_t *graph, igraph_integer_t *res) {
  * \ref igraph_maxflow_value().
  */
 
-int igraph_cohesion(const igraph_t *graph, igraph_integer_t *res) {
+int igraph_cohesion(const igraph_t *graph, igraph_integer_t *res,
+		    igraph_bool_t checks) {
   
-  IGRAPH_CHECK(igraph_vertex_connectivity(graph, res));
+  IGRAPH_CHECK(igraph_vertex_connectivity(graph, res, checks));
   return 0;
 }

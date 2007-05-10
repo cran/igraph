@@ -26,11 +26,13 @@
 
 #include <math.h>
 
-int igraph_measure_dynamics_id(const igraph_t *graph, igraph_integer_t start_vertex,
+int igraph_measure_dynamics_id(const igraph_t *graph,
 			       igraph_matrix_t *ak, igraph_matrix_t *sd,
-			       igraph_matrix_t *confint, igraph_matrix_t *no,
-			       const igraph_vector_t *st, igraph_integer_t pmaxind,
-			       igraph_real_t significance, igraph_bool_t lno) {
+			       igraph_matrix_t *no, igraph_vector_t *cites,
+			       igraph_vector_t *debug, 
+			       igraph_integer_t debugdeg,
+			       const igraph_vector_t *st, 
+			       igraph_integer_t pmaxind) {
   
   long int maxind=pmaxind;
   long int no_of_nodes=igraph_vcount(graph);
@@ -44,7 +46,7 @@ int igraph_measure_dynamics_id(const igraph_t *graph, igraph_integer_t start_ver
   long int i;
   long int edges=0;
   
-  igraph_bool_t lsd=(significance != 0);
+  igraph_bool_t lsd=(sd != 0);
 
   igraph_vector_init(&neis, 0);
   indegree=Calloc(no_of_nodes, int);
@@ -52,37 +54,14 @@ int igraph_measure_dynamics_id(const igraph_t *graph, igraph_integer_t start_ver
   igraph_matrix_null(ak);
   if (lsd) {
     igraph_matrix_resize(sd, maxind+1, 1);
-    igraph_matrix_resize(confint, maxind+1, 1);
-    igraph_matrix_null(ak);
-    /* TODO: significance calculation */
+    igraph_matrix_null(sd);
   }
   igraph_vector_init(&ntk, maxind+1);
   igraph_vector_init(&ch, maxind+1);
   igraph_matrix_init(&normfact, maxind+1, 1);
   igraph_vector_init(&notnull, maxind+1);
 
-  for (node=0; node<start_vertex; node++) {
-    
-    igraph_neighbors(graph, &neis, node, IGRAPH_OUT);
-    for (i=0; i<igraph_vector_size(&neis); i++) {
-      long int to=VECTOR(neis)[i];
-      long int xidx=indegree[to];
-      
-      indegree[to] ++;
-      VECTOR(ntk)[xidx] --;
-      VECTOR(ntk)[xidx+1] ++;
-    }
-    
-    VECTOR(ntk)[0]++;
-  }
-  
-  if (start_vertex != 0) {
-    for (i=0; i<maxind+1; i++) {
-      VECTOR(ch)[i]=start_vertex;
-    }
-  }
-  
-  for (node=start_vertex; node<no_of_nodes; node++) {
+  for (node=0; node<no_of_nodes; node++) {
 
     IGRAPH_ALLOW_INTERRUPTION();
     
@@ -97,7 +76,10 @@ int igraph_measure_dynamics_id(const igraph_t *graph, igraph_integer_t start_ver
       VECTOR(notnull)[xidx] += 1;
       MATRIX(*ak, xidx, 0) += (xk-oldm)/VECTOR(notnull)[xidx];
       if (lsd) {
-	MATRIX(*confint, xidx, 0) += (xk-oldm)*(xk-MATRIX(*ak, xidx, 0));
+	MATRIX(*sd, xidx, 0) += (xk-oldm)*(xk-MATRIX(*ak, xidx, 0));
+      }
+      if (debug && xidx==debugdeg) {
+	igraph_vector_push_back(debug, xk);
       }
     }
 
@@ -134,30 +116,173 @@ int igraph_measure_dynamics_id(const igraph_t *graph, igraph_integer_t start_ver
     oldmean=MATRIX(*ak, i, 0);
     MATRIX(*ak, i, 0) *= VECTOR(notnull)[i] / MATRIX(normfact, i, 0);
     if (lsd) {
-      /* TODO: confidence interval estimation */
-      MATRIX(*confint, i, 0) +=
+      MATRIX(*sd, i, 0) +=
 	oldmean * oldmean * VECTOR(notnull)[i] *
 	(1-VECTOR(notnull)[i]/MATRIX(normfact, i, 0));
       if (MATRIX(normfact, i, 0) > 0) {
-	MATRIX(*confint, i, 0) =
-	  sqrt(MATRIX(*confint, i, 0)/(MATRIX(normfact, i, 0)-1));
-	MATRIX(*sd, i, 0) = MATRIX(*confint,i,0);
+	MATRIX(*sd, i, 0) =
+	  sqrt(MATRIX(*sd, i, 0)/(MATRIX(normfact, i, 0)-1));
       }
     }
   }
-  
-  if (!lno) {
-    igraph_matrix_destroy(&normfact);
-  } else {
+
+  if (no) {
     igraph_matrix_destroy(no);
     *no=normfact;
+  } else {
+    igraph_matrix_destroy(&normfact);
+  }
+  if (cites) {
+    igraph_vector_destroy(cites);
+    *cites=notnull;
+  } else {
+    igraph_vector_destroy(&notnull);
   }
   
   Free(indegree);
   igraph_vector_destroy(&ntk);
   igraph_vector_destroy(&ch);
-  igraph_vector_destroy(&notnull);
   igraph_vector_destroy(&neis);
+  
+  return 0;
+}
+
+int igraph_measure_dynamics_id_expected(const igraph_t *graph,
+					igraph_vector_t *res,
+					const igraph_vector_t *ak,
+					const igraph_vector_t *st,
+					igraph_integer_t pmaxind) {
+  long int maxind=pmaxind;
+  
+  igraph_vector_t ntk;
+  igraph_vector_t indegree;
+  igraph_vector_t neis;
+  
+  long int no_of_nodes=igraph_vcount(graph);
+  long int node, i, j;
+
+  IGRAPH_VECTOR_INIT_FINALLY(&ntk, maxind+1);
+  IGRAPH_VECTOR_INIT_FINALLY(&indegree, no_of_nodes);
+  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  
+  IGRAPH_CHECK(igraph_vector_resize(res, maxind+1));
+  igraph_vector_null(res);
+
+  for (node=0; node<no_of_nodes; node++) {    
+    
+    IGRAPH_ALLOW_INTERRUPTION();
+    
+    /* measure expected number of citations */
+    IGRAPH_CHECK(igraph_neighbors(graph, &neis, node, IGRAPH_OUT));
+    for (i=0; i<igraph_vector_size(&neis); i++) {
+      for (j=0; j<maxind+1; j++) {
+	VECTOR(*res)[j] +=
+	  VECTOR(*ak)[j]*VECTOR(ntk)[j]/VECTOR(*st)[node]; 
+      }      
+    }
+
+    /* update degree & ntk */
+    VECTOR(ntk)[0]++;
+    for (i=0; i<igraph_vector_size(&neis); i++) {
+      long int to=VECTOR(neis)[i];
+      long int xidx=VECTOR(indegree)[to];
+      VECTOR(indegree)[to]++;
+      VECTOR(ntk)[xidx]--;
+      VECTOR(ntk)[xidx+1]++;
+    }
+  }
+
+  igraph_vector_destroy(&neis);
+  igraph_vector_destroy(&indegree);
+  igraph_vector_destroy(&ntk);
+  IGRAPH_FINALLY_CLEAN(3);
+  
+  return 0;
+}
+
+int igraph_measure_dynamics_id_expected2(const igraph_t *graph,
+					 igraph_vector_t *res,
+					 const igraph_vector_t *ak,
+					 const igraph_vector_t *st,
+					 igraph_integer_t pmaxind) {
+  long int maxind=pmaxind;
+  
+  igraph_vector_t ntk;
+  igraph_vector_t cumst;
+  igraph_vector_t ch;
+  igraph_vector_t indegree;
+  igraph_vector_t outdegree;
+  igraph_vector_t neis;
+
+  long int no_of_nodes=igraph_vcount(graph);
+  long int node, i;
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&ntk, maxind+1);
+  IGRAPH_VECTOR_INIT_FINALLY(&ch, maxind+1);
+  IGRAPH_VECTOR_INIT_FINALLY(&cumst, no_of_nodes+1);
+  IGRAPH_VECTOR_INIT_FINALLY(&indegree, no_of_nodes);
+  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  IGRAPH_VECTOR_INIT_FINALLY(&outdegree, no_of_nodes);
+
+  IGRAPH_CHECK(igraph_degree(graph, &outdegree, igraph_vss_all(),
+			     IGRAPH_OUT, IGRAPH_LOOPS));
+
+  /* create the cumulative sum of dt/S(t) */
+  VECTOR(cumst)[0]=0;
+  for (i=0; i<no_of_nodes; i++) {
+    VECTOR(cumst)[i+1] = VECTOR(cumst)[i] + 
+      VECTOR(outdegree)[i]/VECTOR(*st)[i];
+  }
+
+  igraph_vector_destroy(&outdegree);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  IGRAPH_CHECK(igraph_vector_resize(res, maxind+1));
+  igraph_vector_null(res);
+  
+  for (node=0; node<no_of_nodes; node++) {
+    
+    IGRAPH_ALLOW_INTERRUPTION();
+    
+    IGRAPH_CHECK(igraph_neighbors(graph, &neis, node, IGRAPH_OUT));
+    
+    /* update degree and ntk */
+    /* update result if needed */
+    for (i=0; i<igraph_vector_size(&neis); i++) {
+      long int to=VECTOR(neis)[i];
+      long int xidx=VECTOR(indegree)[to];
+      VECTOR(indegree)[to]++;
+      
+      VECTOR(ntk)[xidx]--;
+      VECTOR(*res)[xidx] += (VECTOR(ntk)[xidx]+1)*
+	(VECTOR(cumst)[node]-VECTOR(cumst)[(long int)VECTOR(ch)[xidx]]);
+      VECTOR(ch)[xidx]=node;
+
+      VECTOR(ntk)[xidx+1]++;
+      VECTOR(*res)[xidx+1] += (VECTOR(ntk)[xidx+1]-1)*
+	(VECTOR(cumst)[node]-VECTOR(cumst)[(long int)VECTOR(ch)[xidx+1]]);
+      VECTOR(ch)[xidx+1]=node;
+    }
+    
+    VECTOR(ntk)[0]++;
+    VECTOR(*res)[0] += (VECTOR(ntk)[0]-1)*
+      (VECTOR(cumst)[node]-VECTOR(cumst)[(long int)VECTOR(ch)[0]]);
+    VECTOR(ch)[0]=node;
+  }
+  
+  /* complete res */
+  for (i=0; i<maxind+1; i++) {
+    VECTOR(*res)[i] += VECTOR(ntk)[i]*
+      (VECTOR(cumst)[node]-VECTOR(cumst)[(long int)VECTOR(ch)[i]]);
+    VECTOR(*res)[i] *= VECTOR(*ak)[i];
+  }
+  
+  igraph_vector_destroy(&neis);
+  igraph_vector_destroy(&indegree);
+  igraph_vector_destroy(&cumst);
+  igraph_vector_destroy(&ch);
+  igraph_vector_destroy(&ntk);
+  IGRAPH_FINALLY_CLEAN(5);
   
   return 0;
 }
@@ -205,14 +330,10 @@ int igraph_measure_dynamics_id_st(const igraph_t *graph,
 }
 
 int igraph_measure_dynamics_idwindow(const igraph_t *graph, 
-				     igraph_integer_t start_vertex,
 				     igraph_matrix_t *ak, 
 				     igraph_matrix_t *sd,
-				     igraph_matrix_t *confint,
-				     igraph_matrix_t *no,
 				     const igraph_vector_t *st,
 				     igraph_integer_t pmaxind,
-				     igraph_real_t significance,
 				     igraph_integer_t time_window) {
   long int maxind=pmaxind;
   long int no_of_nodes=igraph_vcount(graph);
@@ -227,8 +348,7 @@ int igraph_measure_dynamics_idwindow(const igraph_t *graph,
   long int i, j;
   long int edges=0;
   
-  igraph_bool_t lsd=(significance != 0);
-  igraph_bool_t lno=(no != 0);
+  igraph_bool_t lsd=(sd != 0);
   
   IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
   IGRAPH_VECTOR_INIT_FINALLY(&indegree, no_of_nodes);
@@ -242,7 +362,7 @@ int igraph_measure_dynamics_idwindow(const igraph_t *graph,
   igraph_matrix_null(ak);
   if (lsd) {
     igraph_matrix_resize(sd, maxind+1, 1);
-    igraph_matrix_resize(confint, maxind+1, 1);
+    igraph_matrix_null(sd);
   } 
   
   for (node=0; node<no_of_nodes; node++) {
@@ -251,18 +371,16 @@ int igraph_measure_dynamics_idwindow(const igraph_t *graph,
 
     /* estimate Ak */
     igraph_neighbors(graph, &neis, node, IGRAPH_OUT);
-    if (node>=start_vertex) {
-      for (i=0; i<igraph_vector_size(&neis); i++) {
-	long int to=VECTOR(neis)[i];
-	long int xidx=VECTOR(indegree)[to];
-	
-	double xk=VECTOR(*st)[node]/VECTOR(ntk)[xidx];
-	double oldm=MATRIX(*ak, xidx, 0);
-	VECTOR(notnull)[xidx]+=1;
-	MATRIX(*ak, xidx, 0) += (xk-oldm)/VECTOR(notnull)[xidx];
-	if (lsd) {
-	  MATRIX(*confint, xidx, 0) += (xk-oldm)*(xk-MATRIX(*ak, xidx, 0));
-	}
+    for (i=0; i<igraph_vector_size(&neis); i++) {
+      long int to=VECTOR(neis)[i];
+      long int xidx=VECTOR(indegree)[to];
+      
+      double xk=VECTOR(*st)[node]/VECTOR(ntk)[xidx];
+      double oldm=MATRIX(*ak, xidx, 0);
+      VECTOR(notnull)[xidx]+=1;
+      MATRIX(*ak, xidx, 0) += (xk-oldm)/VECTOR(notnull)[xidx];
+      if (lsd) {
+	MATRIX(*sd, xidx, 0) += (xk-oldm)*(xk-MATRIX(*ak, xidx, 0));
       }
     }
 
@@ -321,25 +439,19 @@ int igraph_measure_dynamics_idwindow(const igraph_t *graph,
     MATRIX(*ak, i, 0) *= VECTOR(notnull)[i] / MATRIX(normfact, i, 0);
     if (lsd) {
       /* TODO: confidence interval estimation */
-      MATRIX(*confint, i, 0) +=
+      MATRIX(*sd, i, 0) +=
 	oldmean * oldmean * VECTOR(notnull)[i] *
 	(1-VECTOR(notnull)[i]/MATRIX(normfact, i, 0));
       if (MATRIX(normfact, i, 0) > 0) {
-	MATRIX(*confint, i, 0) =
-	  sqrt(MATRIX(*confint, i, 0)/(MATRIX(normfact, i, 0)-1));
-	MATRIX(*sd, i, 0) = MATRIX(*confint,i,0);
+	MATRIX(*sd, i, 0) =
+	  sqrt(MATRIX(*sd, i, 0)/(MATRIX(normfact, i, 0)-1));
       }
     }
   }
   
   igraph_dqueue_destroy(&history);
   igraph_vector_destroy(&notnull);
-  if (!lno) {
-    igraph_matrix_destroy(&normfact);
-  } else {
-    igraph_matrix_destroy(no);
-    *no=normfact;
-  }
+  igraph_matrix_destroy(&normfact);
   igraph_vector_destroy(&ch);
   igraph_vector_destroy(&ntk);
   igraph_vector_destroy(&indegree);
@@ -407,122 +519,13 @@ int igraph_measure_dynamics_idwindow_st(const igraph_t *graph,
   return 0;
 }
     
-  
-
-/* alpha = 
-    0.1,  0.05,   0.025,  0.01,   0.005,  0.001 */
-const int igraph_i_tuppercrit_length=100;
-const igraph_real_t igraph_i_tuppercrit[][6] = {
-  { 3.078,  6.314, 12.706, 31.821, 63.657,318.313 }, /* dof: 1 */
-  { 1.886,  2.920,  4.303,  6.965,  9.925, 22.327 },
-  { 1.638,  2.353,  3.182,  4.541,  5.841, 10.215 },
-  { 1.533,  2.132,  2.776,  3.747,  4.604,  7.173 },
-  { 1.476,  2.015,  2.571,  3.365,  4.032,  5.893 },
-  { 1.440,  1.943,  2.447,  3.143,  3.707,  5.208 },
-  { 1.415,  1.895,  2.365,  2.998,  3.499,  4.782 },
-  { 1.397,  1.860,  2.306,  2.896,  3.355,  4.499 },
-  { 1.383,  1.833,  2.262,  2.821,  3.250,  4.296 },
-  { 1.372,  1.812,  2.228,  2.764,  3.169,  4.143 },
-  { 1.363,  1.796,  2.201,  2.718,  3.106,  4.024 },
-  { 1.356,  1.782,  2.179,  2.681,  3.055,  3.929 },
-  { 1.350,  1.771,  2.160,  2.650,  3.012,  3.852 },
-  { 1.345,  1.761,  2.145,  2.624,  2.977,  3.787 },
-  { 1.341,  1.753,  2.131,  2.602,  2.947,  3.733 },
-  { 1.337,  1.746,  2.120,  2.583,  2.921,  3.686 },
-  { 1.333,  1.740,  2.110,  2.567,  2.898,  3.646 },
-  { 1.330,  1.734,  2.101,  2.552,  2.878,  3.610 },
-  { 1.328,  1.729,  2.093,  2.539,  2.861,  3.579 },
-  { 1.325,  1.725,  2.086,  2.528,  2.845,  3.552 },
-  { 1.323,  1.721,  2.080,  2.518,  2.831,  3.527 },
-  { 1.321,  1.717,  2.074,  2.508,  2.819,  3.505 },
-  { 1.319,  1.714,  2.069,  2.500,  2.807,  3.485 },
-  { 1.318,  1.711,  2.064,  2.492,  2.797,  3.467 },
-  { 1.316,  1.708,  2.060,  2.485,  2.787,  3.450 },
-  { 1.315,  1.706,  2.056,  2.479,  2.779,  3.435 },
-  { 1.314,  1.703,  2.052,  2.473,  2.771,  3.421 },
-  { 1.313,  1.701,  2.048,  2.467,  2.763,  3.408 },
-  { 1.311,  1.699,  2.045,  2.462,  2.756,  3.396 },
-  { 1.310,  1.697,  2.042,  2.457,  2.750,  3.385 },
-  { 1.309,  1.696,  2.040,  2.453,  2.744,  3.375 },
-  { 1.309,  1.694,  2.037,  2.449,  2.738,  3.365 },
-  { 1.308,  1.692,  2.035,  2.445,  2.733,  3.356 },
-  { 1.307,  1.691,  2.032,  2.441,  2.728,  3.348 },
-  { 1.306,  1.690,  2.030,  2.438,  2.724,  3.340 },
-  { 1.306,  1.688,  2.028,  2.434,  2.719,  3.333 },
-  { 1.305,  1.687,  2.026,  2.431,  2.715,  3.326 },
-  { 1.304,  1.686,  2.024,  2.429,  2.712,  3.319 },
-  { 1.304,  1.685,  2.023,  2.426,  2.708,  3.313 },
-  { 1.303,  1.684,  2.021,  2.423,  2.704,  3.307 },
-  { 1.303,  1.683,  2.020,  2.421,  2.701,  3.301 },
-  { 1.302,  1.682,  2.018,  2.418,  2.698,  3.296 },
-  { 1.302,  1.681,  2.017,  2.416,  2.695,  3.291 },
-  { 1.301,  1.680,  2.015,  2.414,  2.692,  3.286 },
-  { 1.301,  1.679,  2.014,  2.412,  2.690,  3.281 },
-  { 1.300,  1.679,  2.013,  2.410,  2.687,  3.277 },
-  { 1.300,  1.678,  2.012,  2.408,  2.685,  3.273 },
-  { 1.299,  1.677,  2.011,  2.407,  2.682,  3.269 },
-  { 1.299,  1.677,  2.010,  2.405,  2.680,  3.265 },
-  { 1.299,  1.676,  2.009,  2.403,  2.678,  3.261 },
-  { 1.298,  1.675,  2.008,  2.402,  2.676,  3.258 },
-  { 1.298,  1.675,  2.007,  2.400,  2.674,  3.255 },
-  { 1.298,  1.674,  2.006,  2.399,  2.672,  3.251 },
-  { 1.297,  1.674,  2.005,  2.397,  2.670,  3.248 },
-  { 1.297,  1.673,  2.004,  2.396,  2.668,  3.245 },
-  { 1.297,  1.673,  2.003,  2.395,  2.667,  3.242 },
-  { 1.297,  1.672,  2.002,  2.394,  2.665,  3.239 },
-  { 1.296,  1.672,  2.002,  2.392,  2.663,  3.237 },
-  { 1.296,  1.671,  2.001,  2.391,  2.662,  3.234 },
-  { 1.296,  1.671,  2.000,  2.390,  2.660,  3.232 },
-  { 1.296,  1.670,  2.000,  2.389,  2.659,  3.229 },
-  { 1.295,  1.670,  1.999,  2.388,  2.657,  3.227 },
-  { 1.295,  1.669,  1.998,  2.387,  2.656,  3.225 },
-  { 1.295,  1.669,  1.998,  2.386,  2.655,  3.223 },
-  { 1.295,  1.669,  1.997,  2.385,  2.654,  3.220 },
-  { 1.295,  1.668,  1.997,  2.384,  2.652,  3.218 },
-  { 1.294,  1.668,  1.996,  2.383,  2.651,  3.216 },
-  { 1.294,  1.668,  1.995,  2.382,  2.650,  3.214 },
-  { 1.294,  1.667,  1.995,  2.382,  2.649,  3.213 },
-  { 1.294,  1.667,  1.994,  2.381,  2.648,  3.211 },
-  { 1.294,  1.667,  1.994,  2.380,  2.647,  3.209 },
-  { 1.293,  1.666,  1.993,  2.379,  2.646,  3.207 },
-  { 1.293,  1.666,  1.993,  2.379,  2.645,  3.206 },
-  { 1.293,  1.666,  1.993,  2.378,  2.644,  3.204 },
-  { 1.293,  1.665,  1.992,  2.377,  2.643,  3.202 },
-  { 1.293,  1.665,  1.992,  2.376,  2.642,  3.201 },
-  { 1.293,  1.665,  1.991,  2.376,  2.641,  3.199 },
-  { 1.292,  1.665,  1.991,  2.375,  2.640,  3.198 },
-  { 1.292,  1.664,  1.990,  2.374,  2.640,  3.197 },
-  { 1.292,  1.664,  1.990,  2.374,  2.639,  3.195 },
-  { 1.292,  1.664,  1.990,  2.373,  2.638,  3.194 },
-  { 1.292,  1.664,  1.989,  2.373,  2.637,  3.193 },
-  { 1.292,  1.663,  1.989,  2.372,  2.636,  3.191 },
-  { 1.292,  1.663,  1.989,  2.372,  2.636,  3.190 },
-  { 1.292,  1.663,  1.988,  2.371,  2.635,  3.189 },
-  { 1.291,  1.663,  1.988,  2.370,  2.634,  3.188 },
-  { 1.291,  1.663,  1.988,  2.370,  2.634,  3.187 },
-  { 1.291,  1.662,  1.987,  2.369,  2.633,  3.185 },
-  { 1.291,  1.662,  1.987,  2.369,  2.632,  3.184 },
-  { 1.291,  1.662,  1.987,  2.368,  2.632,  3.183 },
-  { 1.291,  1.662,  1.986,  2.368,  2.631,  3.182 },
-  { 1.291,  1.662,  1.986,  2.368,  2.630,  3.181 },
-  { 1.291,  1.661,  1.986,  2.367,  2.630,  3.180 },
-  { 1.291,  1.661,  1.986,  2.367,  2.629,  3.179 },
-  { 1.291,  1.661,  1.985,  2.366,  2.629,  3.178 },
-  { 1.290,  1.661,  1.985,  2.366,  2.628,  3.177 },
-  { 1.290,  1.661,  1.985,  2.365,  2.627,  3.176 },
-  { 1.290,  1.661,  1.984,  2.365,  2.627,  3.175 },
-  { 1.290,  1.660,  1.984,  2.365,  2.626,  3.175 },
-  { 1.290,  1.660,  1.984,  2.364,  2.626,  3.174 }, /* dof: 100 */
-  { 1.282,  1.645,  1.960,  2.326,  2.576,  3.090 }  /* dof: infinity */
-};
-
-int igraph_measure_dynamics_idage(const igraph_t *graph, igraph_integer_t start_vertex,
+int igraph_measure_dynamics_idage(const igraph_t *graph,
 				  igraph_matrix_t *akl, 
-				  igraph_matrix_t *sd, igraph_matrix_t *confint, 
+				  igraph_matrix_t *sd,
 				  igraph_matrix_t *no,
+				  igraph_matrix_t *cites,
 				  const igraph_vector_t *st, igraph_integer_t pagebins,
-				  igraph_integer_t pmaxind, igraph_real_t significance,
-				  igraph_bool_t lno) {
+				  igraph_integer_t pmaxind) {
 
   long int agebins=pagebins;
   long int maxind=pmaxind;
@@ -537,8 +540,7 @@ int igraph_measure_dynamics_idage(const igraph_t *graph, igraph_integer_t start_
   long int i, j, k;
   long int edges=0;
 
-  igraph_bool_t lsd=(significance != 0);
-  int signidx=0;
+  igraph_bool_t lsd=(sd != 0);
 
   binwidth = no_of_nodes/agebins+1;
 
@@ -548,52 +550,14 @@ int igraph_measure_dynamics_idage(const igraph_t *graph, igraph_integer_t start_
   igraph_matrix_null(akl);
   if (lsd) {
     igraph_matrix_resize(sd, maxind+1, agebins);
-    igraph_matrix_resize(confint, maxind+1, agebins);
     igraph_matrix_null(sd);
-    if (significance >= 0.998) {
-      signidx=5;
-    } else if (significance >= 0.99) {
-      signidx=4;
-    } else if (significance >= 0.98) {
-      signidx=3;
-    } else if (significance >= 0.95) {
-      signidx=2;
-    } else if (significance >= 0.9) {
-      signidx=1;
-    } else {
-      signidx=0;
-    }
   }
   igraph_matrix_init(&ntkl, maxind+1, agebins+1);
   igraph_matrix_init(&ch, maxind+1, agebins+1);
   igraph_matrix_init(&normfact, maxind+1, agebins);
   igraph_matrix_init(&notnull, maxind+1, agebins);
   
-  for (node=0; node<start_vertex; node++) {
-
-    MATRIX(ntkl, 0, (long int)(start_vertex-node)/binwidth) ++;
-
-    igraph_neighbors(graph, &neis, node, IGRAPH_OUT);
-    for (i=0; i<igraph_vector_size(&neis); i++) {
-      long int to=VECTOR(neis)[i];
-      long int xidx=indegree[to];
-      long int yidx=(start_vertex-to)/binwidth;
-      
-      indegree[to] ++;
-      MATRIX(ntkl, xidx, yidx)--;
-      MATRIX(ntkl, xidx+1, yidx)++;
-    }
-  }
-
-  if (start_vertex != 0) {
-    for (i=0; i<maxind+1; i++) {
-      for (j=0; j<agebins; j++) {
-	MATRIX(ch, i, j) = start_vertex;
-      }
-    }
-  }
-
-  for (node=start_vertex; node<no_of_nodes; node++) {
+  for (node=0; node<no_of_nodes; node++) {
     
     IGRAPH_ALLOW_INTERRUPTION();
 
@@ -609,7 +573,7 @@ int igraph_measure_dynamics_idage(const igraph_t *graph, igraph_integer_t start_
       MATRIX(notnull, xidx, yidx) += 1;
       MATRIX(*akl, xidx, yidx) += (xk-oldm)/MATRIX(notnull, xidx, yidx);
       if (lsd) {
-	MATRIX(*confint, xidx, yidx) += (xk-oldm)*(xk-MATRIX(*akl, xidx, yidx));
+	MATRIX(*sd, xidx, yidx) += (xk-oldm)*(xk-MATRIX(*akl, xidx, yidx));
       }
     }
 
@@ -654,7 +618,6 @@ int igraph_measure_dynamics_idage(const igraph_t *graph, igraph_integer_t start_
 
   /* Ok, measurement done, update change */
   for (i=0; i<maxind+1; i++) {
-    igraph_real_t tuppercrit;
     for (j=0; j<agebins; j++) {
       igraph_real_t oldmean;
       if (MATRIX(ntkl, i, j) != 0) {
@@ -663,40 +626,99 @@ int igraph_measure_dynamics_idage(const igraph_t *graph, igraph_integer_t start_
       oldmean=MATRIX(*akl, i, j);
       MATRIX(*akl, i, j) *= MATRIX(notnull, i, j) / MATRIX(normfact, i, j);
       if (lsd) {
-	MATRIX(*confint, i, j) +=
+	MATRIX(*sd, i, j) +=
 	  oldmean * oldmean * MATRIX(notnull, i, j) * 
 	  (1-MATRIX(notnull,i,j)/MATRIX(normfact,i,j));
 	if (MATRIX(normfact,i,j) > 0) {
-	  MATRIX(*confint, i, j) =
-	    sqrt(MATRIX(*confint, i, j)/(MATRIX(normfact,i,j)-1));
-	  if (MATRIX(normfact,i,j) > igraph_i_tuppercrit_length) {
-	    tuppercrit=
-	      igraph_i_tuppercrit[igraph_i_tuppercrit_length][signidx];
-	  } else {
-	    tuppercrit=igraph_i_tuppercrit
-	      [(long int)MATRIX(normfact,i,j)-1][signidx];
-	  }	  
-	  MATRIX(*sd, i, j) = MATRIX(*confint,i,j);
-	  MATRIX(*confint, i, j) =
-	    tuppercrit * MATRIX(*confint,i,j)/sqrt(MATRIX(normfact,i,j));
+	  MATRIX(*sd, i, j) =
+	    sqrt(MATRIX(*sd, i, j)/(MATRIX(normfact,i,j)-1));
 	}
       }
     }
   }
-  
-  if (!lno) {
-    igraph_matrix_destroy(&normfact);
-  } else {
+
+  if (no) {
     igraph_matrix_destroy(no);
     *no=normfact;
+  } else {
+    igraph_matrix_destroy(&normfact);
+  }
+  if (cites) {
+    igraph_matrix_destroy(cites);
+    *cites=notnull;
+  } else {
+    igraph_matrix_destroy(&notnull);
   }
 
   Free(indegree);
   igraph_matrix_destroy(&ntkl);
   igraph_matrix_destroy(&ch);
-  igraph_matrix_destroy(&notnull);
   igraph_vector_destroy(&neis);
 
+  return 0;
+}
+
+int igraph_measure_dynamics_idage_expected(const igraph_t *graph,
+					   igraph_matrix_t *res,
+					   const igraph_matrix_t *akl,
+					   const igraph_vector_t *st,
+					   igraph_integer_t pmaxind) {
+  long int agebins=igraph_matrix_ncol(akl);
+  long int no_of_nodes=igraph_vcount(graph);
+  long int binwidth=no_of_nodes/agebins+1;
+  long int maxind=pmaxind;
+  
+  igraph_vector_t indegree;
+  igraph_vector_t neis;
+  igraph_matrix_t ntkl;
+
+  long int node, i, j, k;
+
+  IGRAPH_VECTOR_INIT_FINALLY(&indegree, no_of_nodes);
+  IGRAPH_MATRIX_INIT_FINALLY(&ntkl, maxind+1, agebins+1);
+  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  
+  IGRAPH_CHECK(igraph_matrix_resize(res, maxind+1, agebins));
+  igraph_matrix_null(res);
+  
+  for (node=0; node<no_of_nodes; node++) {
+    long int n;
+    
+    IGRAPH_ALLOW_INTERRUPTION();
+    
+    /* expected number of citations */
+    IGRAPH_CHECK(igraph_neighbors(graph, &neis, node, IGRAPH_OUT));
+    n=igraph_vector_size(&neis);
+    for (j=0; j<maxind+1; j++) {
+      for (k=0; k<agebins; k++) {
+	MATRIX(*res, j, k) += 
+	  n * MATRIX(*akl, j, k)*MATRIX(ntkl, j, k)/VECTOR(*st)[node];
+      }
+    }
+    
+    /* update degree & ntkl */
+    MATRIX(ntkl, 0, 0) += 1;
+    for (i=0; i<igraph_vector_size(&neis); i++) {
+      long int to=VECTOR(neis)[i];
+      long int xidx=VECTOR(indegree)[to];
+      long int yidx=(node-to)/binwidth;
+      MATRIX(ntkl, xidx, yidx) -= 1;
+      MATRIX(ntkl, xidx+1, yidx) += 1;
+      VECTOR(indegree)[to] += 1;
+    }
+    for (k=1; node-binwidth*k+1 >= 1; k++) {
+      long int shnode=node-binwidth*k;
+      long int deg=VECTOR(indegree)[shnode];
+      MATRIX(ntkl, deg, k-1) -= 1;
+      MATRIX(ntkl, deg, k) += 1;
+    }
+  }
+  
+  igraph_vector_destroy(&neis);
+  igraph_matrix_destroy(&ntkl);
+  igraph_vector_destroy(&indegree);
+  IGRAPH_FINALLY_CLEAN(3);
+  
   return 0;
 }
 
@@ -754,185 +776,12 @@ int igraph_measure_dynamics_idage_st(const igraph_t *graph, igraph_vector_t *res
   return 0;
 }
 
-int igraph_measure_dynamics_idage_debug(const igraph_t *graph, igraph_matrix_t *akl,
-					igraph_matrix_t *sd, igraph_matrix_t *confint, 
-					igraph_matrix_t *no,
-					const igraph_vector_t *st, igraph_integer_t pagebins,
-					igraph_integer_t pmaxind, igraph_real_t significance,
-					igraph_vector_t *estimates, 
-					igraph_integer_t est_ind, igraph_integer_t est_age,
-					igraph_bool_t lno) {
-  
-  long int agebins=pagebins;
-  long int maxind=pmaxind;
-  long int no_of_nodes=igraph_vcount(graph);
-  long int binwidth;
-  
-  int *indegree;
-  igraph_matrix_t ntkl, ch, normfact, notnull;
-  igraph_vector_t neis;
-  
-  long int node;
-  long int i, j, k;
-  long int edges=0;
-
-  igraph_bool_t lsd=(significance != 0);
-  int signidx=0;
-
-  binwidth = no_of_nodes/agebins+1;
-
-  igraph_vector_init(&neis, 0);
-  indegree=Calloc(no_of_nodes, int);
-  igraph_matrix_resize(akl, maxind+1, agebins);
-  igraph_matrix_null(akl);
-  if (lsd) {
-    igraph_matrix_resize(sd, maxind+1, agebins);
-    igraph_matrix_null(sd);
-    if (significance >= 0.998) {
-      signidx=5;
-    } else if (significance >= 0.99) {
-      signidx=4;
-    } else if (significance >= 0.98) {
-      signidx=3;
-    } else if (significance >= 0.95) {
-      signidx=2;
-    } else if (significance >= 0.9) {
-      signidx=1;
-    } else {
-      signidx=0;
-    }
-  }
-
-  igraph_vector_clear(estimates);
-
-  igraph_matrix_init(&ntkl, maxind+1, agebins+1);
-  igraph_matrix_init(&ch, maxind+1, agebins+1);
-  igraph_matrix_init(&normfact, maxind+1, agebins);
-  igraph_matrix_init(&notnull, maxind+1, agebins);
-
-  for (node=0; node<no_of_nodes; node++) {
-
-    IGRAPH_ALLOW_INTERRUPTION();
-    
-    /* inspect the edges */
-   
-    igraph_neighbors(graph, &neis, node, IGRAPH_OUT);
-    for (i=0; i<igraph_vector_size(&neis); i++) {
-      long int to=VECTOR(neis)[i];
-      long int xidx=indegree[to];
-      long int yidx=(node-to)/binwidth;
-      
-      double xk=VECTOR(*st)[node]/MATRIX(ntkl, xidx, yidx);
-      double oldm=MATRIX(*akl, xidx, yidx);
-      MATRIX(notnull, xidx, yidx) += 1;
-      MATRIX(*akl, xidx, yidx) += (xk-oldm)/MATRIX(notnull, xidx, yidx);
-      if (lsd) {
-	MATRIX(*confint, xidx, yidx) += (xk-oldm)*(xk-MATRIX(*akl, xidx, yidx));
-      }
-
-      if (xidx==est_ind && yidx==est_age) {
-	igraph_vector_push_back(estimates, xk);
-      }
-
-      indegree[to] ++;
-      MATRIX(ntkl, xidx, yidx)--;
-      if (MATRIX(ntkl,xidx, yidx)==0) {
-	MATRIX(normfact, xidx, yidx) += (edges-MATRIX(ch, xidx, yidx)+1);
-	MATRIX(ch, xidx, yidx)=edges;
-      }
-      MATRIX(ntkl, xidx+1, yidx)++;
-      if (MATRIX(ntkl, xidx+1, yidx)==1) {
-	MATRIX(ch, xidx+1, yidx)=edges;
-      }
-      edges++;
-    }
-
-    /* new node, aging */
-    MATRIX(ntkl, 0, 0)++;
-    if (MATRIX(ntkl, 0, 0)==1) {
-      MATRIX(ch, 0, 0)=edges;
-    }
-    for (k=1; node-binwidth*k+1 >=1; k++) {
-      long int shnode=node-binwidth*k;
-      long int deg=indegree[shnode];
-      MATRIX(ntkl, deg, k-1)--;
-      if (MATRIX(ntkl, deg, k-1)==0) {
-	MATRIX(normfact, deg, k-1) += (edges-MATRIX(ch, deg, k-1)+1);
-	MATRIX(ch, deg, k-1)=edges;
-      }
-      MATRIX(ntkl, deg, k)++;
-      if (MATRIX(ntkl, deg, k)==1) {
-	MATRIX(ch, deg, k)=edges;
-      }
-    }
-  }
-
-  /* Ok, measurement done, update change */
-  for (i=0; i<maxind+1; i++) {
-    igraph_real_t tuppercrit;
-    for (j=0; j<agebins; j++) {
-      igraph_real_t oldmean;
-      if (MATRIX(ntkl, i, j) != 0) {
-	MATRIX(normfact, i, j) += (edges-MATRIX(ch, i, j)+1);
-      }
-      oldmean=MATRIX(*akl, i, j);
-      MATRIX(*akl, i, j) *= MATRIX(notnull, i, j) / MATRIX(normfact, i, j);
-      if (lsd) {
-	MATRIX(*confint, i, j) +=
-	  oldmean * oldmean * MATRIX(notnull, i, j) * 
-	  (1-MATRIX(notnull,i,j)/MATRIX(normfact,i,j));
-	if (MATRIX(normfact,i,j) > 0) {
-	  MATRIX(*confint, i, j) =
-	    sqrt(MATRIX(*confint, i, j)/(MATRIX(normfact,i,j)-1));
-	  if (MATRIX(normfact,i,j) > igraph_i_tuppercrit_length) {
-	    tuppercrit=
-	      igraph_i_tuppercrit[igraph_i_tuppercrit_length][signidx];
-	  } else {
-	    tuppercrit=igraph_i_tuppercrit
-	      [(long int)MATRIX(normfact,i,j)-1][signidx];
-	  }
-	  MATRIX(*sd, i, j) = MATRIX(*confint,i,j);
-	  MATRIX(*confint, i, j) =
-	    tuppercrit * MATRIX(*confint,i,j)/sqrt(MATRIX(normfact,i,j));
-	}
-      }
-    }
-  }
-
-  for (i=0; i<igraph_vector_size(estimates); i++) {
-    VECTOR(*estimates)[i] /= MATRIX(normfact, (long int)est_ind, 
-				    (long int)est_age);
-  }
-/*   igraph_vector_push_back(estimates, MATRIX(normfact, est_ind, est_age)); */
-
-
-  if (!lno) {
-    igraph_matrix_destroy(&normfact);
-  } else {
-    igraph_matrix_destroy(no);
-    *no=normfact;
-  }
-  
-  Free(indegree);
-  igraph_matrix_destroy(&ntkl);
-  igraph_matrix_destroy(&ch);
-  igraph_matrix_destroy(&notnull);
-  igraph_vector_destroy(&neis);
-
-  return 0;
-}
-
 int igraph_measure_dynamics_idwindowage(const igraph_t *graph, 
-					igraph_integer_t start_vertex,
 					igraph_matrix_t *akl, 
 					igraph_matrix_t *sd, 
-					igraph_matrix_t *confint, 
-					igraph_matrix_t *no,
 					const igraph_vector_t *st, 
 					igraph_integer_t pagebins,
 					igraph_integer_t pmaxind, 
-					igraph_real_t significance,
-					igraph_bool_t lno, 
 					igraph_integer_t time_window) {
 
   long int agebins=pagebins;
@@ -948,8 +797,7 @@ int igraph_measure_dynamics_idwindowage(const igraph_t *graph,
   long int i, j, k;
   long int edges=0;
 
-  igraph_bool_t lsd=(significance != 0);
-  int signidx=0;
+  igraph_bool_t lsd=(sd != 0);
 
   igraph_dqueue_t history;
 
@@ -961,21 +809,7 @@ int igraph_measure_dynamics_idwindowage(const igraph_t *graph,
   igraph_matrix_null(akl);
   if (lsd) {
     igraph_matrix_resize(sd, maxind+1, agebins);
-    igraph_matrix_resize(confint, maxind+1, agebins);
     igraph_matrix_null(sd);
-    if (significance >= 0.998) {
-      signidx=5;
-    } else if (significance >= 0.99) {
-      signidx=4;
-    } else if (significance >= 0.98) {
-      signidx=3;
-    } else if (significance >= 0.95) {
-      signidx=2;
-    } else if (significance >= 0.9) {
-      signidx=1;
-    } else {
-      signidx=0;
-    }
   }
   igraph_matrix_init(&ntkl, maxind+1, agebins+1);
   igraph_matrix_init(&ch, maxind+1, agebins+1);
@@ -983,35 +817,9 @@ int igraph_measure_dynamics_idwindowage(const igraph_t *graph,
   igraph_matrix_init(&notnull, maxind+1, agebins);
   igraph_dqueue_init(&history, time_window);
   
-  for (node=0; node<start_vertex; node++) {
+  igraph_dqueue_push(&history, -1);
 
-    MATRIX(ntkl, 0, (long int)(start_vertex-node)/binwidth) ++;
-
-    igraph_neighbors(graph, &neis, node, IGRAPH_OUT);
-    for (i=0; i<igraph_vector_size(&neis); i++) {
-      long int to=VECTOR(neis)[i];
-      long int xidx=indegree[to];
-      long int yidx=(start_vertex-to)/binwidth;
-      
-      indegree[to] ++;
-      MATRIX(ntkl, xidx, yidx)--;
-      MATRIX(ntkl, xidx+1, yidx)++;
-    }
-  }
-
-  if (start_vertex != 0) {
-    for (i=0; i<maxind+1; i++) {
-      for (j=0; j<agebins; j++) {
-	MATRIX(ch, i, j) = start_vertex;
-      }
-    }
-  }
-
-  for (i=0; i<=start_vertex; i++) {
-    igraph_dqueue_push(&history, -1);
-  }
-
-  for (node=start_vertex; node<no_of_nodes; node++) {
+  for (node=0; node<no_of_nodes; node++) {
     
     IGRAPH_ALLOW_INTERRUPTION();
 
@@ -1028,7 +836,7 @@ int igraph_measure_dynamics_idwindowage(const igraph_t *graph,
       MATRIX(notnull, xidx, yidx) += 1;
       MATRIX(*akl, xidx, yidx) += (xk-oldm)/MATRIX(notnull, xidx, yidx);
       if (lsd) {
-	MATRIX(*confint, xidx, yidx) += (xk-oldm)*(xk-MATRIX(*akl, xidx, yidx));
+	MATRIX(*sd, xidx, yidx) += (xk-oldm)*(xk-MATRIX(*akl, xidx, yidx));
       }
 
       indegree[to] ++;
@@ -1086,7 +894,6 @@ int igraph_measure_dynamics_idwindowage(const igraph_t *graph,
 
   /* Ok, measurement done, update change */
   for (i=0; i<maxind+1; i++) {
-    igraph_real_t tuppercrit;
     for (j=0; j<agebins; j++) {
       igraph_real_t oldmean;
       if (MATRIX(ntkl, i, j) != 0) {
@@ -1095,33 +902,18 @@ int igraph_measure_dynamics_idwindowage(const igraph_t *graph,
       oldmean=MATRIX(*akl, i, j);
       MATRIX(*akl, i, j) *= MATRIX(notnull, i, j) / MATRIX(normfact, i, j);
       if (lsd) {
-	MATRIX(*confint, i, j) +=
+	MATRIX(*sd, i, j) +=
 	  oldmean * oldmean * MATRIX(notnull, i, j) * 
 	  (1-MATRIX(notnull,i,j)/MATRIX(normfact,i,j));
 	if (MATRIX(normfact,i,j) > 0) {
-	  MATRIX(*confint, i, j) =
-	    sqrt(MATRIX(*confint, i, j)/(MATRIX(normfact,i,j)-1));
-	  if (MATRIX(normfact,i,j) > igraph_i_tuppercrit_length) {
-	    tuppercrit=
-	      igraph_i_tuppercrit[igraph_i_tuppercrit_length][signidx];
-	  } else {
-	    tuppercrit=igraph_i_tuppercrit
-	      [(long int)MATRIX(normfact,i,j)-1][signidx];
-	  }	  
-	  MATRIX(*sd, i, j) = MATRIX(*confint,i,j);
-	  MATRIX(*confint, i, j) =
-	    tuppercrit * MATRIX(*confint,i,j)/sqrt(MATRIX(normfact,i,j));
+	  MATRIX(*sd, i, j) =
+	    sqrt(MATRIX(*sd, i, j)/(MATRIX(normfact,i,j)-1));
 	}
       }
     }
   }
   
-  if (!lno) {
-    igraph_matrix_destroy(&normfact);
-  } else {
-    igraph_matrix_destroy(no);
-    *no=normfact;
-  }
+  igraph_matrix_destroy(&normfact);
 
   igraph_dqueue_destroy(&history);
   Free(indegree);
@@ -1205,18 +997,13 @@ int igraph_measure_dynamics_idwindowage_st(const igraph_t *graph,
 }
 
 int igraph_measure_dynamics_citedcat_id_age(const igraph_t *graph,
-					    igraph_integer_t start_vertex,
 					    igraph_array3_t *adkl,
 					    igraph_array3_t *sd,
-					    igraph_array3_t *confint,
-					    igraph_array3_t *no,
 					    const igraph_vector_t *st,
 					    const igraph_vector_t *cats,
 					    igraph_integer_t pno_cats,
 					    igraph_integer_t pagebins,
-					    igraph_integer_t pmaxind,
-					    igraph_real_t significance,
-					    igraph_bool_t lno) {
+					    igraph_integer_t pmaxind) {
   
   long int agebins=pagebins;
   long int maxind=pmaxind;
@@ -1232,8 +1019,7 @@ int igraph_measure_dynamics_citedcat_id_age(const igraph_t *graph,
   long int i,j,k;
   long int edges=0;
   
-  igraph_bool_t lsd=(significance != 0);
-  int signidx=0;
+  igraph_bool_t lsd=(sd != 0);
 
   binwidth=no_of_nodes/agebins+1;
   
@@ -1244,21 +1030,6 @@ int igraph_measure_dynamics_citedcat_id_age(const igraph_t *graph,
   if (lsd) {
     igraph_array3_resize(sd, no_cats, maxind+1, agebins);
     igraph_array3_null(sd);
-    igraph_array3_resize(confint, no_cats, maxind+1, agebins);
-    igraph_array3_null(confint);
-    if (significance >= 0.998) {
-      signidx=5;
-    } else if (significance >= 0.99) {
-      signidx=4;
-    } else if (significance >= 0.98) {
-      signidx=3;
-    } else if (significance >= 0.95) {
-      signidx=2;
-    } else if (significance >= 0.9) {
-      signidx=1;
-    } else {
-      signidx=0;
-    }    
   }
   igraph_array3_init(&ntkl,     no_cats, maxind+1, agebins);
   igraph_array3_init(&ch,       no_cats, maxind+1, agebins);
@@ -1284,7 +1055,7 @@ int igraph_measure_dynamics_citedcat_id_age(const igraph_t *graph,
       ARRAY3(*adkl, cidx, xidx, yidx) += 
 	(xk-oldm)/ARRAY3(notnull, cidx, xidx, yidx);
       if (lsd) {
-	ARRAY3(*confint, cidx, xidx, yidx) += 
+	ARRAY3(*sd, cidx, xidx, yidx) += 
 	  (xk-oldm)*(xk-ARRAY3(*adkl, cidx, xidx, yidx));
       }
     }
@@ -1335,7 +1106,6 @@ int igraph_measure_dynamics_citedcat_id_age(const igraph_t *graph,
   /* measurement done, update change */
   for (k=0; k<no_cats; k++) {
     for (i=0; i<maxind+1; i++) {
-      igraph_real_t tuppercrit;
       for (j=0; j<agebins; j++) {
 	igraph_real_t oldmean;
 	if (ARRAY3(ntkl, k, i, j) !=0) {
@@ -1345,34 +1115,19 @@ int igraph_measure_dynamics_citedcat_id_age(const igraph_t *graph,
 	ARRAY3(*adkl, k, i, j) *=
 	  ARRAY3(notnull, k, i, j)/ARRAY3(normfact, k, i, j);
 	if (lsd) {
-	  ARRAY3(*confint, k, i, j) += 
+	  ARRAY3(*sd, k, i, j) += 
 	    oldmean * oldmean * ARRAY3(notnull, k, i, j)*
 	    (1-ARRAY3(notnull, k, i, j)/ARRAY3(normfact, k, i, j));
 	  if (ARRAY3(normfact, k, i, j) > 0) {
-	    ARRAY3(*confint, k, i, j)=
-	      sqrt(ARRAY3(*confint, k, i, j)/(ARRAY3(normfact, k, i, j)-1));
-	    if (ARRAY3(normfact, k, i, j) > igraph_i_tuppercrit_length) {
-	      tuppercrit=
-		igraph_i_tuppercrit[igraph_i_tuppercrit_length][signidx];
-	    } else {
-	      tuppercrit=igraph_i_tuppercrit
-		[(long int)ARRAY3(normfact, k, i, j)-1][signidx];
-	    }
-	    ARRAY3(*sd, k, i, j)=ARRAY3(*confint, k, i, k);
-	    ARRAY3(*confint, k, i, j) = 
-	      tuppercrit*ARRAY3(*confint,k,i,j)/sqrt(ARRAY3(normfact,k,i,j));
+	    ARRAY3(*sd, k, i, j)=
+	      sqrt(ARRAY3(*sd, k, i, j)/(ARRAY3(normfact, k, i, j)-1));
 	  }
 	}
       }
     }
   }
   
-  if (!lno) {
-    igraph_array3_destroy(&normfact);
-  } else {
-    igraph_array3_destroy(no);
-    *no=normfact;
-  }
+  igraph_array3_destroy(&normfact);
   
   Free(indegree);
   igraph_array3_destroy(&ntkl);
@@ -1443,18 +1198,13 @@ int igraph_measure_dynamics_citedcat_id_age_st(const igraph_t *graph,
 }
 
 int igraph_measure_dynamics_citingcat_id_age(const igraph_t *graph,
-					     igraph_integer_t start_vertex,
 					     igraph_array3_t *adkl,
 					     igraph_array3_t *sd,
-					     igraph_array3_t *confint,
-					     igraph_array3_t *no,
 					     const igraph_vector_t *st,
 					     const igraph_vector_t *cats,
 					     igraph_integer_t pno_cats,
 					     igraph_integer_t pagebins,
-					     igraph_integer_t pmaxind,
-					     igraph_real_t significance,
-					     igraph_bool_t lno) {
+					     igraph_integer_t pmaxind) {
   
   long int agebins=pagebins;
   long int maxind=pmaxind;
@@ -1471,8 +1221,7 @@ int igraph_measure_dynamics_citingcat_id_age(const igraph_t *graph,
   long int node;
   long int i,j,k;
   
-  igraph_bool_t lsd=(significance != 0);
-  int signidx=0;
+  igraph_bool_t lsd=(sd != 0);
   
   binwidth=no_of_nodes/agebins+1;
   
@@ -1485,21 +1234,6 @@ int igraph_measure_dynamics_citingcat_id_age(const igraph_t *graph,
   if (lsd) {
     igraph_array3_resize(sd, no_cats, maxind+1, agebins);
     igraph_array3_null(sd);
-    igraph_array3_resize(confint, no_cats, maxind+1, agebins);
-    igraph_array3_null(confint);
-    if (significance >= 0.998) {
-      signidx=5;
-    } else if (significance >= 0.99) {
-      signidx=4;
-    } else if (significance >= 0.98) {
-      signidx=3;
-    } else if (significance >= 0.95) {
-      signidx=2;
-    } else if (significance >= 0.9) {
-      signidx=1;
-    } else {
-      signidx=0;
-    }    
   }
   igraph_matrix_init(&ntkl, maxind+1, agebins);
   igraph_array3_init(&ch,       no_cats, maxind+1, agebins);
@@ -1524,7 +1258,7 @@ int igraph_measure_dynamics_citingcat_id_age(const igraph_t *graph,
       ARRAY3(*adkl, cidx, xidx, yidx) += 
 	(xk-oldm)/ARRAY3(notnull, cidx, xidx, yidx);
       if (lsd) {
-	ARRAY3(*confint, cidx, xidx, yidx) += 
+	ARRAY3(*sd, cidx, xidx, yidx) += 
 	  (xk-oldm)*(xk-ARRAY3(*adkl, cidx, xidx, yidx));
       }
     }
@@ -1547,7 +1281,7 @@ int igraph_measure_dynamics_citingcat_id_age(const igraph_t *graph,
       MATRIX(ntkl, xidx+1, yidx)++;
       if (MATRIX(ntkl, xidx+1, yidx)==1) {
 	for (j=0; j<no_cats; j++) {
-	  ARRAY3(ch, j, xidx, yidx)=VECTOR(edges)[j];
+	  ARRAY3(ch, j, xidx+1, yidx)=VECTOR(edges)[j];
 	}
       }
       VECTOR(edges)[cidx]++;
@@ -1593,19 +1327,19 @@ int igraph_measure_dynamics_citingcat_id_age(const igraph_t *graph,
 	ARRAY3(*adkl, k, i, j) *= 
 	  ARRAY3(notnull, k, i, j)/ARRAY3(normfact, k, i, j);
 	if (lsd) {
+	  ARRAY3(*sd, k, i, j) += 
+	    oldmean * oldmean * ARRAY3(notnull, k, i, j)*
+	    (1-ARRAY3(notnull, k, i, j)/ARRAY3(normfact, k, i, j));
+	  if (ARRAY3(normfact, k, i, j) > 0) {
+	    ARRAY3(*sd, k, i, j)=
+	      sqrt(ARRAY3(*sd, k, i, j)/(ARRAY3(normfact, k, i, j)-1));
+	  }
 	}
-	
       }
     }
   }
   
-  if (!lno) {
-    igraph_array3_destroy(&normfact);
-  } else {
-    igraph_array3_destroy(no);
-    *no=normfact;
-  }
-  
+  igraph_array3_destroy(&normfact);
   Free(indegree);
   igraph_matrix_destroy(&ntkl);
   igraph_array3_destroy(&ch);
@@ -1714,7 +1448,6 @@ int igraph_measure_dynamics_d_d(const igraph_t *graph,
 				igraph_integer_t events,
 				igraph_matrix_t *akk,
 				igraph_matrix_t *sd,
-				igraph_matrix_t *no,
 				const igraph_vector_t *st,
 				igraph_integer_t pmaxdeg) {
   
@@ -1761,8 +1494,8 @@ int igraph_measure_dynamics_d_d(const igraph_t *graph,
   }
   
   /* Create lookup vectors for nodes and edges */
-  IGRAPH_CHECK(igraph_vector_order(ntime, &ntimeidx, events));
-  IGRAPH_CHECK(igraph_vector_order(etime, &etimeidx, events));
+  IGRAPH_CHECK(igraph_vector_order1(ntime, &ntimeidx, events));
+  IGRAPH_CHECK(igraph_vector_order1(etime, &etimeidx, events));
 
   for (timestep=0; timestep<events; timestep++) {
 
@@ -1809,7 +1542,7 @@ int igraph_measure_dynamics_d_d(const igraph_t *graph,
       xidx=VECTOR(degree)[ (long int)from ];
       yidx=VECTOR(degree)[ (long int)to ];
       MATRIX(notnull, xidx, yidx) += 1;
-      MATRIX(notnull, yidx, xidx) += 1;
+      MATRIX(notnull, yidx, xidx) += 1;	/* bug */
 
       ntkkval=NTKK(xidx, yidx);
       xk=VECTOR(*st)[timestep]/ntkkval;
@@ -1912,7 +1645,7 @@ int igraph_measure_dynamics_d_d(const igraph_t *graph,
 	MATRIX(*sd, i, j) += oldakk * oldakk * MATRIX(notnull, i, j) *
 	  (1-MATRIX(notnull, i, j)/MATRIX(normfact, i, j));
 	if (MATRIX(normfact, i, j) > 0) {
-	  MATRIX(*sd, i, j) = sqrt(MATRIX(*sd, i, j)/MATRIX(normfact, i, j));
+	  MATRIX(*sd, i, j)=sqrt(MATRIX(*sd, i, j)/(MATRIX(normfact, i, j)-1));
 	  MATRIX(*sd, j, i) = MATRIX(*sd, i, j);
 	}
       }
@@ -1924,12 +1657,7 @@ int igraph_measure_dynamics_d_d(const igraph_t *graph,
   igraph_vector_destroy(&added);
   igraph_matrix_destroy(&notnull);
   igraph_matrix_destroy(&ch);
-  if (!no) { 
-    igraph_matrix_destroy(&normfact);
-  } else {
-    igraph_matrix_destroy(no);
-    *no=normfact;
-  }
+  igraph_matrix_destroy(&normfact);
   igraph_matrix_destroy(&ntkk);
   igraph_vector_destroy(&ntk);
   igraph_vector_destroy(&degree);
@@ -1976,8 +1704,8 @@ int igraph_measure_dynamics_d_d_st(const igraph_t *graph,        /* input */
   VECTOR(*st)[0]=0;
   
   /* Create lookup vectors */
-  IGRAPH_CHECK(igraph_vector_order(ntime, &ntimeidx, events));
-  IGRAPH_CHECK(igraph_vector_order(etime, &etimeidx, events));
+  IGRAPH_CHECK(igraph_vector_order1(ntime, &ntimeidx, events));
+  IGRAPH_CHECK(igraph_vector_order1(etime, &etimeidx, events));
 
   for (timestep=0; timestep<events; timestep++) {
 
@@ -1990,7 +1718,7 @@ int igraph_measure_dynamics_d_d_st(const igraph_t *graph,        /* input */
       akk_inc=0;
       for (i=0; i<=maxdeg; i++) {
 	akk_inc += VECTOR(ntk)[i]*MATRIX(*akk, i, 0);
-	akk_inc += VECTOR(ntk)[i]*MATRIX(*akk, i, 0);
+	akk_inc += VECTOR(ntk)[i]*MATRIX(*akk, i, 0); /* why this? */
       }
       VECTOR(*st)[timestep] += akk_inc;
       VECTOR(ntk)[0]++;
@@ -2021,7 +1749,7 @@ int igraph_measure_dynamics_d_d_st(const igraph_t *graph,        /* input */
 	akk_inc += VECTOR(ntk)[i] * MATRIX(*akk, i, yidx+1);
       }
       akk_inc += MATRIX(*akk, xidx, xidx);
-      akk_inc += MATRIX(*akk, yidx, yidx);
+      akk_inc += MATRIX(*akk, yidx, yidx); /* why twice???? */
       akk_inc -= MATRIX(*akk, xidx+1, xidx+1);
       akk_inc -= MATRIX(*akk, yidx+1, yidx+1);
 
@@ -2110,4 +1838,608 @@ int igraph_measure_dynamics_d_d_st(const igraph_t *graph,        /* input */
 /*   } */
 /*   return 0; */
 /* } */
+
+int igraph_measure_dynamics_lastcit(const igraph_t *graph, igraph_vector_t *al,
+				    igraph_vector_t *sd, 
+				    igraph_vector_t *no,
+				    const igraph_vector_t *st,
+				    igraph_integer_t pagebins) {
+
+  long int no_of_nodes=igraph_vcount(graph);
+
+  /* there will be 'agebins' categories, plus one for vertices without a 
+     citation.
+  */
+  long int agebins=pagebins;
+  long int binwidth=no_of_nodes/agebins+1;
+
+  igraph_vector_t ntl, ch, notnull, normfact;
+
+  /* lastcit[n] is the time step+1 in which n was cited, if not 0;
+     if 0, that means that n was never cited
+   */
+  long int *lastcit;
+
+  long int node, i, k;
+
+  igraph_vector_t neis;
+  
+  long int edges=0;
+  
+  lastcit=Calloc(no_of_nodes, long int);
+  if (!lastcit) {
+    IGRAPH_ERROR("Cannot measure dynamics (lastcit)", IGRAPH_ENOMEM);
+  }
+  IGRAPH_FINALLY(igraph_free, lastcit);
+
+  IGRAPH_VECTOR_INIT_FINALLY(&ntl, agebins+1);
+  IGRAPH_VECTOR_INIT_FINALLY(&ch, agebins+1);
+  IGRAPH_VECTOR_INIT_FINALLY(&notnull, agebins+1);
+  IGRAPH_VECTOR_INIT_FINALLY(&normfact, agebins+1);
+
+  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  
+  IGRAPH_CHECK(igraph_vector_resize(al, agebins+1));
+  igraph_vector_null(al);
+  if (sd) {
+    IGRAPH_CHECK(igraph_vector_resize(sd, agebins+1));
+    igraph_vector_null(sd);
+  }
+  
+  for (node=0; node<no_of_nodes; node++) {
+
+    IGRAPH_ALLOW_INTERRUPTION();
+
+    /* update A(.) */
+    igraph_neighbors(graph, &neis, node, IGRAPH_OUT);
+    for (i=0; i<igraph_vector_size(&neis); i++) {
+      long int to=VECTOR(neis)[i];
+      long int xidx=lastcit[to]!=0 ? (node-lastcit[to]+1)/binwidth : agebins;
+      
+      double xk=VECTOR(*st)[node]/VECTOR(ntl)[xidx];
+      double oldm=VECTOR(*al)[xidx];
+
+      VECTOR(notnull)[xidx] += 1;
+      VECTOR(*al)[xidx] += (xk-oldm)/VECTOR(notnull)[xidx];
+      if (sd) {
+	VECTOR(*sd)[xidx] += (xk-oldm)*(xk-VECTOR(*al)[xidx]);
+      }
+    }
+
+    /* Update ntk, ch, normfact */
+    for (i=0; i<igraph_vector_size(&neis); i++) {
+      long int to=VECTOR(neis)[i];
+      long int xidx=lastcit[to]!=0 ? (node-lastcit[to]+1)/binwidth : agebins;
+
+      lastcit[to]=node+1;
+      VECTOR(ntl)[xidx]--;
+      if (VECTOR(ntl)[xidx]==0) {
+	VECTOR(normfact)[xidx] += (edges-VECTOR(ch)[xidx]+1);
+	VECTOR(ch)[xidx]=edges;
+      }
+      VECTOR(ntl)[0]++;
+      if (VECTOR(ntl)[0]==1) {
+	VECTOR(ch)[0]=edges;
+      }
+      edges++;
+    }    
+
+    /* the new node */
+    VECTOR(ntl)[agebins]++;
+    if (VECTOR(ntl)[agebins]==1) {
+      VECTOR(ch)[agebins]=edges;
+    }
     
+    /* should we move some citations to an older bin? */
+    for (k=1; node-binwidth*k+1 >= 1; k++) {
+      long int shnode=node-binwidth*k;
+      igraph_neighbors(graph, &neis, shnode, IGRAPH_OUT);
+      for (i=0; i<igraph_vector_size(&neis); i++) {
+	long int cnode=VECTOR(neis)[i];
+	if (lastcit[cnode]==shnode+1) {
+	  /* the last citation to cnode was made by shnode, move to other bin*/
+	  VECTOR(ntl)[k-1]--;
+	  if (VECTOR(ntl)[k-1]==0) {
+	    VECTOR(normfact)[k-1] += (edges-VECTOR(ch)[k-1]+1);
+	    VECTOR(ch)[k-1] = edges;
+	  }
+	  VECTOR(ntl)[k]++;
+	  if (VECTOR(ntl)[k]==1) {
+	    VECTOR(ch)[k]=edges;
+	  }
+	}
+      }
+    }
+    
+  }
+
+  /* measurement done, update change */
+  for (i=0; i<agebins+1; i++) {
+    igraph_real_t oldmean;
+    if (VECTOR(ntl)[i] != 0) {
+      VECTOR(normfact)[i] += (edges-VECTOR(ch)[i]+1);
+    }
+    oldmean=VECTOR(*al)[i];
+    VECTOR(*al)[i] *= VECTOR(notnull)[i]/VECTOR(normfact)[i];
+    if (sd) {
+      VECTOR(*sd)[i] += oldmean * oldmean * VECTOR(notnull)[i] *
+	(1-VECTOR(notnull)[i]/VECTOR(normfact)[i]);
+      if (VECTOR(normfact)[i] > 0) {
+	VECTOR(*sd)[i] = sqrt(VECTOR(*sd)[i]/(VECTOR(normfact)[i]-1));
+      }
+    }
+  }  
+
+  if (no) {
+    igraph_vector_destroy(no);
+    *no=normfact;
+  } else {
+    igraph_vector_destroy(&normfact);
+  }
+ 
+  igraph_free(lastcit);
+  igraph_vector_destroy(&ntl);
+  igraph_vector_destroy(&ch);
+  igraph_vector_destroy(&notnull);
+  igraph_vector_destroy(&neis);
+  IGRAPH_FINALLY_CLEAN(6);
+  return 0;
+}
+
+int igraph_measure_dynamics_lastcit_st(const igraph_t *graph, 
+				       igraph_vector_t *res,
+				       const igraph_vector_t *al) {
+  
+  long int no_of_nodes=igraph_vcount(graph);
+  long int agebins=igraph_vector_size(al)-1;
+  long int binwidth=no_of_nodes/agebins+1;
+  long int *lastcit;
+
+  igraph_vector_t neis;
+
+  long int node, i, k;
+
+  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  lastcit=Calloc(no_of_nodes, long int);
+  if (!lastcit) {
+    IGRAPH_ERROR("Cannot measure dynamics (lastcit st)", IGRAPH_ENOMEM);
+  }
+  IGRAPH_FINALLY(igraph_free, lastcit);
+  
+  igraph_vector_resize(res, no_of_nodes);
+  igraph_vector_null(res);
+  VECTOR(*res)[0]=VECTOR(*al)[agebins];	/* node without citation */
+  
+  for (node=1; node<no_of_nodes; node++) {
+    
+    IGRAPH_ALLOW_INTERRUPTION();
+    
+    /* new node, updates */
+    VECTOR(*res)[node]=VECTOR(*res)[node-1]+VECTOR(*al)[agebins];
+    for (k=1; node-binwidth*k+1 >= 1; k++) {
+      long int shnode=node-binwidth*k;
+      igraph_neighbors(graph, &neis, shnode, IGRAPH_OUT);
+      for (i=0; i<igraph_vector_size(&neis); i++) {
+	long int cnode=VECTOR(neis)[i];
+	if (lastcit[cnode]==shnode+1) {
+	  VECTOR(*res)[node] += -VECTOR(*al)[k-1]+VECTOR(*al)[k];
+	}
+      }
+    }
+    
+    /* inspect the outgoing edges */
+    igraph_neighbors(graph, &neis, node, IGRAPH_OUT);
+    for (i=0; i<igraph_vector_size(&neis); i++) {
+      long int to=VECTOR(neis)[i];
+      long int xidx=lastcit[to]!=0 ? (node-lastcit[to]+1)/binwidth : agebins;
+      
+      lastcit[to]=node+1;
+      
+      VECTOR(*res)[node] += -VECTOR(*al)[xidx]+VECTOR(*al)[0];
+    }
+  }
+  
+  igraph_free(lastcit);
+  igraph_vector_destroy(&neis);
+  IGRAPH_FINALLY_CLEAN(2);
+
+  return 0;
+}
+
+int igraph_measure_dynamics_age(const igraph_t *graph, 
+				igraph_vector_t *al,
+				igraph_vector_t *sd,
+				igraph_vector_t *no,
+				const igraph_vector_t *st,
+				igraph_integer_t pagebins) {
+
+  long int no_of_nodes=igraph_vcount(graph);
+  
+  long int agebins=pagebins;
+  long int binwidth=no_of_nodes/agebins+1;
+
+  igraph_vector_t ntl, ch, notnull, normfact;
+  
+  long int node, i, k;
+  
+  igraph_vector_t neis;
+  
+  long int edges=0;
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&ntl, agebins);
+  IGRAPH_VECTOR_INIT_FINALLY(&ch, agebins);
+  IGRAPH_VECTOR_INIT_FINALLY(&notnull, agebins);
+  IGRAPH_VECTOR_INIT_FINALLY(&normfact, agebins);
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  
+  IGRAPH_CHECK(igraph_vector_resize(al, agebins));
+  igraph_vector_null(al);
+  if (sd) {
+    IGRAPH_CHECK(igraph_vector_resize(sd, agebins));
+    igraph_vector_null(sd);
+  }
+  
+  for (node=0; node<no_of_nodes; node++) {
+    
+    IGRAPH_ALLOW_INTERRUPTION();
+    
+    /* update A() */
+    igraph_neighbors(graph, &neis, node, IGRAPH_OUT);
+    for (i=0; i<igraph_vector_size(&neis); i++) {
+      long int to=VECTOR(neis)[i];
+      long int xidx=(node-to)/binwidth;
+      
+      double xk=VECTOR(*st)[node]/VECTOR(ntl)[xidx];
+      double oldm=VECTOR(*al)[xidx];
+      
+      VECTOR(notnull)[xidx] += 1;
+      VECTOR(*al)[xidx] += (xk-oldm)/VECTOR(notnull)[xidx];
+      if (sd) {
+	VECTOR(*sd)[xidx] += (xk-oldm)*(xk-VECTOR(*al)[xidx]);
+      }
+    }
+    
+    /* update ntl, ch, normfact */
+    /* these is omitted, no change in ntl, except for aging */
+    edges += igraph_vector_size(&neis);
+    
+    /* new node */
+    VECTOR(ntl)[0]++;
+    if (VECTOR(ntl)[0]==1) {
+      VECTOR(ch)[0]=edges;
+    }
+    
+    /* aging, this could be written much simpler */
+    for (k=1; node-binwidth*k+1 >=1; k++) {
+      VECTOR(ntl)[k-1]--;
+      if (VECTOR(ntl)[k-1]==0) {
+	VECTOR(normfact)[k-1] += (edges-VECTOR(ch)[k-1]+1);
+	VECTOR(ch)[k-1] = edges;
+      }
+      VECTOR(ntl)[k]++;
+      if (VECTOR(ntl)[k]==1) {
+	VECTOR(ch)[k]=edges;
+      }
+    }
+    
+  } /* node<no_of_nodes */
+
+  /* measurement done, update change */
+  for (i=0; i<agebins; i++) {
+    igraph_real_t oldmean;
+    if (VECTOR(ntl)[i] != 0) {
+      VECTOR(normfact)[i] += (edges-VECTOR(ch)[i]+1);
+    }
+    oldmean=VECTOR(*al)[i];
+    VECTOR(*al)[i] *= VECTOR(notnull)[i]/VECTOR(normfact)[i];
+    if (sd) {
+      VECTOR(*sd)[i] += oldmean * oldmean * VECTOR(notnull)[i] *
+	(1-VECTOR(notnull)[i]/VECTOR(normfact)[i]);
+      if (VECTOR(normfact)[i] > 0) {
+	VECTOR(*sd)[i] = sqrt(VECTOR(*sd)[i]/(VECTOR(normfact)[i]-1));
+      }
+    }
+  }
+  
+  if (no) {
+    igraph_vector_destroy(no);
+    *no=normfact;
+  } else {
+    igraph_vector_destroy(&normfact);
+  }
+
+  igraph_vector_destroy(&ntl);
+  igraph_vector_destroy(&ch);
+  igraph_vector_destroy(&notnull);
+  igraph_vector_destroy(&neis);
+  IGRAPH_FINALLY_CLEAN(5);
+  return 0;
+}
+
+int igraph_measure_dynamics_age_st(const igraph_t *graph, 
+				   igraph_vector_t *res,
+				   const igraph_vector_t *al) {
+  
+  long int agebins=igraph_vector_size(al);
+  long int no_of_nodes=igraph_vcount(graph);
+  long int binwidth=no_of_nodes/agebins+1;
+  
+  long int node, k;
+  
+  IGRAPH_CHECK(igraph_vector_resize(res, no_of_nodes));
+  igraph_vector_null(res);
+  VECTOR(*res)[0]=VECTOR(*al)[0];
+  
+  for (node=1; node<no_of_nodes; node++) {
+    
+    IGRAPH_ALLOW_INTERRUPTION();
+    
+    /* new node, aging */
+    VECTOR(*res)[node] = VECTOR(*res)[node-1] + VECTOR(*al)[0];
+    for (k=1; node-binwidth*k+1 >= 1; k++) {
+      VECTOR(*res)[node] += -VECTOR(*al)[k-1] + VECTOR(*al)[k];
+    }
+    
+    /* inspecting outgoing edges is not needed at all */
+
+  }
+  
+  return 0;
+}
+
+int igraph_measure_dynamics_citedcat(const igraph_t *graph, 
+				     const igraph_vector_t *cats,
+				     igraph_integer_t pnocats,
+				     igraph_vector_t *ak, 
+				     igraph_vector_t *sd,
+				     igraph_vector_t *no,
+				     const igraph_vector_t *st) {
+  
+  long int nocats=pnocats;
+  long int no_of_nodes=igraph_vcount(graph);
+  
+  igraph_vector_t normfact, ntk, ch, notnull;
+  igraph_vector_t neis;
+  
+  long int node, i;
+  long int edges=0;
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&normfact, nocats);
+  IGRAPH_VECTOR_INIT_FINALLY(&ntk, nocats);
+  IGRAPH_VECTOR_INIT_FINALLY(&ch, nocats);
+  IGRAPH_VECTOR_INIT_FINALLY(&notnull, nocats);
+  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+
+  IGRAPH_CHECK(igraph_vector_resize(ak, nocats));
+  igraph_vector_null(ak);
+  if (sd) {
+    IGRAPH_CHECK(igraph_vector_resize(sd, nocats));
+    igraph_vector_null(sd);
+  }
+  
+  for (node=0; node<no_of_nodes; node++) {
+    
+    IGRAPH_ALLOW_INTERRUPTION();
+    
+    long int ccat=VECTOR(*cats)[node];
+    
+    /* estimake A */
+    igraph_neighbors(graph, &neis, node, IGRAPH_OUT);
+    for (i=0; i<igraph_vector_size(&neis); i++) {
+      long int to=VECTOR(neis)[i];
+      long int xidx=VECTOR(*cats)[to];
+      
+      double xk=VECTOR(*st)[node]/VECTOR(ntk)[xidx];
+      double oldm=VECTOR(*ak)[xidx];
+      VECTOR(notnull)[xidx] += 1;
+      VECTOR(*ak)[xidx] += (xk-oldm)/VECTOR(notnull)[xidx];
+      if (sd) {
+	VECTOR(*sd)[xidx] += (xk-oldm)*(xk-VECTOR(*ak)[xidx]);
+      }
+    }
+
+    /* update ntk, ch, normfact, only the new node is important */
+    edges += igraph_vector_size(&neis);
+        
+    VECTOR(ntk)[ccat] += 1;
+    if (VECTOR(ntk)[ccat] == 1) {
+      VECTOR(ch)[ccat]=edges;
+    }
+    
+  }
+
+  /* measurement done, update ch, normfact and ak and sd */
+  for (i=0; i<nocats; i++) {
+    igraph_real_t oldmean;
+    if (VECTOR(ntk)[i] != 0) {
+      VECTOR(normfact)[i] += (edges-VECTOR(ch)[i]+1);
+    }
+    oldmean=VECTOR(*ak)[i];
+    VECTOR(*ak)[i] *= VECTOR(notnull)[i] / VECTOR(normfact)[i];
+    if (sd) {
+      VECTOR(*sd)[i] += oldmean * oldmean * VECTOR(notnull)[i] *
+	(1-VECTOR(notnull)[i]/VECTOR(normfact)[i]);
+      if (VECTOR(normfact)[i]>0) {
+	VECTOR(*sd)[i] = sqrt(VECTOR(*sd)[i] / (VECTOR(normfact)[i]-1));
+      }
+    }
+  }
+  
+  if (no) {
+    igraph_vector_destroy(no);
+    *no=normfact;
+  } else {
+    igraph_vector_destroy(&normfact);
+  }  
+
+  igraph_vector_destroy(&neis);
+  igraph_vector_destroy(&ntk);
+  igraph_vector_destroy(&ch);
+  igraph_vector_destroy(&notnull);
+  IGRAPH_FINALLY_CLEAN(5);
+  
+  return 0;
+}
+
+int igraph_measure_dynamics_citedcat_st(const igraph_t *graph,
+					igraph_vector_t *res,
+					const igraph_vector_t *ak,
+					const igraph_vector_t *cats,
+					igraph_integer_t pnocats) {
+  
+  long int no_of_nodes=igraph_vcount(graph);
+  long int node;
+
+  IGRAPH_CHECK(igraph_vector_resize(res, no_of_nodes));
+  VECTOR(*res)[0]=VECTOR(*ak)[ (long int) VECTOR(*cats)[0] ];
+  
+  for (node=1; node<no_of_nodes; node++) {
+    long int cidx=VECTOR(*cats)[node];
+    IGRAPH_ALLOW_INTERRUPTION();
+    VECTOR(*res)[node]=VECTOR(*res)[node-1] + VECTOR(*ak)[cidx];
+  }    
+  
+  return 0;
+}
+
+int igraph_measure_dynamics_citingcat_citedcat(const igraph_t *graph,
+					       igraph_matrix_t *agd,
+					       igraph_matrix_t *sd,
+					       igraph_matrix_t *no,
+					       const igraph_vector_t *st,
+					       const igraph_vector_t *cats,
+					       igraph_integer_t pnocats) {
+  long int nocats=pnocats;
+  long int no_of_nodes=igraph_vcount(graph);
+  
+  igraph_vector_t ntd;
+  igraph_matrix_t ch, normfact, notnull;
+  igraph_vector_t neis;
+  
+  long int node;
+  long int i, j;
+  igraph_vector_t edges;
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&ntd, nocats);
+  IGRAPH_MATRIX_INIT_FINALLY(&ch, nocats, nocats);
+  IGRAPH_MATRIX_INIT_FINALLY(&normfact, nocats, nocats);
+  IGRAPH_MATRIX_INIT_FINALLY(&notnull, nocats, nocats);  
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  IGRAPH_VECTOR_INIT_FINALLY(&edges, nocats);
+  
+  IGRAPH_CHECK(igraph_matrix_resize(agd, nocats, nocats));
+  igraph_matrix_null(agd);
+  if (sd) {
+    IGRAPH_CHECK(igraph_matrix_resize(sd, nocats, nocats));
+    igraph_matrix_null(sd);
+  }
+  
+  for (node=0; node<no_of_nodes; node++) {
+    long int citingcat=VECTOR(*cats)[node];
+    
+    IGRAPH_ALLOW_INTERRUPTION();
+    
+    /* update A() */
+    igraph_neighbors(graph, &neis, node, IGRAPH_OUT);
+    for (i=0; i<igraph_vector_size(&neis); i++) {
+      long int to=VECTOR(neis)[i];
+      long int xidx=VECTOR(*cats)[to];
+      
+      double xk=VECTOR(*st)[node] / VECTOR(ntd)[xidx];
+      double oldm=MATRIX(*agd, citingcat, xidx);
+      MATRIX(notnull, citingcat, xidx) += 1;
+      MATRIX(*agd, citingcat, xidx) += 
+	(xk-oldm)/MATRIX(notnull, citingcat, xidx);
+      if (sd) {
+	MATRIX(*sd, citingcat, xidx) +=
+	  (xk-oldm)*(xk-MATRIX(*agd, citingcat, xidx));
+      }
+    }
+
+    VECTOR(edges)[citingcat]+=igraph_vector_size(&neis);
+
+    /* only the new node needs to be added */
+    VECTOR(ntd)[citingcat]++;
+    if (VECTOR(ntd)[citingcat]==1) {
+      for (j=0;j<nocats;j++) {
+	MATRIX(ch, j, citingcat)=VECTOR(edges)[j];
+      }
+    }
+    
+  }
+
+  /* done, updates */
+  for (i=0; i<nocats; i++) {
+    for (j=0; j<nocats; j++) {
+      igraph_real_t oldmean;
+      if (VECTOR(ntd)[j] != 0) {
+	MATRIX(normfact, i, j) += (VECTOR(edges)[i]-MATRIX(ch, i,  j)+1);
+      }
+      oldmean=MATRIX(*agd, i, j);
+      MATRIX(*agd, i, j) *= MATRIX(notnull, i, j)/MATRIX(normfact,i, j);
+      if (sd) {
+	MATRIX(*sd, i, j) += oldmean * oldmean * MATRIX(notnull, i, j) *
+	  (1-MATRIX(notnull, i, j)/MATRIX(normfact, i, j));
+	if (MATRIX(normfact, i, j)>0) {
+	  MATRIX(*sd, i, j)=
+	    sqrt(MATRIX(*sd, i, j)/(MATRIX(normfact, i, j)-1));
+	}
+      }
+    }
+  }
+
+  igraph_vector_destroy(&edges);
+  igraph_vector_destroy(&neis);
+  
+  if (no) {
+    igraph_matrix_destroy(no);
+    *no=normfact;
+  } else {
+    igraph_matrix_destroy(&normfact);
+  }
+  
+  igraph_matrix_destroy(&notnull);
+  igraph_matrix_destroy(&ch);
+  igraph_vector_destroy(&ntd);
+  IGRAPH_FINALLY_CLEAN(6);
+  return 0;
+}
+  
+int igraph_measure_dynamics_citingcat_citedcat_st(const igraph_t *graph,
+						  igraph_vector_t *res,
+						  const igraph_matrix_t *agd,
+						  const igraph_vector_t *cats,
+						  igraph_integer_t pnocats) {
+  long int no_of_nodes=igraph_vcount(graph);
+  long int nocats=pnocats;
+  
+  igraph_matrix_t allst;
+  long int j, node;
+
+  IGRAPH_MATRIX_INIT_FINALLY(&allst, nocats, no_of_nodes);
+  IGRAPH_CHECK(igraph_vector_resize(res, no_of_nodes));
+  for (j=0; j<nocats; j++) {
+    MATRIX(allst, j, 0)=MATRIX(*agd, j, (long int)VECTOR(*cats)[0]);
+  }
+  VECTOR(*res)[0]=MATRIX(allst, (long int) VECTOR(*cats)[0], 0);
+  
+  for (node=1; node<no_of_nodes; node++) {
+    long int citingcat=VECTOR(*cats)[node];
+
+    IGRAPH_ALLOW_INTERRUPTION();
+
+    /* new node */
+    for (j=0; j<nocats; j++) {
+      MATRIX(allst, j, node)=MATRIX(allst, j, node-1) + 
+	MATRIX(*agd, j, citingcat);
+    }
+    VECTOR(*res)[node]=MATRIX(allst, citingcat, node);
+  }
+  
+  igraph_matrix_destroy(&allst);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  return 0;
+}

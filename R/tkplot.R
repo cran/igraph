@@ -34,15 +34,7 @@ if (!exists(".tkplot.env")) {
 # Main function
 ###################################################################
 
-tkplot <- function(graph, layout=layout.random, layout.par=list(),
-                   labels=NULL, label.color="darkblue",
-                   label.font=NULL, label.degree=-pi/4, label.dist=0,
-                   vertex.color="SkyBlue2", vertex.size=15,
-                   edge.color="darkgrey", edge.width=1,
-                   edge.labels=NA, edge.lty=1,
-                   vertex.frame.color="black",
-                   loop.angle=0, margin=0,
-                   ...) {
+tkplot <- function(graph, ...) {
 
   if (!is.igraph(graph)) {
     stop("Not a graph object")
@@ -51,40 +43,41 @@ tkplot <- function(graph, layout=layout.random, layout.par=list(),
   # Libraries
   require(tcltk) || stop("tcl/tk library not available")
 
-  # Layout
-  layout <- i.get.layout(graph, layout, layout.par)
+  # Visual parameters
+  params <- i.parse.plot.params(graph, list(...))
+  labels <- params("vertex", "label")
+  label.color <- .tkplot.convert.color(params("vertex", "label.color"))
+  label.font <- .tkplot.convert.font(params("vertex", "label.font"),
+                                     params("vertex", "label.family"),
+                                     params("vertex", "label.cex"))
+  label.degree <- params("vertex", "label.degree")
+  label.dist <- params("vertex", "label.dist")
+  vertex.color <- .tkplot.convert.color(params("vertex", "color"))
+  vertex.size <- params("vertex", "size")
+  vertex.frame.color <- .tkplot.convert.color(params("vertex", "frame.color"))
 
-  # Vertex color
-  vertex.color <- i.get.vertex.color(graph, vertex.color)
-  vertex.frame.color <- i.get.vertex.frame.color(graph, vertex.frame.color)
+  edge.color <- .tkplot.convert.color(params("edge", "color"))
+  edge.width <- params("edge", "width")
+  edge.labels <- params("edge", "label")
+  edge.lty <- params("edge", "lty")
+  loop.angle <- params("edge", "loop.angle")
+  arrow.mode <- params("edge", "arrow.mode")
+  edge.label.font <- .tkplot.convert.font(params("edge", "label.font"),
+                                          params("edge", "label.family"),
+                                          params("edge", "label.cex"))
+  edge.label.color <- params("edge", "label.color")
   
-  # Vertex size
-  vertex.size <- i.get.vertex.size(graph, vertex.size)
+  layout <- params("plot", "layout")
+  layout[,2] <- -layout[,2]
+  margin <- params("plot", "margin")
+  margin <- rep(margin, length=4)
+
+  # the new style parameters can't do this yet
+  arrow.mode         <- i.get.arrow.mode(graph, arrow.mode)
   
-  # Edge color
-  edge.color <- i.get.edge.color(graph, edge.color)
-
-  # Edge width
-  edge.width <- i.get.edge.width(graph, edge.width)
-
   # Edge line type
-  edge.lty <- i.get.edge.lty(graph, edge.lty)
-  if (is.numeric(edge.lty)) {
-    lty <- c( " ", "", "-", ".", "-.", "--", "--.")
-    edge.lty <- lty[edge.lty+1]
-  }
+  edge.lty <- i.tkplot.get.edge.lty(edge.lty)
 
-  # Edge labels
-  edge.labels <- i.get.edge.labels(graph, edge.labels)
-  
-  # Label degree
-  label.degree <- i.get.label.degree(graph, label.degree)
-
-  # Label font
-  if (is.null(label.font)) {
-    label.font=tkfont.create(family="helvetica", size=16, weight="bold")
-  }
-  
   # Create window & canvas
   top <- tktoplevel(background="lightgrey")
   canvas <- tkcanvas(top, relief="raised", width=450, height=450,
@@ -94,11 +87,14 @@ tkplot <- function(graph, layout=layout.random, layout.par=list(),
   # Create parameters
   params <- list(vertex.color=vertex.color, vertex.size=vertex.size,
                  edge.color=edge.color, label.color=label.color,
-                 labels.state=1, edge.width=edge.width, padding=margin*300+30,
+                 labels.state=1, edge.width=edge.width,
+                 padding=margin*300+max(vertex.size)+5,
                  grid=0, label.font=label.font, label.degree=label.degree,
                  label.dist=label.dist, edge.labels=edge.labels,
                  vertex.frame.color=vertex.frame.color,
-                 loop.angle=loop.angle, edge.lty=edge.lty)
+                 loop.angle=loop.angle, edge.lty=edge.lty, arrow.mode=arrow.mode,
+                 edge.label.font=edge.label.font,
+                 edge.label.color=edge.label.color)
 
   # The popup menu
   popup.menu <- tkmenu(canvas)
@@ -503,10 +499,13 @@ tkplot.fit.to.screen <- function(tkp.id, width=NULL, height=NULL) {
   coords[,1] <- coords[,1]-min(coords[,1])
   coords[,2] <- coords[,2]-min(coords[,2])
   # Scale
-  coords[,1] <- coords[,1] / max(coords[,1]) * (width-(tkp$params$padding*2))
-  coords[,2] <- coords[,2] / max(coords[,2]) * (height-(tkp$params$padding*2))
+  coords[,1] <- coords[,1] / max(coords[,1]) *
+    (width-(tkp$params$padding[2]+tkp$params$padding[4]))
+  coords[,2] <- coords[,2] / max(coords[,2]) *
+    (height-(tkp$params$padding[1]+tkp$params$padding[3]))
   # Padding
-  coords <- coords+tkp$params$padding
+  coords[,1] <- coords[,1]+tkp$params$padding[2]
+  coords[,2] <- coords[,2]+tkp$params$padding[3]
   # Store
   .tkplot.set(tkp.id, "coords", coords)
   # Update
@@ -762,7 +761,6 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
 # Creates tk object for edge 'id'
 .tkplot.create.edge <- function(tkp.id, from, to, id) {
   tkp <- .tkplot.get(tkp.id)  
-  arrow <- ifelse(is.directed(tkp$graph), "last", "none")
   from.c <- tkp$coords[from+1,]
   to.c   <- tkp$coords[to+1,]
   edge.color <- ifelse(length(tkp$params$edge.color)>1,
@@ -774,6 +772,11 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
   edge.lty <- ifelse(length(tkp$params$edge.lty)>1,
                        tkp$params$edge.lty[[id]],
                        tkp$params$edge.lty)
+  arrow.mode <- ifelse(length(tkp$params$arrow.mode)>1,
+                       tkp$params$arrow.mode[[id]],
+                       tkp$params$arrow.mode)
+  arrow <- c("none", "first", "last", "both")[arrow.mode+1]
+  
   if (from != to) {
     ## non-loop edge
     tkcreate(tkp$canvas, "line", from.c[1], from.c[2], to.c[1], to.c[2],
@@ -807,8 +810,8 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
     label.y <- (to.c[2]+from.c[2])/2
     litem <- tkcreate(tkp$canvas, "text", label.x, label.y,
                       text=as.character(edge.label), state="normal",
-                      fill=tkp$params$label.color,
-                      font=tkp$params$label.font)
+                      fill=tkp$params$edge.label.color,
+                      font=tkp$params$edge.label.font)
     tkaddtag(tkp$canvas, "label", "withtag", litem)
     tkaddtag(tkp$canvas, paste(sep="", "edge-", id), "withtag", litem)
   }
@@ -841,8 +844,13 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
     vertex.size <- ifelse(length(tkp$params$vertex.size)>1,
                           tkp$params$vertex.size[to+1],
                           tkp$params$vertex.size)
+    vertex.size2 <- ifelse(length(tkp$params$vertex.size)>1,
+                           tkp$params$vertex.size[from+1],
+                           tkp$params$vertex.size)
     to.c[1] <- from.c[1] + (r-vertex.size)*cos(phi)
     to.c[2] <- from.c[2] + (r-vertex.size)*sin(phi)
+    from.c[1] <- from.c[1] + vertex.size2*cos(phi)
+    from.c[2] <- from.c[2] + vertex.size2*sin(phi)
     tkcoords(tkp$canvas, itemid, from.c[1], from.c[2], to.c[1], to.c[2])
   } else {
     vertex.size <- ifelse(length(tkp$params$vertex.size)>1,
@@ -1381,4 +1389,98 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
   color <- tclvalue(tcl("tk_chooseColor", initialcolor=initialcolor,
                         title="Choose a color"))
   return(color);
+}
+
+###################################################################
+# Internal functions: other
+###################################################################
+
+.tkplot.convert.color <- function(col) {
+  if (is.numeric(col)) {
+    ## convert numeric color based on current palette
+    p <- palette()
+    col <- col %% length(p)
+    col[col==0] <- length(p)
+    col <- palette()[col]
+  } else if (is.character(col) && any(substr(col,1,1)=="#" & nchar(col)==9)) {
+    ## drop alpha channel, tcltk doesn't support it
+    idx <- substr(col,1,1)=="#" & nchar(col)==9
+    col[idx] <- substr(col[idx],1,7)
+  }
+  
+  col
+}
+
+.tkplot.convert.font <- function(font, family, cex) {
+  tk.fonts <- as.character(tkfont.names())
+  if (as.character(font) %in% tk.fonts) {
+    ## already defined Tk font
+    as.character(font)
+  } else {
+    ## we create a font from familiy, font & cex
+    font <- as.numeric(font)
+    family <- as.character(family)
+    cex <- as.numeric(cex)    
+
+    ## set slant & weight
+    if (font==2) {
+      slant <- "roman"
+      weight <- "bold"
+    } else if (font==3) {
+      slant <- "italic"
+      weight <- "normal"
+    } else if (font==4) {
+      slant <- "italic"
+      weight <- "bold"
+    } else {
+      slant <- "roman"
+      weight <- "normal"
+    }
+
+    ## set tkfamily
+    if (family=="symbol" || font==5) {
+      ## try to find a symbol font
+      fams <- as.character(tkplot.families())
+      if ("symbol" %in% fams) {
+        tkfamily <- "symbol"
+      } else {
+        i <- grep("symbol", fams, ignore.case=TRUE)
+        if (length(i)>=1) {
+          tkfamily <- fams[i[1]]
+        } else {
+          warning("Could not find proper symbol font.")
+          tkfamily <- "Times"
+        }
+      }
+    } else if (family=="serif") {
+      tkfamily <- "Times"
+    } else if (family=="sans") {
+      tkfamily <- "Helvetica"
+    } else if (family=="mono") {
+      tkfamily <- "Courier"
+    } else {
+      ## pass the family and see what happens
+      tkfamily <- family
+    }
+    
+    newfont <- tkfont.create(family=tkfamily, slant=slant, weight=weight,
+                             size=12*cex)
+    as.character(newfont)
+  }
+}
+
+i.tkplot.get.edge.lty <- function(edge.lty) {
+
+  if (is.numeric(edge.lty)) {
+    lty <- c( " ", "", "-", ".", "-.", "--", "--.")
+    edge.lty <- lty[edge.lty %% 7 + 1]
+  } else if (is.character(edge.lty)) {
+    wh <- edge.lty %in% c("blank", "solid", "dashed", "dotted", "dotdash",
+                          "longdash", "twodash")
+    lty <- c( " ", "", "-", ".", "-.", "--", "--.")
+    names(lty) <- c("blank", "solid", "dashed", "dotted", "dotdash",
+                    "longdash", "twodash")
+    edge.lty[wh] <- lty[ edge.lty[wh] ]
+  }
+  edge.lty
 }

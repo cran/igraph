@@ -1,4 +1,4 @@
- /* -*- mode: C -*-  */
+/* -*- mode: C -*-  */
 /* 
    IGraph library.
    Copyright (C) 2005  Gabor Csardi <csardi@rmki.kfki.hu>
@@ -26,6 +26,7 @@
 #include "random.h"
 
 #include <string.h>
+#include <limits.h>
 
 /** 
  * \section about_structural
@@ -1476,6 +1477,7 @@ int igraph_edge_betweenness (const igraph_t *graph, igraph_vector_t *result,
   long int i;
   igraph_integer_t modein, modeout;
 
+  directed=directed && igraph_is_directed(graph);
   if (directed) {
     modeout=IGRAPH_OUT;
     modein=IGRAPH_IN;
@@ -1996,13 +1998,7 @@ int igraph_subgraph(const igraph_t *graph, igraph_t *res,
  * \return Error code:
  *    \c IGRAPH_ENOMEM if we are out of memory.
  *
- * Time complexity: O(|V|+|E|) for
- * removing the loops,
- * O(|V|d*log(d)+|E|) for removing
- * the multiple edges. |V| and
- * |E| are the number of vertices and
- * edges in the graph, d is the
- * highest out-degree in the graph.
+ * Time complexity: O(|V|+|E|).
  */
 
 int igraph_simplify(igraph_t *graph, igraph_bool_t multiple, igraph_bool_t loops) {
@@ -2033,7 +2029,6 @@ int igraph_simplify(igraph_t *graph, igraph_bool_t multiple, igraph_bool_t loops
       } /* if loops */
       
       if (multiple) {
-	igraph_vector_sort(&neis);
 	for (j=1; j<igraph_vector_size(&neis); j++) {
 	  if (VECTOR(neis)[j]==VECTOR(neis)[j-1] && 
 	      (!loops || VECTOR(neis)[j] != i) ) {
@@ -2063,7 +2058,6 @@ int igraph_simplify(igraph_t *graph, igraph_bool_t multiple, igraph_bool_t loops
       } /* if loops */
       
       if (multiple) {
-	igraph_vector_sort(&neis);
 	for (j=1; j<igraph_vector_size(&neis); j++) {
 	  if (VECTOR(neis)[j] > i && VECTOR(neis)[j]==VECTOR(neis)[j-1]) {
 	    IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
@@ -2140,7 +2134,7 @@ int igraph_transitivity_avglocal_undirected(const igraph_t *graph,
   IGRAPH_CHECK(igraph_degree(graph, &degree, igraph_vss_all(), IGRAPH_ALL,
 			     IGRAPH_LOOPS));
   maxdegree=igraph_vector_max(&degree)+1;
-  igraph_vector_order(&degree, &order, maxdegree);
+  igraph_vector_order1(&degree, &order, maxdegree);
   igraph_vector_destroy(&degree);
   IGRAPH_FINALLY_CLEAN(1);
   IGRAPH_VECTOR_INIT_FINALLY(&rank, no_of_nodes);
@@ -2331,7 +2325,7 @@ int igraph_transitivity_local_undirected2(const igraph_t *graph,
     VECTOR(degree)[i]=deg=igraph_vector_size(neis);
     if (deg > maxdegree) { maxdegree = deg; }
   }
-  igraph_vector_order(&degree, &order, maxdegree+1);
+  igraph_vector_order1(&degree, &order, maxdegree+1);
   igraph_vector_destroy(&degree);
   IGRAPH_FINALLY_CLEAN(1);
   IGRAPH_VECTOR_INIT_FINALLY(&rank, affected_nodes);
@@ -2437,7 +2431,7 @@ int igraph_transitivity_local_undirected2(const igraph_t *graph,
 /*   nodes_to_calc=IGRAPH_VIT_SIZE(vit); */
   
 /*   IGRAPH_CHECK(igraph_i_lazy_adjlist_init(graph, &adjlist, IGRAPH_ALL, */
-/* 					  IGRAPH_I_SORT_SIMPLIFY)); */
+/* 					  IGRAPH_I_SIMPLIFY)); */
 /*   IGRAPH_FINALLY(igraph_i_lazy_adjlist_destroy, &adjlist); */
   
 /*   IGRAPH_CHECK(igraph_vector_resize(res, nodes_to_calc)); */
@@ -2506,7 +2500,7 @@ int igraph_transitivity_local_undirected4(const igraph_t *graph,
   IGRAPH_CHECK(igraph_degree(graph, &degree, igraph_vss_all(), IGRAPH_ALL,
 			     IGRAPH_LOOPS));
   maxdegree=igraph_vector_max(&degree)+1;
-  igraph_vector_order(&degree, &order, maxdegree);
+  igraph_vector_order1(&degree, &order, maxdegree);
   igraph_vector_destroy(&degree);
   IGRAPH_FINALLY_CLEAN(1);
   IGRAPH_VECTOR_INIT_FINALLY(&rank, no_of_nodes);
@@ -2590,9 +2584,8 @@ int igraph_transitivity_local_undirected4(const igraph_t *graph,
  * \sa \ref igraph_transitivity_undirected(), \ref
  * igraph_transitivity_avglocal_undirected().
  * 
- * Time complexity: O(n*d^2+|V|), n is the number of vertices for which
- * the transitivity is calculated, d is the average vertex degree and |V| the 
- * total number if vertices in the graph.
+ * Time complexity: O(n*d^2), n is the number of vertices for which
+ * the transitivity is calculated, d is the average vertex degree.
  */
 
 int igraph_transitivity_local_undirected(const igraph_t *graph,
@@ -2664,7 +2657,7 @@ int igraph_transitivity_undirected(const igraph_t *graph,
   IGRAPH_CHECK(igraph_degree(graph, &degree, igraph_vss_all(), IGRAPH_ALL,
 			     IGRAPH_LOOPS));
   maxdegree=igraph_vector_max(&degree)+1;
-  igraph_vector_order(&degree, &order, maxdegree);
+  igraph_vector_order1(&degree, &order, maxdegree);
   igraph_vector_destroy(&degree);
   IGRAPH_FINALLY_CLEAN(1);
   IGRAPH_VECTOR_INIT_FINALLY(&rank, no_of_nodes);
@@ -2743,8 +2736,8 @@ int igraph_transitivity_undirected(const igraph_t *graph,
  *         \c IGRAPH_ENOMEM: not enough memory for
  *         temporary data. 
  * 
- * Time complexity: O(|V|d*log(d)+|E|), |V| is the number of vertices, 
- * |E| is the number of edges, d is the average degree of the vertices.
+ * Time complexity: O(|V|+|E|), |V| is the number of vertices, 
+ * |E| is the number of edges.
  */
 
 int igraph_reciprocity(const igraph_t *graph, igraph_real_t *res, 
@@ -2767,8 +2760,6 @@ int igraph_reciprocity(const igraph_t *graph, igraph_real_t *res,
     long int ip, op;
     igraph_neighbors(graph, &inneis, i, IGRAPH_IN);
     igraph_neighbors(graph, &outneis, i, IGRAPH_OUT);
-    igraph_vector_sort(&inneis);
-    igraph_vector_sort(&outneis);
     
     ip=op=0;
     while (ip < igraph_vector_size(&inneis) &&
@@ -3547,3 +3538,309 @@ int igraph_neighborhood_graphs(const igraph_t *graph, igraph_vector_ptr_t *res,
   return 0;
 }
 
+/**
+ * \function igraph_topological_sorting
+ * Calculate a possible topological sorting of the graph
+ *
+ * </para><para>
+ * A topological sorting of a directed acyclic graph is a linear ordering
+ * of its nodes where each node comes before all nodes to which it has
+ * edges. Every DAG has at least one topological sort, and may have many.
+ * This function returns a possible topological sort among them. If the
+ * graph is not acyclic (it has at least one cycle), a partial topological
+ * sort is returned and a warning is issued.
+ *
+ * \param graph The input graph.
+ * \param res Pointer to a vector, the result will be stored here.
+ *   It will be resized if needed.
+ * \param mode Specifies how to use the direction of the edges.
+ *   For \c IGRAPH_OUT, the sorting order ensures that each node comes
+ *   before all nodes to which it has edges, so nodes with no incoming
+ *   edges go first. For \c IGRAPH_IN, it is quite the opposite: each
+ *   node comes before all nodes from which it receives edges. Nodes 
+ *   with no outgoing edges go first.
+ * \return Error code.
+ * 
+ * Time complexity: O(|V|+|E|), where |V| and |E| are the number of
+ * vertices and edges in the original input graph.
+ */
+int igraph_topological_sorting(const igraph_t* graph, igraph_vector_t *res,
+			       igraph_neimode_t mode) {
+  long int no_of_nodes=igraph_vcount(graph);
+  igraph_vector_t degrees, neis;
+  igraph_dqueue_t sources;
+  igraph_neimode_t deg_mode;
+  long int node, i, j;
+
+  if (mode == IGRAPH_ALL || !igraph_is_directed(graph)) {
+    IGRAPH_ERROR("topological sorting does not make sense for undirected graphs", IGRAPH_EINVAL);
+  } else if (mode == IGRAPH_OUT) {
+    deg_mode = IGRAPH_IN;
+  } else if (mode == IGRAPH_IN) {
+    deg_mode = IGRAPH_OUT;
+  } else {
+    IGRAPH_ERROR("invalid mode", IGRAPH_EINVAL);
+  }
+
+  IGRAPH_VECTOR_INIT_FINALLY(&degrees, no_of_nodes);
+  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  IGRAPH_CHECK(igraph_dqueue_init(&sources, 0));
+  IGRAPH_FINALLY(igraph_dqueue_destroy, &sources);
+  IGRAPH_CHECK(igraph_degree(graph, &degrees, igraph_vss_all(), deg_mode, 0));
+
+  igraph_vector_clear(res);
+
+  /* Do we have nodes with no incoming vertices? */
+  for (i=0; i<no_of_nodes; i++) {
+    if (VECTOR(degrees)[i] == 0)
+      IGRAPH_CHECK(igraph_dqueue_push(&sources, i));
+  }
+
+  /* Take all nodes with no incoming vertices and remove them */
+  while (!igraph_dqueue_empty(&sources)) {
+    node=(long)igraph_dqueue_pop(&sources);
+    /* Add the node to the result vector */
+    igraph_vector_push_back(res, node);
+    /* Exclude the node from further source searches */
+    VECTOR(degrees)[node]=-1;
+    /* Get the neighbors and decrease their degrees by one */
+    IGRAPH_CHECK(igraph_neighbors(graph, &neis, node, mode));
+    j=igraph_vector_size(&neis);
+    for (i=0; i<j; i++) {
+      VECTOR(degrees)[(long)VECTOR(neis)[i]]--;
+      if (VECTOR(degrees)[(long)VECTOR(neis)[i]] == 0)
+	IGRAPH_CHECK(igraph_dqueue_push(&sources, VECTOR(neis)[i]));
+    }
+  }
+
+  if (igraph_vector_size(res)<no_of_nodes)
+    IGRAPH_WARNING("graph contains a cycle, partial result is returned");
+
+  igraph_vector_destroy(&degrees);
+  igraph_vector_destroy(&neis);
+  igraph_dqueue_destroy(&sources);
+  IGRAPH_FINALLY_CLEAN(3);
+
+  return 0;
+}
+
+int igraph_is_loop(const igraph_t *graph, igraph_vector_t *res, igraph_es_t es) {
+  igraph_eit_t eit;  
+  long int i;
+  IGRAPH_CHECK(igraph_eit_create(graph, es, &eit));
+  IGRAPH_FINALLY(igraph_eit_destroy, &eit);
+
+  IGRAPH_CHECK(igraph_vector_resize(res, IGRAPH_EIT_SIZE(eit)));
+
+  for (i=0; !IGRAPH_EIT_END(eit); i++, IGRAPH_EIT_NEXT(eit)) {
+    long int e=IGRAPH_EIT_GET(eit);
+    VECTOR(*res)[i] = (IGRAPH_FROM(graph, e)==IGRAPH_TO(graph, e)) ? 1 : 0;
+  }
+  
+  igraph_eit_destroy(&eit);
+  IGRAPH_FINALLY_CLEAN(1);
+  return 0;
+}
+
+int igraph_is_multiple(const igraph_t *graph, igraph_vector_t *res, igraph_es_t es) {
+  igraph_eit_t eit;
+  long int i;
+  igraph_i_lazy_adjedgelist_t adjlist;
+  
+  IGRAPH_CHECK(igraph_eit_create(graph, es, &eit));
+  IGRAPH_FINALLY(igraph_eit_destroy, &eit);
+  IGRAPH_CHECK(igraph_i_lazy_adjedgelist_init(graph, &adjlist, IGRAPH_OUT));
+  IGRAPH_FINALLY(igraph_i_lazy_adjedgelist_destroy, &adjlist);
+  
+  IGRAPH_CHECK(igraph_vector_resize(res, IGRAPH_EIT_SIZE(eit)));
+  
+  for (i=0; !IGRAPH_EIT_END(eit); i++, IGRAPH_EIT_NEXT(eit)) {
+    long int e=IGRAPH_EIT_GET(eit);
+    long int from=IGRAPH_FROM(graph, e);
+    long int to=IGRAPH_TO(graph, e);
+    igraph_vector_t *neis=igraph_i_lazy_adjedgelist_get(&adjlist, from);
+    long int j, n=igraph_vector_size(neis);
+    VECTOR(*res)[i]=0;
+    for (j=0; j<n; j++) {
+      long int e2=VECTOR(*neis)[j];
+      long int to2=IGRAPH_OTHER(graph,e2,from);
+      if (to2==to && e2<e) {
+	VECTOR(*res)[i]=1;
+      }
+    }
+  }
+  
+  igraph_i_lazy_adjedgelist_destroy(&adjlist);
+  igraph_eit_destroy(&eit);
+  IGRAPH_FINALLY_CLEAN(2);
+  return 0;
+}
+
+/**
+ * \function igraph_girth
+ * \brief The girth of a graph is the length of the shortest circle in it.
+ * 
+ * </para><para>
+ * The current implementation works for undirected graphs only, 
+ * directed graphs are treated as undirected graphs. Loop edges and
+ * multiple edges are ignored.
+ * </para><para>
+ * If the graph is a forest (ie. acyclic), then zero is returned.
+ * </para><para>
+ * This implementation is based on Alon Itai and Michael Rodeh:
+ * Finding a minimum circuit in a graph
+ * \emb Proceedings of the ninth annual ACM symposium on Theory of
+ * computing \eme, 1-10, 1977. The first implementation of this
+ * function was done by Keith Briggs, thanks Keith.
+ * \param graph The input graph.
+ * \param girth Pointer to an integer, if not \c NULL then the result
+ *     will be stored here.
+ * \param circle Pointer to an initialized vector, the vertex ids in
+ *     the shortest circle will be stored here. If \c NULL then it is
+ *     ignored. 
+ * \return Error code.
+ *
+ * Time complexity: O((|V|+|E|)^2), |V| is the number of vertices, |E|
+ * is the number of edges in the general case. If the graph has no
+ * circles at all then the function needs O(|V|+|E|) time to realize
+ * this and then it stops.
+ */
+
+int igraph_girth(const igraph_t *graph, igraph_integer_t *girth, 
+		 igraph_vector_t *circle) {
+  
+  long int no_of_nodes=igraph_vcount(graph);
+  igraph_dqueue_t q;
+  igraph_i_lazy_adjlist_t adjlist;
+  long int mincirc=LONG_MAX, minvertex=0;
+  long int node;
+  igraph_bool_t triangle=0;
+  igraph_vector_t *neis;
+  igraph_vector_long_t level;
+  long int stoplevel=no_of_nodes+1;
+  igraph_bool_t anycircle=0;
+  long int t1=0, t2=0;
+  
+  IGRAPH_CHECK(igraph_i_lazy_adjlist_init(graph, &adjlist, IGRAPH_ALL, 
+					  IGRAPH_I_SIMPLIFY));
+  IGRAPH_FINALLY(igraph_i_lazy_adjlist_destroy, &adjlist);
+  IGRAPH_DQUEUE_INIT_FINALLY(&q, 100);
+  IGRAPH_CHECK(igraph_vector_long_init(&level, no_of_nodes));
+  IGRAPH_FINALLY(igraph_vector_long_destroy, &level);
+  
+  for (node=0; !triangle && node<no_of_nodes; node++) {
+
+    /* Are there circles in this graph at all? */
+    if (node==1 && anycircle==0) { 
+      igraph_bool_t conn;
+      IGRAPH_CHECK(igraph_is_connected(graph, &conn, IGRAPH_WEAK));
+      if (conn) {
+	/* No, there are none */
+	break;
+      }
+    }
+
+    anycircle=0;
+    igraph_dqueue_clear(&q);
+    igraph_vector_long_null(&level);
+    IGRAPH_CHECK(igraph_dqueue_push(&q, node));
+    VECTOR(level)[node]=1;    
+    
+    IGRAPH_ALLOW_INTERRUPTION();
+    
+    while (!igraph_dqueue_empty(&q)) {
+      long int actnode=igraph_dqueue_pop(&q);
+      long int actlevel=VECTOR(level)[actnode];
+      long int i, n;
+
+      if (actlevel>=stoplevel) { break; }
+
+      neis=igraph_i_lazy_adjlist_get(&adjlist, actnode);
+      n=igraph_vector_size(neis);
+      for (i=0; i<n; i++) {
+	long int nei=VECTOR(*neis)[i];
+	long int neilevel=VECTOR(level)[nei];
+	if (neilevel != 0) {
+	  if (neilevel==actlevel-1) {
+	    continue;
+	  } else {
+	    /* found circle */
+	    stoplevel=neilevel;
+	    anycircle=1;
+	    if (actlevel<mincirc) {
+	      /* Is it a minimum circle? */
+	      mincirc=actlevel+neilevel-1;
+	      minvertex=node;
+	      t1=actnode; t2=nei;
+	      if (neilevel==2) {
+		/* Is it a triangle? */
+		triangle=1;
+	      }	    
+	    }
+	    if (neilevel==actlevel) {
+	      break;
+	    }
+	  }
+	} else {
+	  igraph_dqueue_push(&q, nei);
+	  VECTOR(level)[nei]=actlevel+1;
+	}
+      }
+
+    } /* while q !empty */
+  } /* node */
+
+  if (girth) {
+    if (mincirc==LONG_MAX) {
+      *girth=mincirc=0;
+    } else {
+      *girth=mincirc;
+    }
+  }
+
+  /* Store the actual circle, if needed */
+  if (circle) {
+    IGRAPH_CHECK(igraph_vector_resize(circle, mincirc));
+    if (mincirc != 0) {
+      long int i, n, idx=0;
+      igraph_dqueue_clear(&q);
+      igraph_vector_long_null(&level); /* used for father pointers */
+#define FATHER(x) (VECTOR(level)[(x)])
+      IGRAPH_CHECK(igraph_dqueue_push(&q, minvertex));
+      FATHER(minvertex)=minvertex;
+      while (FATHER(t1)==0 || FATHER(t2)==0) {
+	long int actnode=igraph_dqueue_pop(&q);
+	neis=igraph_i_lazy_adjlist_get(&adjlist, actnode);
+	n=igraph_vector_size(neis);
+	for (i=0; i<n; i++) {
+	  long int nei=VECTOR(*neis)[i];
+	  if (FATHER(nei) == 0) {
+	    FATHER(nei)=actnode+1;
+	    igraph_dqueue_push(&q, nei);
+	  }
+	}
+      }  /* while q !empty */
+      /* Ok, now use FATHER to create the path */
+      while (t1!=minvertex) {
+	VECTOR(*circle)[idx++]=t1;
+	t1=FATHER(t1)-1;
+      }
+      VECTOR(*circle)[idx]=minvertex;
+      idx=mincirc-1;
+      while (t2!=minvertex) {
+	VECTOR(*circle)[idx--]=t2;
+	t2=FATHER(t2)-1;
+      }
+    } /* anycircle */
+  } /* circle */
+#undef FATHER
+
+  igraph_vector_long_destroy(&level);
+  igraph_dqueue_destroy(&q);
+  igraph_i_lazy_adjlist_destroy(&adjlist);
+  IGRAPH_FINALLY_CLEAN(3);
+  
+  return 0;
+}
+    
+    

@@ -26,22 +26,22 @@
 
 read.graph.toraw <- function(filename) {
   if (is.character(filename)) {
-    filename <- file(filename)
+    filename <- file(filename, open="rb")
   }
   if (!isOpen(filename)) {
-    open(filename)
+    open(filename, open="rb")
   }
 
   tmpbufsize <- 20000
-  buffer <- tmpbuffer <- readChar(filename, tmpbufsize)
-  while (nchar(tmpbuffer) == tmpbufsize) {
-    tmpbuffer <- readChar(filename, tmpbufsize)
-    buffer <- paste(sep="", buffer, tmpbuffer)
+  buffer <- tmpbuffer <- readBin(filename, what=raw(0), n=tmpbufsize)
+  while (length(tmpbuffer) == tmpbufsize) {
+    tmpbuffer <- readBin(filename, what=raw(0), n=tmpbufsize)
+    buffer <- c(buffer, tmpbuffer)
   }
   close(filename)
   rm(tmpbuffer)
   
-  charToRaw(buffer)  
+  buffer
 }
 
 write.graph.fromraw <- function(buffer, file) {
@@ -77,6 +77,8 @@ read.graph <- function(file, format="edgelist", ...) {
       write.graph.fromraw(buffer, file)
     }
   }
+
+  format <- tolower(format)
   
   res <- switch(format,
                 "pajek"=read.graph.pajek(file, ...),
@@ -85,6 +87,8 @@ read.graph <- function(file, format="edgelist", ...) {
                 "lgl"=read.graph.lgl(file, ...),
                 "graphml"=read.graph.graphml(file, ...),
                 "dimacs"=read.graph.dimacs(file, ...),
+                "graphdb"=read.graph.graphdb(file, ...),
+                "gml"=read.graph.gml(file, ...),
                 stop(paste("Unknown file format:",format))
                 )
   res
@@ -105,6 +109,8 @@ write.graph <- function(graph, file, format="edgelist", ...) {
     }
   }
   
+  format <- tolower(format)
+
   res <- switch(format,
                 "pajek"=write.graph.pajek(graph, file, ...),
                 "edgelist"=write.graph.edgelist(graph, file, ...),
@@ -112,6 +118,7 @@ write.graph <- function(graph, file, format="edgelist", ...) {
                 "lgl"=write.graph.lgl(graph, file, ...),
                 "graphml"=write.graph.graphml(graph, file, ...),
                 "dimacs"=write.graph.dimacs(graph, file, ...),
+                "gml"=write.graph.gml(graph, file, ...),
                 stop(paste("Unknown file format:",format))
                 )
 
@@ -245,5 +252,92 @@ read.graph.graphml <- function(file, index=0, ...) {
 write.graph.graphml <- function(graph, file, ...) {
 
   .Call("R_igraph_write_graph_graphml", graph, file,
+        PACKAGE="igraph")
+}
+
+################################################################
+# GML
+################################################################
+
+read.graph.gml <- function(file, ...) {
+  .Call("R_igraph_read_graph_gml", file,
+        PACKAGE="igraph")
+}
+
+write.graph.gml <- function(graph, file, id=NULL, creator=NULL, ...) {
+  if (!is.null(id)) {
+    id <- as.numeric(id)
+  }
+  if (!is.null(creator)) {
+    creator <- as.character(creator)
+  }
+  .Call("R_igraph_write_graph_gml", graph, file, id, creator,
+        PACKAGE="igraph")
+}
+
+################################################################
+# Download a file from the graph database for
+# isomorphic problems
+################################################################
+
+graph.graphdb <- function(url=NULL,
+                          prefix="iso", type="r001", nodes=NULL, pair="A", which=0,
+                          base="http://cneurocvs.rmki.kfki.hu/graphdb/gzip",
+                          compressed=TRUE, directed=TRUE) {
+  
+  if (is.null(nodes) && is.null(url)) {
+    stop("The `nodes' or the `url' argument must be non-null")
+  }
+
+  if (is.null(url)) {
+  
+    prefixes <- c("iso", "si6", "mcs10", "mcs30", "mcs50", "mcs70", "mcs90")
+    types <- c("r001", "r005", "r01", "r02", "m2D", "m2Dr2", "m2Dr4", "m2Dr6",
+               "m3D", "m3Dr2", "m3Dr4", "m3Dr6", "m4D", "m4Dr2", "m4Dr4",
+               "m4Dr6", "b03", "b03m", "b06", "b06m", "b09", "b09m")
+    sizecode <- if (nodes<=100) "s" else if (nodes<2000) "m" else "l" # "l" ????
+    typegroups <- c("rand", "rand", "rand", "rand",
+                    "m2D", "m2D", "m2D", "m2D",
+                    "m2D", "m3D", "m3D", "m3D",
+                    "m4D", "m4D", "m4D", "m4D",
+                    "bvg", "bvg", "bvg", "bvg", "bvg", "bvg")
+    typegroup <- typegroups[which(types==type)]
+    
+    if (!prefix %in% prefixes) {
+      stop("Invalid prefix!")
+    }
+    if (!type %in% types) {
+      stop("Invalid graph type!")
+    }
+    suff <- if (compressed) ".gz" else ""
+    filename <- paste(sep="", base, "/", prefix, "/", typegroup, "/", type, "/",
+                      prefix, "_", type, "_", sizecode, nodes,
+                      ".", pair, formatC(which, width=2, flag="0"), suff)
+  } else {
+    filename <- url
+  }
+  
+  ## ok, we have the filename
+
+  f <- try(gzcon(file(filename, open="rb")))
+  if (inherits(f, "try-error")) {
+    stop(paste("Cannot open URL:", filename));
+  }
+
+  if (igraph.i.have.fmemopen) {
+    f <- read.graph.toraw(f)
+  } else {
+    buffer <- read.graph.toraw(f)
+    f <- tempfile()
+    write.graph.fromraw(buffer, f)
+  }
+
+  .Call("R_igraph_read_graph_graphdb", f, as.logical(directed),
+        PACKAGE="igraph")
+  
+}
+
+read.graph.graphdb <- function(file, directed=TRUE, ...) {
+  .Call("R_igraph_read_graph_graphdb", file, as.logical(directed),
         PACKAGE="igraph")
 }

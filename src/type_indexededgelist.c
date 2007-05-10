@@ -231,6 +231,7 @@ int igraph_add_edges(igraph_t *graph, const igraph_vector_t *edges,
   igraph_error_handler_t *oldhandler;
   int ret1, ret2;
   igraph_vector_t newoi, newii;
+  igraph_bool_t directed=igraph_is_directed(graph);
 
   if (igraph_vector_size(edges) % 2 != 0) {
     IGRAPH_ERROR("invalid (odd) length of edges vector", IGRAPH_EINVEVECTOR);
@@ -244,8 +245,13 @@ int igraph_add_edges(igraph_t *graph, const igraph_vector_t *edges,
   IGRAPH_CHECK(igraph_vector_reserve(&graph->to  , no_of_edges+edges_to_add));
 
   while (i<edges_to_add*2) {
-    igraph_vector_push_back(&graph->from, VECTOR(*edges)[i++]); /* reserved */
-    igraph_vector_push_back(&graph->to,   VECTOR(*edges)[i++]); /* reserved */
+    if (directed || VECTOR(*edges)[i] > VECTOR(*edges)[i+1]) {
+      igraph_vector_push_back(&graph->from, VECTOR(*edges)[i++]); /* reserved */
+      igraph_vector_push_back(&graph->to,   VECTOR(*edges)[i++]); /* reserved */
+    } else {
+      igraph_vector_push_back(&graph->to,   VECTOR(*edges)[i++]); /* reserved */
+      igraph_vector_push_back(&graph->from, VECTOR(*edges)[i++]); /* reserved */
+    }      
   }
 
   /* disable the error handler temporarily */
@@ -260,8 +266,8 @@ int igraph_add_edges(igraph_t *graph, const igraph_vector_t *edges,
     igraph_set_error_handler(oldhandler);
     IGRAPH_ERROR("cannot add edges", IGRAPH_ERROR_SELECT_2(ret1, ret2));
   }  
-  ret1=igraph_vector_order(&graph->from, &newoi, graph->n);
-  ret2=igraph_vector_order(&graph->to  , &newii, graph->n);
+  ret1=igraph_vector_order(&graph->from, &graph->to, &newoi, graph->n);
+  ret2=igraph_vector_order(&graph->to  , &graph->from, &newii, graph->n);
   if (ret1 != 0 || ret2 != 0) {
     igraph_vector_resize(&graph->from, no_of_edges);
     igraph_vector_resize(&graph->to, no_of_edges);
@@ -417,8 +423,8 @@ int igraph_delete_edges(igraph_t *graph, igraph_es_t edges) {
 
   /* Create index, this might require additional memory */
   IGRAPH_VECTOR_INIT_FINALLY(&newoi, remaining_edges);
-  IGRAPH_CHECK(igraph_vector_order(&newfrom, &newoi, no_of_nodes));
-  IGRAPH_CHECK(igraph_vector_order(&newto, &graph->ii, no_of_nodes));
+  IGRAPH_CHECK(igraph_vector_order(&newfrom, &newto, &newoi, no_of_nodes));
+  IGRAPH_CHECK(igraph_vector_order(&newto, &newfrom, &graph->ii, no_of_nodes));
   
   /* Attributes, we use the original from vector to create an index,
      needed for the attribute handler. This index is the same as the
@@ -547,9 +553,9 @@ int igraph_delete_vertices(igraph_t *graph, igraph_vs_t vertices) {
     }
   }
   /* update oi & ii */
-  IGRAPH_CHECK(igraph_vector_order(&newgraph.from, &newgraph.oi, 
+  IGRAPH_CHECK(igraph_vector_order(&newgraph.from, &newgraph.to, &newgraph.oi, 
 				   remaining_vertices));
-  IGRAPH_CHECK(igraph_vector_order(&newgraph.to, &newgraph.ii, 
+  IGRAPH_CHECK(igraph_vector_order(&newgraph.to, &newgraph.from, &newgraph.ii, 
 				   remaining_vertices));  
 
   IGRAPH_CHECK(igraph_i_create_start(&newgraph.os, &newgraph.from, 
@@ -609,7 +615,9 @@ igraph_integer_t igraph_ecount(const igraph_t *graph) {
  *
  * \param graph The graph to work on.
  * \param neis This vector will contain the result. The vector should
- *        be initialized before and will be resized.
+ *        be initialized before and will be resized. Starting from igraph 
+ *        version 0.4 this vector is always sorted, the vertex ids are
+ *        in increasing order.
  * \param pnode The id of the node of which the adjacent vertices are
  *        searched. 
  * \param mode Defines the way adjacent vertices are searched for
@@ -663,18 +671,54 @@ int igraph_neighbors(const igraph_t *graph, igraph_vector_t *neis, igraph_intege
   
   IGRAPH_CHECK(igraph_vector_resize(neis, length));
   
-  if (mode & IGRAPH_OUT) {
-    j=VECTOR(graph->os)[node+1];
-    for (i=VECTOR(graph->os)[node]; i<j; i++) {
-      VECTOR(*neis)[idx++] = 
-	VECTOR(graph->to)[ (long int)VECTOR(graph->oi)[i] ];
+  if (!igraph_is_directed(graph) || mode != IGRAPH_ALL) {
+
+    if (mode & IGRAPH_OUT) {
+      j=VECTOR(graph->os)[node+1];
+      for (i=VECTOR(graph->os)[node]; i<j; i++) {
+	VECTOR(*neis)[idx++] = 
+	  VECTOR(graph->to)[ (long int)VECTOR(graph->oi)[i] ];
+      }
     }
-  }
-  if (mode & IGRAPH_IN) {
-    j=VECTOR(graph->is)[node+1];
-    for (i=VECTOR(graph->is)[node]; i<j; i++) {
-      VECTOR(*neis)[idx++] =
-	VECTOR(graph->from)[ (long int)VECTOR(graph->ii)[i] ];
+    if (mode & IGRAPH_IN) {
+      j=VECTOR(graph->is)[node+1];
+      for (i=VECTOR(graph->is)[node]; i<j; i++) {
+	VECTOR(*neis)[idx++] =
+	  VECTOR(graph->from)[ (long int)VECTOR(graph->ii)[i] ];
+      }
+    }
+  } else {
+    /* both in- and out- neighbors in a directed graph,
+       we need to merge the two 'vectors' */
+    long int j1=VECTOR(graph->os)[node+1];
+    long int j2=VECTOR(graph->is)[node+1];
+    long int i1=VECTOR(graph->os)[node];
+    long int i2=VECTOR(graph->is)[node];
+    while (i1 < j1 && i2 < j2) {
+      long int n1=VECTOR(graph->to)[ (long int)VECTOR(graph->oi)[i1] ];
+      long int n2=VECTOR(graph->from)[ (long int)VECTOR(graph->ii)[i2] ];
+      if (n1<n2) {
+	VECTOR(*neis)[idx++]=n1;
+	i1++;
+      } else if (n1>n2) {
+	VECTOR(*neis)[idx++]=n2;
+	i2++;
+      } else {
+	VECTOR(*neis)[idx++]=n1;
+	VECTOR(*neis)[idx++]=n2;
+	i1++;
+	i2++;
+      }
+    }
+    while (i1 < j1) {
+      long int n1=VECTOR(graph->to)[ (long int)VECTOR(graph->oi)[i1] ];
+      VECTOR(*neis)[idx++]=n1;
+      i1++;
+    }
+    while (i2 < j2) {
+      long int n2=VECTOR(graph->from)[ (long int)VECTOR(graph->ii)[i2] ];
+      VECTOR(*neis)[idx++]=n2;
+      i2++;
     }
   }
 
@@ -885,6 +929,27 @@ int igraph_edge(const igraph_t *graph, igraph_integer_t eid,
     *to=tmp;
   }
 
+  return 0;
+}
+
+int igraph_edges(const igraph_t *graph, igraph_es_t eids,
+		 igraph_vector_t *edges) {
+  
+  igraph_eit_t eit;
+  long int i, n, ptr=0;
+
+  IGRAPH_CHECK(igraph_eit_create(graph, eids, &eit));
+  IGRAPH_FINALLY(igraph_eit_destroy, &eit);
+  n=IGRAPH_EIT_SIZE(eit);
+  IGRAPH_CHECK(igraph_vector_resize(edges, n*2));
+  for (; !IGRAPH_EIT_END(eit); IGRAPH_EIT_NEXT(eit)) {
+    long int e=IGRAPH_EIT_GET(eit);
+    VECTOR(*edges)[ptr++]=IGRAPH_FROM(graph, e);
+    VECTOR(*edges)[ptr++]=IGRAPH_TO(graph, e);
+  }
+  
+  igraph_eit_destroy(&eit);
+  IGRAPH_FINALLY_CLEAN(1);
   return 0;
 }
 

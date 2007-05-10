@@ -109,7 +109,8 @@ igraph_vs_t igraph_vss_all(void) {
  * 
  * All neighboring vertices of a given vertex are selected by this
  * selector. The \c mode argument controls the type of the neighboring 
- * vertices to be selected.
+ * vertices to be selected. The vertices are visited in increasing vertex
+ * id order, as of igraph version 0.4.
  * 
  * \param vs Pointer to an uninitialized vertex selector object.
  * \param vid Vertex id, the center of the neighborhood.
@@ -390,7 +391,7 @@ int igraph_vs_seq(igraph_vs_t *vs,
 		  igraph_integer_t from, igraph_integer_t to) {
   vs->type=IGRAPH_VS_SEQ;
   vs->data.seq.from=from;
-  vs->data.seq.to=to;
+  vs->data.seq.to=to+1;
   return 0;
 }
 
@@ -413,7 +414,7 @@ igraph_vs_t igraph_vss_seq(igraph_integer_t from, igraph_integer_t to) {
   igraph_vs_t vs;
   vs.type=IGRAPH_VS_SEQ;
   vs.data.seq.from=from;
-  vs.data.seq.to=to;
+  vs.data.seq.to=to+1;
   return vs;
 }
 

@@ -98,6 +98,8 @@ typedef struct igraph_s {
 /* Constants                                          */
 /* -------------------------------------------------- */
 
+#define IGRAPH_VERSION_STRING "0.4"
+
 typedef enum { IGRAPH_UNDIRECTED=0, IGRAPH_DIRECTED=1 } igraph_i_directed_t;
 
 typedef enum { IGRAPH_NO_LOOPS=0, IGRAPH_LOOPS=1 } igraph_i_loops_t;
@@ -153,8 +155,7 @@ typedef enum { IGRAPH_SPINCOMM_UPDATE_SIMPLE=0,
 	       IGRAPH_SPINCOMM_UPDATE_CONFIG } igraph_spincomm_update_t; 
 
 typedef enum { IGRAPH_I_DONT_SIMPLIFY=0,
-	       IGRAPH_I_SIMPLIFY,
-	       IGRAPH_I_SORT_SIMPLIFY } igraph_i_lazy_adlist_simplify_t;
+	       IGRAPH_I_SIMPLIFY } igraph_i_lazy_adlist_simplify_t;
 	       
 
 /* -------------------------------------------------- */
@@ -523,6 +524,8 @@ int igraph_degree(const igraph_t *graph, igraph_vector_t *res,
 		  igraph_bool_t loops);
 int igraph_edge(const igraph_t *graph, igraph_integer_t eid, 
 		igraph_integer_t *from, igraph_integer_t *to);		
+int igraph_edges(const igraph_t *graph, igraph_es_t eids,
+		 igraph_vector_t *edges);
 int igraph_get_eid(const igraph_t *graph, igraph_integer_t *eid,
 		   igraph_integer_t from, igraph_integer_t to,
 		   igraph_bool_t directed);
@@ -530,6 +533,10 @@ int igraph_get_eids(const igraph_t *graph, igraph_vector_t *eids,
 		    const igraph_vector_t *pairs, igraph_bool_t directed);
 int igraph_adjacent(const igraph_t *graph, igraph_vector_t *eids, igraph_integer_t vid,
 		    igraph_neimode_t mode);
+
+#define IGRAPH_FROM(g,e) (VECTOR((g)->from)[(long int)(e)])
+#define IGRAPH_TO(g,e)   (VECTOR((g)->to)  [(long int)(e)])
+#define IGRAPH_OTHER(g,e,v) (IGRAPH_TO(g,(e))==(v) ? IGRAPH_FROM((g),(e)) : IGRAPH_TO((g),(e)))
 
 /* -------------------------------------------------- */
 /* Constructors, deterministic                        */
@@ -642,6 +649,22 @@ int igraph_watts_strogatz_game(igraph_t *graph, igraph_integer_t dim,
 			       igraph_integer_t size, igraph_integer_t nei,
 			       igraph_real_t p);
 
+int igraph_lastcit_game(igraph_t *graph, 
+			igraph_integer_t nodes, igraph_integer_t edges_per_node, 
+			igraph_integer_t agebins,
+			const igraph_vector_t *preference, igraph_bool_t directed);
+
+int igraph_cited_type_game(igraph_t *graph, igraph_integer_t nodes,
+			   const igraph_vector_t *types,
+			   const igraph_vector_t *pref,
+			   igraph_integer_t edges_per_step,
+			   igraph_bool_t directed);
+
+int igraph_citing_cited_type_game(igraph_t *graph, igraph_integer_t nodes,
+				  const igraph_vector_t *types,
+				  const igraph_matrix_t *pref,
+				  igraph_integer_t edges_per_step,
+				  igraph_bool_t directed);
 
 /* -------------------------------------------------- */
 /* Basic query functions                              */
@@ -724,6 +747,12 @@ int igraph_neighborhood(const igraph_t *graph, igraph_vector_ptr_t *res,
 int igraph_neighborhood_graphs(const igraph_t *graph, igraph_vector_ptr_t *res,
 			       igraph_vs_t vids, igraph_integer_t order,
 			       igraph_neimode_t mode);
+int igraph_topological_sorting(const igraph_t *graph, igraph_vector_t *res,
+			       igraph_neimode_t mode);
+int igraph_is_loop(const igraph_t *graph, igraph_vector_t *res, igraph_es_t es);
+int igraph_is_multiple(const igraph_t *graph, igraph_vector_t *res, igraph_es_t es);
+int igraph_girth(const igraph_t *graph, igraph_integer_t *girth, 
+		 igraph_vector_t *circle);
 
 /* TODO: degree.distribution (?) */
 
@@ -850,6 +879,19 @@ int igraph_bibcoupling(const igraph_t *graph, igraph_matrix_t *res,
 /* TODO: modularity */
 /* TODO:  */
 
+int igraph_community_spinglass(const igraph_t *graph,
+			       const igraph_vector_t *weights,
+			       igraph_real_t *modularity,
+			       igraph_real_t *temperature,
+			       igraph_vector_t *membership, 
+			       igraph_vector_t *csize, 
+			       igraph_integer_t spins,
+			       igraph_bool_t parupdate,
+			       igraph_real_t starttemp,
+			       igraph_real_t stoptemp,
+			       igraph_real_t coolfact,
+			       igraph_spincomm_update_t update_rule,
+			       igraph_real_t gamma);
 int igraph_spinglass_community(const igraph_t *graph,
 			       const igraph_vector_t *weights,
 			       igraph_real_t *modularity,
@@ -864,6 +906,17 @@ int igraph_spinglass_community(const igraph_t *graph,
 			       igraph_spincomm_update_t update_rule,
 			       igraph_real_t gamma);
 
+int igraph_community_spinglass_single(const igraph_t *graph,
+				      const igraph_vector_t *weights,
+				      igraph_integer_t vertex,
+				      igraph_vector_t *community,
+				      igraph_real_t *cohesion,
+				      igraph_real_t *adhesion,
+				      igraph_integer_t *inner_links,
+				      igraph_integer_t *outer_links,
+				      igraph_integer_t spins,
+				      igraph_spincomm_update_t update_rule,
+				      igraph_real_t gamma);
 int igraph_spinglass_my_community(const igraph_t *graph,
 				  const igraph_vector_t *weights,
 				  igraph_integer_t vertex,
@@ -876,12 +929,60 @@ int igraph_spinglass_my_community(const igraph_t *graph,
 				  igraph_spincomm_update_t update_rule,
 				  igraph_real_t gamma);
 
+int igraph_community_walktrap(const igraph_t *graph, 
+			      const igraph_vector_t *weights,
+			      int steps,
+			      igraph_matrix_t *merges,
+			      igraph_vector_t *modularity);
+
+int igraph_community_edge_betweenness(const igraph_t *graph, 
+				      igraph_vector_t *result,
+				      igraph_vector_t *edge_betweenness,
+				      igraph_matrix_t *merges,
+				      igraph_vector_t *bridges,
+				      igraph_bool_t directed);
+int igraph_community_eb_get_merges(const igraph_t *graph, 
+				   const igraph_vector_t *edges,
+				   igraph_matrix_t *merges,
+				   igraph_vector_t *bridges);
+
+int igraph_community_fastgreedy(const igraph_t *graph,
+				igraph_matrix_t *merges,
+				igraph_vector_t *modularity);
+
+int igraph_community_to_membership(const igraph_t *graph,
+				   const igraph_matrix_t *merges,
+				   igraph_integer_t steps,
+				   igraph_vector_t *membership,
+				   igraph_vector_t *csize);
+
+int igraph_modularity(const igraph_t *graph, 
+		      const igraph_vector_t *membership,
+		      igraph_real_t *modularity);
+
+int igraph_community_leading_eigenvector_naive(const igraph_t *graph,
+					       igraph_matrix_t *merges,
+					       igraph_vector_t *membership,
+					       long int steps);
+int igraph_community_leading_eigenvector(const igraph_t *graph,
+					 igraph_matrix_t *merges,
+					 igraph_vector_t *membership,
+					 long int steps);
+int igraph_community_leading_eigenvector_step(const igraph_t *graph,
+					      igraph_vector_t *membership,
+					      igraph_integer_t community,
+					      igraph_bool_t *split,
+					      igraph_vector_t *eigenvector,
+					      igraph_real_t *eigenvalue);
+
 /* -------------------------------------------------- */
 /* Conversion                                         */
 /* -------------------------------------------------- */
 
 int igraph_get_adjacency(const igraph_t *graph, igraph_matrix_t *res,
 			 igraph_get_adjacency_t type);
+int igraph_get_adjacency_sparse(const igraph_t *graph, igraph_spmatrix_t *res,
+			        igraph_get_adjacency_t type);
 int igraph_get_edgelist(const igraph_t *graph, igraph_vector_t *res, igraph_bool_t bycol);
 
 int igraph_to_directed(igraph_t *graph, 
@@ -908,6 +1009,9 @@ int igraph_read_graph_dimacs(igraph_t *graph, FILE *instream,
 			     igraph_integer_t *target, 
 			     igraph_vector_t *capacity, 
 			     igraph_bool_t directed);
+int igraph_read_graph_graphdb(igraph_t *graph, FILE *instream, 
+			      igraph_bool_t directed);
+int igraph_read_graph_gml(igraph_t *graph, FILE *instream);
 
 int igraph_write_graph_edgelist(const igraph_t *graph, FILE *outstream);
 int igraph_write_graph_ncol(const igraph_t *graph, FILE *outstream,
@@ -920,6 +1024,8 @@ int igraph_write_graph_pajek(const igraph_t *graph, FILE *outstream);
 int igraph_write_graph_dimacs(const igraph_t *graph, FILE *outstream,
 			      long int source, long int target,
 			      const igraph_vector_t *capacity);
+int igraph_write_graph_gml(const igraph_t *graph, FILE *outstream, 
+			   const igraph_vector_t *id, const char *creator);
 
 /* -------------------------------------------------- */
 /* Graph isomorphisms                                 */
@@ -932,6 +1038,8 @@ int igraph_isoclass_subgraph(const igraph_t *graph, igraph_vector_t *vids,
 			     int *isoclass);
 int igraph_isoclass_create(igraph_t *graph, igraph_integer_t size,
 			   igraph_integer_t number, igraph_bool_t directed);
+int igraph_isomorphic_vf2(const igraph_t *graph1, const igraph_t *graph2, 
+			  igraph_bool_t *iso);
 
 /* -------------------------------------------------- */
 /* Graph motifs                                       */
@@ -993,24 +1101,35 @@ int igraph_st_mincut_value(const igraph_t *graph, igraph_real_t *res,
                            igraph_integer_t source, igraph_integer_t target,
 			   const igraph_vector_t *capacity);
 
+int igraph_mincut(const igraph_t *graph,
+		  igraph_integer_t *value,
+		  igraph_vector_t *partition,
+		  igraph_vector_t *partition2,
+		  igraph_vector_t *cut,
+		  const igraph_vector_t *capacity);
+
 int igraph_st_vertex_connectivity(const igraph_t *graph, 
 				  igraph_integer_t *res,
 				  igraph_integer_t source,
 				  igraph_integer_t target,
 				  igraph_vconn_nei_t neighbors);
-int igraph_vertex_connectivity(const igraph_t *graph, igraph_integer_t *res);
+int igraph_vertex_connectivity(const igraph_t *graph, igraph_integer_t *res,
+			       igraph_bool_t checks);
 int igraph_st_edge_connectivity(const igraph_t *graph, igraph_integer_t *res,
 				igraph_integer_t source, 
 				igraph_integer_t target);
-int igraph_edge_connectivity(const igraph_t *graph, igraph_integer_t *res);
+int igraph_edge_connectivity(const igraph_t *graph, igraph_integer_t *res,
+			     igraph_bool_t checks);
 int igraph_edge_disjoint_paths(const igraph_t *graph, igraph_integer_t *res,
 			       igraph_integer_t source, 
 			       igraph_integer_t target);
 int igraph_vertex_disjoint_paths(const igraph_t *graph, igraph_integer_t *res,
 				 igraph_integer_t source,
 				 igraph_integer_t target);
-int igraph_adhesion(const igraph_t *graph, igraph_integer_t *res);
-int igraph_cohesion(const igraph_t *graph, igraph_integer_t *res);
+int igraph_adhesion(const igraph_t *graph, igraph_integer_t *res,
+		    igraph_bool_t checks);
+int igraph_cohesion(const igraph_t *graph, igraph_integer_t *res,
+		    igraph_bool_t checks);
 
 /* -------------------------------------------------- */
 /* K-Cores                                            */
@@ -1020,37 +1139,54 @@ int igraph_coreness(const igraph_t *graph, igraph_vector_t *cores,
 		    igraph_neimode_t mode);
 
 /* -------------------------------------------------- */
+/* Eigenvectors and eigenvalues                       */
+/* -------------------------------------------------- */
+
+int igraph_eigen_tred2(const igraph_matrix_t *A,
+		       igraph_vector_t *D,
+		       igraph_vector_t *E,
+		       igraph_matrix_t *Z);
+
+int igraph_eigen_tql2(igraph_vector_t *D,
+		      igraph_vector_t *E,
+		      igraph_matrix_t *Z);
+
+int igraph_eigen_tred1(const igraph_matrix_t *A,
+		       igraph_vector_t *D,
+		       igraph_vector_t *E2);
+
+int igraph_eigen_tqlrat(igraph_vector_t *D,
+			igraph_vector_t *E2);
+
+int igraph_eigen_rs(const igraph_matrix_t *A,
+		    igraph_vector_t *values,
+		    igraph_matrix_t *vectors);
+
+/* -------------------------------------------------- */
 /* Dynamics measurement                               */
 /* -------------------------------------------------- */
 
-int igraph_measure_dynamics_idage(const igraph_t *graph, igraph_integer_t start_vertex,
+int igraph_measure_dynamics_idage(const igraph_t *graph,
 				  igraph_matrix_t *akl, 
-				  igraph_matrix_t *sd, igraph_matrix_t *confint, 
+				  igraph_matrix_t *sd, 
 				  igraph_matrix_t *no,
+				  igraph_matrix_t *cites,
 				  const igraph_vector_t *st, igraph_integer_t agebins,
-				  igraph_integer_t maxind, igraph_real_t significance,
-				  igraph_bool_t lno);
+				  igraph_integer_t maxind);
 int igraph_measure_dynamics_idage_st(const igraph_t *graph, igraph_vector_t *res,
 				     const igraph_matrix_t *akl);
-int igraph_measure_dynamics_idage_debug(const igraph_t *graph, igraph_matrix_t *akl,
-					igraph_matrix_t *sd, igraph_matrix_t *confint, 
-					igraph_matrix_t *no,
-					const igraph_vector_t *st, igraph_integer_t pagebins,
-					igraph_integer_t pmaxind, igraph_real_t significance,
-					igraph_vector_t *estimates, 
-					igraph_integer_t est_ind, igraph_integer_t est_age,
-					igraph_bool_t lno);
+int igraph_measure_dynamics_idage_expected(const igraph_t *graph,
+					   igraph_matrix_t *res,
+					   const igraph_matrix_t *akl,
+					   const igraph_vector_t *st,
+					   igraph_integer_t pmaxind);
+
 int igraph_measure_dynamics_idwindowage(const igraph_t *graph, 
-					igraph_integer_t start_vertex,
 					igraph_matrix_t *akl, 
 					igraph_matrix_t *sd, 
-					igraph_matrix_t *confint, 
-					igraph_matrix_t *no,
 					const igraph_vector_t *st, 
 					igraph_integer_t pagebins,
 					igraph_integer_t pmaxind, 
-					igraph_real_t significance,
-					igraph_bool_t lno, 
 					igraph_integer_t time_window);
 int igraph_measure_dynamics_idwindowage_st(const igraph_t *graph, 
 					   igraph_vector_t *res,
@@ -1058,18 +1194,13 @@ int igraph_measure_dynamics_idwindowage_st(const igraph_t *graph,
 					   igraph_integer_t time_window);
 
 int igraph_measure_dynamics_citedcat_id_age(const igraph_t *graph,
-					    igraph_integer_t start_vertex,
 					    igraph_array3_t *adkl,
 					    igraph_array3_t *sd,
-					    igraph_array3_t *confint,
-					    igraph_array3_t *no,
 					    const igraph_vector_t *st,
 					    const igraph_vector_t *cats,
 					    igraph_integer_t pno_cats,
 					    igraph_integer_t pagebins,
-					    igraph_integer_t pmaxind,
-					    igraph_real_t significance,
-					    igraph_bool_t lno);
+					    igraph_integer_t pmaxind);
 
 int igraph_measure_dynamics_citedcat_id_age_st(const igraph_t *graph,
 					       igraph_vector_t *res,
@@ -1078,32 +1209,38 @@ int igraph_measure_dynamics_citedcat_id_age_st(const igraph_t *graph,
 					       igraph_integer_t pno_cats);
 
 int igraph_measure_dynamics_citingcat_id_age(const igraph_t *graph,
-					     igraph_integer_t start_vertex,
 					     igraph_array3_t *adkl,
 					     igraph_array3_t *sd,
-					     igraph_array3_t *confint,
-					     igraph_array3_t *no,
 					     const igraph_vector_t *st,
 					     const igraph_vector_t *cats,
 					     igraph_integer_t pno_cats,
 					     igraph_integer_t pagebins,
-					     igraph_integer_t pmaxind,
-					     igraph_real_t significance,
-					     igraph_bool_t lno);
+					     igraph_integer_t pmaxind);
 int igraph_measure_dynamics_citingcat_id_age_st(const igraph_t *graph,
 						igraph_vector_t *res,
 						const igraph_array3_t *adkl,
 						const igraph_vector_t *cats,
 						igraph_integer_t pno_cats);
 
-int igraph_measure_dynamics_id(const igraph_t *graph, igraph_integer_t start_vertex,
+int igraph_measure_dynamics_id(const igraph_t *graph,
 			       igraph_matrix_t *ak, igraph_matrix_t *sd,
-			       igraph_matrix_t *confint, igraph_matrix_t *no,
-			       const igraph_vector_t *st, igraph_integer_t pmaxind,
-			       igraph_real_t significance, igraph_bool_t lno);
+			       igraph_matrix_t *no, igraph_vector_t *cites,
+			       igraph_vector_t *debug,
+			       igraph_integer_t debugdeg,
+			       const igraph_vector_t *st, igraph_integer_t pmaxind);
 int igraph_measure_dynamics_id_st(const igraph_t *graph, 
 				  igraph_vector_t *res, 
 				  const igraph_matrix_t *ak);
+int igraph_measure_dynamics_id_expected(const igraph_t *graph,
+					igraph_vector_t *res,
+					const igraph_vector_t *ak,
+					const igraph_vector_t *st,
+					igraph_integer_t pmaxind);
+int igraph_measure_dynamics_id_expected2(const igraph_t *graph,
+					 igraph_vector_t *res,
+					 const igraph_vector_t *ak,
+					 const igraph_vector_t *st,
+					 igraph_integer_t pmaxind);
 
 int igraph_measure_dynamics_d_d(const igraph_t *graph,
 				const igraph_vector_t *ntime,
@@ -1111,7 +1248,6 @@ int igraph_measure_dynamics_d_d(const igraph_t *graph,
 				igraph_integer_t events,
 				igraph_matrix_t *akk,
 				igraph_matrix_t *sd,
-				igraph_matrix_t *no,
 				const igraph_vector_t *st,
 				igraph_integer_t pmadeg);
 
@@ -1124,20 +1260,854 @@ int igraph_measure_dynamics_d_d_st(const igraph_t *graph,
 				   igraph_vector_t *st);
 
 int igraph_measure_dynamics_idwindow(const igraph_t *graph, 
-				     igraph_integer_t start_vertex,
 				     igraph_matrix_t *ak, 
 				     igraph_matrix_t *sd,
-				     igraph_matrix_t *confint,
-				     igraph_matrix_t *no,
 				     const igraph_vector_t *st,
 				     igraph_integer_t pmaxind,
-				     igraph_real_t significance,
 				     igraph_integer_t time_window);
 
 int igraph_measure_dynamics_idwindow_st(const igraph_t *graph,
 					igraph_vector_t *res,
 					const igraph_matrix_t *ak,
 					igraph_integer_t time_window);
+
+int igraph_measure_dynamics_lastcit(const igraph_t *graph, igraph_vector_t *al,
+				    igraph_vector_t *sd,
+				    igraph_vector_t *no,
+				    const igraph_vector_t *st,
+				    igraph_integer_t pagebins);
+int igraph_measure_dynamics_lastcit_st(const igraph_t *graph, 
+				       igraph_vector_t *res,
+				       const igraph_vector_t *al);
+
+int igraph_measure_dynamics_age(const igraph_t *graph, 
+				igraph_vector_t *al,
+				igraph_vector_t *sd,
+				igraph_vector_t *no,
+				const igraph_vector_t *st,
+				igraph_integer_t pagebins);
+int igraph_measure_dynamics_age_st(const igraph_t *graph, 
+				   igraph_vector_t *res,
+				   const igraph_vector_t *al);
+
+int igraph_measure_dynamics_citedcat(const igraph_t *graph, 
+				     const igraph_vector_t *cats,
+				     igraph_integer_t pnocats,
+				     igraph_vector_t *ak, 
+				     igraph_vector_t  *sd,
+				     igraph_vector_t *no,
+				     const igraph_vector_t *st);
+int igraph_measure_dynamics_citedcat_st(const igraph_t *graph,
+					igraph_vector_t *res,
+					const igraph_vector_t *ak,
+					const igraph_vector_t *cats,
+					igraph_integer_t pnocats);
+
+int igraph_measure_dynamics_citingcat_citedcat(const igraph_t *graph,
+					       igraph_matrix_t *agd,
+					       igraph_matrix_t *sd,
+					       igraph_matrix_t *no,
+					       const igraph_vector_t *st,
+					       const igraph_vector_t *cats,
+					       igraph_integer_t pnocats);
+int igraph_measure_dynamics_citingcat_citedcat_st(const igraph_t *graph,
+						  igraph_vector_t *res,
+						  const igraph_matrix_t *agd,
+						  const igraph_vector_t *cats,
+						  igraph_integer_t pnocats);
+
+/* -------------------------------------------------- */
+/* Network evolution measurement, new implementation  */
+/* -------------------------------------------------- */
+
+int igraph_evolver_d(igraph_t *graph,
+		     igraph_integer_t nodes,
+		     igraph_vector_t *kernel,
+		     const igraph_vector_t *outseq,
+		     const igraph_vector_t *outdist,
+		     igraph_integer_t m,
+		     igraph_bool_t directed);
+
+int igraph_revolver_d(const igraph_t *graph,
+		     igraph_integer_t niter,
+		     igraph_vector_t *kernel,		     
+		     igraph_vector_t *sd,
+		     igraph_vector_t *norm,
+		     igraph_vector_t *cites,
+		     igraph_vector_t *expected,
+		     igraph_real_t *logprob,
+		     igraph_real_t *lognull,
+		     const igraph_vector_t *debug,
+		     igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_d(const igraph_t *graph,
+			 igraph_vector_t *kernel,
+			 igraph_vector_t *sd,
+			 igraph_vector_t *norm,
+			 igraph_vector_t *cites,
+			 const igraph_vector_t *debug,
+			 igraph_vector_ptr_t *debugres,
+			 const igraph_vector_t *st,
+			 igraph_integer_t pmaxind);
+int igraph_revolver_st_d(const igraph_t *graph,
+			igraph_vector_t *st,
+			const igraph_vector_t *kernel);
+int igraph_revolver_exp_d(const igraph_t *graphm,
+			 igraph_vector_t *expected,
+			 const igraph_vector_t *kernel,
+			 const igraph_vector_t *st,
+			 igraph_integer_t pmaxind);
+int igraph_revolver_error_d(const igraph_t *graph,
+			   const igraph_vector_t *kernel,
+			   const igraph_vector_t *st,
+			   igraph_integer_t maxind,
+			   igraph_real_t *logprob,
+			   igraph_real_t *lognull);
+
+int igraph_revolver_ad(const igraph_t *graph,
+		      igraph_integer_t niter,
+		      igraph_integer_t agebins,
+		      igraph_matrix_t *kernel,
+		      igraph_matrix_t *sd,
+		      igraph_matrix_t *norm,
+		      igraph_matrix_t *cites,
+		      igraph_matrix_t *expected,
+		      igraph_real_t *logprob,
+		      igraph_real_t *lognull,
+		      const igraph_matrix_t *debug,
+		      igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_ad(const igraph_t *graph,
+			  igraph_matrix_t *kernel,
+			  igraph_matrix_t *sd,
+			  igraph_matrix_t *norm,
+			  igraph_matrix_t *cites,
+			  const igraph_matrix_t *debug,
+			  igraph_vector_ptr_t *debugres,
+			  const igraph_vector_t *st,
+			  igraph_integer_t pmaxind,
+			  igraph_integer_t agebins);
+int igraph_revolver_st_ad(const igraph_t *graph,
+			 igraph_vector_t *st,
+			 const igraph_matrix_t *kernel);
+int igraph_revolver_exp_ad(const igraph_t *graph,
+			  igraph_matrix_t *expected,
+			  const igraph_matrix_t *kernel,
+			  const igraph_vector_t *st,
+			  igraph_integer_t pmaxind,
+			  igraph_integer_t agebins);
+int igraph_revolver_error_ad(const igraph_t *graph, 
+			    const igraph_matrix_t *kernel,
+			    const igraph_vector_t *st,
+			    igraph_integer_t pmaxind,
+			    igraph_integer_t pagebins,
+			    igraph_real_t *logprob,
+			    igraph_real_t *lognull);
+
+int igraph_revolver_ade(const igraph_t *graph,
+		       igraph_integer_t niter,
+		       igraph_integer_t agebins,
+		       const igraph_vector_t *cats,
+		       igraph_array3_t *kernel,
+		       igraph_array3_t *sd,
+		       igraph_array3_t *norm,
+		       igraph_array3_t *cites,
+		       igraph_array3_t *expected,
+		       igraph_real_t *logprob,
+		       igraph_real_t *lognull,
+		       const igraph_matrix_t *debug,
+		       igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_ade(const igraph_t *graph, 
+			   igraph_array3_t *kernel, 
+			   igraph_array3_t *sd,
+			   igraph_array3_t *norm,
+			   igraph_array3_t *cites,
+			   const igraph_matrix_t *debug,
+			   igraph_vector_ptr_t *debugres,
+			   const igraph_vector_t *st,
+			   const igraph_vector_t *cats,
+			   igraph_integer_t pnocats,
+			   igraph_integer_t pmaxind,
+			   igraph_integer_t pagebind);
+int igraph_revolver_st_ade(const igraph_t *graph,
+			  igraph_vector_t *st,
+			  const igraph_array3_t *kernel,
+			  const igraph_vector_t *cats);
+int igraph_revolver_exp_ade(const igraph_t *graph, 
+			   igraph_array3_t *expected,
+			   const igraph_array3_t *kernel,
+			   const igraph_vector_t *st,
+			   const igraph_vector_t *cats,
+			   igraph_integer_t nocats,
+			   igraph_integer_t maxdegree,
+			   igraph_integer_t agebins);
+int igraph_revolver_error_ade(const igraph_t *graph,
+			     const igraph_array3_t *kernel,
+			     const igraph_vector_t *st,
+			     const igraph_vector_t *cats,
+			     igraph_integer_t pnocats,
+			     igraph_integer_t pmaxdegree,
+			     igraph_integer_t pagebins,
+			     igraph_real_t *logprob,
+			     igraph_real_t *lognull);
+
+int igraph_revolver_e(const igraph_t *graph,
+		     igraph_integer_t niter,
+		     const igraph_vector_t *cats,
+		     igraph_vector_t *kernel,
+		     igraph_vector_t *sd,
+		     igraph_vector_t *norm,
+		     igraph_vector_t *cites,
+		     igraph_vector_t *expected,
+		     igraph_real_t *logprob,
+		     igraph_real_t *lognull,
+		     const igraph_vector_t *debug,
+		     igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_e(const igraph_t *graph,
+			 igraph_vector_t *kernel,
+			 igraph_vector_t *sd,
+			 igraph_vector_t *norm,
+			 igraph_vector_t *cites,
+			 const igraph_vector_t *debug,
+			 igraph_vector_ptr_t *debugres,
+			 const igraph_vector_t *st,
+			 const igraph_vector_t *cats,
+			 igraph_integer_t pnocats);
+int igraph_revolver_st_e(const igraph_t *graph,
+			igraph_vector_t *st,
+			const igraph_vector_t *kernel,
+			const igraph_vector_t *cats);
+int igraph_revolver_exp_e(const igraph_t *graph,
+			 igraph_vector_t *expected,
+			 const igraph_vector_t *kernel,
+			 const igraph_vector_t *st,
+			 const igraph_vector_t *cats,
+			 igraph_integer_t pnocats);
+int igraph_revolver_error_e(const igraph_t *graph,
+			   const igraph_vector_t *kernel,
+			   const igraph_vector_t *st,
+			   const igraph_vector_t *cats,
+			   igraph_integer_t pnocats,
+			   igraph_real_t *logprob,
+			   igraph_real_t *lognull);
+
+int igraph_revolver_de(const igraph_t *graph,
+		      igraph_integer_t niter,
+		      const igraph_vector_t *cats,
+		      igraph_matrix_t *kernel,
+		      igraph_matrix_t *sd,
+		      igraph_matrix_t *norm,
+		      igraph_matrix_t *cites,
+		      igraph_matrix_t *expected,
+		      igraph_real_t *logprob,
+		      igraph_real_t *lognull,
+		      const igraph_matrix_t *debug,
+		      igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_de(const igraph_t *graph,
+			  igraph_matrix_t *kernel,
+			  igraph_matrix_t *sd,
+			  igraph_matrix_t *norm,
+			  igraph_matrix_t *cites,
+			  const igraph_matrix_t *debug,
+			  igraph_vector_ptr_t *debugres,
+			  const igraph_vector_t *st,
+			  const igraph_vector_t *cats,
+			  igraph_integer_t pnocats,
+			  igraph_integer_t pmaxind);
+int igraph_revolver_st_de(const igraph_t *graph,
+			 igraph_vector_t *st,
+			 const igraph_matrix_t *kernel,
+			 const igraph_vector_t *cats);
+int igraph_revolver_exp_de(const igraph_t *graph,
+			  igraph_matrix_t *expected,
+			  const igraph_matrix_t *kernel,
+			  const igraph_vector_t *st,
+			  const igraph_vector_t *cats,
+			  igraph_integer_t pnocats,
+			  igraph_integer_t pmaxind);
+int igraph_revolver_error_de(const igraph_t *graph,
+			    const igraph_matrix_t *kernel,
+			    const igraph_vector_t *st,
+			    const igraph_vector_t *cats,
+			    igraph_integer_t pnocats,
+			    igraph_integer_t pmaxind,
+			    igraph_real_t *logprob,
+			    igraph_real_t *lognull);
+
+int igraph_revolver_l(const igraph_t *graph,
+		     igraph_integer_t niter,
+		     igraph_integer_t agebins,
+		     igraph_vector_t *kernel,
+		     igraph_vector_t *sd,
+		     igraph_vector_t *norm,
+		     igraph_vector_t *cites,
+		     igraph_vector_t *expected,
+		     igraph_real_t *logprob,
+		     igraph_real_t *lognull,
+		     const igraph_vector_t *debug,
+		     igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_l(const igraph_t *graph,
+			 igraph_vector_t *kernel,
+			 igraph_vector_t *sd,
+			 igraph_vector_t *norm,
+			 igraph_vector_t *cites,
+			 const igraph_vector_t *debug,
+			 igraph_vector_ptr_t *debugres,
+			 const igraph_vector_t *st,
+			 igraph_integer_t pagebins);
+int igraph_revolver_st_l(const igraph_t *graph,
+			igraph_vector_t *st,
+			const igraph_vector_t *kernel);
+int igraph_revolver_exp_l(const igraph_t *graph,
+			 igraph_vector_t *expected,
+			 const igraph_vector_t *kernel,
+			 const igraph_vector_t *st,
+			 igraph_integer_t pagebins);
+int igraph_revolver_error_l(const igraph_t *graph,
+			   const igraph_vector_t *kernel,
+			   const igraph_vector_t *st,
+			   igraph_integer_t pagebins,
+			   igraph_real_t *logprob,
+			   igraph_real_t *lognull);
+
+int igraph_revolver_dl(const igraph_t *graph,
+		      igraph_integer_t niter,
+		      igraph_integer_t agebins,
+		      igraph_matrix_t *kernel,
+		      igraph_matrix_t *sd,
+		      igraph_matrix_t *norm,
+		      igraph_matrix_t *cites,
+		      igraph_matrix_t *expected,
+		      igraph_real_t *logprob,
+		      igraph_real_t *lognull,
+		      const igraph_matrix_t *debug,
+		      igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_dl(const igraph_t *graph,
+			  igraph_matrix_t *kernel,
+			  igraph_matrix_t *sd,
+			  igraph_matrix_t *norm,
+			  igraph_matrix_t *cites,
+			  const igraph_matrix_t *debug,
+			  igraph_vector_ptr_t *debugres,
+			  const igraph_vector_t *st,
+			  igraph_integer_t pmaxind,
+			  igraph_integer_t pagebins);
+int igraph_revolver_st_dl(const igraph_t *graph,
+			 igraph_vector_t *st,
+			 const igraph_matrix_t *kernel);
+int igraph_revolver_exp_dl(const igraph_t *graph,
+			  igraph_matrix_t *expected,
+			  const igraph_matrix_t *kernel,
+			  const igraph_vector_t *st,
+			  igraph_integer_t pmaxind,
+			  igraph_integer_t pagebins);
+int igraph_revolver_error_dl(const igraph_t *graph,
+			    const igraph_matrix_t *kernel,
+			    const igraph_vector_t *st,
+			    igraph_integer_t pagebins,
+			    igraph_integer_t pmaxind,
+			    igraph_real_t *logprob,
+			    igraph_real_t *lognull);
+
+int igraph_revolver_el(const igraph_t *graph,
+		      igraph_integer_t niter,
+		      const igraph_vector_t *cats,
+		      igraph_integer_t agebins,
+		      igraph_matrix_t *kernel,
+		      igraph_matrix_t *sd,
+		      igraph_matrix_t *norm,
+		      igraph_matrix_t *cites,
+		      igraph_matrix_t *expected,
+		      igraph_real_t *logprob,
+		      igraph_real_t *lognull,
+		      const igraph_matrix_t *debug,
+		      igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_el(const igraph_t *graph,
+			  igraph_matrix_t *kernel,
+			  igraph_matrix_t *sd,
+			  igraph_matrix_t *norm,
+			  igraph_matrix_t *cites,
+			  const igraph_matrix_t *debug,
+			  igraph_vector_ptr_t *debugres,
+			  const igraph_vector_t *st,
+			  const igraph_vector_t *cats,
+			  igraph_integer_t pnocats,
+			  igraph_integer_t pagebins);
+int igraph_revolver_st_el(const igraph_t *graph,
+			 igraph_vector_t *st,
+			 const igraph_matrix_t *kernel,
+			 const igraph_vector_t *cats);
+int igraph_revolver_exp_el(const igraph_t *graph,
+			  igraph_matrix_t *expected,
+			  const igraph_matrix_t *kernel,
+			  const igraph_vector_t *st,
+			  const igraph_vector_t *cats,
+			  igraph_integer_t pnocats,
+			  igraph_integer_t pagebins);
+int igraph_revolver_error_el(const igraph_t *graph,
+			    const igraph_matrix_t *kernel,
+			    const igraph_vector_t *st,
+			    const igraph_vector_t *cats,
+			    igraph_integer_t pnocats,
+			    igraph_integer_t pagebins,
+			    igraph_real_t *logprob,
+			    igraph_real_t *lognull);
+
+int igraph_revolver_r(const igraph_t *graph,
+		     igraph_integer_t niter,
+		     igraph_integer_t window,
+		     igraph_vector_t *kernel,
+		     igraph_vector_t *sd,
+		     igraph_vector_t *norm,
+		     igraph_vector_t *cites,
+		     igraph_vector_t *expected,
+		     igraph_real_t *logprob,
+		     igraph_real_t *lognull,
+		     const igraph_vector_t *debug,
+		     igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_r(const igraph_t *graph,
+			 igraph_vector_t *kernel,
+			 igraph_vector_t *sd,
+			 igraph_vector_t *norm,
+			 igraph_vector_t *cites,
+			 const igraph_vector_t *debug,
+			 igraph_vector_ptr_t *debugres,
+			 const igraph_vector_t *st,
+			 igraph_integer_t window,
+			 igraph_integer_t maxind);
+int igraph_revolver_st_r(const igraph_t *graph,
+			igraph_vector_t *st,
+			const igraph_vector_t *kernel,
+			igraph_integer_t window);
+int igraph_revolver_exp_r(const igraph_t *graph,
+			 igraph_vector_t *expected,
+			 const igraph_vector_t *kernel,
+			 const igraph_vector_t *st,
+			 igraph_integer_t window,
+			 igraph_integer_t pmaxind);
+int igraph_revolver_error_r(const igraph_t *graph,
+			   const igraph_vector_t *kernel,
+			   const igraph_vector_t *st,
+			   igraph_integer_t window,
+			   igraph_integer_t maxind,			   
+			   igraph_real_t *logprob,
+			   igraph_real_t *lognull);
+
+int igraph_revolver_ar(const igraph_t *graph,
+		      igraph_integer_t niter,
+		      igraph_integer_t agebins,
+		      igraph_integer_t window,
+		      igraph_matrix_t *kernel,
+		      igraph_matrix_t *sd,
+		      igraph_matrix_t *norm,
+		      igraph_matrix_t *cites,
+		      igraph_matrix_t *expected,
+		      igraph_real_t *logprob,
+		      igraph_real_t *lognull,
+		      const igraph_matrix_t *debug,
+		      igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_ar(const igraph_t *graph,
+			  igraph_matrix_t *kernel,
+			  igraph_matrix_t *sd,
+			  igraph_matrix_t *norm,
+			  igraph_matrix_t *cites,
+			  const igraph_matrix_t *debug,
+			  igraph_vector_ptr_t *debugres,
+			  const igraph_vector_t *st,
+			  igraph_integer_t pagebins,
+			  igraph_integer_t pwindow,
+			  igraph_integer_t maxind);
+int igraph_revolver_st_ar(const igraph_t *graph,
+			 igraph_vector_t *st,
+			 const igraph_matrix_t *kernel,
+			 igraph_integer_t pwindow);
+int igraph_revolver_exp_ar(const igraph_t *graph,
+			  igraph_matrix_t *expected,
+			  const igraph_matrix_t *kernel,
+			  const igraph_vector_t *st,
+			  igraph_integer_t agebins,
+			  igraph_integer_t window,
+			  igraph_integer_t pmaxind);
+int igraph_revolver_error_ar(const igraph_t *graph,
+			    const igraph_matrix_t *kernel,
+			    const igraph_vector_t *st,
+			    igraph_integer_t pagebins,
+			    igraph_integer_t pwindow,
+			    igraph_integer_t maxind,			   
+			    igraph_real_t *logprob,
+			    igraph_real_t *lognull);
+
+int igraph_revolver_di(const igraph_t *graph,
+		      igraph_integer_t niter,
+		      const igraph_vector_t *cats,
+		      igraph_matrix_t *kernel,
+		      igraph_matrix_t *sd,
+		      igraph_matrix_t *norm,
+		      igraph_matrix_t *cites,
+		      igraph_matrix_t *expected,
+		      igraph_real_t *logprob,
+		      igraph_real_t *lognull,
+		      const igraph_matrix_t *debug,
+		      igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_di(const igraph_t *graph,
+			  igraph_matrix_t *kernel,
+			  igraph_matrix_t *sd,
+			  igraph_matrix_t *norm,
+			  igraph_matrix_t *cites,
+			  const igraph_matrix_t *debug,
+			  igraph_vector_ptr_t *debugres,
+			  const igraph_vector_t *st,
+			  const igraph_vector_t *cats,
+			  igraph_integer_t pnocats,
+			  igraph_integer_t pmaxind);
+int igraph_revolver_st_di(const igraph_t *graph,
+			 igraph_vector_t *st,
+			 const igraph_matrix_t *kernel,
+			 const igraph_vector_t *cats);
+int igraph_revolver_exp_di(const igraph_t *graph,
+			  igraph_matrix_t *expected,
+			  const igraph_matrix_t *kernel,
+			  const igraph_vector_t *st,
+			  const igraph_vector_t *cats,
+			  igraph_integer_t pnocats,
+			  igraph_integer_t pmaxind);
+int igraph_revolver_error_di(const igraph_t *graph,
+			    const igraph_matrix_t *kernel,
+			    const igraph_vector_t *st,
+			    const igraph_vector_t *cats,
+			    igraph_integer_t pnocats,
+			    igraph_integer_t pmaxind,
+			    igraph_real_t *logprob,
+			    igraph_real_t *lognull);
+
+int igraph_revolver_adi(const igraph_t *graph,
+		       igraph_integer_t niter,
+		       igraph_integer_t agebins,
+		       const igraph_vector_t *cats,
+		       igraph_array3_t *kernel,
+		       igraph_array3_t *sd,
+		       igraph_array3_t *norm,
+		       igraph_array3_t *cites,
+		       igraph_array3_t *expected,
+		       igraph_real_t *logprob,
+		       igraph_real_t *lognull,
+		       const igraph_matrix_t *debug,
+		       igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_adi(const igraph_t *graph,
+			   igraph_array3_t *kernel,
+			   igraph_array3_t *sd,
+			   igraph_array3_t *norm,
+			   igraph_array3_t *cites,
+			   const igraph_matrix_t *debug,
+			   igraph_vector_ptr_t *debugres,
+			   const igraph_vector_t *st,
+			   const igraph_vector_t *cats,
+			   igraph_integer_t pnocats,
+			   igraph_integer_t pmaxind,
+			   igraph_integer_t pagebins);
+int igraph_revolver_st_adi(const igraph_t *graph,
+			  igraph_vector_t *st,
+			  const igraph_array3_t *kernel,
+			  const igraph_vector_t *cats);
+int igraph_revolver_exp_adi(const igraph_t *graph,
+			   igraph_array3_t *expected,
+			   const igraph_array3_t *kernel,
+			   const igraph_vector_t *st,
+			   const igraph_vector_t *cats,
+			   igraph_integer_t pnocats,
+			   igraph_integer_t pmaxind,
+			   igraph_integer_t pagebins);
+int igraph_revolver_error_adi(const igraph_t *graph,
+			     const igraph_array3_t *kernel,
+			     const igraph_vector_t *st,
+			     const igraph_vector_t *cats,
+			     igraph_integer_t pnocats,
+			     igraph_integer_t pmaxind,
+			     igraph_integer_t pagebins,
+			     igraph_real_t *logprob,
+			     igraph_real_t *lognull);
+int igraph_revolver_il(const igraph_t *graph,
+		      igraph_integer_t niter,
+		      igraph_integer_t agebins,
+		      const igraph_vector_t *cats,
+		      igraph_matrix_t *kernel,
+		      igraph_matrix_t *sd,
+		      igraph_matrix_t *norm,
+		      igraph_matrix_t *cites,
+		      igraph_matrix_t *expected,
+		      igraph_real_t *logprob,
+		      igraph_real_t *lognull,
+		      const igraph_matrix_t *debug,
+		      igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_il(const igraph_t *graph,
+			  igraph_matrix_t *kernel,
+			  igraph_matrix_t *sd,
+			  igraph_matrix_t *norm,
+			  igraph_matrix_t *cites,
+			  const igraph_matrix_t *debug,
+			  igraph_vector_ptr_t *debugres,
+			  const igraph_vector_t *st,
+			  const igraph_vector_t *cats,
+			  igraph_integer_t pnocats,
+			  igraph_integer_t pagebins);
+int igraph_revolver_st_il(const igraph_t *graph,
+			 igraph_vector_t *st,
+			 const igraph_matrix_t *kernel,
+			 const igraph_vector_t *cats);
+int igraph_revolver_exp_il(const igraph_t *graph,
+			  igraph_matrix_t *expected,
+			  const igraph_matrix_t *kernel,
+			  const igraph_vector_t *st,
+			  const igraph_vector_t *cats,
+			  igraph_integer_t nocats,
+			  igraph_integer_t pagebins);
+int igraph_revolver_error_il(const igraph_t *graph,
+			    const igraph_matrix_t *kernel,
+			    const igraph_vector_t *st,
+			    const igraph_vector_t *cats,
+			    igraph_integer_t nocats,
+			    igraph_integer_t pagebins,
+			    igraph_real_t *logprob,
+			    igraph_real_t *lognull);
+int igraph_revolver_ir(const igraph_t *graph,
+		      igraph_integer_t niter,
+		      igraph_integer_t window,
+		      const igraph_vector_t *cats,
+		      igraph_matrix_t *kernel,
+		      igraph_matrix_t *sd,
+		      igraph_matrix_t *norm,
+		      igraph_matrix_t *cites,
+		      igraph_matrix_t *expected,
+		      igraph_real_t *logprob,
+		      igraph_real_t *lognull,
+		      const igraph_matrix_t *debug,
+		      igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_ir(const igraph_t *graph,
+			  igraph_matrix_t *kernel,
+			  igraph_matrix_t *sd,
+			  igraph_matrix_t *norm,
+			  igraph_matrix_t *cites,
+			  const igraph_matrix_t *debug,
+			  igraph_vector_ptr_t *debugres,
+			  const igraph_vector_t *st,
+			  igraph_integer_t pwindow,
+			  const igraph_vector_t *cats,
+			  igraph_integer_t pnocats,
+			  igraph_integer_t pmaxind);
+int igraph_revolver_st_ir(const igraph_t *graph,
+			 igraph_vector_t *st,
+			 const igraph_matrix_t *kernel,
+			 igraph_integer_t pwindow,
+			 const igraph_vector_t *cats);
+int igraph_revolver_exp_ir(const igraph_t *graph,
+			  igraph_matrix_t *expected,
+			  const igraph_matrix_t *kernel,
+			  const igraph_vector_t *st,
+			  igraph_integer_t pwindow,
+			  const igraph_vector_t *cats,
+			  igraph_integer_t pnocats,
+			  igraph_integer_t pmaxind);
+int igraph_revolver_error_ir(const igraph_t *graph,
+			    const igraph_matrix_t *kernel,
+			    const igraph_vector_t *st,
+			    igraph_integer_t pwindow,
+			    const igraph_vector_t *cats,
+			    igraph_integer_t pnocats,
+			    igraph_integer_t pmaxind,
+			    igraph_real_t *logprob,
+			    igraph_real_t *lognull);
+int igraph_revolver_air(const igraph_t *graph,
+		       igraph_integer_t niter,
+		       igraph_integer_t window,
+		       igraph_integer_t agebins,
+		       const igraph_vector_t *cats,
+		       igraph_array3_t *kernel,
+		       igraph_array3_t *sd,
+		       igraph_array3_t *norm,
+		       igraph_array3_t *cites,
+		       igraph_array3_t *expected,
+		       igraph_real_t *logprob,
+		       igraph_real_t *lognull,
+		       const igraph_matrix_t *debug,
+		       igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_air(const igraph_t *graph,
+			   igraph_array3_t *kernel,
+			   igraph_array3_t *sd,
+			   igraph_array3_t *norm,
+			   igraph_array3_t *cites,
+			   const igraph_matrix_t *debug,
+			   igraph_vector_ptr_t *debugres,
+			   const igraph_vector_t *st,
+			   igraph_integer_t pwindow,
+			   const igraph_vector_t *cats,
+			   igraph_integer_t pnocats,
+			   igraph_integer_t pmaxind,
+			   igraph_integer_t pagebins);
+int igraph_revolver_st_air(const igraph_t *graph,
+			  igraph_vector_t *st,
+			  const igraph_array3_t *kernel,
+			  igraph_integer_t pwindow,
+			  const igraph_vector_t *cats);
+int igraph_revolver_exp_air(const igraph_t *graph,
+			   igraph_array3_t *expected,
+			   const igraph_array3_t *kernel,
+			   const igraph_vector_t *st,
+			   igraph_integer_t pwindow,
+			   const igraph_vector_t *cats,
+			   igraph_integer_t pnocats,
+			   igraph_integer_t pmaxind,
+			   igraph_integer_t pagebins);
+int igraph_revolver_error_air(const igraph_t *graph,
+			     const igraph_array3_t *kernel,
+			     const igraph_vector_t *st,
+			     igraph_integer_t pwindow,
+			     const igraph_vector_t *cats,
+			     igraph_integer_t pnocats,
+			     igraph_integer_t pmaxind,
+			     igraph_integer_t pagebins,
+			     igraph_real_t *logprob,
+			     igraph_real_t *lognull);
+
+/* Should be moved to to types.h? */
+typedef struct igraph_i_lazy_adjedgelist_t {
+  const igraph_t *graph;
+  igraph_integer_t length;
+  igraph_vector_t **adjs;
+  igraph_neimode_t mode;
+} igraph_i_lazy_adjedgelist_t;
+
+/* Non-citation networks */
+
+int igraph_revolver_d_d(const igraph_t *graph,
+			igraph_integer_t niter,
+			const igraph_vector_t *vtime,
+			const igraph_vector_t *etime,
+			igraph_matrix_t *kernel,
+			igraph_matrix_t *sd,
+			igraph_matrix_t *norm,
+			igraph_matrix_t *cites,
+			igraph_matrix_t *expected,
+			igraph_real_t *logprob,
+			igraph_real_t *lognull,
+			const igraph_matrix_t *debug,
+			igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_d_d(const igraph_t *graph, 
+			    igraph_i_lazy_adjedgelist_t *adjlist,
+			    igraph_matrix_t *kernel,
+			    igraph_matrix_t *sd,
+			    igraph_matrix_t *norm,
+			    igraph_matrix_t *cites,
+			    const igraph_matrix_t *debug,
+			    igraph_vector_ptr_t *debugres,
+			    const igraph_vector_t *st,
+			    const igraph_vector_t *vtime,
+			    const igraph_vector_t *vtimeidx,
+			    const igraph_vector_t *etime,
+			    const igraph_vector_t *etimeidx,
+			    igraph_integer_t pno_of_events,
+			    igraph_integer_t pmaxdegree);
+int igraph_revolver_st_d_d(const igraph_t *graph,
+			   igraph_i_lazy_adjedgelist_t *adjlist,
+			   igraph_vector_t *st,
+			   const igraph_matrix_t *kernel,
+			   const igraph_vector_t *vtime,
+			   const igraph_vector_t *vtimeidx,
+			   const igraph_vector_t *etime,
+			   const igraph_vector_t *etimeidx,
+			   igraph_integer_t pno_of_events);
+int igraph_revolver_exp_d_d(const igraph_t *graph,
+			    igraph_i_lazy_adjedgelist_t *adjlist,
+			    igraph_matrix_t *expected,
+			    const igraph_matrix_t *kernel,
+			    const igraph_vector_t *st,
+			    const igraph_vector_t *vtime,
+			    const igraph_vector_t *vtimeidx,
+			    const igraph_vector_t *etime,
+			    const igraph_vector_t *etimeidx,
+			    igraph_integer_t pno_of_events,
+			    igraph_integer_t pmaxdegree);
+int igraph_revolver_error_d_d(const igraph_t *graph,
+			      igraph_i_lazy_adjedgelist_t *adjlist,
+			      const igraph_matrix_t *kernel,
+			      const igraph_vector_t *st,
+			      const igraph_vector_t *vtime,
+			      const igraph_vector_t *vtimeidx,
+			      const igraph_vector_t *etime,
+			      const igraph_vector_t *etimeidx,
+			      igraph_integer_t pno_of_events,
+			      igraph_integer_t pmaxdegree, 
+			      igraph_real_t *logprob,
+			      igraph_real_t *lognull);
+
+int igraph_revolver_p_p(const igraph_t *graph,
+			igraph_integer_t niter,
+			const igraph_vector_t *vtime,
+			const igraph_vector_t *etime,
+			const igraph_vector_t *authors,
+			const igraph_vector_t *eventsizes,
+			igraph_matrix_t *kernel,
+			igraph_matrix_t *sd,
+			igraph_matrix_t *norm,
+			igraph_matrix_t *cites,
+			igraph_matrix_t *expected,
+			igraph_real_t *logprob,
+			igraph_real_t *lognull,
+			const igraph_matrix_t *debug,
+			igraph_vector_ptr_t *debugres);
+int igraph_revolver_mes_p_p(const igraph_t *graph,
+			    igraph_i_lazy_adjedgelist_t *adjlist,
+			    igraph_matrix_t *kernel,
+			    igraph_matrix_t *sd,
+			    igraph_matrix_t *norm,
+			    igraph_matrix_t *cites,
+			    const igraph_matrix_t *debug,
+			    igraph_vector_ptr_t *debugres,
+			    const igraph_vector_t *st,
+			    const igraph_vector_t *vtime,
+			    const igraph_vector_t *vtimeidx,
+			    const igraph_vector_t *etime,
+			    const igraph_vector_t *etimeidx,
+			    igraph_integer_t pno_of_events,
+			    const igraph_vector_t *authors,
+			    const igraph_vector_t *eventsizes,
+			    igraph_integer_t pmaxpapers);
+int igraph_revolver_st_p_p(const igraph_t *graph,
+			   igraph_i_lazy_adjedgelist_t *adjlist,
+			   igraph_vector_t *st,
+			   const igraph_matrix_t *kernel,
+			   const igraph_vector_t *vtime,
+			   const igraph_vector_t *vtimeidx,
+			   const igraph_vector_t *etime,
+			   const igraph_vector_t *etimeidx,
+			   igraph_integer_t pno_of_events,
+			   const igraph_vector_t *authors,
+			   const igraph_vector_t *eventsizes,
+			   igraph_integer_t pmaxpapers);
+int igraph_revolver_exp_p_p(const igraph_t *graph,
+			    igraph_i_lazy_adjedgelist_t *adjlist,
+			    igraph_matrix_t *expected,
+			    const igraph_matrix_t *kernel,
+			    const igraph_vector_t *st,
+			    const igraph_vector_t *vtime,
+			    const igraph_vector_t *vtimeidx,
+			    const igraph_vector_t *etime,
+			    const igraph_vector_t *etimeidx,
+			    igraph_integer_t pno_of_events,
+			    const igraph_vector_t *authors,
+			    const igraph_vector_t *eventsizes,
+			    igraph_integer_t pmaxpapers);
+int igraph_revolver_error_p_p(const igraph_t *graph,
+			      igraph_i_lazy_adjedgelist_t *adjlist,
+			      const igraph_matrix_t *kernel,
+			      const igraph_vector_t *st,
+			      const igraph_vector_t *vtime,
+			      const igraph_vector_t *vtimeidx,
+			      const igraph_vector_t *etime,
+			      const igraph_vector_t *etimeidx,
+			      igraph_integer_t pno_of_events,
+			      const igraph_vector_t *authors,
+			      const igraph_vector_t *eventsizes,
+			      igraph_integer_t pmaxpapers,
+			      igraph_real_t *logprob,
+			      igraph_real_t *lognull);
 
 /* -------------------------------------------------- */
 /* Other, not graph related                           */
@@ -1189,7 +2159,6 @@ typedef struct igraph_i_lazy_adjlist_t {
   igraph_vector_t **adjs;
   igraph_neimode_t mode;
   igraph_i_lazy_adlist_simplify_t simplify;
-  igraph_vector_t svect;
 } igraph_i_lazy_adjlist_t;
 
 int igraph_i_lazy_adjlist_init(const igraph_t *graph,
@@ -1204,6 +2173,16 @@ void igraph_i_lazy_adjlist_destroy(igraph_i_lazy_adjlist_t *al);
    (igraph_i_lazy_adjlist_get_real(al, no)))
 igraph_vector_t *igraph_i_lazy_adjlist_get_real(igraph_i_lazy_adjlist_t *al,
 						igraph_integer_t no);
+
+int igraph_i_lazy_adjedgelist_init(const igraph_t *graph,
+				   igraph_i_lazy_adjedgelist_t *al,
+				   igraph_neimode_t mode);
+void igraph_i_lazy_adjedgelist_destroy(igraph_i_lazy_adjedgelist_t *al);
+#define igraph_i_lazy_adjedgelist_get(al, no) \
+  ((al)->adjs[(long int)(no)] != 0 ? ((al)->adjs[(long int)(no)]) : \
+   (igraph_i_lazy_adjedgelist_get_real(al, no)))
+igraph_vector_t *igraph_i_lazy_adjedgelist_get_real(igraph_i_lazy_adjedgelist_t *al,
+						    igraph_integer_t no);
 
 extern unsigned int igraph_i_isoclass_3[];
 extern unsigned int igraph_i_isoclass_4[];

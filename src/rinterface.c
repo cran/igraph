@@ -35,6 +35,7 @@
 
 int igraph_free(void *p);
 
+SEXP R_igraph_vector_to_SEXP(igraph_vector_t *v);
 SEXP R_igraph_matrix_to_SEXP(igraph_matrix_t *m);
 SEXP R_igraph_strvector_to_SEXP(const igraph_strvector_t *m);
 SEXP R_igraph_to_SEXP(igraph_t *graph);
@@ -69,6 +70,7 @@ SEXP R_igraph_getListElement(SEXP list, const char *str)
 /******************************************************
  * Attributes                                         *
  *****************************************************/
+/* TODO: add graph attributes */
 int R_igraph_attribute_init(igraph_t *graph, igraph_vector_ptr_t *attr) {
   SEXP result;
   long int i;
@@ -812,6 +814,7 @@ void R_igraph_myhandler (const char *reason, const char *file,
 }
 
 igraph_interruption_handler_t *R_igraph_oldinterrupt;
+igraph_progress_handler_t *R_igraph_oldprogress;
 
 extern int R_interrupts_pending;
 
@@ -829,6 +832,29 @@ int R_igraph_interrupt_handler(void *data) {
   return 0;
 }
 
+int R_igraph_progress_handler(const char *message, igraph_real_t percent,
+			      void * data) {
+  static igraph_real_t last=0;
+  if (percent == 0) {
+    int i, l=strlen(message);
+    last=0;
+    fprintf(stderr, 
+	    "                    : --------------------------------------------------|\r");
+    for (i=0; i<l && i<20; i++) {
+      fputc(message[i], stderr);
+    }
+    for (; i<20; i++) {
+      fputc(' ', stderr);
+    }
+    fputc(':', stderr); fputc(' ', stderr);
+  } 
+  while (last < percent) {
+    fputc('*', stderr);
+    last+=2;
+  }
+  return 0;
+}
+
 R_INLINE void R_igraph_before() {
   R_igraph_oldhandler=igraph_set_error_handler(R_igraph_myhandler);
   R_igraph_oldinterrupt=
@@ -837,28 +863,56 @@ R_INLINE void R_igraph_before() {
     igraph_i_set_attribute_table(&R_igraph_attribute_table);
 }
 
+R_INLINE void R_igraph_before2(SEXP verbose, const char *str) {
+  R_igraph_oldhandler=igraph_set_error_handler(R_igraph_myhandler);
+  R_igraph_oldinterrupt=
+    igraph_set_interruption_handler(R_igraph_interrupt_handler);
+  R_igraph_attribute_oldtable=
+    igraph_i_set_attribute_table(&R_igraph_attribute_table);
+  if (LOGICAL(verbose)[0]) {
+    R_igraph_oldprogress=igraph_set_progress_handler(R_igraph_progress_handler);
+  }
+}  
+
 R_INLINE void R_igraph_after() {
   igraph_set_error_handler(R_igraph_oldhandler);
   igraph_set_interruption_handler(R_igraph_oldinterrupt);
   igraph_i_set_attribute_table(R_igraph_attribute_oldtable);
 }
 
-int R_igraph_progress_handler(const char *message, igraph_real_t percent,
-			      void* data) {
-  static igraph_real_t last=0;
-  if (percent == 0) {
-    last=0;
-  } 
-  while (last < percent) {
-    fputc('#', stderr);
-    last+=2;
+R_INLINE void R_igraph_after2(SEXP verbose) {
+  igraph_set_error_handler(R_igraph_oldhandler);
+  igraph_set_interruption_handler(R_igraph_oldinterrupt);
+  igraph_i_set_attribute_table(R_igraph_attribute_oldtable);
+  if (LOGICAL(verbose)[0]) {
+    igraph_set_progress_handler(R_igraph_oldprogress);
+    fputc('\n', stderr);
   }
-  return 0;
 }
 
 /******************************************************
  * functions to convert igraph objects to SEXP
  *****************************************************/
+
+SEXP R_igraph_vector_to_SEXP(igraph_vector_t *v) {
+  SEXP result;
+  
+  PROTECT(result=NEW_NUMERIC(igraph_vector_size(v)));
+  igraph_vector_copy_to(v, REAL(result));
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_0orvector_to_SEXP(igraph_vector_t *v) {
+  SEXP result;
+  if (v) {
+    PROTECT(result=R_igraph_vector_to_SEXP(v));
+  } else {
+    PROTECT(result=R_NilValue);
+  }
+  UNPROTECT(1);
+  return result;
+}
 
 SEXP R_igraph_matrix_to_SEXP(igraph_matrix_t *m) {
 
@@ -875,6 +929,18 @@ SEXP R_igraph_matrix_to_SEXP(igraph_matrix_t *m) {
   return result;
 }
 
+SEXP R_igraph_0ormatrix_to_SEXP(igraph_matrix_t *m) {
+  SEXP result;
+  if (m) {
+    PROTECT(result=R_igraph_matrix_to_SEXP(m));
+  } else {
+    PROTECT(result=R_NilValue);
+  }
+  UNPROTECT(1);
+  return result;
+}
+
+
 SEXP R_igraph_array3_to_SEXP(igraph_array3_t *a) {
   SEXP result, dim;
   
@@ -887,6 +953,17 @@ SEXP R_igraph_array3_to_SEXP(igraph_array3_t *a) {
   SET_DIM(result, dim);
   
   UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_0orarray3_to_SEXP(igraph_array3_t *a) {
+  SEXP result;
+  if (a) {
+    PROTECT(result=R_igraph_array3_to_SEXP(a));
+  } else {
+    PROTECT(result=R_NilValue);
+  }
+  UNPROTECT(1);
   return result;
 }
 
@@ -1726,7 +1803,7 @@ SEXP R_igraph_recent_degree_game(SEXP pn, SEXP ppower, SEXP pwindow,
   
 SEXP R_igraph_layout_kamada_kawai(SEXP graph, SEXP pniter, SEXP pinitemp, 
 				  SEXP pcoolexp, SEXP pkkconst, SEXP psigma, 
-				  SEXP pverbose) {
+				  SEXP verbose) {
   
   igraph_t g;
   igraph_integer_t niter=REAL(pniter)[0];
@@ -1735,15 +1812,9 @@ SEXP R_igraph_layout_kamada_kawai(SEXP graph, SEXP pniter, SEXP pinitemp,
   igraph_real_t kkconst=REAL(pkkconst)[0];
   igraph_real_t sigma=REAL(psigma)[0];
   igraph_matrix_t res;
-  igraph_bool_t verbose=LOGICAL(pverbose)[0];
-  igraph_progress_handler_t *oldprogress;
   SEXP result;
   
-  R_igraph_before();
-  if (verbose) {
-    fprintf(stderr, "KK layout: ");
-    oldprogress=igraph_set_progress_handler(R_igraph_progress_handler);
-  }
+  R_igraph_before2(verbose, "KK layout");
   
   R_SEXP_to_igraph(graph, &g);
   igraph_matrix_init(&res, 0, 0);
@@ -1752,11 +1823,7 @@ SEXP R_igraph_layout_kamada_kawai(SEXP graph, SEXP pniter, SEXP pinitemp,
   PROTECT(result=R_igraph_matrix_to_SEXP(&res));
   igraph_matrix_destroy(&res);
   
-  if (verbose) {
-    igraph_set_progress_handler(oldprogress);
-    fputc('\n', stderr);
-  }
-  R_igraph_after();
+  R_igraph_after2(verbose);
   
   UNPROTECT(1);
   return result;
@@ -1764,7 +1831,7 @@ SEXP R_igraph_layout_kamada_kawai(SEXP graph, SEXP pniter, SEXP pinitemp,
 
 SEXP R_igraph_layout_kamada_kawai_3d(SEXP graph, SEXP pniter, SEXP pinitemp,
 				     SEXP pcoolexp, SEXP pkkconst, 
-				     SEXP psigma, SEXP pverbose) {
+				     SEXP psigma, SEXP verbose) {
   igraph_t g;
   igraph_integer_t niter=REAL(pniter)[0];
   igraph_real_t initemp=REAL(pinitemp)[0];
@@ -1772,15 +1839,9 @@ SEXP R_igraph_layout_kamada_kawai_3d(SEXP graph, SEXP pniter, SEXP pinitemp,
   igraph_real_t kkconst=REAL(pkkconst)[0];
   igraph_real_t sigma=REAL(psigma)[0];
   igraph_matrix_t res;
-  igraph_bool_t verbose=LOGICAL(pverbose)[0];
-  igraph_progress_handler_t *oldprogress;
   SEXP result;
   
-  R_igraph_before();
-  if (verbose) {
-    fprintf(stderr, "3D KK layout: ");
-    oldprogress=igraph_set_progress_handler(R_igraph_progress_handler);
-  }
+  R_igraph_before2(verbose, "3D KK layout");
   
   R_SEXP_to_igraph(graph, &g);
   igraph_matrix_init(&res, 0, 0);
@@ -1789,11 +1850,7 @@ SEXP R_igraph_layout_kamada_kawai_3d(SEXP graph, SEXP pniter, SEXP pinitemp,
   PROTECT(result=R_igraph_matrix_to_SEXP(&res));
   igraph_matrix_destroy(&res);
   
-  if (verbose) {
-    igraph_set_progress_handler(oldprogress);
-    fputc('\n', stderr);
-  }
-  R_igraph_after();
+  R_igraph_after2(verbose);
   
   UNPROTECT(1);
   return result;
@@ -1835,7 +1892,7 @@ SEXP R_igraph_layout_fruchterman_reingold_grid(SEXP graph, SEXP mat,
 					       SEXP pmaxdelta, SEXP parea,
 					       SEXP pcoolexp, SEXP prepulserad,
 					       SEXP pcellsize, SEXP puseseed,
-					       SEXP pverbose) {
+					       SEXP verbose) {
 
   igraph_t g;
   igraph_matrix_t res;
@@ -1846,15 +1903,9 @@ SEXP R_igraph_layout_fruchterman_reingold_grid(SEXP graph, SEXP mat,
   igraph_real_t repulserad=REAL(prepulserad)[0];
   igraph_real_t cellsize=REAL(pcellsize)[0];
   igraph_bool_t use_seed=LOGICAL(puseseed)[0];
-  igraph_bool_t verbose=LOGICAL(pverbose)[0];
-  igraph_progress_handler_t *oldprogress;
   SEXP result;
   
-  R_igraph_before();
-  if (verbose) {
-    fprintf(stderr, "Grid-FR layout: ");
-    oldprogress=igraph_set_progress_handler(R_igraph_progress_handler);
-  }
+  R_igraph_before2(verbose, "Grid-FR layout");
 
   R_SEXP_to_igraph(graph, &g);
   if (use_seed) {
@@ -1868,11 +1919,7 @@ SEXP R_igraph_layout_fruchterman_reingold_grid(SEXP graph, SEXP mat,
   PROTECT(result=R_igraph_matrix_to_SEXP(&res));
   igraph_matrix_destroy(&res);
   
-  if (verbose) {
-    igraph_set_progress_handler(oldprogress);
-    fputc('\n', stderr);
-  }
-  R_igraph_after();
+  R_igraph_after2(verbose);
   
   UNPROTECT(1);
   return result;
@@ -1941,17 +1988,23 @@ SEXP R_igraph_edge_betweenness(SEXP graph, SEXP pdirected) {
   return result;
 }
 
-SEXP R_igraph_measure_dynamics_id(SEXP graph, SEXP pstartvertex,
-				  SEXP pst, SEXP pmaxind, 
-				  SEXP psign, SEXP pno) {
+SEXP R_igraph_measure_dynamics_id(SEXP graph,
+				  SEXP pst, SEXP pmaxind, SEXP psd,
+				  SEXP pno, SEXP pcites, SEXP pdebug, 
+				  SEXP pdebugdeg) {
   
   igraph_t g;
-  igraph_matrix_t ak, sd, confint, no;
+  igraph_matrix_t ak, sd, no;
+  igraph_vector_t cites, debug;
+  igraph_matrix_t *ppsd=&sd, *ppno=&no;
+  igraph_vector_t *ppcites=&cites, *ppdebug=&debug;
   igraph_vector_t st;
-  igraph_integer_t startvertex=REAL(pstartvertex)[0];
-  igraph_integer_t maxind=REAL(pmaxind)[0];
-  igraph_real_t sign=REAL(psign)[0];
+  igraph_bool_t lsd=LOGICAL(psd)[0];
   igraph_bool_t lno=LOGICAL(pno)[0];
+  igraph_bool_t lcites=LOGICAL(pcites)[0];
+  igraph_bool_t ldebug=LOGICAL(pdebug)[0];
+  igraph_integer_t maxind=REAL(pmaxind)[0];
+  igraph_integer_t debugdeg=REAL(pdebugdeg)[0];
   SEXP result;
   
   R_igraph_before();
@@ -1959,20 +2012,49 @@ SEXP R_igraph_measure_dynamics_id(SEXP graph, SEXP pstartvertex,
   R_SEXP_to_vector(pst, &st);
   R_SEXP_to_igraph(graph, &g);
   igraph_matrix_init(&ak, 0, 0);
-  igraph_matrix_init(&sd, 0, 0);
-  igraph_matrix_init(&confint, 0, 0);
-  igraph_matrix_init(&no, 0, 0);
-  igraph_measure_dynamics_id(&g, startvertex, &ak, &sd, &confint, &no, &st,
-			     maxind, sign, lno);
-  PROTECT(result=NEW_LIST(4));
+  if (lsd) {
+    igraph_matrix_init(&sd, 0, 0);
+  } else {
+    ppsd=0;
+  }
+  if (lno) {
+    igraph_matrix_init(&no, 0, 0);
+  } else {
+    ppno=0;
+  }
+  if (lcites) { igraph_vector_init(&cites,0); } else { ppcites=0; }
+  if (ldebug) { igraph_vector_init(&debug,0); } else { ppdebug=0; }
+  igraph_measure_dynamics_id(&g, &ak, ppsd, ppno, ppcites, ppdebug, 
+			     debugdeg, &st, maxind);
+  PROTECT(result=NEW_LIST(5));
   SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&ak));
   igraph_matrix_destroy(&ak);
-  SET_VECTOR_ELT(result, 1, R_igraph_matrix_to_SEXP(&sd));
-  igraph_matrix_destroy(&sd);
-  SET_VECTOR_ELT(result, 2, R_igraph_matrix_to_SEXP(&confint));
-  igraph_matrix_destroy(&confint);
-  SET_VECTOR_ELT(result, 3, R_igraph_matrix_to_SEXP(&no));
-  igraph_matrix_destroy(&no);
+  if (lsd) { 
+    SET_VECTOR_ELT(result, 1, R_igraph_matrix_to_SEXP(&sd));
+    igraph_matrix_destroy(&sd);
+  } else {
+    SET_VECTOR_ELT(result, 1, R_NilValue);
+  }
+  if (lno) {
+    SET_VECTOR_ELT(result, 2, R_igraph_matrix_to_SEXP(&no));
+    igraph_matrix_destroy(&no);
+  } else {
+    SET_VECTOR_ELT(result, 2, R_NilValue);
+  }
+  if (lcites) {    
+    SET_VECTOR_ELT(result, 3, NEW_NUMERIC(igraph_vector_size(&cites)));
+    igraph_vector_copy_to(&cites, REAL(VECTOR_ELT(result, 3)));
+    igraph_vector_destroy(&cites);
+  } else {
+    SET_VECTOR_ELT(result, 3, R_NilValue);
+  }
+  if (ldebug) {
+    SET_VECTOR_ELT(result, 4, NEW_NUMERIC(igraph_vector_size(&debug)));
+    igraph_vector_copy_to(&debug, REAL(VECTOR_ELT(result, 4)));
+    igraph_vector_destroy(&debug);
+  } else {
+    SET_VECTOR_ELT(result, 4, R_NilValue);
+  }
   
   R_igraph_after();
   
@@ -2004,16 +2086,45 @@ SEXP R_igraph_measure_dynamics_id_st(SEXP graph, SEXP pak) {
   return result;
 }
 
-SEXP R_igraph_measure_dynamics_idwindow(SEXP graph, SEXP pstartvertex,
-					SEXP pst, SEXP pwindow, SEXP pmaxind,
-					SEXP psign, SEXP pno) {
+SEXP R_igraph_measure_dynamics_id_expected(SEXP graph, SEXP pak, 
+					   SEXP pst, SEXP pmaxind, SEXP pwhich) {
   igraph_t g;
-  igraph_matrix_t ak, sd, confint, no;
-  igraph_vector_t st;
-  igraph_integer_t startvertex=REAL(pstartvertex)[0];
+  igraph_vector_t ak, st;
   igraph_integer_t maxind=REAL(pmaxind)[0];
-  igraph_real_t sign=REAL(psign)[0];
-  igraph_bool_t lno=LOGICAL(pno)[0];
+  igraph_vector_t err;
+  igraph_integer_t which=REAL(pwhich)[0];
+  SEXP result;
+
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pak, &ak);
+  R_SEXP_to_vector(pst, &st);
+  igraph_vector_init(&err, 0);
+  if (which==1) {
+    igraph_measure_dynamics_id_expected(&g, &err, &ak, &st, maxind);
+  } else {
+    igraph_measure_dynamics_id_expected2(&g, &err, &ak, &st, maxind);
+  }
+  PROTECT(result=NEW_NUMERIC(igraph_vector_size(&err)));
+  igraph_vector_copy_to(&err, REAL(result));
+  igraph_vector_destroy(&err);
+
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+  
+SEXP R_igraph_measure_dynamics_idwindow(SEXP graph,
+					SEXP pst, SEXP pwindow, SEXP pmaxind,
+					SEXP psd) {
+  igraph_t g;
+  igraph_matrix_t ak, sd;
+  igraph_matrix_t *ppsd=&sd;
+  igraph_vector_t st;
+  igraph_bool_t lsd=LOGICAL(psd)[0];
+  igraph_integer_t maxind=REAL(pmaxind)[0];
   igraph_real_t window=REAL(pwindow)[0];
   SEXP result;
   
@@ -2022,20 +2133,20 @@ SEXP R_igraph_measure_dynamics_idwindow(SEXP graph, SEXP pstartvertex,
   R_SEXP_to_vector(pst, &st);
   R_SEXP_to_igraph(graph, &g);
   igraph_matrix_init(&ak, 0, 0);
-  igraph_matrix_init(&sd, 0, 0);
-  igraph_matrix_init(&confint, 0, 0);
-  igraph_matrix_init(&no, 0, 0);
-  igraph_measure_dynamics_idwindow(&g, startvertex, &ak, &sd, &confint,
-				   &no, &st, maxind, sign, window);
-  PROTECT(result=NEW_LIST(4));
+  if (lsd) {
+    igraph_matrix_init(&sd, 0, 0);
+  } else {
+    ppsd=0;
+  }
+  igraph_measure_dynamics_idwindow(&g, &ak, ppsd,
+				   &st, maxind, window);
+  PROTECT(result=NEW_LIST(2));
   SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&ak));
   igraph_matrix_destroy(&ak);
-  SET_VECTOR_ELT(result, 1, R_igraph_matrix_to_SEXP(&sd));
-  igraph_matrix_destroy(&sd);
-  SET_VECTOR_ELT(result, 2, R_igraph_matrix_to_SEXP(&confint));
-  igraph_matrix_destroy(&confint);
-  SET_VECTOR_ELT(result, 3, R_igraph_matrix_to_SEXP(&no));
-  igraph_matrix_destroy(&no);
+  if (lsd) {
+    SET_VECTOR_ELT(result, 1, R_igraph_matrix_to_SEXP(&sd));
+    igraph_matrix_destroy(&sd);
+  }
 
   R_igraph_after();
 
@@ -2067,19 +2178,21 @@ SEXP R_igraph_measure_dynamics_idwindow_st(SEXP graph, SEXP pak,
   return result;
 }
 
-SEXP R_igraph_measure_dynamics_idage(SEXP graph, SEXP pstartvertex,
+SEXP R_igraph_measure_dynamics_idage(SEXP graph,
 				     SEXP pst, SEXP pagebins,
-				     SEXP pmaxind, SEXP psign, SEXP pno, 
+				     SEXP pmaxind, SEXP psd, SEXP pno,
+				     SEXP pcites,
 				     SEXP ptime_window) {
 
   igraph_t g;
-  igraph_matrix_t akl, sd, confint, no;
+  igraph_matrix_t akl, sd, no, cites;
+  igraph_matrix_t *ppsd=&sd, *ppno=&no, *ppcites=&cites;
   igraph_vector_t st;
-  igraph_integer_t startvertex=REAL(pstartvertex)[0];
+  igraph_bool_t lsd=LOGICAL(psd)[0];
+  igraph_bool_t lno=LOGICAL(pno)[0];
+  igraph_bool_t lcites=LOGICAL(pcites)[0];
   igraph_integer_t agebins=REAL(pagebins)[0];
   igraph_integer_t maxind=REAL(pmaxind)[0];
-  igraph_real_t sign=REAL(psign)[0];
-  igraph_bool_t lno=LOGICAL(pno)[0];
   SEXP result;
   
   R_igraph_before();
@@ -2088,27 +2201,47 @@ SEXP R_igraph_measure_dynamics_idage(SEXP graph, SEXP pstartvertex,
 
   R_SEXP_to_igraph(graph, &g);
   igraph_matrix_init(&akl, 0, 0);
-  igraph_matrix_init(&sd, 0, 0);
-  igraph_matrix_init(&confint, 0, 0);
-  igraph_matrix_init(&no, 0, 0);
-  if (ptime_window==R_NilValue) {
-    igraph_measure_dynamics_idage(&g, startvertex, &akl, &sd, &confint, 
-				  &no, &st, agebins, maxind, sign, lno);
+  if (lsd) {
+    igraph_matrix_init(&sd, 0, 0);
   } else {
-    igraph_measure_dynamics_idwindowage(&g, startvertex, &akl, &sd,
-					&confint, &no, &st, agebins, maxind,
-					sign, lno, REAL(ptime_window)[0]);
+    ppsd=0;
+  }
+  if (lno) {
+    igraph_matrix_init(&no, 0, 0);
+  } else {
+    ppno=0;
+  }
+  if (lcites) { igraph_matrix_init(&cites,0,0); } else { ppcites=0; }
+  if (ptime_window==R_NilValue) {
+    igraph_measure_dynamics_idage(&g, &akl, ppsd, ppno, ppcites,
+				  &st, agebins, maxind);
+  } else {
+    igraph_measure_dynamics_idwindowage(&g, &akl, ppsd,
+					&st, agebins, maxind,
+					REAL(ptime_window)[0]);
   }
     
-  PROTECT(result=NEW_LIST(4));  
+  PROTECT(result=NEW_LIST(4));
   SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&akl));
   igraph_matrix_destroy(&akl);
-  SET_VECTOR_ELT(result, 1, R_igraph_matrix_to_SEXP(&sd));
-  igraph_matrix_destroy(&sd);
-  SET_VECTOR_ELT(result, 2, R_igraph_matrix_to_SEXP(&confint));
-  igraph_matrix_destroy(&confint);
-  SET_VECTOR_ELT(result, 3, R_igraph_matrix_to_SEXP(&no));
-  igraph_matrix_destroy(&no);
+  if (lsd) {
+    SET_VECTOR_ELT(result, 1, R_igraph_matrix_to_SEXP(&sd));
+    igraph_matrix_destroy(&sd);
+  } else {
+    SET_VECTOR_ELT(result, 1, R_NilValue);
+  }
+  if (lno) {
+    SET_VECTOR_ELT(result, 2, R_igraph_matrix_to_SEXP(&no));
+    igraph_matrix_destroy(&no);
+  } else {
+    SET_VECTOR_ELT(result, 2, R_NilValue);
+  }
+  if (lcites) {
+    SET_VECTOR_ELT(result, 3, R_igraph_matrix_to_SEXP(&cites));
+    igraph_matrix_destroy(&cites);
+  } else {
+    SET_VECTOR_ELT(result, 3, R_NilValue);
+  }
 
   R_igraph_after();
   
@@ -2116,56 +2249,31 @@ SEXP R_igraph_measure_dynamics_idage(SEXP graph, SEXP pstartvertex,
   return result;
 }
 
-SEXP R_igraph_measure_dynamics_idage_debug(SEXP graph, SEXP pst, 
-					   SEXP pagebins, SEXP pmaxind, 
-					   SEXP psign, SEXP pest_ind, 
-					   SEXP pest_age, SEXP pno) {
+SEXP R_igraph_measure_dynamics_idage_expected(SEXP graph, SEXP pakl,
+					      SEXP pst, SEXP pmaxind) {
   igraph_t g;
-  igraph_matrix_t akl, sd, confint, no;
+  igraph_matrix_t akl;
   igraph_vector_t st;
-  igraph_integer_t agebins=REAL(pagebins)[0];
   igraph_integer_t maxind=REAL(pmaxind)[0];
-  igraph_real_t sign=REAL(psign)[0];
-  igraph_bool_t lno=LOGICAL(pno)[0];
-  igraph_integer_t est_ind=REAL(pest_ind)[0];
-  igraph_integer_t est_age=REAL(pest_age)[0];
-  igraph_vector_t estimates;
+  igraph_matrix_t res;
   SEXP result;
   
   R_igraph_before();
-
-  R_SEXP_to_vector(pst, &st);
   
   R_SEXP_to_igraph(graph, &g);
-  igraph_matrix_init(&akl, 0, 0);
-  igraph_matrix_init(&sd, 0, 0);
-  igraph_matrix_init(&confint, 0, 0);
-  igraph_matrix_init(&no, 0, 0);
-  igraph_vector_init(&estimates, 0);
-  igraph_measure_dynamics_idage_debug(&g, &akl, &sd, &no, &confint, 
-				      &st, agebins, 
-				      maxind, sign, &estimates, est_ind, 
-				      est_age, lno);
-    
-  PROTECT(result=NEW_LIST(5));
-  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&akl));
-  igraph_matrix_destroy(&akl);
-  SET_VECTOR_ELT(result, 1, R_igraph_matrix_to_SEXP(&sd));
-  igraph_matrix_destroy(&sd);
-  SET_VECTOR_ELT(result, 2, R_igraph_matrix_to_SEXP(&confint));
-  igraph_matrix_destroy(&confint);
-  SET_VECTOR_ELT(result, 3, R_igraph_matrix_to_SEXP(&no));
-  igraph_matrix_destroy(&no);
-  SET_VECTOR_ELT(result, 4, NEW_NUMERIC(igraph_vector_size(&estimates)));
-  igraph_vector_copy_to(&estimates, REAL(VECTOR_ELT(result, 4)));
-  igraph_vector_destroy(&estimates);
-
-  R_igraph_after();
+  R_SEXP_to_matrix(pakl, &akl);
+  R_SEXP_to_vector(pst, &st);
+  igraph_matrix_init(&res, 0, 0);
+  igraph_measure_dynamics_idage_expected(&g, &res, &akl, &st, maxind);
+  PROTECT(result=R_igraph_matrix_to_SEXP(&res));
+  igraph_matrix_destroy(&res);
   
+  R_igraph_after();
+
   UNPROTECT(1);
   return result;
 }
-  
+
 SEXP R_igraph_measure_dynamics_idage_st(SEXP graph, SEXP pakl, 
 					SEXP ptime_window) {
   
@@ -2197,21 +2305,19 @@ SEXP R_igraph_measure_dynamics_idage_st(SEXP graph, SEXP pakl,
   return result;
 }
 
-SEXP R_igraph_measure_dynamics_citedcat_id_age(SEXP graph, SEXP pstartvertex,
+SEXP R_igraph_measure_dynamics_citedcat_id_age(SEXP graph,
 					       SEXP pst, SEXP pcats, 
 					       SEXP pcatno, SEXP pagebins,
-					       SEXP pmaxind, SEXP psign,
-					       SEXP pno) {
+					       SEXP pmaxind, SEXP psd) {
   igraph_t g;
-  igraph_array3_t adkl, sd, confint, no;
+  igraph_array3_t adkl, sd;
   igraph_vector_t st;
-  igraph_integer_t startvertex=REAL(pstartvertex)[0];
   igraph_integer_t agebins=REAL(pagebins)[0];
   igraph_vector_t cats;
   igraph_integer_t catno=REAL(pcatno)[0];
   igraph_integer_t maxind=REAL(pmaxind)[0];
-  igraph_real_t sign=REAL(psign)[0];
-  igraph_bool_t lno=LOGICAL(pno)[0];
+  igraph_bool_t lsd=LOGICAL(psd)[0];
+  igraph_array3_t *ppsd=&sd;
   SEXP result;
   
   R_igraph_before();
@@ -2221,21 +2327,21 @@ SEXP R_igraph_measure_dynamics_citedcat_id_age(SEXP graph, SEXP pstartvertex,
   R_SEXP_to_igraph(graph, &g);
   
   igraph_array3_init(&adkl, 0, 0, 0);
-  igraph_array3_init(&sd, 0, 0, 0);
-  igraph_array3_init(&confint, 0, 0, 0);
-  igraph_array3_init(&no, 0, 0, 0);
-  igraph_measure_dynamics_citedcat_id_age(&g, startvertex, &adkl, &sd, 
-					  &confint, &no, &st, &cats, catno,
-					  agebins, maxind, sign, lno);
-  PROTECT(result=NEW_LIST(4));
+  if (lsd) {    
+    igraph_array3_init(&sd, 0, 0, 0);
+  } else {
+    ppsd=0;
+  }
+  igraph_measure_dynamics_citedcat_id_age(&g, &adkl, ppsd, 
+					  &st, &cats, catno,
+					  agebins, maxind);
+  PROTECT(result=NEW_LIST(3));
   SET_VECTOR_ELT(result, 0, R_igraph_array3_to_SEXP(&adkl));
   igraph_array3_destroy(&adkl);
-  SET_VECTOR_ELT(result, 1, R_igraph_array3_to_SEXP(&sd));
-  igraph_array3_destroy(&sd);
-  SET_VECTOR_ELT(result, 2, R_igraph_array3_to_SEXP(&confint));
-  igraph_array3_destroy(&confint);
-  SET_VECTOR_ELT(result, 3, R_igraph_array3_to_SEXP(&no));
-  igraph_array3_destroy(&no);
+  if (lsd) {
+    SET_VECTOR_ELT(result, 1, R_igraph_array3_to_SEXP(&sd));
+    igraph_array3_destroy(&sd);
+  } 
   
   R_igraph_after();
 
@@ -2270,21 +2376,19 @@ SEXP R_igraph_measure_dynamics_citedcat_id_age_st(SEXP graph, SEXP padkl,
   return result;
 }
 
-SEXP R_igraph_measure_dynamics_citingcat_id_age(SEXP graph, SEXP pstartvertex,
+SEXP R_igraph_measure_dynamics_citingcat_id_age(SEXP graph,
 						SEXP pst, SEXP pcats, 
 						SEXP pcatno, SEXP pagebins,
-						SEXP pmaxind, SEXP psign,
-						SEXP pno) {
+						SEXP pmaxind, SEXP psd) {
   igraph_t g;
-  igraph_array3_t adkl, sd, confint, no;
+  igraph_array3_t adkl, sd;
   igraph_vector_t st;
-  igraph_integer_t startvertex=REAL(pstartvertex)[0];
   igraph_integer_t agebins=REAL(pagebins)[0];
   igraph_vector_t cats;
   igraph_integer_t catno=REAL(pcatno)[0];
   igraph_integer_t maxind=REAL(pmaxind)[0];
-  igraph_real_t sign=REAL(psign)[0];
-  igraph_bool_t lno=LOGICAL(pno)[0];
+  igraph_bool_t lsd=LOGICAL(psd)[0];
+  igraph_array3_t *ppsd=&sd;
   SEXP result;
   
   R_igraph_before();
@@ -2294,21 +2398,21 @@ SEXP R_igraph_measure_dynamics_citingcat_id_age(SEXP graph, SEXP pstartvertex,
   R_SEXP_to_igraph(graph, &g);
   
   igraph_array3_init(&adkl, 0, 0, 0);
-  igraph_array3_init(&sd, 0, 0, 0);
-  igraph_array3_init(&confint, 0, 0, 0);
-  igraph_array3_init(&no, 0, 0, 0);
-  igraph_measure_dynamics_citingcat_id_age(&g, startvertex, &adkl, &sd, 
-					  &confint, &no, &st, &cats, catno,
-					  agebins, maxind, sign, lno);
-  PROTECT(result=NEW_LIST(4));
+  if (lsd) {
+    igraph_array3_init(&sd, 0, 0, 0);
+  } else {
+    ppsd=0;
+  }
+  igraph_measure_dynamics_citingcat_id_age(&g, &adkl, ppsd, 
+					   &st, &cats, catno,
+					   agebins, maxind);
+  PROTECT(result=NEW_LIST(3));
   SET_VECTOR_ELT(result, 0, R_igraph_array3_to_SEXP(&adkl));
   igraph_array3_destroy(&adkl);
-  SET_VECTOR_ELT(result, 1, R_igraph_array3_to_SEXP(&sd));
-  igraph_array3_destroy(&sd);
-  SET_VECTOR_ELT(result, 2, R_igraph_array3_to_SEXP(&confint));
-  igraph_array3_destroy(&confint);
-  SET_VECTOR_ELT(result, 3, R_igraph_array3_to_SEXP(&no));
-  igraph_array3_destroy(&no);
+  if (lsd) {
+    SET_VECTOR_ELT(result, 1, R_igraph_array3_to_SEXP(&sd));
+    igraph_array3_destroy(&sd);
+  }
   
   R_igraph_after();
 
@@ -2345,11 +2449,11 @@ SEXP R_igraph_measure_dynamics_citingcat_id_age_st(SEXP graph, SEXP padkl,
   
 SEXP R_igraph_measure_dynamics_d_d(SEXP graph, SEXP pntime, SEXP petime,
 				   SEXP pevents, SEXP pst, SEXP pmaxdeg, 
-				   SEXP psd, SEXP pno) {
+				   SEXP psd) {
   igraph_t g;
   igraph_vector_t ntime, etime;
   igraph_integer_t events=REAL(pevents)[0];
-  igraph_matrix_t akk, sd, *ppsd=0, no, *ppno=0;
+  igraph_matrix_t akk, sd, *ppsd=0;
   igraph_vector_t st;
   igraph_integer_t maxdeg=REAL(pmaxdeg)[0];
   SEXP result;
@@ -2364,13 +2468,9 @@ SEXP R_igraph_measure_dynamics_d_d(SEXP graph, SEXP pntime, SEXP petime,
     igraph_matrix_init(&sd, 0, 0);
     ppsd=&sd;
   }
-  if (LOGICAL(pno)[0]) {
-    igraph_matrix_init(&no, 0, 0);
-    ppno=&no;
-  }
   R_SEXP_to_vector(pst, &st);
   igraph_measure_dynamics_d_d(&g, &ntime, &etime, events, &akk, 
-			      ppsd, ppno, &st, maxdeg);
+			      ppsd, &st, maxdeg);
   PROTECT(result=NEW_LIST(3));
   SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&akk));
   igraph_matrix_destroy(&akk);
@@ -2379,12 +2479,6 @@ SEXP R_igraph_measure_dynamics_d_d(SEXP graph, SEXP pntime, SEXP petime,
     igraph_matrix_destroy(&sd);
   } else {
     SET_VECTOR_ELT(result, 1, R_NilValue);
-  }
-  if (LOGICAL(pno)[0]) {
-    SET_VECTOR_ELT(result, 2, R_igraph_matrix_to_SEXP(&no));
-    igraph_matrix_destroy(&no);
-  } else {
-    SET_VECTOR_ELT(result, 2, R_NilValue);
   }
   
   R_igraph_after();
@@ -2416,6 +2510,307 @@ SEXP R_igraph_measure_dynamics_d_d_st(SEXP graph, SEXP pntime, SEXP petime,
   PROTECT(result=NEW_NUMERIC(igraph_vector_size(&st)));
   igraph_vector_copy_to(&st, REAL(result));
   igraph_vector_destroy(&st);
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_measure_dynamics_lastcit(SEXP graph, SEXP pst,
+				       SEXP pagebins, SEXP psd, SEXP pno) {
+  igraph_t g;
+  igraph_vector_t al, sd, no;
+  igraph_vector_t *ppsd=&sd, *ppno=&no;
+  igraph_vector_t st;
+  igraph_bool_t lsd=LOGICAL(psd)[0];
+  igraph_bool_t lno=LOGICAL(pno)[0];
+  igraph_integer_t agebins=REAL(pagebins)[0];
+  SEXP result;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_vector(pst, &st);
+  R_SEXP_to_igraph(graph, &g);
+  igraph_vector_init(&al, 0);
+  if (lsd) {
+    igraph_vector_init(&sd, 0);
+  } else {
+    ppsd=0;
+  }
+  if (lno) {
+    igraph_vector_init(&no, 0);
+  } else {
+    ppno=0;
+  }
+  igraph_measure_dynamics_lastcit(&g, &al, ppsd, ppno, &st, agebins);
+  PROTECT(result=NEW_LIST(3));
+  SET_VECTOR_ELT(result, 0, NEW_NUMERIC(igraph_vector_size(&al)));
+  igraph_vector_copy_to(&al, REAL(VECTOR_ELT(result, 0)));
+  igraph_vector_destroy(&al);
+  if (lsd) {
+    SET_VECTOR_ELT(result, 1, NEW_NUMERIC(igraph_vector_size(&sd)));
+    igraph_vector_copy_to(&sd, REAL(VECTOR_ELT(result, 1)));
+    igraph_vector_destroy(&sd);
+  } else {
+    SET_VECTOR_ELT(result, 1, R_NilValue);
+  }
+  if (lno) {
+    SET_VECTOR_ELT(result, 2, NEW_NUMERIC(igraph_vector_size(&no)));
+    igraph_vector_copy_to(&no, REAL(VECTOR_ELT(result, 2)));
+    igraph_vector_destroy(&no);
+  } else {
+    SET_VECTOR_ELT(result, 2, R_NilValue);
+  }
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_measure_dynamics_lastcit_st(SEXP graph, SEXP pal) {
+  
+  igraph_t g;
+  igraph_vector_t al;
+  igraph_vector_t res;
+  SEXP result;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pal, &al);
+  igraph_vector_init(&res, 0);
+  igraph_measure_dynamics_lastcit_st(&g, &res, &al);
+  PROTECT(result=NEW_NUMERIC(igraph_vector_size(&res)));
+  igraph_vector_copy_to(&res, REAL(result));
+  igraph_vector_destroy(&res);
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_measure_dynamics_age(SEXP graph, SEXP pst, SEXP pagebins,
+				   SEXP psd, SEXP pno) {
+  igraph_t g;
+  igraph_vector_t al, sd, no;
+  igraph_vector_t *ppsd=&sd, *ppno=&no;
+  igraph_vector_t st;
+  igraph_bool_t lsd=LOGICAL(psd)[0];
+  igraph_bool_t lno=LOGICAL(pno)[0];
+  igraph_integer_t agebins=REAL(pagebins)[0];
+  SEXP result;
+
+  R_igraph_before();
+  
+  R_SEXP_to_vector(pst, &st);
+  R_SEXP_to_igraph(graph, &g);
+  igraph_vector_init(&al, 0);
+  if (lsd) {
+    igraph_vector_init(&sd, 0);
+  } else {
+    ppsd=0;
+  }
+  if (lno) {
+    igraph_vector_init(&no, 0);
+  } else {
+    ppno=0;
+  }
+  igraph_measure_dynamics_age(&g, &al, ppsd, ppno, &st, agebins);
+  PROTECT(result=NEW_LIST(3));
+  SET_VECTOR_ELT(result, 0, NEW_NUMERIC(igraph_vector_size(&al)));
+  igraph_vector_copy_to(&al, REAL(VECTOR_ELT(result, 0)));
+  igraph_vector_destroy(&al);
+  if (lsd) {
+    SET_VECTOR_ELT(result, 1, NEW_NUMERIC(igraph_vector_size(&sd)));
+    igraph_vector_copy_to(&sd, REAL(VECTOR_ELT(result, 1)));
+    igraph_vector_destroy(&sd);
+  } else {
+    SET_VECTOR_ELT(result, 1, R_NilValue);
+  }
+  if (lno) {
+    SET_VECTOR_ELT(result, 2, NEW_NUMERIC(igraph_vector_size(&no)));
+    igraph_vector_copy_to(&no, REAL(VECTOR_ELT(result, 2)));
+    igraph_vector_destroy(&no);
+  } else {
+    SET_VECTOR_ELT(result, 2, R_NilValue);
+  }
+  
+  R_igraph_after();
+
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_measure_dynamics_age_st(SEXP graph, SEXP pal) {
+  
+  igraph_t g;
+  igraph_vector_t al;
+  igraph_vector_t res;
+  SEXP result;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pal, &al);
+  igraph_vector_init(&res, 0);
+  igraph_measure_dynamics_age_st(&g, &res, &al);
+  PROTECT(result=NEW_NUMERIC(igraph_vector_size(&res)));
+  igraph_vector_copy_to(&res, REAL(result));
+  igraph_vector_destroy(&res);
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_measure_dynamics_citedcat(SEXP graph, SEXP pcats,
+					SEXP pnocats, SEXP pst, SEXP psd, SEXP pno) {
+  igraph_t g;
+  igraph_vector_t al, sd, no;
+  igraph_vector_t *ppsd=&sd, *ppno=&no;
+  igraph_vector_t st;
+  igraph_vector_t cats;
+  igraph_bool_t lsd=LOGICAL(psd)[0];
+  igraph_bool_t lno=LOGICAL(pno)[0];
+  igraph_integer_t nocats=REAL(pnocats)[0];
+  SEXP result;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_vector(pst, &st);
+  R_SEXP_to_vector(pcats, &cats);
+  R_SEXP_to_igraph(graph, &g);
+  igraph_vector_init(&al, 0);
+  if (lsd) {
+    igraph_vector_init(&sd,0);
+  } else {
+    ppsd=0;
+  }
+  if (lno) {
+    igraph_vector_init(&no, 0); 
+  } else {
+    ppno=0;
+  }
+  igraph_measure_dynamics_citedcat(&g, &cats, nocats, &al, ppsd, ppno, &st);
+  PROTECT(result=NEW_LIST(3));
+  SET_VECTOR_ELT(result, 0, NEW_NUMERIC(igraph_vector_size(&al)));
+  igraph_vector_copy_to(&al, REAL(VECTOR_ELT(result, 0)));
+  igraph_vector_destroy(&al);
+  if (lsd) {
+    SET_VECTOR_ELT(result, 1, NEW_NUMERIC(igraph_vector_size(&sd)));
+    igraph_vector_copy_to(&sd, REAL(VECTOR_ELT(result, 1)));
+    igraph_vector_destroy(&sd);
+  } else {
+    SET_VECTOR_ELT(result, 1, R_NilValue);
+  }
+  if (lno) {
+    SET_VECTOR_ELT(result, 2, NEW_NUMERIC(igraph_vector_size(&no)));
+    igraph_vector_copy_to(&no, REAL(VECTOR_ELT(result, 2)));
+    igraph_vector_destroy(&no);
+  } else {
+    SET_VECTOR_ELT(result, 2, R_NilValue);
+  }
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_measure_dynamics_citedcat_st(SEXP graph, SEXP pal, SEXP pcats,
+					   SEXP pnocats) {
+  igraph_t g;
+  igraph_vector_t al, cats;
+  igraph_integer_t nocats=REAL(pnocats)[0];
+  igraph_vector_t res;
+  SEXP result;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pal, &al);
+  R_SEXP_to_vector(pcats, &cats);
+  igraph_vector_init(&res, 0);
+  igraph_measure_dynamics_citedcat_st(&g, &res, &al, &cats, nocats);
+  PROTECT(result=NEW_NUMERIC(igraph_vector_size(&res)));
+  igraph_vector_copy_to(&res, REAL(result));
+  igraph_vector_destroy(&res);
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_measure_dynamics_citingcat_citedcat(SEXP graph, SEXP pcats,
+						  SEXP pnocats, SEXP pst,
+						  SEXP psd, SEXP pno) {
+  igraph_t g;
+  igraph_vector_t cats;
+  igraph_integer_t nocats=REAL(pnocats)[0];
+  igraph_vector_t st;
+  igraph_matrix_t agd, sd, no;
+  igraph_matrix_t *ppsd=&sd, *ppno=&no;
+  igraph_bool_t lsd=LOGICAL(psd)[0];
+  igraph_bool_t lno=LOGICAL(pno)[0];
+  SEXP result;
+
+  R_igraph_before();
+  
+  R_SEXP_to_vector(pcats, &cats);
+  R_SEXP_to_vector(pst, &st);
+  R_SEXP_to_igraph(graph, &g);
+  igraph_matrix_init(&agd, 0, 0);
+  if (lsd) { igraph_matrix_init(&sd, 0, 0); } else { ppsd=0; }
+  if (lno) { igraph_matrix_init(&no, 0, 0); } else { ppno=0; }
+  igraph_measure_dynamics_citingcat_citedcat(&g, &agd, ppsd, 
+					     ppno, &st, &cats, nocats);
+  PROTECT(result=NEW_LIST(3));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&agd));
+  igraph_matrix_destroy(&agd);
+  if (lsd) {
+    SET_VECTOR_ELT(result, 1, R_igraph_matrix_to_SEXP(&sd));
+    igraph_matrix_destroy(&sd);
+  } else {
+    SET_VECTOR_ELT(result, 1, R_NilValue);
+  }
+  if (lno) {
+    SET_VECTOR_ELT(result, 2, R_igraph_matrix_to_SEXP(&no));
+    igraph_matrix_destroy(&no);
+  } else {
+    SET_VECTOR_ELT(result, 2, R_NilValue);
+  }
+  
+  R_igraph_after();
+
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_measure_dynamics_citingcat_citedcat_st(SEXP graph, 
+						     SEXP pagd, SEXP pcats,
+						     SEXP pnocats) {
+  igraph_t g;
+  igraph_matrix_t agd;
+  igraph_vector_t cats;
+  igraph_integer_t nocats=REAL(pnocats)[0];
+  igraph_vector_t res;
+  SEXP result;
+
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_matrix(pagd, &agd);
+  R_SEXP_to_vector(pcats, &cats);
+  igraph_vector_init(&res, 0);
+  igraph_measure_dynamics_citingcat_citedcat_st(&g, &res, &agd, &cats, nocats);
+  PROTECT(result=NEW_NUMERIC(igraph_vector_size(&res)));
+  igraph_vector_copy_to(&res, REAL(result));
+  igraph_vector_destroy(&res);
   
   R_igraph_after();
   
@@ -2781,7 +3176,7 @@ SEXP R_igraph_simplify(SEXP graph, SEXP pmultiple, SEXP ploops) {
 SEXP R_igraph_layout_fruchterman_reingold(SEXP graph, SEXP pniter, 
 					  SEXP pmaxdelta, SEXP parea,
 					  SEXP pcoolexp, SEXP prepulserad, 
-					  SEXP pverbose) {
+					  SEXP verbose) {
   igraph_t g;
   igraph_integer_t niter=REAL(pniter)[0];
   igraph_real_t maxdelta=REAL(pmaxdelta)[0];
@@ -2789,15 +3184,9 @@ SEXP R_igraph_layout_fruchterman_reingold(SEXP graph, SEXP pniter,
   igraph_real_t coolexp=REAL(pcoolexp)[0];
   igraph_real_t repulserad=REAL(prepulserad)[0];
   igraph_matrix_t res;
-  igraph_bool_t verbose=LOGICAL(pverbose)[0];
-  igraph_progress_handler_t *oldprogress;
   SEXP result;
   
-  R_igraph_before();
-  if (verbose) {
-    fprintf(stderr, "FR layout: ");
-    oldprogress=igraph_set_progress_handler(R_igraph_progress_handler);
-  }
+  R_igraph_before2(verbose, "FR layout");
   
   R_SEXP_to_igraph(graph, &g);
   igraph_matrix_init(&res, 0, 0);
@@ -2806,11 +3195,7 @@ SEXP R_igraph_layout_fruchterman_reingold(SEXP graph, SEXP pniter,
   PROTECT(result=R_igraph_matrix_to_SEXP(&res));
   igraph_matrix_destroy(&res);
   
-  if (verbose) {
-    igraph_set_progress_handler(oldprogress);
-    fputc('\n', stderr);
-  }
-  R_igraph_after();
+  R_igraph_after2(verbose);
   
   UNPROTECT(1);
   return result;
@@ -2819,7 +3204,7 @@ SEXP R_igraph_layout_fruchterman_reingold(SEXP graph, SEXP pniter,
 SEXP R_igraph_layout_fruchterman_reingold_3d(SEXP graph, SEXP pniter, 
 					     SEXP pmaxdelta, SEXP parea,
 					     SEXP pcoolexp, SEXP prepulserad,
-					     SEXP pverbose) {
+					     SEXP verbose) {
   igraph_t g;
   igraph_integer_t niter=REAL(pniter)[0];
   igraph_real_t maxdelta=REAL(pmaxdelta)[0];
@@ -2827,15 +3212,9 @@ SEXP R_igraph_layout_fruchterman_reingold_3d(SEXP graph, SEXP pniter,
   igraph_real_t coolexp=REAL(pcoolexp)[0];
   igraph_real_t repulserad=REAL(prepulserad)[0];
   igraph_matrix_t res;
-  igraph_bool_t verbose=LOGICAL(pverbose)[0];
-  igraph_progress_handler_t *oldprogress;
   SEXP result;
   
-  R_igraph_before();
-  if (verbose) {
-    fprintf(stderr, "3D FR layout: ");
-    oldprogress=igraph_set_progress_handler(R_igraph_progress_handler);
-  }
+  R_igraph_before2(verbose, "3D FR layout");
   
   R_SEXP_to_igraph(graph, &g);
   igraph_matrix_init(&res, 0, 0);
@@ -2844,11 +3223,7 @@ SEXP R_igraph_layout_fruchterman_reingold_3d(SEXP graph, SEXP pniter,
   PROTECT(result=R_igraph_matrix_to_SEXP(&res));
   igraph_matrix_destroy(&res);
   
-  if (verbose) {
-    igraph_set_progress_handler(oldprogress);
-    fputc('\n', stderr);
-  }
-  R_igraph_after();
+  R_igraph_after2(verbose);
   
   UNPROTECT(1);
   return result;
@@ -2988,6 +3363,58 @@ SEXP R_igraph_read_graph_edgelist(SEXP pvfile, SEXP pn, SEXP pdirected) {
   return result;  
 }
 
+SEXP R_igraph_read_graph_gml(SEXP pvfile) {
+
+  igraph_t g;
+  FILE *file;
+  SEXP result;
+  
+  R_igraph_before();
+  
+#if HAVE_FMEMOPEN == 1
+  file=fmemopen(RAW(pvfile), GET_LENGTH(pvfile), "r");
+#else 
+  file=fopen(CHAR(STRING_ELT(pvfile, 0)), "r");
+#endif
+  if (file==0) { igraph_error("Cannot read GML file", __FILE__, __LINE__,
+			      IGRAPH_EFILE); }
+  igraph_read_graph_gml(&g, file);
+  fclose(file);
+  PROTECT(result=R_igraph_to_SEXP(&g));
+  igraph_destroy(&g);
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;  
+}
+
+SEXP R_igraph_read_graph_graphdb(SEXP pvfile, SEXP pdirected) {
+  igraph_t g;
+  igraph_bool_t directed=LOGICAL(pdirected)[0];
+  FILE *file;
+  SEXP result;
+  
+  R_igraph_before();
+  
+#if HAVE_FMEMOPEN == 1
+  file=fmemopen(RAW(pvfile), GET_LENGTH(pvfile), "rb");
+#else
+  file=fopen(CHAR(STRING_ELT(pvfile, 0)), "rb");
+#endif
+  if (file==0) { igraph_error("Cannot read graphdb file", __FILE__, __LINE__,
+			      IGRAPH_EFILE); }
+  igraph_read_graph_graphdb(&g, file, directed);
+  fclose(file);
+  PROTECT(result=R_igraph_to_SEXP(&g));
+  igraph_destroy(&g);
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
 SEXP R_igraph_write_graph_edgelist(SEXP graph, SEXP file) {
   igraph_t g;
   FILE *stream;
@@ -3006,6 +3433,43 @@ SEXP R_igraph_write_graph_edgelist(SEXP graph, SEXP file) {
   if (stream==0) { igraph_error("Cannot write edgelist", __FILE__, __LINE__,
 				IGRAPH_EFILE); }
   igraph_write_graph_edgelist(&g, stream);
+  fclose(stream);
+#if HAVE_OPEN_MEMSTREAM == 1
+  PROTECT(result=allocVector(RAWSXP, size));
+  memcpy(RAW(result), bp, sizeof(char)*size);
+  free(bp);
+#else 
+  PROTECT(result=NEW_NUMERIC(0));
+#endif
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_write_graph_gml(SEXP graph, SEXP file, SEXP pid, SEXP pcreator) {
+  igraph_t g;
+  FILE *stream;
+  char *bp;
+  size_t size;
+  igraph_vector_t id, *ppid=0;
+  const char *creator=0;
+  SEXP result;
+  
+  R_igraph_before();
+  
+  if (!isNull(pid)) { R_SEXP_to_vector(pid, &id); ppid=&id; }
+  if (!isNull(pcreator)) { creator=CHAR(STRING_ELT(pcreator, 0)); } 
+  R_SEXP_to_igraph(graph, &g);
+#if HAVE_OPEN_MEMSTREAM == 1
+  stream=open_memstream(&bp, &size);
+#else
+  stream=fopen(CHAR(STRING_ELT(file, 0)), "w");
+#endif
+  if (stream==0) { igraph_error("Cannot write edgelist", __FILE__, __LINE__,
+				IGRAPH_EFILE); }
+  igraph_write_graph_gml(&g, stream, ppid, creator);
   fclose(stream);
 #if HAVE_OPEN_MEMSTREAM == 1
   PROTECT(result=allocVector(RAWSXP, size));
@@ -3545,7 +4009,7 @@ SEXP R_igraph_isoclass_create(SEXP psize, SEXP pnumber, SEXP pdirected) {
   return result;
 }
 
-SEXP R_igraph_layout_merge_dla(SEXP graphs, SEXP layouts, SEXP pverbose) {
+SEXP R_igraph_layout_merge_dla(SEXP graphs, SEXP layouts, SEXP verbose) {
 
   igraph_vector_ptr_t graphvec;
   igraph_vector_ptr_t ptrvec;
@@ -3553,15 +4017,9 @@ SEXP R_igraph_layout_merge_dla(SEXP graphs, SEXP layouts, SEXP pverbose) {
   igraph_matrix_t *mats;
   igraph_matrix_t res;
   long int i;
-  igraph_bool_t verbose=LOGICAL(pverbose)[0];
-  igraph_progress_handler_t *oldprogress;
   SEXP result;
   
-  R_igraph_before();
-  if (verbose) {
-    fprintf(stderr, "Merge layouts: ");
-    oldprogress=igraph_set_progress_handler(R_igraph_progress_handler);
-  }
+  R_igraph_before2(verbose, "Merge layouts");
   
   igraph_vector_ptr_init(&graphvec, GET_LENGTH(graphs));
   igraph_vector_ptr_init(&ptrvec, GET_LENGTH(layouts));
@@ -3583,11 +4041,7 @@ SEXP R_igraph_layout_merge_dla(SEXP graphs, SEXP layouts, SEXP pverbose) {
   PROTECT(result=R_igraph_matrix_to_SEXP(&res));
   igraph_matrix_destroy(&res);
   
-  if (verbose) {
-    igraph_set_progress_handler(oldprogress);
-    fputc('\n', stderr);
-  }
-  R_igraph_after();
+  R_igraph_after2(verbose);
   
   UNPROTECT(1);
   return result;
@@ -3828,6 +4282,30 @@ SEXP R_igraph_get_edge(SEXP graph, SEXP peid) {
   UNPROTECT(1);
   return result;
 }
+
+SEXP R_igraph_edges(SEXP graph, SEXP eids) {
+  igraph_t g;
+  igraph_es_t es;
+  igraph_vector_t res;
+  SEXP result;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_igraph_es(eids, &g, &es);
+  igraph_vector_init(&res, 0);
+  igraph_edges(&g, es, &res);
+  
+  PROTECT(result=NEW_NUMERIC(igraph_vector_size(&res)));
+  igraph_vector_copy_to(&res, REAL(result));
+  igraph_vector_destroy(&res);
+  igraph_es_destroy(&es);
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}  
 
 SEXP R_igraph_constraint(SEXP graph, SEXP vids, SEXP pweights) {
   
@@ -4408,16 +4886,17 @@ SEXP R_igraph_st_vertex_connectivity(SEXP graph, SEXP psource,
   return result;
 }
 
-SEXP R_igraph_vertex_connectivity(SEXP graph) {
+SEXP R_igraph_vertex_connectivity(SEXP graph, SEXP pchecks) {
   
   igraph_t g;
   igraph_integer_t res;
+  igraph_bool_t checks=LOGICAL(pchecks)[0];
   SEXP result;
   
   R_igraph_before();
   
   R_SEXP_to_igraph(graph, &g);
-  igraph_vertex_connectivity(&g, &res);
+  igraph_vertex_connectivity(&g, &res, checks);
   
   PROTECT(result=NEW_NUMERIC(1));
   REAL(result)[0]=res;
@@ -4447,16 +4926,17 @@ SEXP R_igraph_st_edge_connectivity(SEXP graph, SEXP psource, SEXP ptarget) {
   return result;
 }
 
-SEXP R_igraph_edge_connectivity(SEXP graph) {
+SEXP R_igraph_edge_connectivity(SEXP graph, SEXP pchecks) {
   
   igraph_t g;
   igraph_integer_t res;
+  igraph_bool_t checks=LOGICAL(pchecks)[0];
   SEXP result;
   
   R_igraph_before();
   
   R_SEXP_to_igraph(graph, &g);
-  igraph_edge_connectivity(&g, &res);
+  igraph_edge_connectivity(&g, &res, checks);
   
   PROTECT(result=NEW_NUMERIC(1));
   REAL(result)[0]=res;
@@ -4530,16 +5010,17 @@ SEXP R_igraph_vertex_disjoint_paths(SEXP graph, SEXP psource, SEXP ptarget) {
   return result;
 }
 
-SEXP R_igraph_adhesion(SEXP graph) {
+SEXP R_igraph_adhesion(SEXP graph, SEXP pchecks) {
   
   igraph_t g;
   igraph_integer_t res;
+  igraph_bool_t checks=LOGICAL(pchecks)[0];
   SEXP result;
   
   R_igraph_before();
   
   R_SEXP_to_igraph(graph, &g);
-  igraph_adhesion(&g, &res);
+  igraph_adhesion(&g, &res, checks);
   PROTECT(result=NEW_NUMERIC(1));
   REAL(result)[0]=res;
   
@@ -4549,16 +5030,17 @@ SEXP R_igraph_adhesion(SEXP graph) {
   return result;
 }
 
-SEXP R_igraph_cohesion(SEXP graph) {
+SEXP R_igraph_cohesion(SEXP graph, SEXP pchecks) {
   
   igraph_t g;
   igraph_integer_t res;
+  igraph_bool_t checks=LOGICAL(pchecks)[0];
   SEXP result;
   
   R_igraph_before();
   
   R_SEXP_to_igraph(graph, &g);
-  igraph_cohesion(&g, &res);
+  igraph_cohesion(&g, &res, checks);
   PROTECT(result=NEW_NUMERIC(1));
   REAL(result)[0]=res;
   
@@ -4594,7 +5076,7 @@ SEXP R_igraph_spinglass_community(SEXP graph, SEXP pweights,
   R_SEXP_to_vector(pweights, &weights);
   igraph_vector_init(&membership, 0);
   igraph_vector_init(&csize, 0);
-  igraph_spinglass_community(&g, &weights, 
+  igraph_community_spinglass(&g, &weights, 
 			     &modularity, &temperature, 
 			     &membership, &csize,
 			     spins, parupdate, starttemp, stoptemp,
@@ -4646,9 +5128,9 @@ SEXP R_igraph_spinglass_my_community(SEXP graph, SEXP pweights,
   R_SEXP_to_igraph(graph, &g);
   R_SEXP_to_vector(pweights, &weights);
   igraph_vector_init(&community, 0);
-  igraph_spinglass_my_community(&g, &weights, vertex, &community,
-				&cohesion, &adhesion, &inner_links,
-				&outer_links, spins, update_rule, gamma);
+  igraph_community_spinglass_single(&g, &weights, vertex, &community,
+				    &cohesion, &adhesion, &inner_links,
+				    &outer_links, spins, update_rule, gamma);
   
   PROTECT(result=NEW_LIST(5));
   PROTECT(names=NEW_CHARACTER(5));
@@ -5196,6 +5678,1767 @@ SEXP R_igraph_empty(SEXP n, SEXP directed) {
   return graph;
 }
 
+SEXP R_igraph_lastcit_game(SEXP pnodes, SEXP pedges, SEXP pagebins,
+			   SEXP ppreference, SEXP pdirected) {
+  
+  igraph_t g;
+  igraph_integer_t nodes=REAL(pnodes)[0];
+  igraph_integer_t edges=REAL(pedges)[0];
+  igraph_integer_t agebins=REAL(pagebins)[0];
+  igraph_vector_t preference;
+  igraph_bool_t directed=LOGICAL(pdirected)[0];
+  SEXP result;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_vector(ppreference, &preference);
+  igraph_lastcit_game(&g, nodes, edges, agebins, &preference, directed);
+  PROTECT(result=R_igraph_to_SEXP(&g));
+  igraph_destroy(&g);
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_cited_type_game(SEXP pnodes, SEXP pedges, SEXP ptypes,
+			      SEXP ppref, SEXP pdirected) {
+  igraph_t g;
+  igraph_integer_t nodes=REAL(pnodes)[0];
+  igraph_integer_t edges=REAL(pedges)[0];
+  igraph_vector_t types, pref;
+  igraph_bool_t directed=LOGICAL(pdirected)[0];
+  SEXP result;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_vector(ptypes, &types);
+  R_SEXP_to_vector(ppref, &pref);
+  igraph_cited_type_game(&g, nodes, &types, &pref, edges, directed);
+  PROTECT(result=R_igraph_to_SEXP(&g));
+  igraph_destroy(&g);
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+			      
+
+SEXP R_igraph_citing_cited_type_game(SEXP pnodes, SEXP ptypes, SEXP ppref,
+				     SEXP pedges, SEXP pdirected) {
+  igraph_t g;
+  igraph_integer_t nodes=REAL(pnodes)[0];
+  igraph_integer_t edges=REAL(pedges)[0];
+  igraph_vector_t types;
+  igraph_matrix_t pref;
+  igraph_bool_t directed=LOGICAL(pdirected)[0];
+  SEXP result;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_vector(ptypes, &types);
+  R_SEXP_to_matrix(ppref, &pref);
+  igraph_citing_cited_type_game(&g, nodes, &types, &pref, edges, directed);
+  PROTECT(result=R_igraph_to_SEXP(&g));
+  igraph_destroy(&g);
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_isomorphic_vf2(SEXP graph1, SEXP graph2) {
+  
+  igraph_t g1, g2;
+  igraph_bool_t iso;
+  SEXP result;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph1, &g1);
+  R_SEXP_to_igraph(graph2, &g2);
+  igraph_isomorphic_vf2(&g1, &g2, &iso);
+  PROTECT(result=NEW_LOGICAL(1));
+  LOGICAL(result)[0]=iso;
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_walktrap_community(SEXP graph, SEXP pweights,
+				 SEXP psteps, SEXP pmerges, 
+				 SEXP pmodularity) {
+  igraph_t g;
+  igraph_vector_t weights, *ppweights=0;
+  igraph_integer_t steps=REAL(psteps)[0];
+  igraph_matrix_t merges, *ppmerges=0;
+  igraph_vector_t modularity, *ppmodularity=0;
+  SEXP result, names;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  if (!isNull(pweights)) {
+    ppweights=&weights;
+    R_SEXP_to_vector(pweights, ppweights);
+  }        
+  if (LOGICAL(pmerges)[0]) {
+    ppmerges=&merges;
+    igraph_matrix_init(ppmerges, 0, 0);
+  }
+  if (LOGICAL(pmodularity)[0]) {
+    ppmodularity=&modularity;
+    igraph_vector_init(ppmodularity, 0);
+  }
+
+  igraph_community_walktrap(&g, ppweights, steps, ppmerges, ppmodularity);
+
+  PROTECT(result=NEW_LIST(2));
+  SET_VECTOR_ELT(result, 0, R_igraph_0ormatrix_to_SEXP(ppmerges));
+  if (ppmerges) { igraph_matrix_destroy(ppmerges); }
+  SET_VECTOR_ELT(result, 1, R_igraph_0orvector_to_SEXP(ppmodularity));
+  if (ppmodularity) { igraph_vector_destroy(ppmodularity); }
+  PROTECT(names=NEW_CHARACTER(2));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("merges"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("modularity"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after();
+  
+  UNPROTECT(2);
+  return result;
+} 
+
+SEXP R_igraph_topological_sorting(SEXP graph, SEXP pneimode) {
+  igraph_t g;
+  igraph_vector_t res;
+  igraph_integer_t mode=REAL(pneimode)[0];
+  SEXP result;  
+
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  igraph_vector_init(&res, 0);
+  igraph_topological_sorting(&g, &res, mode);
+  
+  PROTECT(result=R_igraph_vector_to_SEXP(&res));
+  igraph_vector_destroy(&res);
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_community_edge_betweenness(SEXP graph, SEXP pdirected, 
+					 SEXP peb, SEXP pmerges, SEXP pbridges) {
+  igraph_t g;
+  igraph_vector_t res;
+  igraph_vector_t eb, *ppeb=0;
+  igraph_matrix_t merges, *ppmerges=0;
+  igraph_vector_t bridges, *ppbridges=0;
+  igraph_bool_t directed=LOGICAL(pdirected)[0];
+  SEXP result, names;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  igraph_vector_init(&res, 0);
+  if (LOGICAL(peb)[0]) {
+    ppeb=&eb;
+    igraph_vector_init(&eb, 0);
+  }
+  if (LOGICAL(pmerges)[0]) {
+    ppmerges=&merges;
+    igraph_matrix_init(&merges, 0, 0);
+  }
+  if (LOGICAL(pbridges)[0]) {
+    ppbridges=&bridges;
+    igraph_vector_init(&bridges, 0);
+  }
+  igraph_community_edge_betweenness(&g, &res, ppeb, ppmerges, ppbridges, 
+				    directed);
+  
+  PROTECT(result=NEW_LIST(4));
+  SET_VECTOR_ELT(result, 0, R_igraph_vector_to_SEXP(&res));
+  igraph_vector_destroy(&res);
+  SET_VECTOR_ELT(result, 1, R_igraph_0orvector_to_SEXP(ppeb));
+  if (ppeb) { igraph_vector_destroy(ppeb); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0ormatrix_to_SEXP(ppmerges));
+  if (ppmerges) { igraph_matrix_destroy(ppmerges); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0orvector_to_SEXP(ppbridges));
+  if (ppbridges) { igraph_vector_destroy(ppbridges); }
+  PROTECT(names=NEW_CHARACTER(4));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("removed.edges"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("edge.betweenness"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("merges"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("bridges"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after();
+  
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_community_eb_get_merges(SEXP graph, 
+				      SEXP pedges) {
+  
+  igraph_t g;
+  igraph_vector_t edges;
+  igraph_vector_t bridges;
+  igraph_matrix_t res;
+  SEXP result, names;
+  
+  R_igraph_before();
+ 
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pedges, &edges);
+  igraph_matrix_init(&res, 0, 0);
+  igraph_vector_init(&bridges, 0);
+  igraph_community_eb_get_merges(&g, &edges, &res, &bridges);
+  PROTECT(result=NEW_LIST(2));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&res));
+  igraph_matrix_destroy(&res);    
+  SET_VECTOR_ELT(result, 1, R_igraph_vector_to_SEXP(&bridges));
+  igraph_vector_destroy(&bridges);
+  PROTECT(names=NEW_CHARACTER(2));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("merges"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("bridges"));  
+  SET_NAMES(result, names);
+
+  R_igraph_after();
+  
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_community_fastgreedy(SEXP graph, SEXP pmerges, SEXP pmodularity) {
+  
+  igraph_t g;
+  igraph_matrix_t merges, *ppmerges=0;
+  igraph_vector_t modularity, *ppmodularity=0;
+  SEXP result, names;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  if (LOGICAL(pmerges)[0]) {
+    ppmerges=&merges;
+    igraph_matrix_init(&merges, 0, 0);
+  }
+  if (LOGICAL(pmodularity)[0]) {
+    ppmodularity=&modularity;
+    igraph_vector_init(&modularity, 0);
+  }
+  igraph_community_fastgreedy(&g, ppmerges, ppmodularity);
+  PROTECT(result=NEW_LIST(2));
+  SET_VECTOR_ELT(result, 0, R_igraph_0ormatrix_to_SEXP(ppmerges));
+  if (ppmerges) { igraph_matrix_destroy(ppmerges); }
+  SET_VECTOR_ELT(result, 1, R_igraph_0orvector_to_SEXP(ppmodularity));
+  if (ppmodularity) { igraph_vector_destroy(ppmodularity); }
+  PROTECT(names=NEW_CHARACTER(2));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("merges"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("modularity"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after();
+  
+  UNPROTECT(2);
+  return result;
+} 
+
+SEXP R_igraph_community_to_membership(SEXP graph, SEXP pmerges, 
+				      SEXP psteps, SEXP pmembership,
+				      SEXP pcsize) {
+  igraph_t g;
+  igraph_matrix_t merges;
+  igraph_integer_t steps=REAL(psteps)[0];
+  igraph_vector_t membership, *ppmembership=0;
+  igraph_vector_t csize, *ppcsize=0;
+  SEXP result, names;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_matrix(pmerges, &merges);
+  if (LOGICAL(pmembership)[0]) {
+    ppmembership=&membership;
+    igraph_vector_init(ppmembership, 0);
+  } 
+  if (LOGICAL(pcsize)[0]) {
+    ppcsize=&csize;
+    igraph_vector_init(ppcsize, 0);
+  }
+  igraph_community_to_membership(&g, &merges, steps, ppmembership, ppcsize);
+  PROTECT(result=NEW_LIST(2));
+  SET_VECTOR_ELT(result, 0, R_igraph_0orvector_to_SEXP(ppmembership));
+  if (ppmembership) { igraph_vector_destroy(ppmembership); }
+  SET_VECTOR_ELT(result, 1, R_igraph_0orvector_to_SEXP(ppcsize)); 
+  if (ppcsize) { igraph_vector_destroy(ppcsize); }
+  PROTECT(names=NEW_CHARACTER(2));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("membership"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("csize"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after();
+  
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_modularity(SEXP graph, SEXP pmembership) {
+  
+  igraph_t g;
+  igraph_vector_t membership;
+  igraph_real_t res;
+  SEXP result;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pmembership, &membership);
+  igraph_modularity(&g, &membership, &res);
+  PROTECT(result=NEW_NUMERIC(1));
+  REAL(result)[0]=res;
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+
+SEXP R_igraph_community_leading_eigenvector(SEXP graph, SEXP psteps, SEXP pnaive) {
+  
+  igraph_t g;
+  long int steps=REAL(psteps)[0];
+  igraph_matrix_t merges;
+  igraph_vector_t membership;
+  SEXP result, names;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_igraph(graph, &g);
+  igraph_matrix_init(&merges, 0, 0);
+  igraph_vector_init(&membership, 0);
+  if (LOGICAL(pnaive)[0]) {
+    igraph_community_leading_eigenvector_naive(&g, &merges, &membership, steps);
+  } else {
+    igraph_community_leading_eigenvector(&g, &merges, &membership, steps);
+  }
+  PROTECT(result=NEW_LIST(2));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&merges));
+  igraph_matrix_destroy(&merges);
+  SET_VECTOR_ELT(result, 1, R_igraph_vector_to_SEXP(&membership));
+  igraph_vector_destroy(&membership);
+  PROTECT(names=NEW_CHARACTER(2));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("merges"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("membership"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after();
+  
+  UNPROTECT(2);
+  return result;
+} 
+
+SEXP R_igraph_community_leading_eigenvector_step(SEXP graph, 
+						 SEXP pmembership,
+						 SEXP pcommunity,
+						 SEXP peigenvector) {
+
+  igraph_t g;
+  igraph_vector_t membership;
+  igraph_integer_t community=REAL(pcommunity)[0];
+  igraph_bool_t split;
+  igraph_vector_t eigenvector, *ppeigenvector=0;
+  igraph_real_t eigenvalue;
+  SEXP result, names;
+
+  R_igraph_before();
+
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector_copy(pmembership, &membership);
+  if (LOGICAL(peigenvector)[0]) {
+    ppeigenvector=&eigenvector;
+    igraph_vector_init(ppeigenvector, 0);
+  }
+  igraph_community_leading_eigenvector_step(&g, &membership, community, 
+					    &split, ppeigenvector, &eigenvalue);
+  PROTECT(result=NEW_LIST(4));
+  SET_VECTOR_ELT(result, 0, R_igraph_vector_to_SEXP(&membership));
+  igraph_vector_destroy(&membership);
+  SET_VECTOR_ELT(result, 1, NEW_LOGICAL(1));
+  LOGICAL(VECTOR_ELT(result, 1))[0]=split;
+  SET_VECTOR_ELT(result, 2, R_igraph_0orvector_to_SEXP(ppeigenvector));
+  if (ppeigenvector) { igraph_vector_destroy(ppeigenvector); }
+  SET_VECTOR_ELT(result, 3, NEW_NUMERIC(1));
+  REAL(VECTOR_ELT(result, 3))[0]=eigenvalue;  
+  PROTECT(names=NEW_CHARACTER(4));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("membership"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("split"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("eigenvector"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("eigenvalue"));
+  SET_NAMES(result, names);
+
+  R_igraph_after();
+
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_girth(SEXP graph, SEXP pcircle) {
+  
+  igraph_t g;
+  igraph_vector_t circle, *ppcircle=0;
+  igraph_integer_t girth;
+  SEXP result, names;
+  
+  R_igraph_before();
+
+  R_SEXP_to_igraph(graph, &g);
+  if (LOGICAL(pcircle)[0]) { igraph_vector_init(&circle, 0); ppcircle=&circle; }
+
+  igraph_girth(&g, &girth, ppcircle);
+
+  PROTECT(result=NEW_LIST(2));
+  SET_VECTOR_ELT(result, 0, NEW_NUMERIC(1));
+  REAL(VECTOR_ELT(result, 0))[0]=girth;
+  SET_VECTOR_ELT(result, 1, R_igraph_0orvector_to_SEXP(ppcircle));
+  if (ppcircle) { igraph_vector_destroy(ppcircle); }
+  PROTECT(names=NEW_CHARACTER(2));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("girth"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("circle"));
+  SET_NAMES(result, names);
+
+  R_igraph_after();
+  
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_revolver_d(SEXP graph, SEXP pniter, SEXP psd, SEXP pnorm,
+			SEXP pcites, SEXP pexpected, SEXP perror, SEXP pdebug,
+			SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_bool_t sd=LOGICAL(psd)[0];
+  igraph_bool_t norm=LOGICAL(pnorm)[0];
+  igraph_bool_t cites=LOGICAL(pcites)[0];
+  igraph_bool_t expected=LOGICAL(pexpected)[0];
+  igraph_vector_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_vector_t vsd, vnorm, vcites, vexpected;
+  igraph_vector_t *pvsd=0, *pvnorm=0, *pvcites=0, *pvexpected=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver d ");
+
+  R_SEXP_to_igraph(graph, &g);
+  igraph_vector_init(&kernel, 0);
+  if (sd) { igraph_vector_init(&vsd, 0); pvsd=&vsd; }
+  if (norm) { igraph_vector_init(&vnorm, 0); pvnorm=&vnorm; }
+  if (cites) { igraph_vector_init(&vcites, 0); pvcites=&vcites; }
+  if (expected) { igraph_vector_init(&vexpected, 0); pvexpected=&vexpected; }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_vector(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+
+  igraph_revolver_d(&g, niter, &kernel, pvsd, pvnorm, pvcites, pvexpected,
+		   pplogprob, pplognull, ppdebug, ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_vector_to_SEXP(&kernel));
+  igraph_vector_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0orvector_to_SEXP(pvsd));
+  if (pvsd) { igraph_vector_destroy(pvsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0orvector_to_SEXP(pvnorm));
+  if (pvnorm) { igraph_vector_destroy(pvnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0orvector_to_SEXP(pvcites));
+  if (pvcites) { igraph_vector_destroy(pvcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0orvector_to_SEXP(pvexpected));
+  if (pvexpected) { igraph_vector_destroy(pvexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_revolver_ad(SEXP graph, SEXP pniter, SEXP pagebins,
+			 SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			 SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_matrix_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_integer_t agebins=REAL(pagebins)[0];
+  igraph_bool_t sd=LOGICAL(psd)[0];
+  igraph_bool_t norm=LOGICAL(pnorm)[0];
+  igraph_bool_t cites=LOGICAL(pcites)[0];
+  igraph_bool_t expected=LOGICAL(pexpected)[0];
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_matrix_t vsd, vnorm, vcites, vexpected;
+  igraph_matrix_t *pvsd=0, *pvnorm=0, *pvcites=0, *pvexpected=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver ad ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  igraph_matrix_init(&kernel, 0, 0);
+  if (sd) { igraph_matrix_init(&vsd, 0, 0); pvsd=&vsd; }
+  if (norm) { igraph_matrix_init(&vnorm, 0, 0); pvnorm=&vnorm; }
+  if (cites) { igraph_matrix_init(&vcites, 0, 0); pvcites=&vcites; }
+  if (expected) { igraph_matrix_init(&vexpected, 0, 0); pvexpected=&vexpected; }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+
+  igraph_revolver_ad(&g, niter, agebins, &kernel, pvsd, pvnorm, pvcites,
+		    pvexpected, pplogprob, pplognull, ppdebug, ppdebugres);
+
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&kernel));
+  igraph_matrix_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0ormatrix_to_SEXP(pvsd));
+  if (pvsd) { igraph_matrix_destroy(pvsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0ormatrix_to_SEXP(pvnorm));
+  if (pvnorm) { igraph_matrix_destroy(pvnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0ormatrix_to_SEXP(pvcites));
+  if (pvcites) { igraph_matrix_destroy(pvcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0ormatrix_to_SEXP(pvexpected));
+  if (pvexpected) { igraph_matrix_destroy(pvexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+  
+}
+
+SEXP R_igraph_revolver_ade(SEXP graph, SEXP pcats, SEXP pniter, SEXP pagebins,
+			  SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			  SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t cats;
+  igraph_array3_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_integer_t agebins=REAL(pagebins)[0];
+  igraph_array3_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver ade ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pcats, &cats);
+  igraph_array3_init(&kernel, 0, 0, 0);
+  if (LOGICAL(psd)[0]) { igraph_array3_init(&vsd, 0, 0, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_array3_init(&vnorm, 0, 0, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_array3_init(&vcites, 0, 0, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_array3_init(&vexpected, 0, 0, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_ade(&g, niter, agebins, &cats, &kernel, ppsd, ppnorm,
+		     ppcites, ppexpected, pplogprob, pplognull, ppdebug,
+		     ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_array3_to_SEXP(&kernel));
+  igraph_array3_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0orarray3_to_SEXP(ppsd));
+  if (ppsd) { igraph_array3_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0orarray3_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_array3_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0orarray3_to_SEXP(ppcites));
+  if (ppcites) { igraph_array3_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0orarray3_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_array3_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+  
+SEXP R_igraph_revolver_e(SEXP graph, SEXP pcats, SEXP pniter, 
+			SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t cats;
+  igraph_vector_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_vector_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_vector_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver e ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pcats, &cats);
+  igraph_vector_init(&kernel, 0);
+  if (LOGICAL(psd)[0]) { igraph_vector_init(&vsd, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_vector_init(&vnorm, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_vector_init(&vcites, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_vector_init(&vexpected, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_vector(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_e(&g, niter, &cats, &kernel, ppsd, ppnorm, ppcites, ppexpected,
+		   pplogprob, pplognull, ppdebug, ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_vector_to_SEXP(&kernel));
+  igraph_vector_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0orvector_to_SEXP(ppsd));
+  if (ppsd) { igraph_vector_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0orvector_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_vector_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0orvector_to_SEXP(ppcites));
+  if (ppcites) { igraph_vector_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0orvector_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_vector_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_revolver_de(SEXP graph, SEXP pcats, SEXP pniter,
+			 SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			 SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t cats;
+  igraph_matrix_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_matrix_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver de ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pcats, &cats);
+  igraph_matrix_init(&kernel, 0, 0);
+  if (LOGICAL(psd)[0]) { igraph_matrix_init(&vsd, 0, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_matrix_init(&vnorm, 0, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_matrix_init(&vcites, 0, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_matrix_init(&vexpected, 0, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_de(&g, niter, &cats, &kernel, ppsd, ppnorm, ppcites,
+		    ppexpected, pplogprob, pplognull, ppdebug, ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&kernel));
+  igraph_matrix_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0ormatrix_to_SEXP(ppsd));
+  if (ppsd) { igraph_matrix_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0ormatrix_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_matrix_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0ormatrix_to_SEXP(ppcites));
+  if (ppcites) { igraph_matrix_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0ormatrix_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_matrix_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+  
+SEXP R_igraph_revolver_l(SEXP graph, SEXP pniter, SEXP pagebins,
+			SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_integer_t agebins=REAL(pagebins)[0];
+  igraph_vector_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_vector_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver l ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  igraph_vector_init(&kernel, 0);
+  if (LOGICAL(psd)[0]) { igraph_vector_init(&vsd, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_vector_init(&vnorm, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_vector_init(&vcites, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_vector_init(&vexpected, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_vector(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_l(&g, niter, agebins, &kernel, ppsd, ppnorm, 
+		   ppcites, ppexpected, pplogprob, pplognull, ppdebug,
+		   ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_vector_to_SEXP(&kernel));
+  igraph_vector_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0orvector_to_SEXP(ppsd));
+  if (ppsd) { igraph_vector_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0orvector_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_vector_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0orvector_to_SEXP(ppcites));
+  if (ppcites) { igraph_vector_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0orvector_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_vector_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_revolver_dl(SEXP graph, SEXP pniter, SEXP pagebins,
+			 SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			 SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_matrix_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_integer_t agebins=REAL(pagebins)[0];
+  igraph_matrix_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver dl ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  igraph_matrix_init(&kernel, 0, 0);
+  if (LOGICAL(psd)[0]) { igraph_matrix_init(&vsd, 0, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_matrix_init(&vnorm, 0, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_matrix_init(&vcites, 0, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_matrix_init(&vexpected, 0, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_dl(&g, niter, agebins, &kernel, ppsd, ppnorm, 
+		   ppcites, ppexpected, pplogprob, pplognull, ppdebug,
+		   ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&kernel));
+  igraph_matrix_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0ormatrix_to_SEXP(ppsd));
+  if (ppsd) { igraph_matrix_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0ormatrix_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_matrix_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0ormatrix_to_SEXP(ppcites));
+  if (ppcites) { igraph_matrix_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0ormatrix_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_matrix_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+  
+SEXP R_igraph_revolver_el(SEXP graph, SEXP pcats, SEXP pniter, SEXP pagebins,
+			 SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			 SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t cats;
+  igraph_matrix_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_integer_t agebins=REAL(pagebins)[0];
+  igraph_matrix_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver el ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pcats, &cats);
+  igraph_matrix_init(&kernel, 0, 0);
+  if (LOGICAL(psd)[0]) { igraph_matrix_init(&vsd, 0, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_matrix_init(&vnorm, 0, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_matrix_init(&vcites, 0, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_matrix_init(&vexpected, 0, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_el(&g, niter, &cats, agebins, &kernel, ppsd, ppnorm, 
+		   ppcites, ppexpected, pplogprob, pplognull, ppdebug,
+		   ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&kernel));
+  igraph_matrix_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0ormatrix_to_SEXP(ppsd));
+  if (ppsd) { igraph_matrix_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0ormatrix_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_matrix_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0ormatrix_to_SEXP(ppcites));
+  if (ppcites) { igraph_matrix_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0ormatrix_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_matrix_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_revolver_r(SEXP graph, SEXP pniter, SEXP pwindow,
+			SEXP psd, SEXP pnorm,
+			SEXP pcites, SEXP pexpected, SEXP perror, SEXP pdebug,
+			SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_integer_t window=REAL(pwindow)[0];
+  igraph_bool_t sd=LOGICAL(psd)[0];
+  igraph_bool_t norm=LOGICAL(pnorm)[0];
+  igraph_bool_t cites=LOGICAL(pcites)[0];
+  igraph_bool_t expected=LOGICAL(pexpected)[0];
+  igraph_vector_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_vector_t vsd, vnorm, vcites, vexpected;
+  igraph_vector_t *pvsd=0, *pvnorm=0, *pvcites=0, *pvexpected=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver r ");
+
+  R_SEXP_to_igraph(graph, &g);
+  igraph_vector_init(&kernel, 0);
+  if (sd) { igraph_vector_init(&vsd, 0); pvsd=&vsd; }
+  if (norm) { igraph_vector_init(&vnorm, 0); pvnorm=&vnorm; }
+  if (cites) { igraph_vector_init(&vcites, 0); pvcites=&vcites; }
+  if (expected) { igraph_vector_init(&vexpected, 0); pvexpected=&vexpected; }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_vector(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+
+  igraph_revolver_r(&g, niter, window, &kernel, pvsd, pvnorm, pvcites, pvexpected,
+		   pplogprob, pplognull, ppdebug, ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_vector_to_SEXP(&kernel));
+  igraph_vector_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0orvector_to_SEXP(pvsd));
+  if (pvsd) { igraph_vector_destroy(pvsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0orvector_to_SEXP(pvnorm));
+  if (pvnorm) { igraph_vector_destroy(pvnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0orvector_to_SEXP(pvcites));
+  if (pvcites) { igraph_vector_destroy(pvcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0orvector_to_SEXP(pvexpected));
+  if (pvexpected) { igraph_vector_destroy(pvexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_revolver_ar(SEXP graph, SEXP pniter, SEXP pagebins, SEXP pwindow,
+			 SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			 SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_matrix_t kernel;  
+  igraph_integer_t niter=REAL(pniter)[0];  
+  igraph_integer_t agebins=REAL(pagebins)[0];
+  igraph_integer_t window=REAL(pwindow)[0];
+  igraph_bool_t sd=LOGICAL(psd)[0];
+  igraph_bool_t norm=LOGICAL(pnorm)[0];
+  igraph_bool_t cites=LOGICAL(pcites)[0];
+  igraph_bool_t expected=LOGICAL(pexpected)[0];
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_matrix_t vsd, vnorm, vcites, vexpected;
+  igraph_matrix_t *pvsd=0, *pvnorm=0, *pvcites=0, *pvexpected=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver ar ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  igraph_matrix_init(&kernel, 0, 0);
+  if (sd) { igraph_matrix_init(&vsd, 0, 0); pvsd=&vsd; }
+  if (norm) { igraph_matrix_init(&vnorm, 0, 0); pvnorm=&vnorm; }
+  if (cites) { igraph_matrix_init(&vcites, 0, 0); pvcites=&vcites; }
+  if (expected) { igraph_matrix_init(&vexpected, 0, 0); pvexpected=&vexpected; }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+
+  igraph_revolver_ar(&g, niter, agebins, window, &kernel, pvsd, pvnorm, pvcites,
+		    pvexpected, pplogprob, pplognull, ppdebug, ppdebugres);
+
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&kernel));
+  igraph_matrix_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0ormatrix_to_SEXP(pvsd));
+  if (pvsd) { igraph_matrix_destroy(pvsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0ormatrix_to_SEXP(pvnorm));
+  if (pvnorm) { igraph_matrix_destroy(pvnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0ormatrix_to_SEXP(pvcites));
+  if (pvcites) { igraph_matrix_destroy(pvcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0ormatrix_to_SEXP(pvexpected));
+  if (pvexpected) { igraph_matrix_destroy(pvexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+  
+}
+
+SEXP R_igraph_revolver_di(SEXP graph, SEXP pcats, SEXP pniter,
+			 SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			 SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t cats;
+  igraph_matrix_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_matrix_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver di ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pcats, &cats);
+  igraph_matrix_init(&kernel, 0, 0);
+  if (LOGICAL(psd)[0]) { igraph_matrix_init(&vsd, 0, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_matrix_init(&vnorm, 0, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_matrix_init(&vcites, 0, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_matrix_init(&vexpected, 0, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_di(&g, niter, &cats, &kernel, ppsd, ppnorm, ppcites,
+		    ppexpected, pplogprob, pplognull, ppdebug, ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&kernel));
+  igraph_matrix_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0ormatrix_to_SEXP(ppsd));
+  if (ppsd) { igraph_matrix_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0ormatrix_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_matrix_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0ormatrix_to_SEXP(ppcites));
+  if (ppcites) { igraph_matrix_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0ormatrix_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_matrix_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_revolver_adi(SEXP graph, SEXP pcats, SEXP pniter, SEXP pagebins,
+			  SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			  SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t cats;
+  igraph_array3_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_integer_t agebins=REAL(pagebins)[0];
+  igraph_array3_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver adi ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pcats, &cats);
+  igraph_array3_init(&kernel, 0, 0, 0);
+  if (LOGICAL(psd)[0]) { igraph_array3_init(&vsd, 0, 0, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_array3_init(&vnorm, 0, 0, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_array3_init(&vcites, 0, 0, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_array3_init(&vexpected, 0, 0, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_adi(&g, niter, agebins, &cats, &kernel, ppsd, ppnorm,
+		     ppcites, ppexpected, pplogprob, pplognull, ppdebug,
+		     ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_array3_to_SEXP(&kernel));
+  igraph_array3_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0orarray3_to_SEXP(ppsd));
+  if (ppsd) { igraph_array3_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0orarray3_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_array3_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0orarray3_to_SEXP(ppcites));
+  if (ppcites) { igraph_array3_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0orarray3_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_array3_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_revolver_il(SEXP graph, SEXP pcats, SEXP pniter, SEXP pagebins,
+			 SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			 SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t cats;
+  igraph_matrix_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_integer_t agebins=REAL(pagebins)[0];
+  igraph_matrix_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver il ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pcats, &cats);
+  igraph_matrix_init(&kernel, 0, 0);
+  if (LOGICAL(psd)[0]) { igraph_matrix_init(&vsd, 0, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_matrix_init(&vnorm, 0, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_matrix_init(&vcites, 0, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_matrix_init(&vexpected, 0, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_il(&g, niter, agebins, &cats, &kernel, ppsd, ppnorm, 
+		    ppcites, ppexpected, pplogprob, pplognull, ppdebug,
+		    ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&kernel));
+  igraph_matrix_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0ormatrix_to_SEXP(ppsd));
+  if (ppsd) { igraph_matrix_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0ormatrix_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_matrix_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0ormatrix_to_SEXP(ppcites));
+  if (ppcites) { igraph_matrix_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0ormatrix_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_matrix_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_revolver_ir(SEXP graph, SEXP pcats, SEXP pwindow, SEXP pniter,
+			 SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			 SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t cats;
+  igraph_integer_t window=REAL(pwindow)[0];
+  igraph_matrix_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_matrix_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver di ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pcats, &cats);
+  igraph_matrix_init(&kernel, 0, 0);
+  if (LOGICAL(psd)[0]) { igraph_matrix_init(&vsd, 0, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_matrix_init(&vnorm, 0, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_matrix_init(&vcites, 0, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_matrix_init(&vexpected, 0, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_ir(&g, niter, window, &cats, &kernel, ppsd, ppnorm, ppcites,
+		    ppexpected, pplogprob, pplognull, ppdebug, ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&kernel));
+  igraph_matrix_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0ormatrix_to_SEXP(ppsd));
+  if (ppsd) { igraph_matrix_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0ormatrix_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_matrix_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0ormatrix_to_SEXP(ppcites));
+  if (ppcites) { igraph_matrix_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0ormatrix_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_matrix_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_revolver_air(SEXP graph, SEXP pcats, SEXP pwindow, 
+			  SEXP pniter, SEXP pagebins,
+			  SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			  SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t cats;
+  igraph_integer_t window=REAL(pwindow)[0];
+  igraph_array3_t kernel;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_integer_t agebins=REAL(pagebins)[0];
+  igraph_array3_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revolver air ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pcats, &cats);
+  igraph_array3_init(&kernel, 0, 0, 0);
+  if (LOGICAL(psd)[0]) { igraph_array3_init(&vsd, 0, 0, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_array3_init(&vnorm, 0, 0, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_array3_init(&vcites, 0, 0, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_array3_init(&vexpected, 0, 0, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_air(&g, niter, window, agebins, &cats, &kernel, ppsd, ppnorm,
+		     ppcites, ppexpected, pplogprob, pplognull, ppdebug,
+		     ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_array3_to_SEXP(&kernel));
+  igraph_array3_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0orarray3_to_SEXP(ppsd));
+  if (ppsd) { igraph_array3_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0orarray3_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_array3_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0orarray3_to_SEXP(ppcites));
+  if (ppcites) { igraph_array3_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0orarray3_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_array3_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_revolver_d_d(SEXP graph, SEXP pniter, SEXP pvtime, SEXP petime,
+			   SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			   SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t vtime, etime;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_matrix_t kernel;
+  igraph_matrix_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revover d-d ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pvtime, &vtime);
+  R_SEXP_to_vector(petime, &etime);
+  igraph_matrix_init(&kernel, 0, 0);
+  if (LOGICAL(psd)[0]) { igraph_matrix_init(&vsd, 0, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_matrix_init(&vnorm, 0, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_matrix_init(&vcites, 0, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_matrix_init(&vexpected, 0, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_d_d(&g, niter, &vtime, &etime, &kernel, ppsd, ppnorm,
+		      ppcites, ppexpected, pplogprob, pplognull,
+		      ppdebug, ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&kernel));
+  igraph_matrix_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0ormatrix_to_SEXP(ppsd));
+  if (ppsd) { igraph_matrix_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0ormatrix_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_matrix_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0ormatrix_to_SEXP(ppcites));
+  if (ppcites) { igraph_matrix_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0ormatrix_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_matrix_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}
+
+SEXP R_igraph_evolver_d(SEXP pnodes, SEXP pkernel, SEXP poutseq, 
+			SEXP poutdist, SEXP pm, SEXP pdirected) {
+  
+  igraph_t g;
+  igraph_integer_t nodes=REAL(pnodes)[0];
+  igraph_vector_t kernel;
+  igraph_vector_t voutseq, *ppoutseq=0;
+  igraph_vector_t voutdist, *ppoutdist=0;
+  igraph_integer_t m=REAL(pm)[0];
+  igraph_bool_t directed=LOGICAL(pdirected)[0];
+  SEXP result;
+  
+  R_igraph_before();
+  
+  R_SEXP_to_vector(pkernel, &kernel);
+  if (!isNull(poutseq)) {
+    R_SEXP_to_vector(poutseq, &voutseq);
+    ppoutseq=&voutseq;
+  }
+  if (!isNull(poutdist)) {
+    R_SEXP_to_vector(poutdist, &voutdist);
+    ppoutdist=&voutdist;
+  }
+  
+  igraph_evolver_d(&g, nodes, &kernel, ppoutseq, ppoutdist, m, directed);
+  PROTECT(result=R_igraph_to_SEXP(&g));
+  igraph_destroy(&g);
+  
+  R_igraph_after();
+  
+  UNPROTECT(1);
+  return result;
+}
+		   
+SEXP R_igraph_revolver_p_p(SEXP graph, SEXP pniter, SEXP pvtime, SEXP petime,
+			   SEXP pauthors, SEXP peventsizes,
+			   SEXP psd, SEXP pnorm, SEXP pcites, SEXP pexpected,
+			   SEXP perror, SEXP pdebug, SEXP verbose) {
+  igraph_t g;
+  igraph_vector_t vtime, etime;
+  igraph_vector_t authors, eventsizes;
+  igraph_integer_t niter=REAL(pniter)[0];
+  igraph_matrix_t kernel;
+  igraph_matrix_t vsd, *ppsd=0, vnorm, *ppnorm=0, vcites, *ppcites=0,
+    vexpected, *ppexpected=0;
+  igraph_matrix_t debug, *ppdebug=0;
+  igraph_vector_ptr_t debugres, *ppdebugres=0;
+  igraph_real_t rlogprob, rlognull, *pplogprob=0, *pplognull=0;
+  SEXP result, names;
+  
+  R_igraph_before2(verbose, "Revover d-d ");
+  
+  R_SEXP_to_igraph(graph, &g);
+  R_SEXP_to_vector(pvtime, &vtime);
+  R_SEXP_to_vector(petime, &etime);
+  R_SEXP_to_vector(pauthors, &authors);
+  R_SEXP_to_vector(peventsizes, &eventsizes);
+  igraph_matrix_init(&kernel, 0, 0);
+  if (LOGICAL(psd)[0]) { igraph_matrix_init(&vsd, 0, 0); ppsd=&vsd; }
+  if (LOGICAL(pnorm)[0]) { igraph_matrix_init(&vnorm, 0, 0); ppnorm=&vnorm; }
+  if (LOGICAL(pcites)[0]) { igraph_matrix_init(&vcites, 0, 0); ppcites=&vcites; }
+  if (LOGICAL(pexpected)[0]) { 
+    igraph_matrix_init(&vexpected, 0, 0); 
+    ppexpected=&vexpected; 
+  }
+  if (LOGICAL(perror)[0]) { pplogprob=&rlogprob; pplognull=&rlognull; }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug)!=0) {
+    R_SEXP_to_matrix(pdebug, &debug); ppdebug=&debug; 
+    igraph_vector_ptr_init(&debugres, 0); ppdebugres=&debugres;
+  }
+  
+  igraph_revolver_p_p(&g, niter, &vtime, &etime, &authors, &eventsizes,
+		      &kernel, ppsd, ppnorm,
+		      ppcites, ppexpected, pplogprob, pplognull,
+		      ppdebug, ppdebugres);
+  
+  PROTECT(result=NEW_LIST(7));
+  SET_VECTOR_ELT(result, 0, R_igraph_matrix_to_SEXP(&kernel));
+  igraph_matrix_destroy(&kernel);
+  SET_VECTOR_ELT(result, 1, R_igraph_0ormatrix_to_SEXP(ppsd));
+  if (ppsd) { igraph_matrix_destroy(ppsd); }
+  SET_VECTOR_ELT(result, 2, R_igraph_0ormatrix_to_SEXP(ppnorm));
+  if (ppnorm) { igraph_matrix_destroy(ppnorm); }
+  SET_VECTOR_ELT(result, 3, R_igraph_0ormatrix_to_SEXP(ppcites));
+  if (ppcites) { igraph_matrix_destroy(ppcites); }
+  SET_VECTOR_ELT(result, 4, R_igraph_0ormatrix_to_SEXP(ppexpected));
+  if (ppexpected) { igraph_matrix_destroy(ppexpected); }
+  if (!isNull(pdebug) && GET_LENGTH(pdebug) != 0) {
+    /* TODO */
+  } else {
+    SET_VECTOR_ELT(result, 5, R_NilValue);
+  }
+  if (pplogprob) {
+    SET_VECTOR_ELT(result, 6, NEW_NUMERIC(2));
+    REAL(VECTOR_ELT(result, 6))[0]=*pplogprob;
+    REAL(VECTOR_ELT(result, 6))[1]=*pplognull;
+  } else {
+    SET_VECTOR_ELT(result, 6, R_NilValue);
+  }
+  PROTECT(names=NEW_CHARACTER(7));
+  SET_STRING_ELT(names, 0, CREATE_STRING_VECTOR("kernel"));
+  SET_STRING_ELT(names, 1, CREATE_STRING_VECTOR("sd"));
+  SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("norm"));
+  SET_STRING_ELT(names, 3, CREATE_STRING_VECTOR("cites"));
+  SET_STRING_ELT(names, 4, CREATE_STRING_VECTOR("expected"));
+  SET_STRING_ELT(names, 5, CREATE_STRING_VECTOR("debug"));
+  SET_STRING_ELT(names, 6, CREATE_STRING_VECTOR("error"));
+  SET_NAMES(result, names);
+  
+  R_igraph_after2(verbose);  
+
+  UNPROTECT(2);
+  return result;
+}		   
+			 
 /***********************************************/
 /* THE REST IS GENERATED BY inger.py           */
 /***********************************************/

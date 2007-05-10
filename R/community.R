@@ -59,103 +59,346 @@ spinglass.community <- function(graph, weights=NULL, vertex=NULL, spins=25,
   }    
 }
 
-community.eb <- function(graph, directed=TRUE) {
+walktrap.community <- function(graph, weights=E(g)$weight, steps=4, merges=TRUE,
+                               modularity=FALSE, labels=TRUE) {
   if (!is.igraph(graph)) {
-    stop("Not a graph object")
+    stop("Not a graph object!")
   }
 
-  all.nodes <- vcount(graph)
-  all.edges <- ecount(graph)
-  res <- matrix(0, nc=2, nr=all.edges);
-
-  for (i in 1:all.edges) {
-
-    print(i)
-    
-    max.eb <- which.max(edge.betweenness(graph, directed=directed))
-    res[i,1] <- (max.eb-1) %%  all.nodes + 1
-    res[i,2] <- (max.eb-1) %/% all.nodes + 1
-
-    graph <- delete.edges(graph, res[i,])
+  if (!is.null(weights)) {
+    weight <- as.numeric(weight)
   }
-  
+
+  res <- .Call("R_igraph_walktrap_community", graph, weights, as.numeric(steps),
+        as.logical(merges), as.logical(modularity),
+        PACKAGE="igraph")
+  if (labels && "name" %in% list.vertex.attributes(graph)) {
+    res$labels <- V(g)$name
+  }
+  class(res) <- "igraph.walktrap"
   res
 }
 
-community.cut <- function(graph, edges, after.removing) {
-  if (!is.igraph(graph)) {
-    stop("Not a graph object")
-  }
+# The following two functions were adapted from the stats R package
 
-  if (after.removing >= nrow(edges)) { 
-    res <- graph.empty(directed=is.directed(graph))
+.memberDend <- function(x) {
+  r <- attr(x,"x.member")
+  if(is.null(r)) {
+    r <- attr(x,"members")
+    if(is.null(r)) r <- 1:1
+  }
+  r
+}
+
+as.dendrogram.igraph.walktrap <- function (object, hang=-1,
+                                           use.modularity=FALSE, ...)
+{
+  stopifnot(nrow(object$merges)> 0)
+  if (is.null(object$labels))
+    object$labels <- 1:(nrow(object$merges)+1)-1
+  z <- list()
+  if (!use.modularity || is.null(object$modularity)) {
+    object$height <- 1:nrow(object$merges)
   } else {
-    res <- graph( t(edges[(after.removing+1):nrow(edges),]), 
-		  directed=is.directed(graph) )
+    object$height <- object$modularity[-1]
+    object$height <- cumsum(object$height - min(object$height))
   }
-
-  res
-}
-
-edge.type.matrix <- function(graph, types) {
-  if (!is.igraph(graph)) {
-    stop("Not a graph object")
-  }
-
-  if (vcount(graph) != length(types)) {
-    stop("'graph' and/or 'types' invalid, they should be of the same length")
-  }
-
-  no.of.types <- max(types)
-  res <- matrix(0, nr=no.of.types, nc=no.of.types)
-
-  el <- get.edgelist(graph, names=FALSE)
-  if (length(el) != 0) {
-    for (i in 1:nrow(el)) {
-      res[ types[el[i,1]], types[el[i,2]] ] <-
-        res[ types[el[i,1]], types[el[i,2]] ] + 1
+  nMerge <- length(oHgt <- object$height)
+  if (nMerge != nrow(object$merges))
+    stop("'merge' and 'height' do not fit!")
+  hMax <- oHgt[nMerge]
+  one <- 1:1;
+  two <- 2:2 # integer!
+  leafs <- nrow(object$merges)+1
+  for (k in 1:nMerge) {
+    x <- object$merges[k, ]# no sort() anymore!
+    if (any(neg <- x < leafs))
+      h0 <- if (hang < 0) 0 else max(0, oHgt[k] - hang * hMax)
+    if (all(neg)) {                  # two leaves
+      zk <- as.list(x)
+      attr(zk, "members") <- two
+      attr(zk, "midpoint") <- 0.5 # mean( c(0,1) )
+      objlabels <- object$labels[x+1]
+      attr(zk[[1]], "label") <- objlabels[1]
+      attr(zk[[2]], "label") <- objlabels[2]
+      attr(zk[[1]], "members") <- attr(zk[[2]], "members") <- one
+      attr(zk[[1]], "height") <- attr(zk[[2]], "height") <- h0
+      attr(zk[[1]], "leaf") <- attr(zk[[2]], "leaf") <- TRUE
     }
-    res <- res / sum(res)
+    else if (any(neg)) {            # one leaf, one node
+      X <- as.character(x)
+      ## Originally had "x <- sort(..) above => leaf always left, x[1];
+      ## don't want to assume this
+      isL <- x[1] < leafs ## is leaf left?
+      zk <-
+        if(isL) list(x[1], z[[X[2]]])
+        else    list(z[[X[1]]], x[2])
+      attr(zk, "members") <- attr(z[[X[1 + isL]]], "members") + one
+      attr(zk, "midpoint") <-
+        (.memberDend(zk[[1]]) + attr(z[[X[1 + isL]]], "midpoint"))/2
+      attr(zk[[2 - isL]], "members") <- one
+      attr(zk[[2 - isL]], "height") <- h0
+      attr(zk[[2 - isL]], "label") <- object$labels[x[2 - isL]+1]
+      attr(zk[[2 - isL]], "leaf") <- TRUE
+      }
+    else {                        # two nodes
+      x <- as.character(x)
+      zk <- list(z[[x[1]]], z[[x[2]]])
+      attr(zk, "members") <- attr(z[[x[1]]], "members") +
+        attr(z[[x[2]]], "members")
+      attr(zk, "midpoint") <- (attr(z[[x[1]]], "members") +
+                               attr(z[[x[1]]], "midpoint") +
+                               attr(z[[x[2]]], "midpoint"))/2
+    }
+    attr(zk, "height") <- oHgt[k]
+    z[[k <- as.character(k+leafs-1)]] <- zk
   }
-  
+  z <- z[[k]]
+  class(z) <- "dendrogram"
+  z
+}
+
+edge.betweenness.community <- function(graph, directed=TRUE,
+                                       edge.betweenness=TRUE,
+                                       merges=TRUE, bridges=TRUE,
+                                       labels=TRUE) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object!")
+  }
+
+  res <- .Call("R_igraph_community_edge_betweenness", graph, as.logical(directed),
+               as.logical(edge.betweenness),
+               as.logical(merges), as.logical(bridges),
+               PACKAGE="igraph")
+  if (labels && "name" %in% list.vertex.attributes(graph)) {
+    res$labels <- V(g)$name
+  }
+  class(res) <- "igraph.ebc"
   res
 }
 
-modularity <- function(graph, types) {
+edge.betweenness.community.merges <- function(graph, edges) {
+  
+  if (!is.igraph(graph)) {
+    stop("Not a graph object!")
+  }
+
+  .Call("R_igraph_community_eb_get_merges", graph, as.numeric(edges),
+        PACKAGE="igraph")
+}
+
+# Adapted from the stats package
+
+as.dendrogram.igraph.ebc <- function (object, hang=-1,
+                                      use.eb=FALSE,
+                                      merges=NULL,
+                                      bridges=NULL,
+                                      ...)
+{
+  if (!is.null(merges)) {
+    object$merges <- merges
+  }
+  stopifnot(nrow(object$merges)> 0)
+  if (is.null(object$labels))
+    object$labels <- 1:(nrow(object$merges)+1)-1
+  z <- list()
+  if (!use.eb || is.null(object$edge.betweenness) || is.null(object$bridges)) {
+    object$height <- 1:nrow(object$merges)
+  } else {
+    object$height <- object$edge.betweenness[object$bridges]
+    object$height <- cumsum(object$height)
+  }
+  nMerge <- length(oHgt <- object$height)
+  if (nMerge != nrow(object$merges))
+    stop("'merge' and 'height' do not fit!")
+  hMax <- oHgt[nMerge]
+  one <- 1:1;
+  two <- 2:2 # integer!
+  leafs <- nrow(object$merges)+1
+  for (k in 1:nMerge) {
+    x <- object$merges[k, ]# no sort() anymore!
+    if (any(neg <- x < leafs))
+      h0 <- if (hang < 0) 0 else max(0, oHgt[k] - hang * hMax)
+    if (all(neg)) {                  # two leaves
+      zk <- as.list(x)
+      attr(zk, "members") <- two
+      attr(zk, "midpoint") <- 0.5 # mean( c(0,1) )
+      objlabels <- object$labels[x+1]
+      attr(zk[[1]], "label") <- objlabels[1]
+      attr(zk[[2]], "label") <- objlabels[2]
+      attr(zk[[1]], "members") <- attr(zk[[2]], "members") <- one
+      attr(zk[[1]], "height") <- attr(zk[[2]], "height") <- h0
+      attr(zk[[1]], "leaf") <- attr(zk[[2]], "leaf") <- TRUE
+    }
+    else if (any(neg)) {            # one leaf, one node
+      X <- as.character(x)
+      ## Originally had "x <- sort(..) above => leaf always left, x[1];
+      ## don't want to assume this
+      isL <- x[1] < leafs ## is leaf left?
+      zk <-
+        if(isL) list(x[1], z[[X[2]]])
+        else    list(z[[X[1]]], x[2])
+      attr(zk, "members") <- attr(z[[X[1 + isL]]], "members") + one
+      attr(zk, "midpoint") <-
+        (.memberDend(zk[[1]]) + attr(z[[X[1 + isL]]], "midpoint"))/2
+      attr(zk[[2 - isL]], "members") <- one
+      attr(zk[[2 - isL]], "height") <- h0
+      attr(zk[[2 - isL]], "label") <- object$labels[x[2 - isL]+1]
+      attr(zk[[2 - isL]], "leaf") <- TRUE
+      }
+    else {                        # two nodes
+      x <- as.character(x)
+      zk <- list(z[[x[1]]], z[[x[2]]])
+      attr(zk, "members") <- attr(z[[x[1]]], "members") +
+        attr(z[[x[2]]], "members")
+      attr(zk, "midpoint") <- (attr(z[[x[1]]], "members") +
+                               attr(z[[x[1]]], "midpoint") +
+                               attr(z[[x[2]]], "midpoint"))/2
+    }
+    attr(zk, "height") <- oHgt[k]
+    z[[k <- as.character(k+leafs-1)]] <- zk
+  }
+  z <- z[[k]]
+  class(z) <- "dendrogram"
+  z
+}
+
+fastgreedy.community <- function(graph, merges=TRUE, modularity=TRUE) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
 
-  etm <- edge.type.matrix(graph, types)
+  .Call("R_igraph_community_fastgreedy", graph, as.logical(merges),
+        as.logical(modularity), 
+        PACKAGE="igraph")
+} 
 
-  res <- sum(diag(etm)) - sum(etm %*% etm)
-  
-  res
-}
-
-community.eb2 <- function(graph, directed=TRUE) {
+community.to.membership <- function(graph, merges, steps, membership=TRUE,
+                                    csize=TRUE) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
 
-  all.nodes <- vcount(graph)
-  all.edges <- ecount(graph)
-  cno <- length(clusters(graph)$csize)
-  res <- numeric()
+  merges <- as.matrix(merges)
+  merges <- structure(as.numeric(merges), dim=dim(merges))
+  
+  .Call("R_igraph_community_to_membership", graph, merges, as.numeric(steps),
+        as.logical(membership), as.logical(csize),
+        PACKAGE="igraph")
+}
 
-  for (i in 1:all.edges) {
+leading.eigenvector.community <- function(graph, steps=vcount(graph),
+                                          naive=FALSE) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object!")
+  }
 
-    print(i)
-    
-    max.eb <- which.max(edge.betweenness(graph, directed=directed))
-    from <- (max.eb-1) %%  all.nodes + 1
-    to <- (max.eb-1) %/% all.nodes + 1
+  res <- .Call("R_igraph_community_leading_eigenvector", graph, as.numeric(steps),
+               as.logical(naive),
+               PACKAGE="igraph")
+  class(res) <- "igraph.eigenc"
+  res
+}
 
-    res <- c(res, from, to)
-    graph <- delete.edges(graph, c(from, to))
-    cno2 <- length(clusters(graph)$csize)
-    if (cno2 > cno) { break }
+leading.eigenvector.community.step <- function(graph, fromhere=NULL,
+                                               membership=rep(0, vcount(graph)),
+                                               community=0,
+                                               eigenvector=TRUE) {
+
+  if (!is.igraph(graph)) {
+    stop("Not a graph object!")
+  }
+  if (!is.null(fromhere)) {
+    if (class(fromhere) != "igraph.eigencstep") {
+      stop("invalid community structure object given")
+    }
+    membership <- fromhere[["membership"]]
   }
   
-  matrix(res, nc=2, byrow=TRUE)
+  res <- .Call("R_igraph_community_leading_eigenvector_step",
+               graph, as.numeric(membership), as.numeric(community),
+               as.logical(eigenvector),
+               PACKAGE="igraph")
+  class(res) <- "igraph.eigencstep"
+  res
+}
+
+as.dendrogram.igraph.eigenc <- function(object, hang=-1,
+                                         merges=NULL, ...) {
+  if (!is.null(merges)) {
+    object$merges <- merges
+  }
+  stopifnot(nrow(object$merges)>0)
+  if (is.null(object$labels)) {
+    labels <- character()
+    for (i in 1:max(object$membership+1)) {
+      labels[i] <- paste(sep="", "{",
+                         paste(collapse=",", which(object$membership==i-1)-1), "}")
+    }
+    object$labels <- labels
+  }
+  z <- list()
+  object$height <- 1:nrow(object$merges)
+  nMerge <- length(oHgt <- object$height)
+  if (nMerge != nrow(object$merges))
+    stop("'merge' and 'height' do not fit!")
+  hMax <- oHgt[nMerge]
+  one <- 1:1;
+  two <- 2:2 # integer!
+  leafs <- nrow(object$merges)+1
+  for (k in 1:nMerge) {
+    x <- object$merges[k, ]# no sort() anymore!
+    if (any(neg <- x < leafs))
+      h0 <- if (hang < 0) 0 else max(0, oHgt[k] - hang * hMax)
+    if (all(neg)) {                  # two leaves
+      zk <- as.list(x)
+      attr(zk, "members") <- two
+      attr(zk, "midpoint") <- 0.5 # mean( c(0,1) )
+      objlabels <- object$labels[x+1]
+      attr(zk[[1]], "label") <- objlabels[1]
+      attr(zk[[2]], "label") <- objlabels[2]
+      attr(zk[[1]], "members") <- attr(zk[[2]], "members") <- one
+      attr(zk[[1]], "height") <- attr(zk[[2]], "height") <- h0
+      attr(zk[[1]], "leaf") <- attr(zk[[2]], "leaf") <- TRUE
+    }
+    else if (any(neg)) {            # one leaf, one node
+      X <- as.character(x)
+      ## Originally had "x <- sort(..) above => leaf always left, x[1];
+      ## don't want to assume this
+      isL <- x[1] < leafs ## is leaf left?
+      zk <-
+        if(isL) list(x[1], z[[X[2]]])
+        else    list(z[[X[1]]], x[2])
+      attr(zk, "members") <- attr(z[[X[1 + isL]]], "members") + one
+      attr(zk, "midpoint") <-
+        (.memberDend(zk[[1]]) + attr(z[[X[1 + isL]]], "midpoint"))/2
+      attr(zk[[2 - isL]], "members") <- one
+      attr(zk[[2 - isL]], "height") <- h0
+      attr(zk[[2 - isL]], "label") <- object$labels[x[2 - isL]+1]
+      attr(zk[[2 - isL]], "leaf") <- TRUE
+      }
+    else {                        # two nodes
+      x <- as.character(x)
+      zk <- list(z[[x[1]]], z[[x[2]]])
+      attr(zk, "members") <- attr(z[[x[1]]], "members") +
+        attr(z[[x[2]]], "members")
+      attr(zk, "midpoint") <- (attr(z[[x[1]]], "members") +
+                               attr(z[[x[1]]], "midpoint") +
+                               attr(z[[x[2]]], "midpoint"))/2
+    }
+    attr(zk, "height") <- oHgt[k]
+    z[[k <- as.character(k+leafs-1)]] <- zk
+  }
+  z <- z[[k]]
+  class(z) <- "dendrogram"
+  z
+}  
+
+modularity <- function(graph, membership) {
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+
+  .Call("R_igraph_modularity", graph, as.numeric(membership),
+        PACKAGE="igraph")
 }

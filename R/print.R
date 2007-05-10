@@ -54,38 +54,91 @@ print.igraph <- function(x,
   if (vertex.attributes) {
     cat("Vertex attributes:\n")
     list <- list.vertex.attributes(x)
-    if (vc != 0) {
-      for (i in 0:(vc-1)) {
-        cat("  ", i, "  ")
-        sapply(list, function(n) {
-          cat(n, "=", get.vertex.attribute(x, n, i), "\t")})
-        cat("\n")
+    if (length(list) == 0) {
+      cat("No vertex attributes\n")
+    } else {
+      mp <- getOption("max.print")
+      options(max.print=1000000000)      # no built-in limit, we handle it by hand
+      if (vc <= mp) {
+        omitted.vertices <- 0
+        ind <- V(x)
+      } else {
+        omitted.vertices <- vc-mp
+        ind <- seq(length=mp)-1
       }
+      if (vc==0 ||
+          all(sapply(list, function(v) is.numeric(v) |
+                     is.character(v) | is.logical(v)))) {
+        ## create a table
+        tab <- data.frame(v=paste(sep="", "[", ind, "]"), row.names="v")
+        for (i in list) {
+          tab[i] <- get.vertex.attribute(x, i, ind)
+        }
+        print(tab)
+      } else {
+        for (i in ind) {
+          cat("  ", i, "  ")
+          sapply(list, function(n) {
+            cat(n, "=", get.vertex.attribute(x, n, i), "\t")})
+          cat("\n")
+        }
+      }
+      options(max.print=mp)
+      if (omitted.vertices != 0) {
+        cat(paste('[ reached getOption("max.print") -- omitted',
+                  omitted.vertices, "vertices ]\n\n"))
+      }      
     }
   }
 
   if (edge.attributes) {
     list <- list.edge.attributes(x)
+  } else {
+    list <- character()
   }
   
   arrow <- ifelse(is.directed(x), "->", "--")
   if (ec != 0) {
     if (!edge.attributes) {
-      cat("\nEdges:\n")
+      cat("Edges:\n")
     } else {
-      cat("\nEdges and their attributes:\n")
+      cat("Edges and their attributes:\n")
     }
-    i <- 0
     el <- get.edgelist(x, names=names)
-    apply(el, 1, function(v) {
-      cat(sep="", "[", i, "] ", v[1], " ", arrow, " ", v[2]);
-      if (edge.attributes) {
-        sapply(list, function(n) {
-          cat("  ", n, "=", get.edge.attribute(x, n, i), "\t")})
+    mp <- getOption("max.print")
+    if (mp >= nrow(el)) {
+      omitted.edges <- 0
+    } else {
+      omitted.edges <- nrow(el)-mp
+      el <- el[1:mp,]
+    }
+    if (ec==0 || 
+        all(sapply(list, function(v) is.numeric(v) |
+                   is.character(v) | is.logical(v)))) {
+      ## create a table
+      tab <- data.frame(e=paste(sep="", "[", seq(length=nrow(el))-1, "]"), row.names="e")
+      if (is.numeric(el)) { w <- nchar(max(el)) } else { w <- max(nchar(el)) }
+      tab[" "] <- paste(format(el[,1], width=w), arrow, format(el[,2], width=w))
+      for (i in list) {
+        tab[i] <- get.edge.attribute(x, i)
       }
-      cat("\n")
-      i <<- i+1
-    })
+      print(tab)
+    } else {
+      i <- 0
+      apply(el, 1, function(v) {
+        cat(sep="", "[", i, "] ", v[1], " ", arrow, " ", v[2]);
+        if (edge.attributes) {
+          sapply(list, function(n) {
+            cat("  ", n, "=", get.edge.attribute(x, n, i), "\t")})
+        }
+        cat("\n")
+        i <<- i+1
+      })
+    }
+    if (omitted.edges != 0) {
+      cat(paste('[ reached getOption("max.print") -- omitted', omitted.edges,
+                'edges ]\n\n'))
+    }    
   }
   
   invisible(x)
@@ -99,6 +152,24 @@ summary.igraph <- function(object, ...) {
   cat("Vertices:", vcount(object), "\n")
   cat("Edges:", ecount(object), "\n")
   cat("Directed:", is.directed(object), "\n")
+  l <- list.graph.attributes(object)
+  if (length(l)==0) {
+    cat("No graph attributes.\n")
+  } else {
+    cat(sep="", "Graph attributes: ", paste(l, collapse=", "), ".\n")
+  }
+  l <- list.vertex.attributes(object)
+  if (length(l)==0) {
+    cat("No vertex attributes.\n")
+  } else {
+    cat(sep="", "Vertex attributes: ", paste(l, collapse=", "), ".\n")
+  }
+  l <- list.edge.attributes(object)
+  if (length(l)==0) {
+    cat("No edge attributes.\n")
+  } else {
+    cat(sep="", "Edge attributes: ", paste(l, collapse=", "), ".\n")
+  }
   
   invisible(object)
 }

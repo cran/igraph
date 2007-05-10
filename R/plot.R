@@ -20,14 +20,7 @@
 #
 ###################################################################
 
-plot.igraph <- function(x, layout=layout.random, layout.par=list(),
-                       labels=NULL, label.color="darkblue",
-                       label.font=NULL, label.degree=-pi/4, label.dist=0,
-                       vertex.color="SkyBlue2", vertex.size=15,
-                       edge.color="darkgrey", edge.width=1,
-                       edge.labels=NA, edge.lty=1,
-                       vertex.frame.color="black", 
-                       margin=0, loop.angle=0,
+plot.igraph <- function(x, 
                        # SPECIFIC: #####################################
                        axes=FALSE, xlab="", ylab="",
                        xlim=c(-1,1), ylim=c(-1,1),
@@ -37,24 +30,44 @@ plot.igraph <- function(x, layout=layout.random, layout.par=list(),
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
+
+  # Visual parameters
+  params <- i.parse.plot.params(graph, list(...))
+  vertex.color       <- params("vertex", "color")
+  vertex.frame.color <- params("vertex", "frame.color")
+  vertex.size        <- (1/200) * params("vertex", "size")
+  label.family       <- params("vertex", "label.family")
+  label.font         <- params("vertex", "label.font")
+  label.cex          <- params("vertex", "label.cex")
+  label.degree       <- params("vertex", "label.degree")
+  label.color        <- params("vertex", "label.color")
+  label.dist         <- params("vertex", "label.dist")
+  labels             <- params("vertex", "label")
+
+  edge.color         <- params("edge", "color")
+  edge.width         <- params("edge", "width")
+  edge.lty           <- params("edge", "lty")
+  arrow.mode         <- params("edge", "arrow.mode")
+  edge.labels        <- params("edge", "label")
+  loop.angle         <- params("edge", "loop.angle")
+  edge.label.font    <- params("edge", "label.font")
+  edge.label.family  <- params("edge", "label.family")
+  edge.label.cex     <- params("edge", "label.cex")
+  edge.label.color   <- params("edge", "label.color")
   
-  # Interpret parameters
-  layout <- i.get.layout(graph, layout, layout.par)
-  vertex.color <- i.get.vertex.color(graph, vertex.color)
-  vertex.frame.color <- i.get.vertex.frame.color(graph, vertex.frame.color)
-  vertex.size <- (1/200) * i.get.vertex.size(graph, vertex.size)
-  edge.color <- i.get.edge.color(graph, edge.color)
-  edge.width <- i.get.edge.width(graph, edge.width)
-  edge.lty <- i.get.edge.lty(graph, edge.lty)
-  label.degree <- i.get.label.degree(graph, label.degree)
-  labels <- i.get.labels(graph, labels)
-  edge.labels <- i.get.edge.labels(graph, edge.labels)
+  layout             <- params("plot", "layout")
+  margin             <- params("plot", "margin")
+  margin <- rep(margin, length=4)
+
+  # the new style parameters can't do this yet
+  arrow.mode         <- i.get.arrow.mode(graph, arrow.mode)
 
   # create the plot
-  xlim <- c(xlim[1]-margin, xlim[2]+margin)
-  ylim <- c(ylim[1]-margin, ylim[2]+margin)
+  maxv <- max(vertex.size)
+  xlim <- c(xlim[1]-margin[2]-maxv, xlim[2]+margin[4]+maxv)
+  ylim <- c(ylim[1]-margin[1]-maxv, ylim[2]+margin[3]+maxv)
   plot(0, 0, type="n", xlab=xlab, ylab=ylab, asp=1, xlim=xlim, ylim=ylim,
-       axes=axes, ...)
+       axes=axes)
 
   # norm layout to (-1, 1)
   layout <- i.layout.norm(layout, -1, 1, -1, 1)
@@ -111,17 +124,24 @@ plot.igraph <- function(x, layout=layout.random, layout.par=list(),
       sapply(dt, function(t) point.on.cubic.bezier(cp, t))
     }
     
-    plot.bezier <- function(cp, points, color, width, arrows, lty) {
+    plot.bezier <- function(cp, points, color, width, arr, lty) {
       p <- compute.bezier( cp, points )
       polygon(p[1,], p[2,], border=color, lwd=width, lty=lty)
-      if (arrows) {
-        arrows(p[1,ncol(p)-1], p[2,ncol(p)-1], p[1,ncol(p)], p[2,ncol(p)],
-               length=.2, angle=20, col=color, lwd=width)
+      if (arr==1 || arr==3) {
+        igraph.Arrows(p[1,ncol(p)-1], p[2,ncol(p)-1], p[1,ncol(p)], p[2,ncol(p)],
+                      sh.col=color, h.col=color,
+                      sh.lwd=width, h.lwd=width, open=FALSE, code=2)
+      }
+      if (arr==2 || arr==3) {
+        igraph.Arrows(p[1,2], p[2,2], p[1,1], p[2,1],
+                      sh.col=color, h.col=color,
+                      sh.lwd=width, h.lwd=width, open=FALSE, code=2)
       }
     }
     
     loop <- function(x0, y0, cx=x0, cy=y0, color, angle=0, label=NA,
-                     width=1, arrows=FALSE, lty=1) {
+                     width=1, arr=2, lty=1) {
+
       rad <- angle/180*pi
       center <- c(cx,cy)
       cp <- matrix( c(x0,y0, x0+.4,y0+.2, x0+.4,y0-.2, x0,y0),
@@ -134,7 +154,7 @@ plot.igraph <- function(x, layout=layout.random, layout.par=list(),
       cp[,1] <- cx+r*cos(phi)
       cp[,2] <- cy+r*sin(phi)
 
-      plot.bezier(cp, 50, color, width, arrows=arrows, lty=lty)
+      plot.bezier(cp, 50, color, width, arr=arr, lty=lty)
 
       if (!is.na(label)) {
         lx <- x0+.3
@@ -147,46 +167,57 @@ plot.igraph <- function(x, layout=layout.random, layout.par=list(),
         lx <- cx+r*cos(phi)
         ly <- cy+r*sin(phi)
 
-        text(lx, ly, label, col=label.color)
+        text(lx, ly, label, col=edge.label.color, font=edge.label.font,
+             family=edge.label.family, cex=edge.label.cex)
       }
     }
 
     ec <- edge.color
     if (length(ec)>1) { ec <- ec[loops.e] }
     vs <- vertex.size
-    if (length(vertex.size)>1) { vs <- vs[loops.e] }
+    if (length(vertex.size)>1) { vs <- vs[loops.v] }
     ew <- edge.width
     if (length(edge.width)>1) { ew <- ew[loops.e] }
     la <- loop.angle
     if (length(loop.angle)>1) { la <- la[loops.e] }
     lty <- edge.lty
     if (length(edge.lty)>1) { lty <- lty[loops.e] }
+    arr <- arrow.mode
+    if (length(arrow.mode)>1) { arr <- arrow.mode[loops.e] }
     xx0 <- layout[loops.v,1] + cos(la/180*pi) * vs
     yy0 <- layout[loops.v,2] + sin(la/180*pi) * vs
     mapply(loop, xx0, yy0,
            color=ec, angle=la, label=loop.labels, lty=lty,
-           width=ew, MoreArgs=list(arrows=is.directed(graph)))
-
+           width=ew, arr=arr)
   }
   
-  arrow.code <- ifelse(is.directed(graph), 2, 0)
   if (length(x0) != 0) {
     if (length(edge.color)>1) { edge.color <- edge.color[nonloops.e] }
     if (length(edge.width)>1) { edge.width <- edge.width[nonloops.e] }
     if (length(edge.lty)>1) { edge.lty <- edge.lty[nonloops.e] }
-    arrows(x0, y0, x1, y1, angle=20, length=0.2, code=arrow.code,
-           col=edge.color, lwd=edge.width, lty=edge.lty)
-    if (any(edge.lty != 1)) {
-      pp <- atan2(y0-y1, x0-x1)
-      xx <- x1+0.01*cos(pp)
-      yy <- y1+0.01*sin(pp)
-      arrows(xx, yy, x1, y1, angle=20, length=0.2, code=arrow.code,
-             col=edge.color, lwd=edge.width, lty=1)
+    if (length(arrow.mode)>1) { arrow.mode <- arrow.mode[nonloops.e] }
+    if (length(unique(arrow.mode))==1) {
+      igraph.Arrows(x0, y0, x1, y1, h.col=edge.color, sh.col=edge.color,
+                    sh.lwd=edge.width, h.lwd=edge.width, open=FALSE, code=arrow.mode,
+                    sh.lty=edge.lty, h.lty=1)
+    } else {
+      ## different kinds of arrow drawn separately as 'arrows' cannot
+      ## handle a vector as the 'code' argument
+      for (code in 0:3) {
+        valid <- arrow.mode==code
+        if (!any(valid)) { next }
+        ec <- edge.color ; if (length(ec)>1) { ec <- ec[valid] }
+        ew <- edge.width ; if (length(ew)>1) { ew <- ew[valid] }
+        el <- edge.lty   ; if (length(el)>1) { el <- el[valid] }        
+        igraph.Arrows(x0[valid], y0[valid], x1[valid], y1[valid],
+                      code=code, sh.col=ec, h.col=ec, sh.lwd=ew, h.lwd=ew,
+                      h.lty=1, sh.lty=el, open=FALSE)
+      }
     }
     x <- (x0+x1)/2
     y <- (y0+y1)/2
-    if (!is.null(label.font)) par(family=label.font)
-    text(x, y, labels=edge.labels, col=label.color)
+    text(x, y, labels=edge.labels, col=edge.label.color, family=edge.label.family,
+         font=edge.label.font, cex=edge.label.cex)
   }
   
   rm(x0, y0, x1, y1)
@@ -197,36 +228,21 @@ plot.igraph <- function(x, layout=layout.random, layout.par=list(),
           circles=vertex.size, add=TRUE, inches=FALSE)
 
   # add the labels
-  if (!is.null(label.font)) par(family=label.font)
   par(xpd=TRUE)
   x <- layout[,1]+label.dist*cos(-label.degree)* 
     (vertex.size+6*8*log10(nchar(labels)+1))/200
   y <- layout[,2]+label.dist*sin(-label.degree)*
     (vertex.size+6*8*log10(nchar(labels)+1))/200
-  text(x, y, labels=labels, col=label.color)
+  text(x, y, labels=labels, col=label.color, family=label.family, font=label.font,
+       cex=label.cex)
   rm(x, y)
   invisible(NULL)
 }
 
-rglplot        <- function(x, layout=layout.random, layout.par=list(),
-                           labels=NULL, label.color="darkblue",
-                           label.font=NULL, label.degree=-pi/4, label.dist=0,
-                           vertex.color="SkyBlue2", vertex.size=15,
-                           edge.color="darkgrey", edge.width=1,
-                           edge.labels=NA, 
-                           # SPECIFIC: #####################################
-                           ...)
+rglplot        <- function(x, ...)
   UseMethod("rglplot", x)
 
-
-rglplot.igraph <- function(x, layout=layout.random, layout.par=list(),
-                           labels=NULL, label.color="darkblue",
-                           label.font=NULL, label.degree=-pi/4, label.dist=0,
-                           vertex.color="SkyBlue2", vertex.size=15,
-                           edge.color="darkgrey", edge.width=1,
-                           edge.labels=NA, 
-                           # SPECIFIC: #####################################
-                           ...) {
+rglplot.igraph <- function(x, ...) {
 
   require(rgl)
   
@@ -235,64 +251,329 @@ rglplot.igraph <- function(x, layout=layout.random, layout.par=list(),
     stop("Not a graph object")
   }
 
-  # Interpret parameters
-  layout <- i.get.layout(graph, layout, layout.par)
-  vertex.color <- i.get.vertex.color(graph, vertex.color)
-  vertex.size <- (1/200) * i.get.vertex.size(graph, vertex.size)
-  edge.color <- i.get.edge.color(graph, edge.color)
-  edge.width <- i.get.edge.width(graph, edge.width)
-  label.degree <- i.get.label.degree(graph, label.degree)
-  labels <- i.get.labels(graph, labels)
-  edge.labels <- i.get.edge.labels(graph, edge.labels)
+  create.edge <- function(v1, v2, r1, r2, ec, ew, am) {
+    ## these could also be parameters:
+    aw <- 3*ew                      # arrow width
+    al <- 4*ew                      # arrow length    
+    
+    dist <- sqrt(sum((v2-v1)^2))   # distance of the centers
 
+    if (am==0) {
+      edge <- qmesh3d(c(-ew/2,-ew/2,dist,1, ew/2,-ew/2,dist,1, ew/2,ew/2,dist,1,
+                        -ew/2,ew/2,dist,1,  -ew/2,-ew/2,0,1, ew/2,-ew/2,0,1,
+                        ew/2,ew/2,0,1, -ew/2,ew/2,0,1),
+                      c(1,2,3,4, 5,6,7,8, 1,2,6,5, 2,3,7,6, 3,4,8,7, 4,1,5,8))
+    } else if (am==1) {
+      edge <- qmesh3d(c(-ew/2,-ew/2,dist,1, ew/2,-ew/2,dist,1,
+                        ew/2,ew/2,dist,1, -ew/2,ew/2,dist,1,
+                        -ew/2,-ew/2,al+r1,1, ew/2,-ew/2,al+r1,1,
+                        ew/2,ew/2,al+r1,1, -ew/2,ew/2,al+r1,1,
+                        -aw/2,-aw/2,al+r1,1, aw/2,-aw/2,al+r1,1,
+                        aw/2,aw/2,al+r1,1, -aw/2,aw/2,al+r1,1, 0,0,r1,1),
+                      c(1,2,3,4, 5,6,7,8, 1,2,6,5, 2,3,7,6, 3,4,8,7, 4,1,5,8,
+                        9,10,11,12, 9,12,13,13, 9,10,13,13, 10,11,13,13,
+                        11,12,13,13))
+    } else if (am==2) {
+      box <- dist-r2-al
+      edge <- qmesh3d(c(-ew/2,-ew/2,box,1, ew/2,-ew/2,box,1, ew/2,ew/2,box,1,
+                        -ew/2,ew/2,box,1,  -ew/2,-ew/2,0,1, ew/2,-ew/2,0,1,
+                        ew/2,ew/2,0,1, -ew/2,ew/2,0,1,
+                        -aw/2,-aw/2,box,1, aw/2,-aw/2,box,1, aw/2,aw/2,box,1,
+                        -aw/2,aw/2,box,1, 0,0,box+al,1),
+                      c(1,2,3,4, 5,6,7,8, 1,2,6,5, 2,3,7,6, 3,4,8,7, 4,1,5,8,
+                        9,10,11,12, 9,12,13,13, 9,10,13,13, 10,11,13,13,
+                        11,12,13,13))
+    } else {
+      edge <- qmesh3d(c(-ew/2,-ew/2,dist-al-r2,1, ew/2,-ew/2,dist-al-r2,1,
+                        ew/2,ew/2,dist-al-r2,1, -ew/2,ew/2,dist-al-r2,1,
+                        -ew/2,-ew/2,r1+al,1, ew/2,-ew/2,r1+al,1,
+                        ew/2,ew/2,r1+al,1, -ew/2,ew/2,r1+al,1,
+                        -aw/2,-aw/2,dist-al-r2,1, aw/2,-aw/2,dist-al-r2,1,
+                        aw/2,aw/2,dist-al-r2,1, -aw/2,aw/2,dist-al-r2,1,
+                        -aw/2,-aw/2,r1+al,1, aw/2,-aw/2,r1+al,1,
+                        aw/2,aw/2,r1+al,1, -aw/2,aw/2,r1+al,1,
+                        0,0,dist-r2,1, 0,0,r1,1),
+                      c(1,2,3,4, 5,6,7,8, 1,2,6,5, 2,3,7,6, 3,4,8,7, 4,1,5,8,
+                        9,10,11,12, 9,12,17,17, 9,10,17,17, 10,11,17,17,
+                        11,12,17,17,
+                        13,14,15,16, 13,16,18,18, 13,14,18,18, 14,15,18,18,
+                        15,16,18,18))
+    }
+      
+
+    ## rotate and shift it to its position
+    phi<- -atan2(v2[2]-v1[2],v1[1]-v2[1])-pi/2
+    psi<- acos((v2[3]-v1[3])/dist)    
+    rot1 <- rbind(c(1,0,0),c(0,cos(psi),sin(psi)), c(0,-sin(psi),cos(psi)))
+    rot2 <- rbind(c(cos(phi),sin(phi),0),c(-sin(phi),cos(phi),0), c(0,0,1))
+    rot <- rot1 %*% rot2
+    edge <- transform3d(edge, rotationMatrix(matrix=rot))
+    edge <- transform3d(edge, translationMatrix(v1[1], v1[2], v1[3]))
+
+    ## we are ready 
+    shade3d(edge, col=ec)
+  }
+  
+  create.loop <- function(v, r, ec, ew, am, la, la2) {
+    aw <- 3*ew
+    al <- 4*ew
+    wi <- aw*2                          # size of the loop
+    wi2 <- wi+aw-ew                     # size including the arrow heads
+    hi <- al*2+ew*2
+    gap <- wi-2*ew
+
+    if (am==0) {
+      edge <- qmesh3d(c(-wi/2,-ew/2,0,1, -gap/2,-ew/2,0,1,
+                        -gap/2,ew/2,0,1, -wi/2,ew/2,0,1,
+                        -wi/2,-ew/2,hi-ew+r,1, -gap/2,-ew/2,hi-ew+r,1,
+                        -gap/2,ew/2,hi-ew+r,1, -wi/2,ew/2,hi-ew+r,1,
+                        wi/2,-ew/2,0,1, gap/2,-ew/2,0,1,
+                        gap/2,ew/2,0,1, wi/2,ew/2,0,1,
+                        wi/2,-ew/2,hi-ew+r,1, gap/2,-ew/2,hi-ew+r,1,
+                        gap/2,ew/2,hi-ew+r,1, wi/2,ew/2,hi-ew+r,1,
+                        -wi/2,-ew/2,hi+r,1, -wi/2,ew/2,hi+r,1,
+                        wi/2,-ew/2,hi+r,1, wi/2,ew/2,hi+r,1
+                        ),
+                      c(1,2,3,4, 5,6,7,8, 1,2,6,5, 2,3,7,6, 3,4,8,7,
+                        1,4,18,17,
+                        9,10,11,12, 13,14,15,16, 9,10,14,13, 10,11,15,14,
+                        11,12,16,15, 9,12,20,19,
+                        5,13,19,17, 17,18,20,19, 8,16,20,18, 6,7,15,14
+                        ))
+    } else if (am==1 || am==2) {
+      edge <- qmesh3d(c(-wi/2,-ew/2,r+al,1, -gap/2,-ew/2,r+al,1,
+                        -gap/2,ew/2,r+al,1, -wi/2,ew/2,r+al,1,
+                        -wi/2,-ew/2,hi-ew+r,1, -gap/2,-ew/2,hi-ew+r,1,
+                        -gap/2,ew/2,hi-ew+r,1, -wi/2,ew/2,hi-ew+r,1,
+                        wi/2,-ew/2,0,1, gap/2,-ew/2,0,1,
+                        gap/2,ew/2,0,1, wi/2,ew/2,0,1,
+                        wi/2,-ew/2,hi-ew+r,1, gap/2,-ew/2,hi-ew+r,1,
+                        gap/2,ew/2,hi-ew+r,1, wi/2,ew/2,hi-ew+r,1,
+                        -wi/2,-ew/2,hi+r,1, -wi/2,ew/2,hi+r,1,
+                        wi/2,-ew/2,hi+r,1, wi/2,ew/2,hi+r,1,
+                        # the arrow
+                        -wi2/2,-aw/2,r+al,1, -wi2/2+aw,-aw/2,r+al,1,
+                        -wi2/2+aw,aw/2,r+al,1, -wi2/2,aw/2,r+al,1,
+                        -wi2/2+aw/2,0,r,1                   
+                        ),
+                      c(1,2,3,4, 5,6,7,8, 1,2,6,5, 2,3,7,6, 3,4,8,7,
+                        1,4,18,17,
+                        9,10,11,12, 13,14,15,16, 9,10,14,13, 10,11,15,14,
+                        11,12,16,15, 9,12,20,19,
+                        5,13,19,17, 17,18,20,19, 8,16,20,18, 6,7,15,14,
+                        # the arrow
+                        21,22,23,24, 21,22,25,25, 22,23,25,25, 23,24,25,25,
+                        21,24,25,25
+                        ))
+    } else if (am==3) {
+      edge <- qmesh3d(c(-wi/2,-ew/2,r+al,1, -gap/2,-ew/2,r+al,1,
+                        -gap/2,ew/2,r+al,1, -wi/2,ew/2,r+al,1,
+                        -wi/2,-ew/2,hi-ew+r,1, -gap/2,-ew/2,hi-ew+r,1,
+                        -gap/2,ew/2,hi-ew+r,1, -wi/2,ew/2,hi-ew+r,1,
+                        wi/2,-ew/2,r+al,1, gap/2,-ew/2,r+al,1,
+                        gap/2,ew/2,r+al,1, wi/2,ew/2,r+al,1,
+                        wi/2,-ew/2,hi-ew+r,1, gap/2,-ew/2,hi-ew+r,1,
+                        gap/2,ew/2,hi-ew+r,1, wi/2,ew/2,hi-ew+r,1,
+                        -wi/2,-ew/2,hi+r,1, -wi/2,ew/2,hi+r,1,
+                        wi/2,-ew/2,hi+r,1, wi/2,ew/2,hi+r,1,
+                        # the arrows
+                        -wi2/2,-aw/2,r+al,1, -wi2/2+aw,-aw/2,r+al,1,
+                        -wi2/2+aw,aw/2,r+al,1, -wi2/2,aw/2,r+al,1,
+                        -wi2/2+aw/2,0,r,1,
+                        wi2/2,-aw/2,r+al,1, wi2/2-aw,-aw/2,r+al,1,
+                        wi2/2-aw,aw/2,r+al,1, wi2/2,aw/2,r+al,1,
+                        wi2/2-aw/2,0,r,1                   
+                        ),
+                      c(1,2,3,4, 5,6,7,8, 1,2,6,5, 2,3,7,6, 3,4,8,7,
+                        1,4,18,17,
+                        9,10,11,12, 13,14,15,16, 9,10,14,13, 10,11,15,14,
+                        11,12,16,15, 9,12,20,19,
+                        5,13,19,17, 17,18,20,19, 8,16,20,18, 6,7,15,14,
+                        # the arrows
+                        21,22,23,24, 21,22,25,25, 22,23,25,25, 23,24,25,25,
+                        21,24,25,25,
+                        26,27,28,29, 26,27,30,30, 27,28,30,30, 28,29,30,30,
+                        26,29,30,30
+                        ))
+    }
+
+    # rotate and shift to its position
+    rot1 <- rbind(c(1,0,0),c(0,cos(la2),sin(la2)), c(0,-sin(la2),cos(la2)))
+    rot2 <- rbind(c(cos(la),sin(la),0),c(-sin(la),cos(la),0), c(0,0,1))
+    rot <- rot1 %*% rot2
+    edge <- transform3d(edge, rotationMatrix(matrix=rot))
+    edge <- transform3d(edge, translationMatrix(v[1], v[2], v[3]))
+
+    ## we are ready
+    shade3d(edge, col=ec)
+  }
+  
+  # Visual parameters
+  params <- i.parse.plot.params(graph, list(...))
+  labels <- params("vertex", "label")
+  label.color <- params("vertex", "label.color")
+  label.font <- params("vertex", "label.font")
+  label.degree <- params("vertex", "label.degree")
+  label.dist <- params("vertex", "label.dist")
+  vertex.color <- params("vertex", "color")
+  vertex.size <- (1/200) * params("vertex", "size")
+  loop.angle <- params("edge", "loop.angle")
+  loop.angle2 <- params("edge", "loop.angle2")
+
+  edge.color <- params("edge", "color")
+  edge.width <- (1/200) * params("edge", "width")
+  edge.labels <- params("edge","label")
+  arrow.mode <- params("edge","arrow.mode")
+  
+  layout <- params("plot", "layout")
+
+  # the new style parameters can't do this yet
+  arrow.mode         <- i.get.arrow.mode(graph, arrow.mode)
+  
   # norm layout to (-1, 1)
+  if (ncol(layout)==2) { layout <- cbind(layout, 0) }
   layout <- i.layout.norm(layout, -1, 1, -1, 1, -1, 1)
   
-  # add the edges
-  # TODO: loops
+  # add the edges, the loops are handled separately
   el <- get.edgelist(graph, names=FALSE)
-  x0 <- layout[,1][el[,1]+1]
-  y0 <- layout[,2][el[,1]+1]
-  z0 <- layout[,3][el[,1]+1]
-  x1 <- layout[,1][el[,2]+1]
-  y1 <- layout[,2][el[,2]+1]
-  z1 <- layout[,3][el[,2]+1]
-
-  # we do this for undirected graphs also because some
-  # graphics drivers do not handle 'depth' properly (or at all)
-  if (length(vertex.size)!=1) {
-    vsize.from <- vertex.size[get.edgelist(graph)[,1]+1]
-    vsize.to   <- vertex.size[get.edgelist(graph)[,2]+1]
-  } else {
-    vsize.from <- vsize.to <- vertex.size
-  }
-  rm(el)
   
-  rgl.lines(as.numeric(t(matrix( c(x0,x1), nc=2))),
-            as.numeric(t(matrix( c(y0,y1), nc=2))),
-            as.numeric(t(matrix( c(z0,z1), nc=2))),
-            col=edge.color, size=edge.width)
+  # It is faster this way
+  par3d(skipRedraw=TRUE)
 
+  # edges first
+  for (i in seq(length=nrow(el))) {
+    from <- el[i,1]
+    to   <- el[i,2]
+    v1 <- layout[from+1,]
+    v2 <- layout[to+1,]
+    am <- arrow.mode; if (length(am)>1) { am <- am[i] }
+    ew <- edge.width; if (length(ew)>1) { ew <- ew[i] }
+    ec <- edge.color; if (length(ec)>1) { ec <- ec[i] }
+    r1 <- vertex.size; if (length(r1)>1) { r1 <- r1[from+1] }
+    r2 <- vertex.size; if (length(r2)>1) { r2 <- r2[to+1] }
+
+    if (from!=to) {
+      create.edge(v1,v2,r1,r2,ec,ew,am)
+    } else {
+      la <- loop.angle; if (length(la)>1) { la <- la[i] }
+      la2 <- loop.angle2; if (length(la2)>1) { la2 <- la2[i] }      
+      create.loop(v1,r1,ec,ew,am,la,la2)
+    }
+    
+  }
+      
   # add the vertices
   if (length(vertex.size)==1) { vertex.size <- rep(vertex.size, nrow(layout)) }
   rgl.spheres(layout[,1], layout[,2], layout[,3], radius=vertex.size,
               col=vertex.color)
 
-  # add the labels
-  if (!is.na(labels)) {
-    x <- layout[,1]+label.dist*cos(-label.degree)* 
-      (vertex.size+6*10*log10(nchar(labels)+1))/200
-    y <- layout[,2]+label.dist*sin(-label.degree)*
-      (vertex.size+6*10*log10(nchar(labels)+1))/200
-    z <- layout[,3]
-    rgl.texts(x,y,z, labels, col=label.color, justify="left")
-  }
-  
-  if (!is.na(edge.labels)) {
+  # add the labels, 'l1' is a stupid workaround of a mysterious rgl bug
+  labels[is.na(labels)] <- ""
+  x <- layout[,1]+label.dist*cos(-label.degree)* 
+    (vertex.size+6*10*log10(nchar(labels)+1))/200
+  y <- layout[,2]+label.dist*sin(-label.degree)*
+    (vertex.size+6*10*log10(nchar(labels)+1))/200
+  z <- layout[,3]
+  l1 <- labels[1]
+  labels[1] <- ""
+  rgl.texts(x,y,z, labels, col=label.color, adj=0)
+  rgl.texts(c(0,x[1]), c(0,y[1]), c(0,z[1]),
+            c("",l1), col=c(label.color[1],label.color[1]), adj=0)
+
+  edge.labels[is.na(edge.labels)] <- ""
+  if (any(edge.labels != "")) {
+    x0 <- layout[,1][el[,1]+1]
+    x1 <- layout[,1][el[,2]+1]
+    y0 <- layout[,2][el[,1]+1]
+    y1 <- layout[,2][el[,2]+1]
+    z0 <- layout[,3][el[,1]+1]
+    z1 <- layout[,4][el[,2]+1]
     rgl.texts((x0+x1)/2, (y0+y1)/2, (z0+z1)/2, edge.labels,
               col=label.color)
   }
+
+  # draw everything
+  par3d(skipRedraw=FALSE)
   
   invisible(NULL)
 }
+
+# This is taken from the IDPmisc package,
+# slightly modified: code argument added
+
+igraph.Arrows <-
+function (x1, y1, x2, y2,
+                    code=2,
+                    size= 1,     
+                    width= 1.2/4/cin,
+                    open=TRUE,
+                    sh.adj=0.1, 
+                    sh.lwd=1,
+                    sh.col=if(is.R()) par("fg") else 1,
+                    sh.lty=1,
+                    h.col=sh.col,
+                    h.col.bo=sh.col,
+                    h.lwd=sh.lwd,
+                    h.lty=sh.lty)
+  ## Author: Andreas Ruckstuhl, refined by Rene Locher
+  ## Version: 2005-10-17
+{
+  cin <- size * par("cin")[2]
+  uin <- if (is.R()) 
+    1/xyinch()
+  else par("uin")
+  x <- sqrt(seq(0, cin^2, length = floor(35 * cin) + 2))
+  delta <-  sqrt(h.lwd)*par("cin")[2]*0.005      ## has been 0.05
+  x.arr <- c(-rev(x), -x)
+  wx2 <- width * x^2
+  y.arr <- c(-rev(wx2 + delta), wx2 + delta)
+  deg.arr <- c(atan2(y.arr, x.arr), NA)
+  r.arr <- c(sqrt(x.arr^2 + y.arr^2), NA)
+  
+  ## forward arrowhead
+  theta <- atan2((y2 - y1) * uin[2], (x2 - x1) * uin[1])
+  lx <- length(x1)
+  Rep <- rep(length(deg.arr), lx)
+  p.x2 <- rep(x2, Rep)
+  p.y2 <- rep(y2, Rep)
+  ttheta <- rep(theta, Rep) + rep(deg.arr, lx)
+  r.arr <- rep(r.arr, lx)  
+  if (code %in% c(2,3)) {
+    if(open) lines((p.x2 + r.arr * cos(ttheta)/uin[1]),
+                   (p.y2 + r.arr*sin(ttheta)/uin[2]), 
+                   lwd=h.lwd, col = h.col.bo, lty=h.lty) else
+    polygon(p.x2 + r.arr * cos(ttheta)/uin[1], p.y2 + r.arr*sin(ttheta)/uin[2], 
+            col = h.col, lwd=h.lwd,
+            border=h.col.bo, lty=h.lty)
+  }
+  
+  ## shaft
+  r.seg <- rep(cin*sh.adj, lx)
+  th.seg <- theta + rep(atan2(0, -cin), lx)
+  segments(x1, y1, x2+r.seg*cos(th.seg)/uin[1], y2+r.seg*sin(th.seg)/uin[2], 
+           lwd=sh.lwd, col=sh.col, lty=sh.lty)
+
+  ## backward arrow head
+  if (code %in% c(1,3)) {
+    tmp <- x1 ; x1 <- x2 ; x2 <- tmp
+    tmp <- y1 ; y1 <- y2 ; y2 <- tmp
+    theta <- atan2((y2 - y1) * uin[2], (x2 - x1) * uin[1])
+    lx <- length(x1)
+    Rep <- rep(length(deg.arr), lx)
+    p.x2 <- rep(x2, Rep)
+    p.y2 <- rep(y2, Rep)
+    ttheta <- rep(theta, Rep) + rep(deg.arr, lx)
+    r.arr <- rep(r.arr, lx)
+
+    if(open) lines((p.x2 + r.arr * cos(ttheta)/uin[1]),
+                   (p.y2 + r.arr*sin(ttheta)/uin[2]), 
+                   lwd=h.lwd, col = h.col.bo, lty=h.lty) else
+    polygon(p.x2 + r.arr * cos(ttheta)/uin[1], p.y2 + r.arr*sin(ttheta)/uin[2], 
+            col = h.col, lwd=h.lwd,
+            border=h.col.bo, lty=h.lty)
+    r.seg <- rep(cin*sh.adj, lx)
+    th.seg <- theta + rep(atan2(0, -cin), lx)
+    
+  }
+} # Arrows
 

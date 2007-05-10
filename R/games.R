@@ -80,7 +80,7 @@ ba.game <- function(n, power=1, m=NULL, out.dist=NULL, out.seq=NULL,
     .Call("R_igraph_recent_degree_game", n, power, time.window, m, out.seq,
           out.pref, as.numeric(zero.appeal), directed,
           PACKAGE="igraph")
-  } else if (power==1) {    
+  } else if (power==1 && zero.appeal==1) {    
     .Call("R_igraph_barabasi_game", n, m, out.seq, out.pref, directed,
           PACKAGE="igraph")
   } else {
@@ -288,5 +288,38 @@ watts.strogatz.game <- function(dim, size, nei, p) {
   .Call("R_igraph_watts_strogatz_game", as.numeric(dim), as.numeric(size),
         as.numeric(nei), as.numeric(p),
         PACKAGE="igraph")
+}
+
+lastcit.game <- function(n, edges=1, agebins=n/7100, pref=(1:(agebins+1))^-3,
+                         directed=TRUE) {
+  .Call("R_igraph_lastcit_game", as.numeric(n), as.numeric(edges), as.numeric(agebins),
+        as.numeric(pref), as.logical(directed),
+        PACKAGE="igraph")
+}
+
+cited.type.game <- function(n, edges=1, types=rep(0, n),
+                            pref=rep(1, length(types)),
+                            directed=TRUE, attr=TRUE) {
+  res <- .Call("R_igraph_cited_type_game", as.numeric(n), as.numeric(edges),
+               as.numeric(types), as.numeric(pref), as.logical(directed),
+               PACKAGE="igraph")
+  if (attr) {
+    V(res)$type <- types
+  }
+  res
+}
+
+citing.cited.type.game <- function(n, edges=1, types=rep(0, n),
+                                   pref=matrix(1, nr=length(types), nc=length(types)),
+                                   directed=TRUE, attr=TRUE) {
+  pref <- structure(as.numeric(pref), dim=dim(pref))
+  res <- .Call("R_igraph_citing_cited_type_game", as.numeric(n),
+               as.numeric(types), pref, as.numeric(edges),
+               as.logical(directed),
+               PACKAGE="igraph")
+  if (attr) {
+    V(res)$type <- types
+  }
+  res
 }
 
