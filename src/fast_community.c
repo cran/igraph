@@ -26,10 +26,22 @@
 
 /* #define IGRAPH_FASTCOMM_DEBUG */
 
+#ifdef _MSC_VER
+/* MSVC does not support variadic macros */
+void debug(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
 #ifdef IGRAPH_FASTCOMM_DEBUG
-#define debug(...) fprintf(stderr, __VA_ARGS__)
+    vfprintf(stderr, fmt, args);
+#endif
+    va_end(args);
+}
 #else
-#define debug(...) 
+#  ifdef IGRAPH_FASTCOMM_DEBUG
+#    define debug(...) fprintf(stderr, __VA_ARGS__)
+#  else
+#    define debug(...) 
+#  endif
 #endif
 
 /*
@@ -754,6 +766,7 @@ int igraph_community_fastgreedy(const igraph_t *graph,
 	
 	no_of_joins++;
   }
+  igraph_progress("fast greedy community detection", 100.0, 0);
 
   if (modularity) VECTOR(*modularity)[no_of_joins] = q;
 
