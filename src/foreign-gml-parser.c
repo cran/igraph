@@ -177,7 +177,7 @@ typedef union YYSTYPE
    void *tree;
    double real;
 }
-/* Line 193 of yacc.c.  */
+/* Line 187 of yacc.c.  */
 #line 182 "foreign-gml-parser.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

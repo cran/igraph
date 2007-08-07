@@ -284,7 +284,7 @@ typedef union YYSTYPE
     int len;
   } string;  
 }
-/* Line 193 of yacc.c.  */
+/* Line 187 of yacc.c.  */
 #line 289 "foreign-pajek-parser.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
