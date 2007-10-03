@@ -1,3 +1,38 @@
+2007-12-14  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/print.R (print.igraph) : better printing of
+	attributes
+
+	* interfaces/R/igraph/R/CohesiveBlocks.R (max.cohesion, maxcohesion) : 
+	renamed
+
+	* interface/R/igraph/R/CohesiveBlocks.R (layout.byblock, dyadAsymmetry) :
+	removed
+	(cohesive.blocks, recalc.tree.bgraph, print.bgraph, plot.bgraph) :
+	many small modifications
+	(is.bgraph) : added
+	
+	* interfaces/R/igraph/R/CohesiveBlocks.R 
+	* interfaces/R/igraph/R/layout.R (layout.mds, layout.svd)
+	(piecewise.layout) : moved
+
+2007-12-13  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/CohesiveBlocks.R (cohesive.blocks)
+	(recalc.tree.bgraph, print.bgraph, plot.bgraph, max.cohesion)
+	(plot.kCore.bgraph, write.pajek.bgraph, write.pajek.kCore.bgraph)
+	(piecewise.layout, expand.layout, layout.byblock, dyadAsymmetry) : added 
+
+	* interfaces/R/igraph/R/iterators.R ($.igraph, $<-.igraph) : added
+
+	* interfaces/R/igraph/R/print.R (print.igraph) : use the 'print' method
+	of complex attributes
+
+2007-10-17  Gabor Csardi  <csardi@rmki.kfki.hu>
+  
+	* interfaces/R/src/rinterface.c.in (R_igraph_vectorlist_to_SEXP)
+	(R_igraph_vectorlist_destroy) : added
+
 2007-08-09  Gabor Csardi  <csardi@rmki.kfki.hu>
 
 	* interfaces/R/igraph/src/rinterface.c
