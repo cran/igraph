@@ -1,6 +1,6 @@
 Package: igraph
-Version: 0.4.3
-Date: Aug 7, 2007
+Version: 0.4.4
+Date: Oct 3, 2007
 Title:  Routines for simple graphs, network analysis.
 Author: Gabor Csardi <csardi@rmki.kfki.hu>
 Maintainer: Gabor Csardi <csardi@rmki.kfki.hu>
@@ -11,4 +11,4 @@ Depends: stats
 Suggests: stats4, rgl, tcltk
 License: GPL version 2 or later (June, 1991)
 URL: http://cneurocvs.rmki.kfki.hu/igraph
-Packaged: Thu Aug  9 17:59:04 2007; csardi
+Packaged: Wed Oct  3 17:09:38 2007; csardi
