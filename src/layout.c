@@ -267,7 +267,7 @@ int igraph_layout_fruchterman_reingold(const igraph_t *graph, igraph_matrix_t *r
   for(i=niter;i>0;i--) {
     /* Report progress in approx. every 100th step */
     if (i%10 == 0)
-      igraph_progress("Fruchterman-Reingold layout: ",
+      IGRAPH_PROGRESS("Fruchterman-Reingold layout: ",
 		      100.0-100.0*i/niter, NULL);
     
     /* Set the temperature (maximum move/iteration) */
@@ -329,7 +329,7 @@ int igraph_layout_fruchterman_reingold(const igraph_t *graph, igraph_matrix_t *r
     }
   }
 
-  igraph_progress("Fruchterman-Reingold layout: ", 100.0, NULL);
+  IGRAPH_PROGRESS("Fruchterman-Reingold layout: ", 100.0, NULL);
   
   igraph_eit_destroy(&edgeit);
   igraph_matrix_destroy(&dxdy);
@@ -412,7 +412,7 @@ int igraph_layout_fruchterman_reingold_3d(const igraph_t *graph,
   /*Run the annealing loop*/
   for(i=niter;i>=0;i--){
     if (i%10 == 0)
-      igraph_progress("3D Fruchterman-Reingold layout: ",
+      IGRAPH_PROGRESS("3D Fruchterman-Reingold layout: ",
 		      100.0-100.0*i/niter, NULL);
 
     /*Set the temperature (maximum move/iteration)*/
@@ -488,7 +488,7 @@ int igraph_layout_fruchterman_reingold_3d(const igraph_t *graph,
     }
   }
 
-  igraph_progress("3D Fruchterman-Reingold layout: ", 100.0, NULL);
+  IGRAPH_PROGRESS("3D Fruchterman-Reingold layout: ", 100.0, NULL);
   
   igraph_matrix_destroy(&dxdydz);
   igraph_eit_destroy(&edgeit);
@@ -559,7 +559,7 @@ int igraph_layout_kamada_kawai(const igraph_t *graph, igraph_matrix_t *res,
   for(i=0;i<niter;i++){
     /* Report progress in approx. every 100th step */
     if (i%10 == 0)
-      igraph_progress("Kamada-Kawai layout: ",
+      IGRAPH_PROGRESS("Kamada-Kawai layout: ",
 		      100.0*i/niter, NULL);
     /*Update each vertex*/
     for(j=0;j<n;j++){
@@ -591,7 +591,7 @@ int igraph_layout_kamada_kawai(const igraph_t *graph, igraph_matrix_t *res,
     temp*=coolexp;
   }
 
-  igraph_progress("Kamada-Kawai layout: ", 100.0, NULL);
+  IGRAPH_PROGRESS("Kamada-Kawai layout: ", 100.0, NULL);
 
   RNG_END();
   igraph_matrix_destroy(&elen);
@@ -658,7 +658,7 @@ int igraph_layout_kamada_kawai_3d(const igraph_t *graph, igraph_matrix_t *res,
   temp=initemp;
   for(i=0;i<niter;i++){
     if (i%10 == 0)
-      igraph_progress("3D Kamada-Kawai layout: ",
+      IGRAPH_PROGRESS("3D Kamada-Kawai layout: ",
 		      100.0*i/niter, NULL);
 
     /*Update each vertex*/
@@ -696,7 +696,7 @@ int igraph_layout_kamada_kawai_3d(const igraph_t *graph, igraph_matrix_t *res,
     temp*=coolexp;
   }
 
-  igraph_progress("3D Kamada-Kawai layout: ", 100.0, NULL);
+  IGRAPH_PROGRESS("3D Kamada-Kawai layout: ", 100.0, NULL);
 
   RNG_END();
   igraph_matrix_destroy(&elen);
@@ -1084,7 +1084,7 @@ int igraph_layout_grid_fruchterman_reingold(const igraph_t *graph,
 
     /* Report progress */
     if (it%10 == 0) {
-      igraph_progress("Grid based Fruchterman-Reingold layout: ", 
+      IGRAPH_PROGRESS("Grid based Fruchterman-Reingold layout: ", 
 		      (100.0*it)/niter, NULL);
     }
 
@@ -1146,7 +1146,7 @@ int igraph_layout_grid_fruchterman_reingold(const igraph_t *graph,
     
   } /* it<niter */
   
-  igraph_progress("Grid based Fruchterman-Reingold layout: ", 
+  IGRAPH_PROGRESS("Grid based Fruchterman-Reingold layout: ", 
 		  100.0, NULL);
 
   igraph_vector_destroy(&forcex);
@@ -1158,13 +1158,15 @@ int igraph_layout_grid_fruchterman_reingold(const igraph_t *graph,
 
 /* Internal structure for Reingold-Tilford layout */
 struct igraph_i_reingold_tilford_vertex {
-  int parent;        /* Parent node index */
-  int level;         /* Level of the node */
+  long int parent;        /* Parent node index */
+  long int level;         /* Level of the node */
   igraph_real_t offset;     /* X offset from parent node */
-  int left_contour;  /* Next left node of the contour
+  long int left_contour;  /* Next left node of the contour
 		      of the subtree rooted at this node */
-  int right_contour; /* Next right node of the contour
+  long int right_contour; /* Next right node of the contour
 		      of the subtree rooted at this node */
+  igraph_real_t offset_follow_lc;  /* X offset when following the left contour */
+  igraph_real_t offset_follow_rc;  /* X offset when following the right contour */
 };
 
 int igraph_i_layout_reingold_tilford_postorder(struct igraph_i_reingold_tilford_vertex *vdata,
@@ -1238,6 +1240,8 @@ int igraph_layout_reingold_tilford(const igraph_t *graph,
     vdata[i].offset=0.0;
     vdata[i].left_contour=-1;
     vdata[i].right_contour=-1;
+    vdata[i].offset_follow_lc=0.0;
+    vdata[i].offset_follow_rc=0.0;
   }
   vdata[root].parent=root;
   vdata[root].level=0;
@@ -1274,7 +1278,7 @@ int igraph_layout_reingold_tilford(const igraph_t *graph,
   igraph_free(vdata);
   IGRAPH_FINALLY_CLEAN(3);
   
-  igraph_progress("Reingold-Tilford tree layout", 100.0, NULL);
+  IGRAPH_PROGRESS("Reingold-Tilford tree layout", 100.0, NULL);
   
   return 0;
 }
@@ -1296,7 +1300,7 @@ int igraph_i_layout_reingold_tilford_calc_coords(struct igraph_i_reingold_tilfor
 
 int igraph_i_layout_reingold_tilford_postorder(struct igraph_i_reingold_tilford_vertex *vdata,
                                                long int node, long int vcount) {
-  long int i, j, childcount, leftroot, leftrootidx;
+  long int i, j, childcount, leftroot, leftrootidx, leftleftroot;
   igraph_real_t avg;
   
   /* printf("Starting visiting node %d\n", node); */
@@ -1322,77 +1326,93 @@ int igraph_i_layout_reingold_tilford_postorder(struct igraph_i_reingold_tilford_
    * as close to each other as possible. leftroot stores the root of the
    * rightmost subtree of the already placed subtrees - its right contour
    * will be checked against the left contour of the next subtree */
-  leftroot=leftrootidx=-1;
+  leftleftroot=leftroot=leftrootidx=-1;
   avg=0.0;
-  /* printf("Visited node %d and arranged its subtrees\n", node); */
+  /*printf("Visited node %d and arranged its subtrees\n", node);*/
   for (i=0, j=0; i<vcount; i++) {
     if (i == node) continue;
     if (vdata[i].parent == node) {
-      /* printf("  Placing child %d on level %d\n", i, vdata[i].level); */
+      /*printf("  Placing child %d on level %d\n", i, vdata[i].level);*/
       if (leftroot >= 0) {
-	/* Now we will follow the right contour of leftroot and the
-	 * left contour of the subtree rooted at i */
-	long lnode, rnode;
-	igraph_real_t loffset, roffset, minsep, rootsep;
-	lnode = leftroot; rnode = i;
-	minsep = 1;
-	rootsep = vdata[leftroot].offset + minsep;
-	loffset = 0; roffset = minsep;
-	/* printf("    Contour: [%d, %d], offsets: [%lf, %lf], rootsep: %lf\n",
-	 lnode, rnode, loffset, roffset, rootsep);*/
-	while ((lnode >= 0) && (rnode >= 0)) {
-	  /* Step to the next level on the left contour */
-	  if (vdata[lnode].right_contour >= 0) {
-	    lnode = vdata[lnode].right_contour;
-	    loffset += vdata[lnode].offset;
-	  } else {
-	    lnode = vdata[lnode].left_contour;
-	    if (lnode >= 0) loffset += vdata[lnode].offset;
-	  }
-	  /* Step to the next level on the right contour */
-	  if (vdata[rnode].left_contour >= 0) {
-	    rnode = vdata[rnode].left_contour;
-	    roffset += vdata[rnode].offset;
-	  } else if (vdata[rnode].right_contour >= 0) {
-	    rnode = vdata[rnode].right_contour;
-	    roffset += vdata[rnode].offset;
-	  } else {
-	    /* Right subtree ended. If the left subtree is deeper, the
-	     * left contour will continue on the left subtree. We can
-	     * use only lnode here, since it has already been advanced
-	     * to the next level in the previous if statement */
-	    vdata[rnode].left_contour = lnode;
-	    vdata[rnode].right_contour = lnode;
-	    rnode = -1;
-	    /* printf("      Right subtree ended, continuing its contours to %d\n", vdata[rnode].left_contour); */
-	  }
-	  /* printf("    Contour: [%d, %d], offsets: [%lf, %lf], rootsep: %lf\n", 
-	   lnode, rnode, loffset, roffset, rootsep);*/
-	  
-	  /* Push subtrees away if necessary */
-	  if ((lnode >= 0) && (rnode >= 0) && (roffset - loffset < minsep)) {
-	    /* printf("    Pushing right subtree away by %lf\n", minsep-roffset+loffset); */
-	    rootsep += minsep-roffset+loffset;
-	    roffset = loffset+minsep;
-	  }
-	}
-	/* printf("  Offset of subtree with root node %d will be %lf\n", i, rootsep); */
-	vdata[i].offset = rootsep;
-	vdata[node].right_contour=i;
-	avg = (avg*j)/(j+1) + rootsep/(j+1);
-	leftrootidx=j;
-	leftroot=i;
+        /* Now we will follow the right contour of leftroot and the
+         * left contour of the subtree rooted at i */
+        long lnode, rnode;
+        igraph_real_t loffset, roffset, minsep, rootsep;
+        lnode = leftroot; rnode = i;
+        minsep = 1;
+        rootsep = vdata[leftroot].offset + minsep;
+        loffset = 0; roffset = minsep;
+        /*printf("    Contour: [%d, %d], offsets: [%lf, %lf], rootsep: %lf\n",
+               lnode, rnode, loffset, roffset, rootsep);*/
+        while ((lnode >= 0) && (rnode >= 0)) {
+          /* Step to the next level on the right contour of the left subtree */
+          if (vdata[lnode].right_contour >= 0) {
+            loffset += vdata[lnode].offset_follow_rc;
+            lnode = vdata[lnode].right_contour;
+          } else {
+            /* Left subtree ended there. The right contour of the left subtree
+             * will continue to the next step on the right subtree. */
+            if (vdata[rnode].left_contour >= 0) {
+              /*printf("      Left subtree ended, continuing left subtree's left and right contour on right subtree (node %ld)\n", vdata[rnode].left_contour);*/
+              vdata[lnode].left_contour = vdata[rnode].left_contour;
+              vdata[lnode].right_contour = vdata[rnode].left_contour;
+              vdata[lnode].offset_follow_lc = vdata[lnode].offset_follow_rc =
+                (roffset-loffset)+vdata[rnode].offset_follow_lc;
+              /*printf("      vdata[lnode].offset_follow_* = %.4f\n", vdata[lnode].offset_follow_lc);*/
+            }
+            lnode = -1;
+          }
+          /* Step to the next level on the left contour of the right subtree */
+          if (vdata[rnode].left_contour >= 0) {
+            roffset += vdata[rnode].offset_follow_lc;
+            rnode = vdata[rnode].left_contour;
+          } else {
+            /* Right subtree ended here. The left contour of the right
+             * subtree will continue to the next step on the left subtree.
+             * Note that lnode has already been advanced here */
+            if (lnode >= 0) {
+              /*printf("      Right subtree ended, continuing right subtree's left and right contour on left subtree (node %ld)\n", lnode);*/
+              vdata[rnode].left_contour = lnode;
+              vdata[rnode].right_contour = lnode;
+              vdata[rnode].offset_follow_lc = vdata[rnode].offset_follow_rc =
+                (loffset-roffset);  /* loffset has also been increased earlier */
+              /*printf("      vdata[rnode].offset_follow_* = %.4f\n", vdata[rnode].offset_follow_lc);*/
+            }
+            rnode = -1;
+          }
+          /*printf("    Contour: [%d, %d], offsets: [%lf, %lf], rootsep: %lf\n", 
+                 lnode, rnode, loffset, roffset, rootsep);*/
+      
+          /* Push subtrees away if necessary */
+          if ((lnode >= 0) && (rnode >= 0) && (roffset - loffset < minsep)) {
+            /*printf("    Pushing right subtree away by %lf\n", minsep-roffset+loffset);*/
+            rootsep += minsep-roffset+loffset;
+            roffset = loffset+minsep;
+          }
+        }
+
+        /*printf("  Offset of subtree with root node %d will be %lf\n", i, rootsep);*/
+        vdata[i].offset = rootsep;
+        vdata[node].right_contour = i;
+        vdata[node].offset_follow_rc = rootsep;
+        avg = (avg*j)/(j+1) + rootsep/(j+1);
+        leftrootidx=j;
+        leftroot=i;
       } else {
-	leftrootidx=j;
-	leftroot=i;
-	vdata[node].left_contour=i;
-	avg = vdata[i].offset;
+        leftrootidx=j;
+        leftroot=i;
+        vdata[node].left_contour=i;
+        vdata[node].right_contour=i;
+        vdata[node].offset_follow_lc = 0.0;
+        vdata[node].offset_follow_rc = 0.0;
+        avg = vdata[i].offset; 
       }
       j++;
     }
   }
-  /* printf("Shifting node to be centered above children. Shift amount: %lf\n", avg); */
-  vdata[node].offset += avg;
+  /*printf("Shifting node to be centered above children. Shift amount: %lf\n", avg);*/
+  vdata[node].offset_follow_lc -= avg;
+  vdata[node].offset_follow_rc -= avg;
   for (i=0, j=0; i<vcount; i++) {
     if (i == node) continue;
     if (vdata[i].parent == node) vdata[i].offset -= avg;
@@ -1423,18 +1443,21 @@ int igraph_layout_reingold_tilford_circular(const igraph_t *graph,
   
   long int no_of_nodes=igraph_vcount(graph);
   long int i;
-  igraph_real_t pi2=2*M_PI*(no_of_nodes-1.0)/no_of_nodes;
-  igraph_real_t mm=0;
+  igraph_real_t ratio=2*M_PI*(no_of_nodes-1.0)/no_of_nodes;
+  igraph_real_t minx, maxx;
 
   IGRAPH_CHECK(igraph_layout_reingold_tilford(graph, res, root));
-  
-  for (i=0; i<no_of_nodes; i++) {
-    if (MATRIX(*res, i, 0) > mm) {
-      mm=MATRIX(*res, i, 0);
-    }
+
+  if (no_of_nodes == 0) return 0;
+
+  minx = maxx = MATRIX(*res, 0, 0);
+  for (i=1; i<no_of_nodes; i++) {
+    if (MATRIX(*res, i, 0) > maxx) maxx=MATRIX(*res, i, 0);
+	if (MATRIX(*res, i, 0) < minx) minx=MATRIX(*res, i, 0);
   }
+  ratio /= (maxx-minx);
   for (i=0; i<no_of_nodes; i++) {
-    igraph_real_t phi=MATRIX(*res, i, 0)/mm*pi2;
+    igraph_real_t phi=(MATRIX(*res, i, 0)-minx)*ratio;
     igraph_real_t r=MATRIX(*res, i, 1);
     MATRIX(*res, i, 0) = r*cos(phi);
     MATRIX(*res, i, 1) = r*sin(phi);
@@ -1740,11 +1763,11 @@ int igraph_layout_graphopt(const igraph_t *graph, igraph_matrix_t *res,
     IGRAPH_CHECK(igraph_layout_random(graph, res));
   }
 
-  igraph_progress("Graphopt layout", 0, NULL);
+  IGRAPH_PROGRESS("Graphopt layout", 0, NULL);
   for(i=niter;i>0;i--) {
     /* Report progress in approx. every 100th step */
     if (i%10 == 0) {
-      igraph_progress("Graphopt layout", 100.0-100.0*i/niter, NULL);
+      IGRAPH_PROGRESS("Graphopt layout", 100.0-100.0*i/niter, NULL);
     }
     
     /* Clear pending forces on all nodes */
@@ -1796,7 +1819,7 @@ int igraph_layout_graphopt(const igraph_t *graph, igraph_matrix_t *res,
     igraph_i_move_nodes(res, &pending_forces_x, &pending_forces_y, node_mass,
 			max_sa_movement);
   }
-  igraph_progress("Graphopt layout", 100, NULL);
+  IGRAPH_PROGRESS("Graphopt layout", 100, NULL);
 
   igraph_vector_destroy(&pending_forces_y);
   igraph_vector_destroy(&pending_forces_x);
@@ -1891,11 +1914,11 @@ int igraph_layout_merge_dla(igraph_vector_ptr_t *thegraphs,
   actg=VECTOR(sizes)[jpos++];
   igraph_i_layout_merge_place_sphere(&grid, 0, 0, VECTOR(r)[actg], actg);
   
-  igraph_progress("Merging layouts via DLA", 0.0, NULL);
+  IGRAPH_PROGRESS("Merging layouts via DLA", 0.0, NULL);
   while (jpos<graphs) {
     IGRAPH_ALLOW_INTERRUPTION();
 /*     fprintf(stderr, "comp: %li", jpos); */
-    igraph_progress("Merging layouts via DLA", (100.0*jpos)/graphs, NULL);
+    IGRAPH_PROGRESS("Merging layouts via DLA", (100.0*jpos)/graphs, NULL);
     
     actg=VECTOR(sizes)[jpos++];
     /* 2. random walk, TODO: tune parameters */
@@ -1909,7 +1932,7 @@ int igraph_layout_merge_dla(igraph_vector_ptr_t *thegraphs,
     igraph_i_layout_merge_place_sphere(&grid, VECTOR(x)[actg], VECTOR(y)[actg],
 				       VECTOR(r)[actg], actg);
   }
-  igraph_progress("Merging layouts via DLA", 100.0, NULL);
+  IGRAPH_PROGRESS("Merging layouts via DLA", 100.0, NULL);
 
   /* Create the result */
   IGRAPH_CHECK(igraph_matrix_resize(res, allnodes, 2));

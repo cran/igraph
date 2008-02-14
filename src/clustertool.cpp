@@ -204,7 +204,7 @@ int igraph_community_spinglass(const igraph_t *graph,
   runs=0;
   changes=1;
 
-  while (changes>0 && (kT/stoptemp>1.0 || zeroT && runs<150)) {
+  while (changes>0 && (kT/stoptemp>1.0 || (zeroT && runs<150))) {
 
     IGRAPH_ALLOW_INTERRUPTION(); /* This is not clean.... */
     
@@ -246,8 +246,14 @@ int igraph_community_spinglass(const igraph_t *graph,
       while (cl_cur->Size()) cl_cur->Pop();
       delete cl_cur;
     }
+  delete net->link_list;
+  delete net->node_list;
+  delete net->cluster_list;
   
   RNG_END();
+  
+  delete net;
+  delete pm;
 
   return 0;
 }
@@ -414,8 +420,14 @@ int igraph_community_spinglass_single(const igraph_t *graph,
       while (cl_cur->Size()) cl_cur->Pop();
       delete cl_cur;
     }
+  delete net->link_list;
+  delete net->node_list;
+  delete net->cluster_list;
   
   RNG_END();
+
+  delete net;
+  delete pm;
 
   return 0;
 }

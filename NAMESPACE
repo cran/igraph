@@ -71,7 +71,8 @@ S3method("as.dendrogram", igraph.eigenc)
 # conversion
 
 export(get.adjacency, get.edgelist, as.directed, as.undirected,
-       get.adjlist, get.adjedgelist)
+       get.adjlist, get.adjedgelist, igraph.from.graphNEL, 
+       igraph.to.graphNEL)
 
 # fitting, other
 
@@ -87,7 +88,8 @@ export(layout.random, layout.circle,
        layout.spring, layout.kamada.kawai, layout.lgl,
        layout.fruchterman.reingold.grid, layout.sphere, layout.merge,
        layout.reingold.tilford, layout.norm, piecewise.layout)
-
+export(igraph.drl.default, igraph.drl.coarsen, igraph.drl.coarsest,
+       igraph.drl.refine, igraph.drl.final)
 
 # structural properties
 
@@ -199,6 +201,7 @@ export(add.edges)
 export(vcount)
 export(graph.full.citation)
 export(graph.lcf)
+export(graph.adjlist)
 export(forest.fire.game)
 export(closeness.estimate)
 export(betweenness.estimate)
@@ -210,13 +213,17 @@ export(is.simple)
 export(evcent)
 export(hub.score)
 export(authority.score)
+export(arpack.unpack.complex)
+export(is.mutual)
 export(clusters)
 export(articulation.points)
 export(biconnected.components)
 export(layout.fruchterman.reingold)
 export(layout.graphopt)
+export(layout.drl)
 export(similarity.jaccard)
 export(similarity.dice)
+export(similarity.invlogweighted)
 export(community.le.to.membership)
 export(modularity)
 export(leading.eigenvector.community)

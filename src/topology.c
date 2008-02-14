@@ -784,6 +784,7 @@ int igraph_isomorphic(const igraph_t *graph1, const igraph_t *graph2,
   } else if (nodes1 != nodes2 || edges1 != edges2) { 
     *iso=0;
   } else if (nodes1==3 || nodes1==4) {
+	igraph_isomorphic_34(graph1, graph2, iso);
   } else if (dir1) {
     igraph_isomorphic_vf2(graph1, graph2, iso, 0, 0);
   } else {
@@ -2228,6 +2229,29 @@ int igraph_permute_vertices(const igraph_t *graph, igraph_t *res,
   IGRAPH_FINALLY_CLEAN(1);
   return 0;
 }
+
+/** 
+ * \section about_bliss 
+ * 
+ * <para>
+ * BLISS is a successor of the famous NAUTY algorithm and
+ * implementation. While using the same ideas in general, with better
+ * heuristics and data structure BLISS outperforms NAUTY on most
+ * graphs.
+ * </para>
+ * 
+ * <para>
+ * BLISS was developed and implemented by Tommi Junttila and Petteri Kaski at 
+ * Helsinki University of Technology, Finland. See Tommi Juntilla's 
+ * homepage at http://www.tcs.hut.fi/~tjunttil/ and the publication at 
+ * http://www.siam.org/proceedings/alenex/2007/alx07_013junttilat.pdf
+ * for more information.
+ * </para>
+ * 
+ * <para>
+ * BLISS version 0.35 is included in igraph.
+ * </para>
+ */
 
 /**
  * \function igraph_isomorphic_bliss

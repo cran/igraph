@@ -121,6 +121,7 @@ long int igraph_ncol_mylineno;
 igraph_vector_t *igraph_ncol_vector=0;
 igraph_vector_t *igraph_ncol_weights=0;
 igraph_trie_t *igraph_ncol_trie=0;
+extern char *igraph_i_ncol_errmsg;
 
 /**
  * \ingroup loadsave
@@ -219,8 +220,15 @@ int igraph_read_graph_ncol(igraph_t *graph, FILE *instream,
   igraph_ncol_yyin=instream;
   igraph_ncol_mylineno=1;
   igraph_i_ncol_eof=0;
+  igraph_i_ncol_errmsg=0;
 
-  igraph_ncol_yyparse();
+  if (igraph_ncol_yyparse()) {
+    if (igraph_i_ncol_errmsg) {
+      IGRAPH_ERROR(igraph_i_ncol_errmsg, IGRAPH_PARSEERROR);
+    } else {
+      IGRAPH_ERROR("Cannot read NCOL file", IGRAPH_PARSEERROR);
+    }
+  }
 
   if (predefnames != 0 && 
       igraph_trie_size(&trie) != no_predefined) {
@@ -271,6 +279,7 @@ long int igraph_lgl_mylineno;
 igraph_vector_t *igraph_lgl_vector=0;
 igraph_vector_t *igraph_lgl_weights=0;
 igraph_trie_t *igraph_lgl_trie=0;
+extern char *igraph_i_lgl_errmsg;
 
 /**
  * \ingroup loadsave
@@ -342,9 +351,16 @@ int igraph_read_graph_lgl(igraph_t *graph, FILE *instream,
   igraph_lgl_yyin=instream;
   igraph_lgl_mylineno=1;
   igraph_i_lgl_eof=0;
+  igraph_i_lgl_errmsg=0;
 
-  igraph_lgl_yyparse();
-  
+  if (igraph_lgl_yyparse()) {
+    if (igraph_i_lgl_errmsg) {
+      IGRAPH_ERROR(igraph_i_lgl_errmsg, IGRAPH_PARSEERROR);
+    } else {
+      IGRAPH_ERROR("Cannot read LGL file", IGRAPH_PARSEERROR);
+    }
+  }
+
   IGRAPH_CHECK(igraph_empty(graph, 0, IGRAPH_UNDIRECTED));
   IGRAPH_FINALLY(igraph_destroy, graph);
 
@@ -395,7 +411,7 @@ extern int igraph_i_pajek_eof;
 long int igraph_pajek_mylineno;
 igraph_vector_t *igraph_pajek_vector=0;
 igraph_bool_t igraph_pajek_directed;
-long int igraph_pajek_vcount=0;
+long int igraph_pajek_vcount;
 long int igraph_pajek_actfrom, igraph_pajek_actto;
 int igraph_pajek_mode=0;	/* 0 - general, 1 - vertex, 2 - edge */
 igraph_trie_t *igraph_i_pajek_vertex_attribute_names;
@@ -405,6 +421,7 @@ igraph_vector_ptr_t *igraph_i_pajek_edge_attributes;
 long int igraph_i_pajek_vertexid=0;
 long int igraph_i_pajek_actvertex=0;
 long int igraph_i_pajek_actedge=0;
+extern char *igraph_i_pajek_errmsg;
 
 /* int vector_print(igraph_vector_t *v) { */
 /*   long int i, size=igraph_vector_size(v); */
@@ -540,7 +557,7 @@ int igraph_read_graph_pajek(igraph_t *graph, FILE *instream) {
   igraph_pajek_yyin=instream;
 
   igraph_pajek_mode=0;
-  igraph_pajek_vcount=0;
+  igraph_pajek_vcount=-1;
   igraph_i_pajek_vertexid=0;
   igraph_i_pajek_vertex_attribute_names=&vattrnames;
   igraph_i_pajek_vertex_attributes=&vattrs;
@@ -549,8 +566,18 @@ int igraph_read_graph_pajek(igraph_t *graph, FILE *instream) {
   igraph_i_pajek_actedge=0;
   igraph_pajek_mylineno=1;
   igraph_i_pajek_eof=0;
+  igraph_i_pajek_errmsg=0;
 
-  igraph_pajek_yyparse();
+  if (igraph_pajek_yyparse()) {
+    if (igraph_i_pajek_errmsg) {
+      IGRAPH_ERROR(igraph_i_pajek_errmsg, IGRAPH_PARSEERROR);
+    } else {
+      IGRAPH_ERROR("Cannot read Pajek file", IGRAPH_PARSEERROR);
+    }
+  }
+
+  if (igraph_pajek_vcount < 0)
+    IGRAPH_ERROR("invalid vertex count in Pajek file", IGRAPH_EINVAL);
 
   for (i=0; i<igraph_vector_ptr_size(&eattrs); i++) {
     igraph_i_attribute_record_t *rec=VECTOR(eattrs)[i];
@@ -587,6 +614,7 @@ int igraph_read_graph_pajek(igraph_t *graph, FILE *instream) {
       igraph_strvector_destroy(strvec);
       igraph_Free(strvec);
     }
+    igraph_free( (char*)(rec->name));
     igraph_Free(rec);
   }
 
@@ -601,6 +629,7 @@ int igraph_read_graph_pajek(igraph_t *graph, FILE *instream) {
       igraph_strvector_destroy(strvec);
       igraph_Free(strvec);
     }
+    igraph_free( (char*)(rec->name));
     igraph_Free(rec);
   }
 
@@ -1060,7 +1089,8 @@ int igraph_read_graph_gml(igraph_t *graph, FILE *instream) {
   igraph_gml_yyin=instream;
   igraph_gml_mylineno=1;
   igraph_gml_eof=0;
-  
+  igraph_i_gml_errmsg=0;
+
   i=igraph_gml_yyparse();
   if (i != 0) {
     if (igraph_i_gml_errmsg) {
@@ -2372,7 +2402,7 @@ int igraph_write_graph_gml(const igraph_t *graph, FILE *outstream,
   }      
 
   /* directedness */
-  CHECK(fprintf(outstream, "  directed %i\n", igraph_is_directed(graph) ? 0 : 1));
+  CHECK(fprintf(outstream, "  directed %i\n", igraph_is_directed(graph) ? 1 : 0));
 
   /* Graph attributes first */
   for (i=0; i<igraph_vector_size(&gtypes); i++) {
@@ -2389,7 +2419,8 @@ int igraph_write_graph_gml(const igraph_t *graph, FILE *outstream,
       igraph_strvector_get(&strv, 0, &s);
       CHECK(fprintf(outstream, "  %s \"%s\"\n", newname, s));
       igraph_Free(newname);
-    } else { 
+    } else {
+      igraph_Free(newname);
       IGRAPH_WARNING("A non-numeric, non-string graph attribute ignored");
     }
   } 
@@ -2419,8 +2450,8 @@ int igraph_write_graph_gml(const igraph_t *graph, FILE *outstream,
 							       &strv));
 	igraph_strvector_get(&strv, 0, &s);
 	CHECK(fprintf(outstream, "    %s \"%s\"\n", newname, s));
-	igraph_Free(newname);
       }
+      igraph_Free(newname);
     }
     CHECK(fprintf(outstream, "  ]\n"));
   }
@@ -2456,8 +2487,8 @@ int igraph_write_graph_gml(const igraph_t *graph, FILE *outstream,
 							     &strv));
 	igraph_strvector_get(&strv, 0, &s);
 	CHECK(fprintf(outstream, "    %s \"%s\"\n", newname, s));
-	igraph_Free(newname);
       }
+      igraph_Free(newname);
     }
     CHECK(fprintf(outstream, "  ]\n"));
   }

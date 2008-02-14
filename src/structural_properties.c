@@ -355,7 +355,7 @@ int igraph_path_length_hist(const igraph_t *graph, igraph_vector_t *res,
 
   } /* for i<no_of_nodes */
 
-  igraph_progress("Path-hist: ", 100.0, NULL);
+  IGRAPH_PROGRESS("Path-hist: ", 100.0, NULL);
 
   /* count every pair only once for an undirected graph */
   if (!directed || !igraph_is_directed(graph)) {
@@ -666,7 +666,8 @@ int igraph_minimum_spanning_tree_prim(const igraph_t *graph, igraph_t *mst,
  *        argument, and its number of columns is the number of
  *        vertices in the graph. One row of the matrix shows the
  *        distances from/to a given vertex to all the others in the
- *        graph, the order is fixed by the vertex ids.
+ *        graph, the order is fixed by the vertex ids. For the
+ *        unreachable vertices IGRAPH_INFINITY is returned.
  * \param from Vector of the vertex ids for which the path length
  *        calculations are done.
  * \param mode The type of shortest paths to be use for the
@@ -697,7 +698,8 @@ int igraph_minimum_spanning_tree_prim(const igraph_t *graph, igraph_t *mst,
  * |E| are the number of vertices and
  * edges in the graph. 
  *
- * \sa \ref igraph_get_shortest_paths() to get the paths themselves.
+ * \sa \ref igraph_get_shortest_paths() to get the paths themselves, 
+ * \ref igraph_shortest_paths_dijkstra() for the weighted version.
  */
 
 int igraph_shortest_paths(const igraph_t *graph, igraph_matrix_t *res, 
@@ -765,7 +767,7 @@ int igraph_shortest_paths(const igraph_t *graph, igraph_matrix_t *res,
     j=0;
     while (reached < no_of_nodes) {
       if (MATRIX(*res, i, j) == 0 && j != IGRAPH_VIT_GET(fromvit)) {
-        MATRIX(*res, i, j)=no_of_nodes;
+        MATRIX(*res, i, j)=IGRAPH_INFINITY;
         reached++;
       }
       j++;
@@ -2269,6 +2271,7 @@ int igraph_transitivity_local_undirected(const igraph_t *graph,
     IGRAPH_FINALLY(igraph_vit_destroy, &vit);
     size=IGRAPH_VIT_SIZE(vit);
     igraph_vit_destroy(&vit);
+	IGRAPH_FINALLY_CLEAN(1);
     if (size < 100) {
       return igraph_transitivity_local_undirected1(graph, res, vids);
     } else {
@@ -3955,3 +3958,553 @@ int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
   return 0;
 }
 
+/**
+ * \function igraph_shortest_paths_dijkstra
+ * Weighted shortest paths from some sources
+ * 
+ * This function is Dijkstra's algorithm to find the weighted 
+ * shortest paths to all vertices from a single source. (It is run 
+ * independently for the given sources.) It uses a binary heap for 
+ * efficient implementation.
+ * 
+ * \param graph The input graph, can be directed.
+ * \param res The result, a matrix. Each row contains the distances
+ *    from a single source, in the order of vertex ids.
+ *    Unreachable vertices has distance \c IGRAPH_INFINITY.
+ * \param from The source vertices.
+ * \param weights The edge weights. They must be all non-negative for
+ *    Dijkstra's algorithm to work. An error code is returned if there
+ *    is a negative edge weight in the weight vector. If this is a null
+ *    pointer, then the
+ *    unweighted version, \ref igraph_shortest_paths() is called.
+ * \param mode For directed graphs; whether to follow paths along edge
+ *    directions (\c IGRAPH_OUT), or the opposite (\c IGRAPH_IN), or
+ *    ignore edge directions completely (\c IGRAPH_ALL). It is ignored 
+ *    for undirected graphs.
+ * \return Error code.
+ * 
+ * Time complexity: O(s*|E|log|E|+|V|), where |V| is the number of
+ * vertices, |E| the number of edges and s the number of sources.
+ * 
+ * \sa \ref igraph_shortest_paths() for a (slightly) faster unweighted
+ * version or \ref igraph_shortest_paths_bellman_ford() for a weighted
+ * variant that works in the presence of negative edge weights (but no
+ * negative loops).
+ */
+
+int igraph_shortest_paths_dijkstra(const igraph_t *graph,
+				   igraph_matrix_t *res,
+				   const igraph_vs_t from,
+				   const igraph_vector_t *weights, 
+				   igraph_neimode_t mode) {
+
+  /* Implementation details. This is the basic Dijkstra algorithm, 
+     with a binary heap. The heap is indexed, i.e. it stores not only
+     the distances, but also which vertex they belong to. The other
+     mapping, i.e. getting the distance for a vertex is not in the
+     heap (that would by the double-indexed heap), but in the result
+     matrix.
+
+     Dirty tricks:
+     - the opposite of the distance is stored in the heap, as it is a
+       maximum heap and we need a minimum heap.
+     - we don't use IGRAPH_INFINITY in the res matrix during the
+       computation, as IGRAPH_FINITE() might involve a function call 
+       and we want to spare that. So we store distance+1.0 instead of 
+       distance in the res matrix, and zero denotes infinity.
+  */
+  
+  long int no_of_nodes=igraph_vcount(graph);
+  long int no_of_edges=igraph_ecount(graph);
+  igraph_indheap_t Q;
+  igraph_vit_t fromvit;
+  long int no_of_from;
+  igraph_lazy_adjedgelist_t adjlist;
+  long int i,j;
+    
+  if (!weights) {
+    return igraph_shortest_paths(graph, res, from, mode);
+  }
+  
+  if (igraph_vector_size(weights) != no_of_edges) {
+    IGRAPH_ERROR("Weight vector length does not match", IGRAPH_EINVAL);
+  }
+  if (igraph_vector_min(weights) < 0) {
+    IGRAPH_ERROR("Weight vector must be non-negative", IGRAPH_EINVAL);
+  }
+
+  IGRAPH_CHECK(igraph_vit_create(graph, from, &fromvit));
+  IGRAPH_FINALLY(igraph_vit_destroy, &fromvit);
+  no_of_from=IGRAPH_VIT_SIZE(fromvit);
+  
+  IGRAPH_CHECK(igraph_indheap_init(&Q, no_of_nodes));
+  IGRAPH_FINALLY(igraph_indheap_destroy, &Q);
+  IGRAPH_CHECK(igraph_lazy_adjedgelist_init(graph, &adjlist, mode));
+  IGRAPH_FINALLY(igraph_lazy_adjedgelist_destroy, &adjlist);
+
+  IGRAPH_CHECK(igraph_matrix_resize(res, no_of_from, no_of_nodes));
+  igraph_matrix_null(res);
+
+  for (IGRAPH_VIT_RESET(fromvit), i=0; 
+       !IGRAPH_VIT_END(fromvit);
+       IGRAPH_VIT_NEXT(fromvit), i++) {
+
+    long int source=IGRAPH_VIT_GET(fromvit);
+    MATRIX(*res, i, source) = 1.0;	/* zero distance */
+    igraph_indheap_push_with_index(&Q, source, 0);
+    
+    while (!igraph_indheap_empty(&Q)) {
+      long int minnei=igraph_indheap_max_index(&Q);
+      igraph_real_t mindist=-igraph_indheap_delete_max(&Q);
+
+      /* Now check all neighbors of 'minnei' for a shorter path */
+      igraph_vector_t *neis=igraph_lazy_adjedgelist_get(&adjlist, minnei);
+      long int nlen=igraph_vector_size(neis);
+      for (j=0; j<nlen; j++) {
+	long int edge=VECTOR(*neis)[j];
+	long int to=IGRAPH_OTHER(graph, edge, minnei);
+	igraph_real_t altdist=mindist + VECTOR(*weights)[edge];
+	igraph_real_t curdist=MATRIX(*res, i, to);
+	if (curdist==0) {
+	  /* This is the first non-infinite distance */
+	  MATRIX(*res, i, to) = altdist+1.0;
+	  IGRAPH_CHECK(igraph_indheap_push_with_index(&Q, to, -altdist));
+	} else if (altdist < curdist-1) {
+	  /* This is a shorter path */
+	  MATRIX(*res, i, to) = altdist+1.0;
+	  IGRAPH_CHECK(igraph_indheap_modify(&Q, to, -altdist));
+	}
+      }
+      
+    } /* !igraph_indheap_empty(&Q) */
+
+  } /* !IGRAPH_VIT_END(fromvit) */
+  
+  igraph_lazy_adjedgelist_destroy(&adjlist);
+  igraph_indheap_destroy(&Q);
+  igraph_vit_destroy(&fromvit);
+  IGRAPH_FINALLY_CLEAN(3);
+  
+  /* Rewrite the result matrix */
+  for (i=0; i<no_of_from; i++) {
+    for (j=0; j<no_of_nodes; j++) {
+      if (MATRIX(*res, i, j) == 0) {
+	MATRIX(*res, i, j) = IGRAPH_INFINITY;
+      } else {
+	MATRIX(*res, i, j) -= 1.0;
+      }
+    }
+  }
+  
+  return 0;
+}
+
+/**
+ * \ingroup structural
+ * \function igraph_get_shortest_paths_dijkstra
+ * \brief Calculates the weighted shortest paths from/to one vertex.
+ * 
+ * </para><para>
+ * If there is more than one path with the smallest weight between two vertices, this
+ * function gives only one of them. 
+ * \param graph The graph object.
+ * \param res The result, this is a pointer vector, each element points 
+ *        to a vector
+ *        object. These should be initialized before passing them to
+ *        the function, which will properly clear and/or resize them
+ *        and fill the ids of the vertices along the geodesics from/to
+ *        the vertices.
+ * \param from The id of the vertex from/to which the geodesics are
+ *        calculated. 
+ * \param to Vertex sequence with the ids of the vertices to/from which the 
+ *        shortest paths will be calculated. A vertex might be given multiple
+ *        times.
+ * \param weights a vector holding the edge weights. All weights must be
+ *        positive.
+ * \param mode The type of shortest paths to be use for the
+ *        calculation in directed graphs. Possible values: 
+ *        \clist
+ *        \cli IGRAPH_OUT 
+ *          the outgoing paths are calculated. 
+ *        \cli IGRAPH_IN 
+ *          the incoming paths are calculated. 
+ *        \cli IGRAPH_ALL 
+ *          the directed graph is considered as an
+ *          undirected one for the computation.
+ *        \endclist
+ * \return Error code:
+ *        \clist
+ *        \cli IGRAPH_ENOMEM 
+ *           not enough memory for temporary data.
+ *        \cli IGRAPH_EINVVID
+ *           \p from is invalid vertex id, or the length of \p to is 
+ *           not the same as the length of \p res.
+ *        \cli IGRAPH_EINVMODE 
+ *           invalid mode argument.
+ *        \endclist
+ * 
+ * Time complexity: O(|E|log|E|+|V|), where |V| is the number of
+ * vertices and |E| is the number of edges
+ * 
+ * \sa \ref igraph_shortest_paths_dijkstra() if you only need the path length but
+ * not the paths themselves, \ref igraph_get_shortest_paths() if all edge
+ * weights are equal. 
+ */
+int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
+                                       igraph_vector_ptr_t *res,
+				       igraph_integer_t from,
+				       igraph_vs_t to,
+				       const igraph_vector_t *weights,
+				       igraph_neimode_t mode) {
+  /* Implementation details. This is the basic Dijkstra algorithm, 
+     with a binary heap. The heap is indexed, i.e. it stores not only
+     the distances, but also which vertex they belong to. The other
+     mapping, i.e. getting the distance for a vertex is not in the
+     heap (that would by the double-indexed heap), but in the result
+     matrix.
+
+     Dirty tricks:
+     - the opposite of the distance is stored in the heap, as it is a
+       maximum heap and we need a minimum heap.
+     - we don't use IGRAPH_INFINITY in the distance vector during the
+       computation, as IGRAPH_FINITE() might involve a function call 
+       and we want to spare that. So we store distance+1.0 instead of 
+       distance, and zero denotes infinity.
+     - `parents' assigns the predecessors of all vertices in the
+       shortest path tree to the vertices. In this implementation, the
+       vertex ID + 1 is stored, zero means unreachable vertices.
+  */
+  
+  long int no_of_nodes=igraph_vcount(graph);
+  long int no_of_edges=igraph_ecount(graph);
+  igraph_vit_t vit;
+  igraph_indheap_t Q;
+  igraph_lazy_adjedgelist_t adjlist;
+  igraph_vector_t dists;
+  long int *parents;
+  igraph_bool_t *is_target;
+  long int i,to_reach;
+    
+  if (!weights) {
+    return igraph_get_shortest_paths(graph, res, from, to, mode);
+  }
+  
+  if (igraph_vector_size(weights) != no_of_edges) {
+    IGRAPH_ERROR("Weight vector length does not match", IGRAPH_EINVAL);
+  }
+  if (igraph_vector_min(weights) < 0) {
+    IGRAPH_ERROR("Weight vector must be non-negative", IGRAPH_EINVAL);
+  }
+
+  IGRAPH_CHECK(igraph_vit_create(graph, to, &vit));
+  IGRAPH_FINALLY(igraph_vit_destroy, &vit);
+
+  if (IGRAPH_VIT_SIZE(vit) != igraph_vector_ptr_size(res)) {
+    IGRAPH_ERROR("Size of `res' and `to' should match", IGRAPH_EINVAL);
+  }
+
+  IGRAPH_CHECK(igraph_indheap_init(&Q, no_of_nodes));
+  IGRAPH_FINALLY(igraph_indheap_destroy, &Q);
+  IGRAPH_CHECK(igraph_lazy_adjedgelist_init(graph, &adjlist, mode));
+  IGRAPH_FINALLY(igraph_lazy_adjedgelist_destroy, &adjlist);
+
+  IGRAPH_VECTOR_INIT_FINALLY(&dists, no_of_nodes);
+
+  parents = igraph_Calloc(no_of_nodes, long int);
+  if (parents == 0) IGRAPH_ERROR("Can't calculate shortest paths", IGRAPH_ENOMEM);
+  IGRAPH_FINALLY(igraph_free, parents);
+  is_target = igraph_Calloc(no_of_nodes, igraph_bool_t);
+  if (is_target == 0) IGRAPH_ERROR("Can't calculate shortest paths", IGRAPH_ENOMEM);
+  IGRAPH_FINALLY(igraph_free, is_target);
+
+  /* Mark the vertices we need to reach */
+  to_reach=IGRAPH_VIT_SIZE(vit);
+  for (IGRAPH_VIT_RESET(vit); !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit)) {
+    if (!is_target[ (long int) IGRAPH_VIT_GET(vit) ]) {
+      is_target[ (long int) IGRAPH_VIT_GET(vit) ] = 1;
+    } else {
+      to_reach--;		/* this node was given multiple times */
+    }
+  }
+
+  VECTOR(dists)[(long int)from] = 1.0;	/* zero distance */
+  if (is_target[(long int)from]) to_reach--;
+  parents[(long int)from] = from+1;
+  igraph_indheap_push_with_index(&Q, from, 0);
+    
+  while (!igraph_indheap_empty(&Q) && to_reach > 0) {
+    long int minnei=igraph_indheap_max_index(&Q);
+    igraph_real_t mindist=-igraph_indheap_delete_max(&Q);
+
+    IGRAPH_ALLOW_INTERRUPTION();
+
+    if (is_target[minnei]) {
+      is_target[minnei] = 0;
+	  to_reach--;
+	}
+
+    /* Now check all neighbors of 'minnei' for a shorter path */
+    igraph_vector_t *neis=igraph_lazy_adjedgelist_get(&adjlist, minnei);
+    long int nlen=igraph_vector_size(neis);
+    for (i=0; i<nlen; i++) {
+      long int edge=VECTOR(*neis)[i];
+      long int to=IGRAPH_OTHER(graph, edge, minnei);
+      igraph_real_t altdist=mindist + VECTOR(*weights)[edge];
+      igraph_real_t curdist=VECTOR(dists)[to];
+      if (curdist==0) {
+        /* This is the first non-infinite distance */
+        VECTOR(dists)[to] = altdist+1.0;
+        parents[to] = minnei+1;
+        IGRAPH_CHECK(igraph_indheap_push_with_index(&Q, to, -altdist));
+      } else if (altdist < curdist-1) {
+	    /* This is a shorter path */
+        VECTOR(dists)[to] = altdist+1.0;
+        parents[to] = minnei+1;
+        IGRAPH_CHECK(igraph_indheap_modify(&Q, to, -altdist));
+      }
+    }
+  } /* !igraph_indheap_empty(&Q) */
+
+  if (to_reach > 0) IGRAPH_WARNING("Couldn't reach some vertices");
+
+  /* Reconstruct the shortest paths based on vertex IDs */
+  for (IGRAPH_VIT_RESET(vit), i=0; !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit), i++) {
+    long int node=IGRAPH_VIT_GET(vit);
+    igraph_vector_t *vec=VECTOR(*res)[i];
+    igraph_vector_clear(vec);
+
+    IGRAPH_ALLOW_INTERRUPTION();
+
+    if (parents[node]>0) {
+      long int size=0;
+	  long int act=node;
+      while (parents[act] != act+1) {
+        size++;
+        act=parents[act]-1;
+      }
+      size++;
+      IGRAPH_CHECK(igraph_vector_resize(vec, size));
+      VECTOR(*vec)[--size]=node;
+      act=node;
+      while (parents[act] != act+1) {
+        VECTOR(*vec)[--size]=parents[act]-1;
+        act=parents[act]-1;
+      }
+    }
+  }
+  
+  igraph_lazy_adjedgelist_destroy(&adjlist);
+  igraph_indheap_destroy(&Q);
+  igraph_vector_destroy(&dists);
+  igraph_Free(is_target);
+  igraph_Free(parents);
+  igraph_vit_destroy(&vit);
+  IGRAPH_FINALLY_CLEAN(6);
+  
+  return 0;
+}
+
+/**
+ * \function igraph_shortest_paths_bellman_ford
+ * Weighted shortest paths from some sources allowing negative weights
+ * 
+ * This function is the Bellman-Ford algorithm to find the weighted 
+ * shortest paths to all vertices from a single source. (It is run 
+ * independently for the given sources.). If there are no negative
+ * weights, you are better off with \ref igraph_shortest_paths_dijkstra() .
+ * 
+ * \param graph The input graph, can be directed.
+ * \param res The result, a matrix. Each row contains the distances
+ *    from a single source, in the order of vertex ids.
+ *    Unreachable vertices has distance \c IGRAPH_INFINITY.
+ * \param from The source vertices.
+ * \param weights The edge weights. There mustn't be any closed loop in
+ *    the graph that has a negative total weight (since this would allow
+ *    us to decrease the weight of any path containing at least a single
+ *    vertex of this loop infinitely). If this is a null pointer, then the
+ *    unweighted version, \ref igraph_shortest_paths() is called.
+ * \param mode For directed graphs; whether to follow paths along edge
+ *    directions (\c IGRAPH_OUT), or the opposite (\c IGRAPH_IN), or
+ *    ignore edge directions completely (\c IGRAPH_ALL). It is ignored 
+ *    for undirected graphs.
+ * \return Error code.
+ * 
+ * Time complexity: O(s*|E|*|V|), where |V| is the number of
+ * vertices, |E| the number of edges and s the number of sources.
+ * 
+ * \sa \ref igraph_shortest_paths() for a faster unweighted version
+ * or \ref igraph_shortest_paths_dijkstra() if you do not have negative
+ * edge weights.
+ */
+
+int igraph_shortest_paths_bellman_ford(const igraph_t *graph,
+				       igraph_matrix_t *res,
+				       const igraph_vs_t from,
+				       const igraph_vector_t *weights, 
+				       igraph_neimode_t mode) {
+  long int no_of_nodes=igraph_vcount(graph);
+  long int no_of_edges=igraph_ecount(graph);
+  igraph_lazy_adjedgelist_t adjlist;
+  long int i,j,k;
+  long int no_of_from;
+  igraph_dqueue_t Q; 
+  igraph_vector_t clean_vertices;
+  igraph_vector_t num_queued;
+  igraph_vit_t fromvit;
+
+  /*
+     - speedup: a vertex is marked clean if its distance from the source
+       did not change during the last phase. Neighbors of a clean vertex
+       are not relaxed again, since it would mean no change in the
+       shortest path values. Dirty vertices are queued. Negative loops can
+       be detected by checking whether a vertex has been queued at least
+       n times.
+  */
+  if (!weights) {
+    return igraph_shortest_paths(graph, res, from, mode);
+  }
+  
+  if (igraph_vector_size(weights) != no_of_edges) {
+    IGRAPH_ERROR("Weight vector length does not match", IGRAPH_EINVAL);
+  }
+
+  IGRAPH_CHECK(igraph_vit_create(graph, from, &fromvit));
+  IGRAPH_FINALLY(igraph_vit_destroy, &fromvit);
+  no_of_from=IGRAPH_VIT_SIZE(fromvit);
+  
+  IGRAPH_DQUEUE_INIT_FINALLY(&Q, no_of_nodes);
+  IGRAPH_VECTOR_INIT_FINALLY(&clean_vertices, no_of_nodes);
+  IGRAPH_VECTOR_INIT_FINALLY(&num_queued, no_of_nodes);
+  IGRAPH_CHECK(igraph_lazy_adjedgelist_init(graph, &adjlist, mode));
+  IGRAPH_FINALLY(igraph_lazy_adjedgelist_destroy, &adjlist);
+
+  IGRAPH_CHECK(igraph_matrix_resize(res, no_of_from, no_of_nodes));
+  igraph_matrix_fill(res, IGRAPH_INFINITY);
+
+  for (IGRAPH_VIT_RESET(fromvit), i=0; 
+       !IGRAPH_VIT_END(fromvit);
+       IGRAPH_VIT_NEXT(fromvit), i++) {
+    long int source=IGRAPH_VIT_GET(fromvit);
+
+    MATRIX(*res, i, source) = 0;
+    igraph_vector_null(&clean_vertices);
+    igraph_vector_null(&num_queued);
+
+    /* Fill the queue with vertices to be checked */
+    for (j=0; j<no_of_nodes; j++) IGRAPH_CHECK(igraph_dqueue_push(&Q, j));
+
+    while (!igraph_dqueue_empty(&Q)) {
+      igraph_vector_t *neis;
+      long int nlen;
+
+      j = igraph_dqueue_pop(&Q);
+      VECTOR(clean_vertices)[j] = 1;
+      VECTOR(num_queued)[j] += 1;
+      if (VECTOR(num_queued)[j] > no_of_nodes)
+        IGRAPH_ERROR("cannot run Bellman-Ford algorithm", IGRAPH_ENEGLOOP);
+
+      /* If we cannot get to j in finite time yet, there is no need to relax
+       * its edges */
+      if (!IGRAPH_FINITE(MATRIX(*res,i,j))) continue;
+
+      neis = igraph_lazy_adjedgelist_get(&adjlist, j);
+      nlen = igraph_vector_size(neis);
+
+      for (k=0; k<nlen; k++) {
+        long int nei = VECTOR(*neis)[k];
+        long int target = IGRAPH_OTHER(graph, nei, j);
+        if (MATRIX(*res, i, target) > MATRIX(*res, i, j) + VECTOR(*weights)[nei]) {
+          /* relax the edge */
+          MATRIX(*res, i, target) = MATRIX(*res, i, j) + VECTOR(*weights)[nei];
+          if (VECTOR(clean_vertices)[target]) {
+            VECTOR(clean_vertices)[target] = 0;
+            IGRAPH_CHECK(igraph_dqueue_push(&Q, target));
+          }
+        }
+      }
+    }
+  }
+
+  igraph_vit_destroy(&fromvit);
+  igraph_dqueue_destroy(&Q);
+  igraph_vector_destroy(&clean_vertices);
+  igraph_vector_destroy(&num_queued);
+  igraph_lazy_adjedgelist_destroy(&adjlist);
+  IGRAPH_FINALLY_CLEAN(5);
+
+  return 0;
+}
+
+/**
+ * \function igraph_is_mutual
+ * Check whether the edges of a directed graph are mutual
+ * 
+ * An (A,B) edge is mutual if the graph contains the (B,A) edge, too.
+ * </para>
+ * 
+ * <para>An undirected graph only has mutual edges, by definition.
+ * </para>
+ * 
+ * <para>Edge multiplicity is not considered here, e.g. if there are two 
+ * (A,B) edges and one (B,A) edge, then all three are considered to be
+ * mutual.
+ * 
+ * \param graph The input graph.
+ * \param res Pointer to an initialized vector, the result is stored
+ *        here.
+ * \param es The sequence of edges to check. Supply
+ *        <code>igraph_ess_all()</code> for all edges, see \ref
+ *        igraph_ess_all().
+ * \return Error code.
+ * 
+ * Time complexity: O(n log(d)), n is the number of edges supplied, d
+ * is the maximum in-degree of the vertices that are targets of the
+ * supplied edges. An upper limit of the time complexity is O(n log(|E|)),
+ * |E| is the number of edges in the graph.
+ */
+
+int igraph_is_mutual(igraph_t *graph, igraph_vector_bool_t *res, igraph_es_t es) {
+
+  igraph_eit_t eit;
+  igraph_lazy_adjlist_t adjlist;
+  long int i;
+  
+  /* How many edges do we have? */
+  IGRAPH_CHECK(igraph_eit_create(graph, es, &eit));
+  IGRAPH_FINALLY(igraph_eit_destroy, &eit);
+  IGRAPH_CHECK(igraph_vector_bool_resize(res, IGRAPH_EIT_SIZE(eit)));
+
+  /* An undirected graph has mutual edges by definition,
+     res is already properly resized */
+  if (! igraph_is_directed(graph)) {
+    igraph_vector_bool_fill(res, 1);
+    igraph_eit_destroy(&eit);
+    IGRAPH_FINALLY_CLEAN(1);
+    return 0;
+  }
+
+  IGRAPH_CHECK(igraph_lazy_adjlist_init(graph, &adjlist, IGRAPH_OUT, IGRAPH_DONT_SIMPLIFY));
+  IGRAPH_FINALLY(igraph_lazy_adjlist_destroy, &adjlist);
+  
+  for (i=0; ! IGRAPH_EIT_END(eit); i++, IGRAPH_EIT_NEXT(eit)) {
+    long int edge=IGRAPH_EIT_GET(eit);
+    long int from=IGRAPH_FROM(graph, edge);
+    long int to=IGRAPH_TO(graph, edge);
+    
+    /* Check whether there is a to->from edge, search for from in the
+       out-list of to. We don't search an empty vector, because
+       vector_binsearch seems to have a bug with this. */
+    igraph_vector_t *neis=igraph_lazy_adjlist_get(&adjlist, to);
+    if (igraph_vector_empty(neis)) {
+      VECTOR(*res)[i]=0;
+    } else {
+      VECTOR(*res)[i]=igraph_vector_binsearch2(neis, from);
+    }
+  }
+
+  igraph_lazy_adjlist_destroy(&adjlist);
+  igraph_eit_destroy(&eit);
+  IGRAPH_FINALLY_CLEAN(2);
+
+  return 0;
+}

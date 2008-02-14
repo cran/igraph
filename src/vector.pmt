@@ -1133,6 +1133,17 @@ int FUNCTION(igraph_vector,move_interval)(TYPE(igraph_vector) *v,
   return 0;
 }
 
+int FUNCTION(igraph_vector,move_interval2)(TYPE(igraph_vector) *v, 
+					  long int begin, long int end, 
+					  long int to) {
+  assert(v != NULL);
+  assert(v->stor_begin != NULL);
+  memmove(v->stor_begin+to, v->stor_begin+begin, 
+	 sizeof(BASE)*(end-begin));
+
+  return 0;
+}
+
 /**
  * \ingroup vector
  * \function igraph_vector_permdelete
@@ -1295,6 +1306,11 @@ igraph_bool_t FUNCTION(igraph_vector,binsearch)(const TYPE(igraph_vector) *v,
   long int left=0;
   long int right=FUNCTION(igraph_vector,size)(v)-1;
 
+  if (right < 0) {
+    if (pos != 0) *pos=0;
+	return 0;
+  }
+
   while (left < right-1) {
     long int middle=(left+right)/2;
     if (VECTOR(*v)[middle] > what) {
@@ -1315,7 +1331,12 @@ igraph_bool_t FUNCTION(igraph_vector,binsearch)(const TYPE(igraph_vector) *v,
   if (pos != 0) {
     *pos=left;
   }
-  return VECTOR(*v)[left]==what;
+  
+  if (left < FUNCTION(igraph_vector,size)(v)) {
+    return VECTOR(*v)[left]==what;
+  } else { 
+    return 0;
+  }
 }
 
 /**
@@ -1342,6 +1363,10 @@ igraph_bool_t FUNCTION(igraph_vector,binsearch2)(const TYPE(igraph_vector) *v,
 						 BASE what) {
   long int left=0;
   long int right=v->end - v->stor_begin-1;
+
+  if (right<0) {
+    return 0;
+  }
 
   while (left < right-1) {
     long int middle=(left+right)/2;
@@ -1873,4 +1898,44 @@ igraph_bool_t FUNCTION(igraph_vector,isnull)(const TYPE(igraph_vector) *v) {
   }
   
   return i==n;
+}
+
+/**
+ * \function igraph_vector_intersect_sorted
+ * \brief Calculates the intersection of two sorted vectors
+ *
+ * The elements that are contained in both vectors are stored in the result
+ * vector. All three vectors must be initialized.
+ *
+ * \param v1 the first vector
+ * \param v2 the second vector
+ * \param result the result vector
+ * \param keep_multiplicity whether to preserve the multiplicity of the
+ *   elements. If \c FALSE, all elements in the resulting vector will be
+ *   unique
+ */
+int FUNCTION(igraph_vector,intersect_sorted)(const TYPE(igraph_vector) *v1,
+    const TYPE(igraph_vector) *v2, TYPE(igraph_vector) *result,
+    igraph_bool_t keep_multiplicity) {
+  long int i, j, k, i0, j0;
+  i0 = FUNCTION(igraph_vector,size)(v1);
+  j0 = FUNCTION(igraph_vector,size)(v2);
+  i = j = 0;
+  FUNCTION(igraph_vector,clear)(result);
+  while (i < i0 && j < j0) {
+    BASE element;
+    if (VECTOR(*v1)[i] == VECTOR(*v2)[j]) {
+      element = VECTOR(*v1)[i]; k=0;
+      while (i < i0 && VECTOR(*v1)[i] == element) { i++; k++; }
+      while (j < j0 && VECTOR(*v2)[j] == element) { j++; k++; }
+      if (!keep_multiplicity) k=1;
+      while (k>0) {
+        FUNCTION(igraph_vector,push_back)(result, element);
+        k--;
+      }
+    } else if (VECTOR(*v1)[i] < VECTOR(*v2)[j]) i++;
+    else j++;
+  }
+
+  return 0;
 }

@@ -46,6 +46,19 @@ graph.lcf <- function(n, shifts, repeats=1) {
   res
 }
 
+graph.adjlist <- function(adjlist, directed=TRUE, duplicate=TRUE) {
+  # Argument checks
+  adjlist <- lapply(adjlist, as.numeric)
+  directed <- as.logical(directed)
+  duplicate <- as.logical(duplicate)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_adjlist", adjlist, directed, duplicate,
+        PACKAGE="igraph")
+  res
+}
+
 forest.fire.game <- function(nodes, fw.prob, bw.factor=1, ambs=1, directed=TRUE, verbose=igraph.par("verbose")) {
   # Argument checks
   nodes <- as.numeric(nodes)
@@ -212,6 +225,31 @@ authority.score <- function(graph, scale=TRUE, options=igraph.arpack.default) {
   res
 }
 
+arpack.unpack.complex <- function(vectors, values, nev) {
+  # Argument checks
+  vectors <- structure(as.double(vectors), dim=dim(vectors))
+  values <- structure(as.double(values), dim=dim(values))
+  nev <- as.numeric(nev)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_arpack_unpack_complex", vectors, values, nev,
+        PACKAGE="igraph")
+  res
+}
+
+is.mutual <- function(graph, es=E(graph)) {
+  # Argument checks
+  if (!is.igraph(graph)) { stop("Not a graph object") }
+  es <- as.igraph.es(es)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_is_mutual", graph, es,
+        PACKAGE="igraph")
+  res
+}
+
 clusters <- function(graph, mode=c("weak", "strong")) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
@@ -270,6 +308,19 @@ similarity.dice <- function(graph, vids=V(graph), mode=c("all", "out", "in", "to
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
   res <- .Call("R_igraph_similarity_dice", graph, vids, mode, loops,
+        PACKAGE="igraph")
+  res
+}
+
+similarity.invlogweighted <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total")) {
+  # Argument checks
+  if (!is.igraph(graph)) { stop("Not a graph object") }
+  vids <- as.igraph.vs(vids)
+  mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_similarity_inverse_log_weighted", graph, vids, mode,
         PACKAGE="igraph")
   res
 }

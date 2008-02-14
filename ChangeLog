@@ -1,3 +1,89 @@
+2008-06-24  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structure.generators.R (graph.adjacency) :
+	'sparse' option added
+
+	* interfaces/R/igraph/R/structure.generators.R (graph.adjacency) :
+	several bugs corrected
+	
+2008-06-21  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/conversion.R (get.adjacency) : 'sparse' 
+	argument added
+
+2008-06-20  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/conversion.R (igraph.from.graphNEL)
+	(igraph.to.graphNEL) : add support for attributes
+
+2008-06-15  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structure.generators.R (graph.data.frame) :
+	bug corrected
+
+2008-06-02  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/rinterface.c.in (R_igraph_shortest_path) :
+	call Bellman-Ford method if there is a negative weight
+
+2008-05-25  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structure.generators.R
+	(graph.data.frame) : added 'vertices' argument
+
+2008-05-20  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/centrality.R (arpack) : 
+	convert result of the non-symmetric solver to a better format
+
+2008-05-03  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph)
+	* interfaces/R/igraph/R/plot.common.R (i.default.values) : 
+	'arrow.width' edge option added
+
+2008-04-26  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/community.R (fastgreedy.community) :
+	added 'weights' argument
+	* interfaces/R/src/rinterface.c.in (R_igraph_community_fastgreedy) :
+	updated
+
+2008-04-02  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structure.generators.R (graph.adjacency) :
+	add 'add.colnames' and 'add.rownames' arguments
+
+2008-02-22  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : plot edge labels
+	at one third of the edge to allow better plotting of mutual edges
+
+2008-02-21  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/conversion.R (igraph.from.graphNEL)
+	(igraph.to.graphNEL)
+	* interfaces/R/src/rinterface.c.in (R_SEXP_to_igraph_adjlist) : added
+
+2008-02-18  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/plot.shapes.R : handle graphs which contain 
+	no edges at all
+
+2008-02-17  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/plot.shapes.R
+	* interfaces/R/igraph/R/plot.common.R
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : vertex shapes added,
+	some interface cleanup might be needed
+
+2008-02-16  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structural.properties.R (shortest.paths)
+	* interfaces/R/src/rinterface.c.in (R_igraph_shortest_paths):
+	weights added, we always call the weighted version, there is a 
+	fallback in that anyway
+
 2008-02-09  Gabor Csardi  <csardi@rmki.kfki.hu>
 
 	* interfaces/R/igraph/R/flow.R (graph.maxflow, graph.mincut) : allow

@@ -187,6 +187,9 @@ int igraph_i_adjacency_min(igraph_matrix_t *adjmatrix, igraph_vector_t *edges) {
  * \function igraph_adjacency
  * \brief Creates a graph object from an adjacency matrix.
  * 
+ * The order of the vertices in the matrix is preserved, i.e. the vertex 
+ * corresponding to the first row/column will be vertex with id 0, the 
+ * next row is for vertex 1, etc.
  * \param graph Pointer to an uninitialized graph object.
  * \param adjmatrix The adjacency matrix. How it is interpreted
  *        depends on the \p mode argument.
@@ -199,7 +202,7 @@ int igraph_i_adjacency_min(igraph_matrix_t *adjmatrix, igraph_vector_t *edges) {
  *        \clist
  *        \cli IGRAPH_ADJ_DIRECTED
  *          the graph will be directed and
- *          an element gives the number of edges between two vertex.
+ *          an element gives the number of edges between two vertices.
  *        \cli IGRAPH_ADJ_UNDIRECTED
  *          this is the same as \c IGRAPH_ADJ_MAX,
  *          for convenience. 
@@ -233,10 +236,8 @@ int igraph_i_adjacency_min(igraph_matrix_t *adjmatrix, igraph_vector_t *edges) {
  * \return Error code,
  *         \c IGRAPH_NONSQUARE: non-square matrix.
  * 
- * Time complexity: O(|V||V|+|E|),
- * |V| and 
- * |E| are number of vertices and
- * edges in the graph. 
+ * Time complexity: O(|V||V|),
+ * |V| is the number of vertices in the graph.
  */
 
 int igraph_adjacency(igraph_t *graph, igraph_matrix_t *adjmatrix,
@@ -279,6 +280,249 @@ int igraph_adjacency(igraph_t *graph, igraph_matrix_t *adjmatrix,
 			     (mode == IGRAPH_ADJ_DIRECTED))); 
   igraph_vector_destroy(&edges);
   IGRAPH_FINALLY_CLEAN(1);
+  
+  return 0;
+}
+
+int igraph_i_weighted_adjacency_directed(igraph_matrix_t *adjmatrix,
+  igraph_vector_t *edges, igraph_vector_t *weights) {
+  
+  long int no_of_nodes=igraph_matrix_nrow(adjmatrix);
+  long int i, j;
+  
+  for (i=0; i<no_of_nodes; i++) {
+    for (j=0; j<no_of_nodes; j++) {
+      igraph_real_t M=MATRIX(*adjmatrix, i, j);
+      if (M == 0.0) continue;
+      IGRAPH_CHECK(igraph_vector_push_back(edges, i));
+      IGRAPH_CHECK(igraph_vector_push_back(edges, j));
+      IGRAPH_CHECK(igraph_vector_push_back(weights, M));
+    }
+  }
+  
+  return 0;
+}
+
+int igraph_i_weighted_adjacency_plus(igraph_matrix_t *adjmatrix,
+  igraph_vector_t *edges, igraph_vector_t *weights) {
+  
+  long int no_of_nodes=igraph_matrix_nrow(adjmatrix);
+  long int i, j;
+  
+  for (i=0; i<no_of_nodes; i++) {
+    for (j=i; j<no_of_nodes; j++) {
+      igraph_real_t M=MATRIX(*adjmatrix, i, j) + MATRIX(*adjmatrix, j, i);
+      if (M == 0.0) continue;
+      if (i == j) M /= 2;
+      IGRAPH_CHECK(igraph_vector_push_back(edges, i));
+      IGRAPH_CHECK(igraph_vector_push_back(edges, j));
+      IGRAPH_CHECK(igraph_vector_push_back(weights, M));
+    }
+  }
+  
+  return 0;
+}
+
+int igraph_i_weighted_adjacency_max(igraph_matrix_t *adjmatrix,
+  igraph_vector_t *edges, igraph_vector_t *weights) {
+  
+  long int no_of_nodes=igraph_matrix_nrow(adjmatrix);
+  long int i, j;
+  
+  for (i=0; i<no_of_nodes; i++) {
+    for (j=i; j<no_of_nodes; j++) {
+      igraph_real_t M1=MATRIX(*adjmatrix, i, j);
+      igraph_real_t M2=MATRIX(*adjmatrix, j, i);
+      if (M1<M2) { M1=M2; }
+      if (M1 == 0.0) continue;
+      IGRAPH_CHECK(igraph_vector_push_back(edges, i));
+      IGRAPH_CHECK(igraph_vector_push_back(edges, j));
+      IGRAPH_CHECK(igraph_vector_push_back(weights, M1));
+    }
+  }
+  return 0;
+}
+
+int igraph_i_weighted_adjacency_upper(igraph_matrix_t *adjmatrix,
+  igraph_vector_t *edges, igraph_vector_t *weights) {
+  
+  long int no_of_nodes=igraph_matrix_nrow(adjmatrix);
+  long int i, j;
+  
+  for (i=0; i<no_of_nodes; i++) {
+    for (j=i; j<no_of_nodes; j++) {
+      igraph_real_t M=MATRIX(*adjmatrix, i, j);
+      if (M == 0.0) continue;
+      IGRAPH_CHECK(igraph_vector_push_back(edges, i));
+      IGRAPH_CHECK(igraph_vector_push_back(edges, j));
+      IGRAPH_CHECK(igraph_vector_push_back(weights, M));
+    }
+  }
+  return 0;
+}
+
+int igraph_i_weighted_adjacency_lower(igraph_matrix_t *adjmatrix,
+  igraph_vector_t *edges, igraph_vector_t *weights) {
+
+  long int no_of_nodes=igraph_matrix_nrow(adjmatrix);
+  long int i, j;
+  
+  for (i=0; i<no_of_nodes; i++) {
+    for (j=0; j<=i; j++) {
+      igraph_real_t M=MATRIX(*adjmatrix, i, j);
+      if (M == 0.0) continue;
+      IGRAPH_CHECK(igraph_vector_push_back(edges, i));
+      IGRAPH_CHECK(igraph_vector_push_back(edges, j));
+      IGRAPH_CHECK(igraph_vector_push_back(weights, M));
+    }
+  }
+  return 0;
+}
+
+int igraph_i_weighted_adjacency_min(igraph_matrix_t *adjmatrix,
+  igraph_vector_t *edges, igraph_vector_t *weights) {
+  
+  long int no_of_nodes=igraph_matrix_nrow(adjmatrix);
+  long int i, j;
+  
+  for (i=0; i<no_of_nodes; i++) {
+    for (j=i; j<no_of_nodes; j++) {
+      igraph_real_t M1=MATRIX(*adjmatrix, i, j);
+      igraph_real_t M2=MATRIX(*adjmatrix, j, i);
+      if (M1>M2) { M1=M2; }
+      if (M1 == 0.0) continue;
+      IGRAPH_CHECK(igraph_vector_push_back(edges, i));
+      IGRAPH_CHECK(igraph_vector_push_back(edges, j));
+      IGRAPH_CHECK(igraph_vector_push_back(weights, M1));
+    }
+  }
+  
+  return 0;
+}
+
+/**
+ * \ingroup generators
+ * \function igraph_weighted_adjacency
+ * \brief Creates a graph object from a weighted adjacency matrix.
+ * 
+ * The order of the vertices in the matrix is preserved, i.e. the vertex 
+ * corresponding to the first row/column will be vertex with id 0, the 
+ * next row is for vertex 1, etc.
+ * \param graph Pointer to an uninitialized graph object.
+ * \param adjmatrix The weighted adjacency matrix. How it is interpreted
+ *        depends on the \p mode argument. The common feature is that
+ *        edges with zero weights are considered nonexistent (however,
+ *        negative weights are permitted).
+ * \param mode Constant to specify how the given matrix is interpreted
+ *        as an adjacency matrix. Possible values
+ *        (A(i,j) 
+ *        is the element in row i and column
+ *        j in the adjacency matrix
+ *        (\p adjmatrix): 
+ *        \clist
+ *        \cli IGRAPH_ADJ_DIRECTED
+ *          the graph will be directed and
+ *          an element gives the weight of the edge between two vertices.
+ *        \cli IGRAPH_ADJ_UNDIRECTED
+ *          this is the same as \c IGRAPH_ADJ_MAX,
+ *          for convenience. 
+ *        \cli IGRAPH_ADJ_MAX
+ *          undirected graph will be created
+ *          and the weight of the edge between vertex
+ *          i and 
+ *          j is
+ *          max(A(i,j), A(j,i)). 
+ *        \cli IGRAPH_ADJ_MIN
+ *          undirected graph will be created
+ *          with edge weight min(A(i,j), A(j,i))
+ *          between vertex 
+ *          i and
+ *          j. 
+ *        \cli IGRAPH_ADJ_PLUS 
+ *          undirected graph will be created 
+ *          with edge weight A(i,j)+A(j,i)
+ *          between vertex 
+ *          i and
+ *          j.  
+ *        \cli IGRAPH_ADJ_UPPER 
+ *          undirected graph will be created,
+ *          only the upper right triangle (including the diagonal) is
+ *          used for the edge weights.
+ *        \cli IGRAPH_ADJ_LOWER 
+ *          undirected graph will be created,
+ *          only the lower left triangle (including the diagonal) is 
+ *          used for the edge weights. 
+ *       \endclist
+ * \param attr the name of the attribute that will store the edge weights.
+ *         If \c NULL , it will use \c weight as the attribute name.
+ * \return Error code,
+ *         \c IGRAPH_NONSQUARE: non-square matrix.
+ * 
+ * Time complexity: O(|V||V|),
+ * |V| is the number of vertices in the graph.a
+ */
+
+int igraph_weighted_adjacency(igraph_t *graph, igraph_matrix_t *adjmatrix,
+		     igraph_adjacency_t mode, const char* attr) {
+
+  igraph_vector_t edges=IGRAPH_VECTOR_NULL;
+  igraph_vector_t weights=IGRAPH_VECTOR_NULL;
+  const char* default_attr = "weight";
+  igraph_vector_ptr_t attr_vec;
+  igraph_i_attribute_record_t attr_rec;
+  long int no_of_nodes;
+
+  /* Some checks */
+  if (igraph_matrix_nrow(adjmatrix) != igraph_matrix_ncol(adjmatrix)) {
+    IGRAPH_ERROR("Non-square matrix", IGRAPH_NONSQUARE);
+  }
+
+  IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
+  IGRAPH_VECTOR_INIT_FINALLY(&weights, 0);
+  IGRAPH_VECTOR_PTR_INIT_FINALLY(&attr_vec, 1);
+
+  /* Collect the edges */
+  no_of_nodes=igraph_matrix_nrow(adjmatrix);
+  switch (mode) {
+  case IGRAPH_ADJ_DIRECTED:
+    IGRAPH_CHECK(igraph_i_weighted_adjacency_directed(adjmatrix, &edges, &weights));
+    break;
+  case IGRAPH_ADJ_MAX:
+    IGRAPH_CHECK(igraph_i_weighted_adjacency_max(adjmatrix, &edges, &weights));
+    break;
+  case IGRAPH_ADJ_UPPER:
+    IGRAPH_CHECK(igraph_i_weighted_adjacency_upper(adjmatrix, &edges, &weights));
+    break;
+  case IGRAPH_ADJ_LOWER:
+    IGRAPH_CHECK(igraph_i_weighted_adjacency_lower(adjmatrix, &edges, &weights));
+    break;
+  case IGRAPH_ADJ_MIN:
+    IGRAPH_CHECK(igraph_i_weighted_adjacency_min(adjmatrix, &edges, &weights));
+    break;
+  case IGRAPH_ADJ_PLUS:
+    IGRAPH_CHECK(igraph_i_weighted_adjacency_plus(adjmatrix, &edges, &weights));
+    break;
+  }
+
+  /* Prepare attribute record */
+  attr_rec.name = attr ? attr : default_attr;
+  attr_rec.type = IGRAPH_ATTRIBUTE_NUMERIC;
+  attr_rec.value = &weights;
+  VECTOR(attr_vec)[0] = &attr_rec;
+
+  /* Create graph */
+  IGRAPH_CHECK(igraph_empty(graph, no_of_nodes, (mode == IGRAPH_ADJ_DIRECTED)));
+  IGRAPH_FINALLY(igraph_destroy, graph);
+  if (igraph_vector_size(&edges)>0) {
+    IGRAPH_CHECK(igraph_add_edges(graph, &edges, &attr_vec));
+  }
+  IGRAPH_FINALLY_CLEAN(1);
+
+  /* Cleanup */
+  igraph_vector_destroy(&edges);
+  igraph_vector_destroy(&weights);
+  igraph_vector_ptr_destroy(&attr_vec);
+  IGRAPH_FINALLY_CLEAN(3);
   
   return 0;
 }
@@ -1776,6 +2020,93 @@ int igraph_famous(igraph_t *graph, const char *name) {
   } else {
     IGRAPH_ERROR("Unknown graph, see documentation", IGRAPH_EINVAL);
   }
+  
+  return 0;
+}
+
+/**
+ * \function igraph_adjlist
+ * Create a graph from an adjacency list
+ * 
+ * An adjacency list is list of vectors, containing the neighbors 
+ * of all vertices. For operations that involve many changes of the
+ * graph structure, it is recommended that you convert the graph into
+ * and adjacency list via \ref igraph_adjlist_init(), perform the
+ * modifications (these are cheap for an adjacency list) and then
+ * recreate the igraph graph via this function.
+ * 
+ * \param graph Pointer to an uninitialized graph object.
+ * \param adjlist The adjacency list.
+ * \param directed Logical, whether or not to create a directed graph.
+ * \param duplicate Logical, for undirected graphs this specified
+ *        whether each edge is included twice, in the vectors of 
+ *        both adjacenct vertices. If this is false (0), then it is
+ *        assumed that every edge is included only once. This argument 
+ *        is ignored for directed graphs.
+ * \return Error code.
+ * 
+ * \sa \ref igraph_adjlist_init() for the opposite operation.
+ *
+ * Time complexity: O(|V|+|E|).
+ * 
+ */
+
+int igraph_adjlist(igraph_t *graph, const igraph_adjlist_t *adjlist,
+		   igraph_bool_t directed, igraph_bool_t duplicate) {
+  
+  long int no_of_nodes=igraph_adjlist_size(adjlist);
+  long int no_of_edges=0;
+  long int i;
+
+  igraph_vector_t edges;
+  long int edgeptr=0;
+
+  duplicate = duplicate && !directed; /* only duplicate if undirected */
+  
+  for (i=0; i<no_of_nodes; i++) {
+    no_of_edges += igraph_vector_size(igraph_adjlist_get(adjlist, i));
+  }
+  
+  if (duplicate) {
+    no_of_edges /= 2;
+  }
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&edges, 2*no_of_edges);
+  
+  for (i=0; i<no_of_nodes; i++) {
+    igraph_vector_t *neis=igraph_adjlist_get(adjlist, i);
+    long int j, n=igraph_vector_size(neis);
+    long int loops=0;
+    for (j=0; j<n; j++) {
+      long int nei=VECTOR(*neis)[j];
+      if (nei==i) {
+	loops++; 
+      } else {
+	if (! duplicate || nei > i) {
+	  if (edgeptr+2 > 2*no_of_edges) {
+	    IGRAPH_ERROR("Invalid adjacency list, most probably not correctly"
+			 " duplicated edges for an undirected graph", IGRAPH_EINVAL);
+	  }
+	  VECTOR(edges)[edgeptr++] = i;
+	  VECTOR(edges)[edgeptr++] = nei;
+	}
+      }
+    }
+    /* loops */
+    if (duplicate) { loops=loops/2; }
+    if (edgeptr+2*loops > 2*no_of_edges) {
+      IGRAPH_ERROR("Invalid adjacency list, most probably not correctly"
+		   " duplicated edges for an undirected graph", IGRAPH_EINVAL);
+    }
+    for (j=0; j<loops; j++) {
+      VECTOR(edges)[edgeptr++] = i;
+      VECTOR(edges)[edgeptr++] = i;
+    }
+  }
+  
+  IGRAPH_CHECK(igraph_create(graph, &edges, no_of_nodes, directed));
+  igraph_vector_destroy(&edges);
+  IGRAPH_FINALLY_CLEAN(1);
   
   return 0;
 }

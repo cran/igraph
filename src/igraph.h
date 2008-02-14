@@ -126,7 +126,8 @@ typedef enum { IGRAPH_GET_ADJACENCY_UPPER=0,
 	       IGRAPH_GET_ADJACENCY_LOWER,
 	       IGRAPH_GET_ADJACENCY_BOTH } igraph_get_adjacency_t;
 
-typedef enum { IGRAPH_DEGSEQ_SIMPLE=0 } igraph_degseq_t;
+typedef enum { IGRAPH_DEGSEQ_SIMPLE=0,
+	       IGRAPH_DEGSEQ_VL } igraph_degseq_t;
 
 typedef enum { IGRAPH_FILEFORMAT_EDGELIST=0,
 	       IGRAPH_FILEFORMAT_NCOL,
@@ -230,7 +231,7 @@ int igraph_vs_as_vector(const igraph_t *graph, igraph_vs_t vs,
 			igraph_vector_t *v);
 int igraph_vs_size(const igraph_t *graph, const igraph_vs_t *vs,
   igraph_integer_t *result);
-inline int igraph_vs_type(const igraph_vs_t *vs);
+int igraph_vs_type(const igraph_vs_t *vs);
 
 /* -------------------------------------------------- */
 /* Vertex iterators                                   */
@@ -432,7 +433,7 @@ int igraph_es_as_vector(const igraph_t *graph, igraph_es_t es,
 			igraph_vector_t *v);
 int igraph_es_size(const igraph_t *graph, const igraph_es_t *es,
   igraph_integer_t *result);
-inline int igraph_es_type(const igraph_es_t *es);
+int igraph_es_type(const igraph_es_t *es);
 
 
 /* -------------------------------------------------- */
@@ -576,6 +577,8 @@ int igraph_small(igraph_t *graph, igraph_integer_t n, igraph_bool_t directed,
 		 ...);
 int igraph_adjacency(igraph_t *graph, igraph_matrix_t *adjmatrix,
 		     igraph_adjacency_t mode);
+int igraph_weighted_adjacency(igraph_t *graph, igraph_matrix_t *adjmatrix,
+		              igraph_adjacency_t mode, const char* attr);
 int igraph_star(igraph_t *graph, igraph_integer_t n, igraph_star_mode_t mode, 
 		igraph_integer_t center);
 int igraph_lattice(igraph_t *graph, const igraph_vector_t *dimvector, igraph_integer_t nei, 
@@ -745,6 +748,23 @@ int igraph_get_all_shortest_paths(const igraph_t *graph,
 				  igraph_vector_t *nrgeo,
 				  igraph_integer_t from, const igraph_vs_t to, 
 				  igraph_neimode_t mode);
+int igraph_shortest_paths_dijkstra(const igraph_t *graph,
+				   igraph_matrix_t *res,
+				   const igraph_vs_t from,
+				   const igraph_vector_t *weights, 
+				   igraph_neimode_t mode);
+int igraph_shortest_paths_bellman_ford(const igraph_t *graph,
+				   igraph_matrix_t *res,
+				   const igraph_vs_t from,
+				   const igraph_vector_t *weights, 
+				   igraph_neimode_t mode);
+int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
+                                       igraph_vector_ptr_t *res,
+									   igraph_integer_t from,
+									   igraph_vs_t to,
+									   const igraph_vector_t *weights,
+									   igraph_neimode_t mode); 
+
 int igraph_subcomponent(const igraph_t *graph, igraph_vector_t *res, igraph_real_t vid, 
 			igraph_neimode_t mode);	
 int igraph_betweenness(const igraph_t *graph, igraph_vector_t *res, 
@@ -829,6 +849,8 @@ int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
 
 int igraph_laplacian(const igraph_t *graph, igraph_matrix_t *res,
 		     igraph_bool_t normalized);
+
+int igraph_is_mutual(igraph_t *graph, igraph_vector_bool_t *res, igraph_es_t es);
 
 /* -------------------------------------------------- */
 /* Components                                         */
@@ -925,6 +947,99 @@ int igraph_layout_graphopt(const igraph_t *graph,
 			   igraph_real_t max_sa_movement,
 			   igraph_bool_t use_seed);
 
+/** 
+ * \struct igraph_layout_drl_options_t
+ * Parameters for the DrL layout generator
+ *
+ * \member edge_cut The edge cutting parameter.
+ *    Edge cutting is done in the late stages of the
+ *    algorithm in order to achieve less dense layouts.  Edges are cut
+ *    if there is a lot of stress on them (a large value in the
+ *    objective function sum).  The edge cutting parameter is a value
+ *    between 0 and 1 with 0 representing no edge cutting and 1
+ *    representing maximal edge cutting. The default value is 32/40.
+ * \member init_iterations Number of iterations, initial phase.
+ * \member init_temperature Start temperature, initial phase.
+ * \member init_attraction Attraction, initial phase.
+ * \member init_damping_mult Damping factor, initial phase.
+ * \member liquid_iterations Number of iterations in the liquid phase.
+ * \member liquid_temperature Start temperature in the liquid phase.
+ * \member liquid_attraction Attraction in the liquid phase.
+ * \member liquid_damping_mult Multiplicatie damping factor, liquid phase.
+ * \member expansion_iterations Number of iterations in the expansion phase.
+ * \member expansion_temperature Start temperature in the expansion phase.
+ * \member expansion_attraction Attraction, expansion phase.
+ * \member expansion_damping_mult Damping factor, expansion phase.
+ * \member cooldown_iterations Number of iterations in the cooldown phase.
+ * \member cooldown_temperature Start temperature in the cooldown phase.
+ * \member cooldown_attraction Attraction in the cooldown phase.
+ * \member cooldown_damping_mult Damping fact int the cooldown phase.
+ * \member crunch_iterations Number of iterations in the crunch phase.
+ * \member crunch_temperature Start temperature in the crunch phase.
+ * \member crunch_attraction Attraction in the crunch phase.
+ * \member crunch_damping_mult Damping factor in the crunch phase.
+ * \member simmer_iterations Number of iterations in the simmer phase.
+ * \member simmer_temperature Start temperature in te simmer phase.
+ * \member simmer_attraction Attraction in the simmer phase.
+ * \member simmer_damping_mult Multiplicative damping factor in the simmer phase.
+ */
+
+typedef struct igraph_layout_drl_options_t {
+  igraph_real_t    edge_cut;
+  igraph_integer_t init_iterations;
+  igraph_real_t    init_temperature;
+  igraph_real_t    init_attraction;
+  igraph_real_t    init_damping_mult;
+  igraph_integer_t liquid_iterations;
+  igraph_real_t    liquid_temperature;
+  igraph_real_t    liquid_attraction;
+  igraph_real_t    liquid_damping_mult;
+  igraph_integer_t expansion_iterations;
+  igraph_real_t    expansion_temperature;
+  igraph_real_t    expansion_attraction;
+  igraph_real_t    expansion_damping_mult;
+  igraph_integer_t cooldown_iterations;
+  igraph_real_t    cooldown_temperature;
+  igraph_real_t    cooldown_attraction;
+  igraph_real_t    cooldown_damping_mult;
+  igraph_integer_t crunch_iterations;
+  igraph_real_t    crunch_temperature;
+  igraph_real_t    crunch_attraction;
+  igraph_real_t    crunch_damping_mult;
+  igraph_integer_t simmer_iterations;
+  igraph_real_t    simmer_temperature;
+  igraph_real_t    simmer_attraction;
+  igraph_real_t    simmer_damping_mult;
+} igraph_layout_drl_options_t;
+
+/**
+ * \typedef igraph_layout_drl_default_t 
+ * Predefined parameter templates for the DrL layout generator
+ * 
+ * These constants can be used to initialize a set of DrL parameters. 
+ * These can then be modified according to the user's needs.
+ * \enumval IGRAPH_LAYOUT_DRL_DEFAULT The deafult parameters.
+ * \enumval IGRAPH_LAYOUT_DRL_COARSEN Slightly modified parameters to
+ *      get a coarser layout.  
+ * \enumval IGRAPH_LAYOUT_DRL_COARSEST An even coarser layout.
+ * \enumval IGRAPH_LAYOUT_DRL_REFINE Refine an already calculated layout.
+ * \enumval IGRAPH_LAYOUT_DRL_FINAL Finalize an already refined layout.
+ */
+
+typedef enum { IGRAPH_LAYOUT_DRL_DEFAULT=0, 
+	       IGRAPH_LAYOUT_DRL_COARSEN,
+	       IGRAPH_LAYOUT_DRL_COARSEST,
+	       IGRAPH_LAYOUT_DRL_REFINE,
+	       IGRAPH_LAYOUT_DRL_FINAL } igraph_layout_drl_default_t;
+
+int igraph_layout_drl_options_init(igraph_layout_drl_options_t *options,
+				   igraph_layout_drl_default_t templ);
+int igraph_layout_drl(const igraph_t *graph, igraph_matrix_t *res, 
+		      igraph_bool_t use_seed,
+		      igraph_layout_drl_options_t *options,
+		      const igraph_vector_t *weights, 
+		      const igraph_vector_bool_t *fixed);
+
 int igraph_layout_merge_dla(igraph_vector_ptr_t *graphs,
 			    igraph_vector_ptr_t *coords, 
 			    igraph_matrix_t *res);
@@ -967,6 +1082,9 @@ int igraph_similarity_jaccard(const igraph_t *graph, igraph_matrix_t *res,
 int igraph_similarity_dice(const igraph_t *graph, igraph_matrix_t *res,
               const igraph_vs_t vids, igraph_neimode_t mode,
 			  igraph_bool_t loops);
+int igraph_similarity_inverse_log_weighted(const igraph_t *graph,
+              igraph_matrix_t *res, const igraph_vs_t vids,
+              igraph_neimode_t mode);
 
 /* -------------------------------------------------- */
 /* Community Structure                                */
@@ -1339,7 +1457,7 @@ int igraph_st_mincut_value(const igraph_t *graph, igraph_real_t *res,
 			   const igraph_vector_t *capacity);
 
 int igraph_mincut(const igraph_t *graph,
-		  igraph_integer_t *value,
+		  igraph_real_t *value,
 		  igraph_vector_t *partition,
 		  igraph_vector_t *partition2,
 		  igraph_vector_t *cut,
@@ -2738,6 +2856,7 @@ typedef struct igraph_adjlist_t {
 
 int igraph_adjlist_init(const igraph_t *graph, igraph_adjlist_t *al, 
 			  igraph_neimode_t mode);
+igraph_integer_t igraph_adjlist_size(const igraph_adjlist_t *al); 
 int igraph_adjlist_init_complementer(const igraph_t *graph,
 				     igraph_adjlist_t *al, 
 				     igraph_neimode_t mode,
@@ -2761,6 +2880,9 @@ int igraph_adjlist_simplify(igraph_adjlist_t *al);
  * Time complexity: O(1).
  */
 #define igraph_adjlist_get(al,no) (&(al)->adjs[(long int)(no)])
+
+int igraph_adjlist(igraph_t *graph, const igraph_adjlist_t *adjlist,
+		   igraph_bool_t directed, igraph_bool_t duplicate);
 
 typedef struct igraph_adjedgelist_t {
   igraph_integer_t length;

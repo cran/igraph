@@ -52,7 +52,7 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 68 "foreign-ncol-parser.y"
+#line 69 "foreign-ncol-parser.y"
 {
   long int edgenum;
   double weightnum;

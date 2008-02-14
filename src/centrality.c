@@ -150,6 +150,12 @@ int igraph_eigenvector_centrality(const igraph_t *graph, igraph_vector_t *vector
   igraph_vector_destroy(&degree);
   IGRAPH_FINALLY_CLEAN(1);
   
+  options->n = igraph_vcount(graph);
+  options->nev = 1;
+  options->ncv = 3;
+  options->which[0]='L'; options->which[1]='A';
+  options->start=1;		/* no random start vector */
+
   if (!weights) {
     
     igraph_adjlist_t adjlist;
@@ -290,6 +296,12 @@ int igraph_i_kleinberg(const igraph_t *graph, igraph_vector_t *vector,
   }
 	
   extra.in=inadjlist; extra.out=outadjlist; extra.tmp=&tmp;
+
+  options->n = igraph_vcount(graph);
+  options->nev = 1;
+  options->ncv = 3;
+  options->which[0]='L'; options->which[1]='M';
+  options->start=1;		/* no random start vector */
 
   IGRAPH_CHECK(igraph_arpack_rssolve(igraph_i_kleinberg2, &extra,
 				     options, 0, &values, &vectors));
@@ -583,7 +595,7 @@ int igraph_pagerank(const igraph_t *graph, igraph_vector_t *vector,
   options->which[0]='L'; options->which[1]='M';
   options->start=1;		/* no random start vector */
 
-  directed <- directed && igraph_is_directed(graph);
+  directed = directed && igraph_is_directed(graph);
 
   if (weights && igraph_vector_size(weights) != igraph_ecount(graph))
   {

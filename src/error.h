@@ -312,6 +312,7 @@ igraph_set_error_handler(igraph_error_handler_t* new_handler);
  * \enumval IGRAPH_ARPACK_SHUR Error from calculation of a real Schur form.
  * \enumval IGRAPH_ARPACK_LAPACK LAPACK (dtrevc) error for calculating eigenvectors.
  * \enumval IGRAPH_ARPACK_UNKNOWN Unkown ARPACK error.
+ * \enumval IGRAPH_ENEGLOOP Negative loop detected while calculating shortest paths.
  */
 
 typedef enum {
@@ -350,7 +351,8 @@ typedef enum {
   IGRAPH_ARPACK_EVDIFF    = 33,
   IGRAPH_ARPACK_SHUR      = 34,
   IGRAPH_ARPACK_LAPACK    = 35,
-  IGRAPH_ARPACK_UNKNOWN   = 36
+  IGRAPH_ARPACK_UNKNOWN   = 36,
+  IGRAPH_ENEGLOOP         = 37
 } igraph_error_type_t;
 
 /**
@@ -458,6 +460,32 @@ void IGRAPH_FINALLY_CLEAN(int num);
  */
 
 void IGRAPH_FINALLY_FREE(void);
+
+/**
+ * \function IGRAPH_FINALLY_STACK_SIZE
+ * \brief Returns the number of registered objects.
+ *
+ * Returns the number of objects in the stack of temporarily allocated
+ * objects. This function is handy if you write an own igraph routine and
+ * you want to make sure it handles errors properly. A properly written
+ * igraph routine should not leave pointers to temporarily allocated objects
+ * in the finally stack, because otherwise an \ref IGRAPH_FINALLY_FREE call
+ * in another igraph function would result in freeing these objects as well
+ * (and this is really hard to debug, since the error will be not in that
+ * function that shows erroneous behaviour). Therefore, it is advised to
+ * write your own test cases and examine \ref IGRAPH_FINALLY_STACK_SIZE
+ * before and after your test cases - the numbers should be equal.
+ */
+int IGRAPH_FINALLY_STACK_SIZE(void);
+
+/**
+ * \define IGRAPH_FINALLY_STACK_EMPTY
+ * \brief Returns true if there are no registered objects, false otherwise.
+ *
+ * This is just a shorthand notation for checking that
+ * \ref IGRAPH_FINALLY_STACK_SIZE is zero.
+ */
+#define IGRAPH_FINALLY_STACK_EMPTY (IGRAPH_FINALLY_STACK_SIZE() == 0)
 
 /**
  * \define IGRAPH_FINALLY

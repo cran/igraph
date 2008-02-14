@@ -66,7 +66,8 @@ static char *igraph_i_error_strings[]=
     /* 33 */ "Different number of converged Ritz values",
     /* 34 */ "Error from calculation of a real Schur form",
     /* 35 */ "LAPACK (dtrevc) error for calculating eigenvectors",
-    /* 36 */ "Unkown ARPACK error"
+    /* 36 */ "Unknown ARPACK error",
+    /* 37 */ "Negative loop detected while calculating shortest paths",
 };
 
 const char* igraph_strerror(const int igraph_errno) {
@@ -143,6 +144,10 @@ void IGRAPH_FINALLY_FREE(void) {
     igraph_i_finally_stack[p].func(igraph_i_finally_stack[p].ptr);
   }
   igraph_i_finally_stack[0].all=0;
+}
+
+inline int IGRAPH_FINALLY_STACK_SIZE(void) {
+  return igraph_i_finally_stack[0].all;
 }
 
 static igraph_warning_handler_t *igraph_i_warning_handler=0;

@@ -208,6 +208,8 @@ int FUNCTION(igraph_vector,init_int_end)(TYPE(igraph_vector)*v, int endmark, ...
 
 int FUNCTION(igraph_vector,move_interval)(TYPE(igraph_vector) *v, 
 					  long int begin, long int end, long int to);
+int FUNCTION(igraph_vector,move_interval2)(TYPE(igraph_vector) *v, 
+					  long int begin, long int end, long int to);
 void FUNCTION(igraph_vector,permdelete)(TYPE(igraph_vector) *v, 
 					const igraph_vector_t *index, 
 					long int nremove);
@@ -218,3 +220,7 @@ int FUNCTION(igraph_vector,filter_smaller)(TYPE(igraph_vector) *v, BASE elem);
 int FUNCTION(igraph_vector,get_interval)(const TYPE(igraph_vector) *v, 
 					 TYPE(igraph_vector) *res,
 					 long int from, long int to);
+int FUNCTION(igraph_vector,intersect_sorted)(const TYPE(igraph_vector) *v1,
+  const TYPE(igraph_vector) *v2, TYPE(igraph_vector) *result,
+  igraph_bool_t keep_multiplicity);
+

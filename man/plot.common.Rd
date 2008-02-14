@@ -98,6 +98,14 @@
 
       The default value is 15. This is big enough to place short labels
       on vertices.}
+    \item{size2}{The \dQuote{other} size of the vertex, for some vertex
+      shapes. For the various rectangle shapes this gives the height of
+      the vertices, whereas \code{size} gives the width. It is ignored
+      by shapes for which the size can be specified with a single
+      number.
+
+      The default is 15.
+    }
     \item{color}{The fill color of the vertex. If it is numeric then
       the current palette is used, see
       \code{\link[grDevices]{palette}}. If it is a character vector then
@@ -114,9 +122,16 @@
 
       By default it is \dQuote{black}.
     }
-    \item{shape}{The shape of the vertex, currently only
-      \dQuote{\code{circle}} and \dQuote{\code{square}} is supported,
-      and only by the \code{\link{plot.igraph}} command.
+    \item{shape}{The shape of the vertex, currently
+      \dQuote{\code{circle}}, \dQuote{\code{square}},
+      \dQuote{\code{csquare}}, \dQuote{\code{rectangle}},
+      \dQuote{\code{crectangle}}, \dQuote{\code{vrectangle}} and
+      \dQuote{\code{none}} are supported,
+      and only by the \code{\link{plot.igraph}}
+      command. \dQuote{\code{none}} does not draw the vertices at all,
+      although vertex label are plotted (if given). See
+      \code{\link{igraph.vertex.shapes}} for details about vertex
+      shapes.
 
       By default vertices are drawn as circles.
     }
@@ -227,6 +242,17 @@
       edge is used for all arrows. This will likely change in the future.
 
       The default value is 1.
+    }
+    \item{arrow.width}{The width of the arrows. Currently this is a
+      constant, so it is the same for every edge. If a vector is
+      submitted then only the first element is used, ie. if this is
+      taken from an edge attribute then only the attribute of the first
+      edge is used for all arrows. This will likely change in the future.
+
+      This argument is currently only used by \code{\link{plot.igraph}}.
+      
+      The default value is 1, which gives the same width as before
+      this option appeared in igraph.
     }
     \item{lty}{The line type for the edges. Almost the same format is
       accepted as for the standard graphics \code{\link[graphics]{par}},

@@ -118,6 +118,7 @@ extern int igraph_lgl_yylex(void);
 extern long int igraph_lgl_mylineno;
 extern char *igraph_lgl_yytext;
 extern int igraph_lgl_yyleng;
+char *igraph_i_lgl_errmsg=0;
 int igraph_lgl_yyerror(char *s);
 #include "types.h" 
 #include "memory.h"
@@ -150,13 +151,13 @@ long int igraph_lgl_actvertex;
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 68 "foreign-lgl-parser.y"
+#line 69 "foreign-lgl-parser.y"
 {
   long int edgenum;
   double weightnum;
 }
 /* Line 187 of yacc.c.  */
-#line 160 "foreign-lgl-parser.c"
+#line 161 "foreign-lgl-parser.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -169,7 +170,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 173 "foreign-lgl-parser.c"
+#line 174 "foreign-lgl-parser.c"
 
 #ifdef short
 # undef short
@@ -455,8 +456,8 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    82,    82,    83,    84,    87,    89,    91,    91,    93,
-      98,   106,   110
+       0,    83,    83,    84,    85,    88,    90,    92,    92,    94,
+      99,   107,   111
 };
 #endif
 
@@ -1358,12 +1359,12 @@ yyreduce:
   switch (yyn)
     {
         case 6:
-#line 89 "foreign-lgl-parser.y"
+#line 90 "foreign-lgl-parser.y"
     { igraph_lgl_actvertex=(yyvsp[(2) - (3)].edgenum); }
     break;
 
   case 9:
-#line 93 "foreign-lgl-parser.y"
+#line 94 "foreign-lgl-parser.y"
     { 
              igraph_vector_push_back(igraph_lgl_vector, igraph_lgl_actvertex);
 	     igraph_vector_push_back(igraph_lgl_vector, (yyvsp[(1) - (2)].edgenum));
@@ -1372,7 +1373,7 @@ yyreduce:
     break;
 
   case 10:
-#line 98 "foreign-lgl-parser.y"
+#line 99 "foreign-lgl-parser.y"
     { 
              igraph_vector_push_back(igraph_lgl_vector, igraph_lgl_actvertex);
 	     igraph_vector_push_back(igraph_lgl_vector, (yyvsp[(1) - (3)].edgenum));
@@ -1381,21 +1382,21 @@ yyreduce:
     break;
 
   case 11:
-#line 106 "foreign-lgl-parser.y"
+#line 107 "foreign-lgl-parser.y"
     { igraph_trie_get2(igraph_lgl_trie, 
 				   igraph_lgl_yytext, 
 				   igraph_lgl_yyleng, &(yyval.edgenum)); }
     break;
 
   case 12:
-#line 110 "foreign-lgl-parser.y"
+#line 111 "foreign-lgl-parser.y"
     { (yyval.weightnum)=igraph_lgl_get_number(igraph_lgl_yytext, 
 					   igraph_lgl_yyleng); }
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1399 "foreign-lgl-parser.c"
+#line 1400 "foreign-lgl-parser.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1609,16 +1610,18 @@ yyreturn:
 }
 
 
-#line 113 "foreign-lgl-parser.y"
+#line 114 "foreign-lgl-parser.y"
 
 
 int igraph_lgl_yyerror (char *s)
 {
-  char str[200];  
+  static char str[300];  
   igraph_i_lgl_reset_scanner();
-  snprintf(str, sizeof(str), "Parse error in LGL file, line %li", 
-	   igraph_lgl_mylineno);
-  IGRAPH_ERROR(str, IGRAPH_PARSEERROR);
+
+  snprintf(str, sizeof(str), "Parse error in LGL file, line %li (%s)", 
+	   (long)igraph_lgl_mylineno, s);
+  igraph_i_lgl_errmsg=str;
+  return 0;
 }
 
 igraph_real_t igraph_lgl_get_number(const char *str, long int length) {
