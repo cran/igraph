@@ -84,7 +84,7 @@ int igraph_motifs_randesu(const igraph_t *graph, igraph_vector_t *hist,
 			  int size, const igraph_vector_t *cut_prob) {
 
   long int no_of_nodes=igraph_vcount(graph);
-  igraph_i_adjlist_t allneis, alloutneis;
+  igraph_adjlist_t allneis, alloutneis;
   igraph_vector_t *neis;
   long int father;
   long int i, j, s;
@@ -132,27 +132,29 @@ int igraph_motifs_randesu(const igraph_t *graph, igraph_vector_t *hist,
   IGRAPH_CHECK(igraph_vector_resize(hist, histlen));
   igraph_vector_null(hist);
   
-  added=Calloc(no_of_nodes, long int);
+  added=igraph_Calloc(no_of_nodes, long int);
   if (added==0) {
     IGRAPH_ERROR("Cannot find motifs", IGRAPH_ENOMEM);
   }
   IGRAPH_FINALLY(igraph_free, added);
 
-  subg=Calloc(no_of_nodes, char);
+  subg=igraph_Calloc(no_of_nodes, char);
   if (subg==0) {
     IGRAPH_ERROR("Cannot find motifs", IGRAPH_ENOMEM);
   }
   IGRAPH_FINALLY(igraph_free, subg);
 
-  IGRAPH_CHECK(igraph_i_adjlist_init(graph, &allneis, IGRAPH_ALL));
-  IGRAPH_FINALLY(igraph_i_adjlist_destroy, &allneis);  
-  IGRAPH_CHECK(igraph_i_adjlist_init(graph, &alloutneis, IGRAPH_OUT));
-  IGRAPH_FINALLY(igraph_i_adjlist_destroy, &alloutneis);  
+  IGRAPH_CHECK(igraph_adjlist_init(graph, &allneis, IGRAPH_ALL));
+  IGRAPH_FINALLY(igraph_adjlist_destroy, &allneis);  
+  IGRAPH_CHECK(igraph_adjlist_init(graph, &alloutneis, IGRAPH_OUT));
+  IGRAPH_FINALLY(igraph_adjlist_destroy, &alloutneis);  
 
   IGRAPH_VECTOR_INIT_FINALLY(&vids, 0);
   IGRAPH_VECTOR_INIT_FINALLY(&adjverts, 0);
   IGRAPH_CHECK(igraph_stack_init(&stack, 0));
   IGRAPH_FINALLY(igraph_stack_destroy, &stack);
+
+  RNG_BEGIN();
 
   for (father=0; father<no_of_nodes; father++) {
     long int level;
@@ -166,7 +168,7 @@ int igraph_motifs_randesu(const igraph_t *graph, igraph_vector_t *hist,
     
     /* init V_E */
     igraph_vector_clear(&adjverts);
-    neis=igraph_i_adjlist_get(&allneis, father);
+    neis=igraph_adjlist_get(&allneis, father);
     s=igraph_vector_size(neis);
     for (i=0; i<s; i++) {
       long int nei=VECTOR(*neis)[i];
@@ -180,9 +182,9 @@ int igraph_motifs_randesu(const igraph_t *graph, igraph_vector_t *hist,
     /* init S */
     igraph_stack_clear(&stack);
 
-    while (level != 1 || !igraph_vector_empty(&adjverts)) {
+    while (level > 1 || !igraph_vector_empty(&adjverts)) {
       igraph_real_t cp=VECTOR(*cut_prob)[level];
-      
+
       if (level==size-1) {
 	s=igraph_vector_size(&adjverts)/2;
 	for (i=0; i<s; i++) {
@@ -199,7 +201,7 @@ int igraph_motifs_randesu(const igraph_t *graph, igraph_vector_t *hist,
 	  code=0; idx=0;
 	  for (k=0; k<size; k++) {
 	    long int from=VECTOR(vids)[k];
- 	    neis=igraph_i_adjlist_get(&alloutneis, from);
+ 	    neis=igraph_adjlist_get(&alloutneis, from);
 	    s2=igraph_vector_size(neis);
 	    for (j=0; j<s2; j++) {
 	      long int nei=VECTOR(*neis)[j];
@@ -230,7 +232,7 @@ int igraph_motifs_randesu(const igraph_t *graph, igraph_vector_t *hist,
 	IGRAPH_CHECK(igraph_stack_push(&stack, nei));
 	IGRAPH_CHECK(igraph_stack_push(&stack, level));
 	
-	neis=igraph_i_adjlist_get(&allneis, nei);
+	neis=igraph_adjlist_get(&allneis, nei);
 	s=igraph_vector_size(neis);
 	for (i=0; i<s; i++) {
 	  long int nei2=VECTOR(*neis)[i];
@@ -254,7 +256,7 @@ int igraph_motifs_randesu(const igraph_t *graph, igraph_vector_t *hist,
 
 	nei=igraph_vector_pop_back(&vids);
 	subg[nei]=0; added[nei] -= 1; level -= 1;
-	neis=igraph_i_adjlist_get(&allneis, nei);
+	neis=igraph_adjlist_get(&allneis, nei);
 	s=igraph_vector_size(neis);
 	for (i=0; i<s; i++) {
 	  added[ (long int) VECTOR(*neis)[i] ] -= 1;
@@ -271,7 +273,7 @@ int igraph_motifs_randesu(const igraph_t *graph, igraph_vector_t *hist,
     /* clear the added vector */
     added[father] -= 1;
     subg[father] = 0;
-    neis=igraph_i_adjlist_get(&allneis, father);
+    neis=igraph_adjlist_get(&allneis, father);
     s=igraph_vector_size(neis);
     for (i=0; i<s; i++) {
       added[ (long int) VECTOR(*neis)[i] ] -= 1;
@@ -279,12 +281,14 @@ int igraph_motifs_randesu(const igraph_t *graph, igraph_vector_t *hist,
 
   } /* for father */
 
-  Free(added);
-  Free(subg);
+  RNG_END();
+
+  igraph_Free(added);
+  igraph_Free(subg);
   igraph_vector_destroy(&vids);
   igraph_vector_destroy(&adjverts);
-  igraph_i_adjlist_destroy(&alloutneis);
-  igraph_i_adjlist_destroy(&allneis);
+  igraph_adjlist_destroy(&alloutneis);
+  igraph_adjlist_destroy(&allneis);
   igraph_stack_destroy(&stack);
   IGRAPH_FINALLY_CLEAN(7);
   return 0;
@@ -347,7 +351,7 @@ int igraph_motifs_randesu_estimate(const igraph_t *graph, igraph_integer_t *est,
   long int sam;
   long int i;
 
-  added=Calloc(no_of_nodes, long int);
+  added=igraph_Calloc(no_of_nodes, long int);
   if (added==0) {
     IGRAPH_ERROR("Cannot find motifs", IGRAPH_ENOMEM);
   }
@@ -360,7 +364,7 @@ int igraph_motifs_randesu_estimate(const igraph_t *graph, igraph_integer_t *est,
   IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
 
   if (parsample==0) {
-    sample=Calloc(1, igraph_vector_t);
+    sample=igraph_Calloc(1, igraph_vector_t);
     if (sample==0) {
       IGRAPH_ERROR("Cannot estimate motifs", IGRAPH_ENOMEM);
     }
@@ -373,6 +377,8 @@ int igraph_motifs_randesu_estimate(const igraph_t *graph, igraph_integer_t *est,
   }
 
   *est=0;
+
+  RNG_BEGIN();
 
   for (sam=0; sam<sample_size; sam++) {
     long int father=VECTOR(*sample)[sam];
@@ -401,7 +407,7 @@ int igraph_motifs_randesu_estimate(const igraph_t *graph, igraph_integer_t *est,
     /* init S */
     igraph_stack_clear(&stack);
 
-    while (level != 1 || !igraph_vector_empty(&adjverts)) {
+    while (level > 1 || !igraph_vector_empty(&adjverts)) {
       igraph_real_t cp=VECTOR(*cut_prob)[level];
       
       if (level==size-1) {
@@ -473,16 +479,18 @@ int igraph_motifs_randesu_estimate(const igraph_t *graph, igraph_integer_t *est,
 
   } /* for father */
 
+  RNG_END();
+
   (*est) *= ((double)no_of_nodes/sample_size);
   (*est) /= size;
 
   if (parsample==0) {
     igraph_vector_destroy(sample);
-    Free(sample);
+    igraph_Free(sample);
     IGRAPH_FINALLY_CLEAN(2);
   }
 
-  Free(added);
+  igraph_Free(added);
   igraph_vector_destroy(&vids);
   igraph_vector_destroy(&adjverts);
   igraph_stack_destroy(&stack);
@@ -529,7 +537,7 @@ int igraph_motifs_randesu_no(const igraph_t *graph, igraph_integer_t *no,
   long int father;
   long int i;
 
-  added=Calloc(no_of_nodes, long int);
+  added=igraph_Calloc(no_of_nodes, long int);
   if (added==0) {
     IGRAPH_ERROR("Cannot find motifs", IGRAPH_ENOMEM);
   }
@@ -542,6 +550,8 @@ int igraph_motifs_randesu_no(const igraph_t *graph, igraph_integer_t *no,
   IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
 
   *no=0;
+
+  RNG_BEGIN();
 
   for (father=0; father<no_of_nodes; father++) {
     long int level, s;
@@ -569,7 +579,7 @@ int igraph_motifs_randesu_no(const igraph_t *graph, igraph_integer_t *no,
     /* init S */
     igraph_stack_clear(&stack);
 
-    while (level != 1 || !igraph_vector_empty(&adjverts)) {
+    while (level > 1 || !igraph_vector_empty(&adjverts)) {
       igraph_real_t cp=VECTOR(*cut_prob)[level];
       
       if (level==size-1) {
@@ -641,9 +651,11 @@ int igraph_motifs_randesu_no(const igraph_t *graph, igraph_integer_t *no,
 
   } /* for father */
 
+  RNG_END();
+
   *no /= size;
 
-  Free(added);
+  igraph_Free(added);
   igraph_vector_destroy(&vids);
   igraph_vector_destroy(&adjverts);
   igraph_stack_destroy(&stack);
@@ -651,3 +663,234 @@ int igraph_motifs_randesu_no(const igraph_t *graph, igraph_integer_t *no,
   IGRAPH_FINALLY_CLEAN(5);
   return 0;
 }
+
+/**
+ * \function igraph_dyad_census
+ * \brief Calculating the dyad census as defined by Holland and Leinhardt
+ * 
+ * </para><para>
+ * Dyad census means classifying each pair of vertices of a directed
+ * graph into three categories: mutual, there is an edge from \c a to
+ * \c b and also from \c b to \c a; asymmetric, there is an edge
+ * either from \c a to \c b or from \c b to \c a but not the other way
+ * and null, no edges between \c a and \c b.
+ * 
+ * </para><para>
+ * Holland, P.W. and Leinhardt, S.  (1970).  A Method for Detecting
+ * Structure in Sociometric Data.  American Journal of Sociology,
+ * 70, 492-513. 
+ * \param graph The input graph, a warning is given if undirected as 
+ *    the results are undefined for undirected graphs.
+ * \param mut Pointer to an integer, the number of mutual dyads is
+ *    stored here.
+ * \param asym Pointer to an integer, the number of asymmetric dyads
+ *    is stored here.
+ * \param null Pointer to an integer, the number of null dyads is
+ *    stored here.
+ * \return Error code.
+ *
+ * \sa \ref igraph_reciprocity(), \ref igraph_triad_census().
+ * 
+ * Time complexity: O(|V|+|E|), the number of vertices plus the number
+ * of edges.
+ */
+
+int igraph_dyad_census(const igraph_t *graph, igraph_integer_t *mut,
+		       igraph_integer_t *asym, igraph_integer_t *null) {
+  
+  igraph_integer_t vc=igraph_vcount(graph);
+  igraph_integer_t ec=igraph_ecount(graph);
+  igraph_real_t rec;
+
+  if (!igraph_is_directed(graph)) {
+    IGRAPH_WARNING("Dyad census called on undirected graph");
+  }
+
+  IGRAPH_CHECK(igraph_reciprocity(graph, &rec, 1));
+  *mut = rec*ec/(rec+1);
+  *asym = ec-2*(*mut);
+  *null = vc*(vc-1)/2-(*mut)-(*asym);
+  
+  return 0;
+}
+
+/**
+ * \function igraph_triad_census_24
+ * TODO
+ */
+
+int igraph_triad_census_24(const igraph_t *graph, igraph_integer_t *res2,
+			   igraph_integer_t *res4) {
+  
+  long int vc=igraph_vcount(graph);
+  igraph_vector_long_t seen;
+  igraph_vector_t *neis, *neis2;
+  long int i, j, k, s, neilen, neilen2, ign;
+  igraph_adjlist_t adjlist;
+  
+  IGRAPH_CHECK(igraph_vector_long_init(&seen, vc));
+  IGRAPH_FINALLY(igraph_vector_long_destroy, &seen);
+  IGRAPH_CHECK(igraph_adjlist_init(graph, &adjlist, IGRAPH_ALL));
+  IGRAPH_FINALLY(igraph_adjlist_destroy, &adjlist);
+  *res2=*res4=0;
+
+  for (i=0; i<vc; i++) {
+    IGRAPH_ALLOW_INTERRUPTION();
+    
+    neis=igraph_adjlist_get(&adjlist, i);
+    neilen=igraph_vector_size(neis);
+    /* mark neighbors of i & i itself */
+    VECTOR(seen)[i]=i+1;
+    ign=0;
+    for (j=0; j<neilen; j++) {
+      long int nei=VECTOR(*neis)[j];
+      if (VECTOR(seen)[nei]==i+1 || VECTOR(seen)[nei]==-(i+1)) {
+	/* multiple edges or loop edge */
+	VECTOR(seen)[nei]=-(i+1);
+	ign++;
+      } else {
+	VECTOR(seen)[nei]=i+1;
+      }
+    }
+    
+    for (j=0; j<neilen; j++) {
+      long int nei=VECTOR(*neis)[j];
+      if (nei<=i || (j>0 && nei==VECTOR(*neis)[j-1])) { continue; }
+      neis2=igraph_adjlist_get(&adjlist, nei);
+      neilen2=igraph_vector_size(neis2);
+      s=0;
+      for (k=0; k<neilen2; k++) {
+	long int nei2=VECTOR(*neis2)[k];
+	if (k>0 && nei2==VECTOR(*neis2)[k-1]) { continue; }	
+	if (VECTOR(seen)[nei2] != i+1 && VECTOR(seen)[nei2] != -(i+1)) {
+	  s++;
+	}
+      }
+      if (VECTOR(seen)[nei] > 0) {
+	*res2 += vc-s-neilen+ign-1;
+      } else {
+	*res4 += vc-s-neilen+ign-1;
+      }
+    }
+  }
+
+  igraph_adjlist_destroy(&adjlist);
+  igraph_vector_long_destroy(&seen);
+  IGRAPH_FINALLY_CLEAN(2);
+
+  return 0;
+}
+
+/**
+ * \function igraph_triad_census
+ * \brief Triad census, as defined by Davis and Leinhardt
+ * 
+ * </para><para>
+ * Calculating the triad census means classifying every triple of
+ * vertices in a directed graph. A triple can be in one of 16 states:
+ * \clist
+ * \cli 003 
+ *      A, B, C, the empty graph.
+ * \cli 012 
+ *      A->B, C, a graph with a single directed edge.
+ * \cli 102 
+ *      A&lt;->B, C, a graph with a mutual connection between two vertices.
+ * \cli 021D 
+ *      A&lt;-B->C, the binary out-tree.
+ * \cli 021U 
+ *      A->B&lt;-C, the binary in-tree.
+ * \cli 021C 
+ *      A->B->C, the directed line.
+ * \cli 111D 
+ *      A&lt;->B&lt;-C.
+ * \cli 111U 
+ *      A&lt;->B->C.
+ * \cli 030T 
+ *      A->B&lt;-C, A->C.
+ * \cli 030C 
+ *      A&lt;-B&lt;-C, A->C.
+ * \cli 201 
+ *      A&lt;->B&lt;->C.
+ * \cli 120D 
+ *      A&lt;-B->C, A&lt;->C.
+ * \cli 120U 
+ *      A->B&lt;-C, A&lt;->C.
+ * \cli 120C 
+ *      A->B->C, A&lt;->C.
+ * \cli 210 
+ *      A->B&lt;->C, A&lt;->C.
+ * \cli 300 
+ *      A&lt;->B&lt;->C, A&lt;->C, the complete graph.
+ * \endclist
+ *
+ * </para><para>
+ * See also Davis, J.A. and Leinhardt, S.  (1972).  The Structure of
+ * Positive Interpersonal Relations in Small Groups.  In J. Berger
+ * (Ed.), Sociological Theories in Progress, Volume 2, 218-251. 
+ * Boston: Houghton Mifflin.
+ * 
+ * </para><para>
+ * This function calls \ref igraph_motifs_randesu() which is an
+ * implementation of the FANMOD motif finder tool, see \ref
+ * igraph_motifs_randesu() for details. Note that the order of the
+ * triads is not the same for \ref igraph_triad_census() and \ref
+ * igraph_motifs_randesu().
+ * 
+ * \param graph The input graph. A warning is given for undirected
+ *   graphs, as the result is undefined for those.
+ * \param res Pointer to an initialized vector, the result is stored
+ *   here in the same order as given in the list above. Note that this
+ *   order is different than the one used by \ref igraph_motifs_randesu().
+ * \return Error code.
+ * 
+ * \sa \ref igraph_motifs_randesu(), \ref igraph_dyad_census().
+ * 
+ * Time complexity: TODO.
+ */
+
+int igraph_triad_census(const igraph_t *graph, igraph_vector_t *res) {
+
+  igraph_vector_t cut_prob;
+  igraph_integer_t m2, m4;
+  igraph_vector_t tmp;
+  igraph_integer_t vc=igraph_vcount(graph);
+
+  if (!igraph_is_directed(graph)) {
+    IGRAPH_WARNING("Triad census called on an undirected graph");
+  }
+
+  IGRAPH_VECTOR_INIT_FINALLY(&tmp, 0);
+  IGRAPH_VECTOR_INIT_FINALLY(&cut_prob, 3); /* all zeros */
+  IGRAPH_CHECK(igraph_vector_resize(res, 16));
+  IGRAPH_CHECK(igraph_motifs_randesu(graph, &tmp, 3, &cut_prob));
+  
+  IGRAPH_CHECK(igraph_triad_census_24(graph, &m2, &m4));
+  VECTOR(tmp)[1]=m2;
+  VECTOR(tmp)[3]=m4;
+  VECTOR(tmp)[0]=vc*(vc-1)*(vc-2)/6 - igraph_vector_sum(&tmp);
+  
+  /* Reorder */
+  VECTOR(*res)[0] = VECTOR(tmp)[0];
+  VECTOR(*res)[1] = VECTOR(tmp)[1];
+  VECTOR(*res)[2] = VECTOR(tmp)[3];
+  VECTOR(*res)[3] = VECTOR(tmp)[6];
+  VECTOR(*res)[4] = VECTOR(tmp)[2];
+  VECTOR(*res)[5] = VECTOR(tmp)[4];
+  VECTOR(*res)[6] = VECTOR(tmp)[5];
+  VECTOR(*res)[7] = VECTOR(tmp)[9];
+  VECTOR(*res)[8] = VECTOR(tmp)[7];
+  VECTOR(*res)[9] = VECTOR(tmp)[11];
+  VECTOR(*res)[10] = VECTOR(tmp)[10];
+  VECTOR(*res)[11] = VECTOR(tmp)[8];
+  VECTOR(*res)[12] = VECTOR(tmp)[13];
+  VECTOR(*res)[13] = VECTOR(tmp)[12];
+  VECTOR(*res)[14] = VECTOR(tmp)[14];
+  VECTOR(*res)[15] = VECTOR(tmp)[15];
+  
+  igraph_vector_destroy(&cut_prob);
+  igraph_vector_destroy(&tmp);
+  IGRAPH_FINALLY_CLEAN(2);  
+  
+  return 0;
+}
+

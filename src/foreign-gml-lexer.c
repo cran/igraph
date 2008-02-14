@@ -376,11 +376,11 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[28] =
+static yyconst flex_int16_t yy_accept[29] =
     {   0,
-        0,    0,   10,    9,    8,    7,    9,    9,    3,    4,
-        5,    6,    7,    1,    9,    0,    2,    3,    0,    0,
-        4,    0,    1,    3,    0,    3,    0
+        0,    0,   10,    9,    8,    7,    7,    9,    9,    3,
+        4,    5,    6,    1,    9,    7,    0,    2,    3,    0,
+        0,    4,    0,    1,    3,    0,    3,    0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
@@ -394,11 +394,11 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,   11,   11,   11,   11,   12,   11,
        11,   11,   11,   11,   11,   11,   11,   11,   11,   11,
        11,   11,   11,   11,   11,   11,   11,   11,   11,   11,
-       13,    1,   14,    1,    1,    1,   11,   11,   11,   11,
+       13,    1,   14,    1,   11,    1,   11,   11,   11,   11,
 
        12,   11,   11,   11,   11,   11,   11,   11,   11,   11,
        11,   11,   11,   11,   11,   11,   11,   11,   11,   11,
-       11,   11,    1,   15,    1,    1,    1,    1,    1,    1,
+       11,   11,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -415,44 +415,46 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst flex_int32_t yy_meta[16] =
+static yyconst flex_int32_t yy_meta[15] =
     {   0,
         1,    1,    1,    2,    1,    1,    1,    1,    1,    3,
-        3,    3,    1,    1,    1
+        3,    3,    1,    1
     } ;
 
-static yyconst flex_int16_t yy_base[31] =
+static yyconst flex_int16_t yy_base[32] =
     {   0,
-        0,   12,   40,   41,   41,   41,   34,   28,   10,    0,
-       41,   41,   41,   41,   34,   31,   41,    0,   25,   16,
-        0,   31,   41,   15,   22,   11,   41,   27,   14,   30
+        0,   11,   42,   43,   43,   37,   37,   34,   28,    9,
+        0,   43,   43,   34,   33,   43,   30,   43,    0,   24,
+       15,    0,   30,   43,   14,   21,   10,   43,   26,   13,
+       29
     } ;
 
-static yyconst flex_int16_t yy_def[31] =
+static yyconst flex_int16_t yy_def[32] =
     {   0,
-       27,    1,   27,   27,   27,   27,   28,   27,   27,   29,
-       27,   27,   27,   27,   30,   28,   27,    9,   27,   27,
-       29,   30,   27,   27,   27,   27,    0,   27,   27,   27
+       28,    1,   28,   28,   28,   28,   28,   29,   28,   28,
+       30,   28,   28,   28,   31,   28,   29,   28,   10,   28,
+       28,   30,   31,   28,   28,   28,   28,    0,   28,   28,
+       28
     } ;
 
-static yyconst flex_int16_t yy_nxt[57] =
+static yyconst flex_int16_t yy_nxt[58] =
     {   0,
-        4,    5,    6,    6,    7,    4,    4,    8,    4,    9,
-       10,   10,   11,   12,   13,   14,   21,   15,   19,   18,
-       26,   20,   25,   25,   24,   26,   20,   16,   16,   16,
-       22,   26,   22,   23,   24,   17,   23,   18,   17,   27,
-        3,   27,   27,   27,   27,   27,   27,   27,   27,   27,
-       27,   27,   27,   27,   27,   27
+        4,    5,    6,    7,    8,    4,    4,    9,    4,   10,
+       11,   11,   12,   13,   14,   22,   15,   20,   19,   27,
+       21,   26,   26,   25,   27,   21,   17,   17,   17,   23,
+       27,   23,   24,   25,   18,   24,   16,   19,   18,   16,
+       16,   28,    3,   28,   28,   28,   28,   28,   28,   28,
+       28,   28,   28,   28,   28,   28,   28
     } ;
 
-static yyconst flex_int16_t yy_chk[57] =
+static yyconst flex_int16_t yy_chk[58] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    2,   29,    2,    9,    9,
-       26,    9,   20,   20,   24,   20,   24,   28,   28,   28,
-       30,   25,   30,   22,   19,   16,   15,    8,    7,    3,
-       27,   27,   27,   27,   27,   27,   27,   27,   27,   27,
-       27,   27,   27,   27,   27,   27
+        1,    1,    1,    1,    2,   30,    2,   10,   10,   27,
+       10,   21,   21,   25,   21,   25,   29,   29,   29,   31,
+       26,   31,   23,   20,   17,   15,   14,    9,    8,    7,
+        6,    3,   28,   28,   28,   28,   28,   28,   28,   28,
+       28,   28,   28,   28,   28,   28,   28
     } ;
 
 static yy_state_type yy_last_accepting_state;
@@ -515,6 +517,7 @@ char *igraph_gml_yytext;
 
 */
 
+#include <stdlib.h>
 #include "foreign-gml-parser.h"
 extern long int igraph_gml_mylineno;
 extern int igraph_gml_mode;
@@ -522,7 +525,7 @@ int igraph_gml_eof;
 void igraph_i_gml_reset_scanner() {
   YY_FLUSH_BUFFER;
 }
-#line 526 "foreign-gml-lexer.c"
+#line 529 "foreign-gml-lexer.c"
 
 #define INITIAL 0
 
@@ -678,10 +681,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 63 "foreign-gml-lexer.l"
+#line 64 "foreign-gml-lexer.l"
 
 
-#line 685 "foreign-gml-lexer.c"
+#line 688 "foreign-gml-lexer.c"
 
 	if ( !(yy_init) )
 		{
@@ -735,13 +738,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 28 )
+				if ( yy_current_state >= 29 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 41 );
+		while ( yy_base[yy_current_state] != 43 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -768,49 +771,49 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 65 "foreign-gml-lexer.l"
+#line 66 "foreign-gml-lexer.l"
 { igraph_gml_mylineno++; /* comments ignored */ }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 67 "foreign-gml-lexer.l"
+#line 68 "foreign-gml-lexer.l"
 { return STRING; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 68 "foreign-gml-lexer.l"
+#line 69 "foreign-gml-lexer.l"
 { return NUM; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 69 "foreign-gml-lexer.l"
+#line 70 "foreign-gml-lexer.l"
 { return KEYWORD; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 70 "foreign-gml-lexer.l"
+#line 71 "foreign-gml-lexer.l"
 { return LISTOPEN; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 71 "foreign-gml-lexer.l"
+#line 72 "foreign-gml-lexer.l"
 { return LISTCLOSE; }
 	YY_BREAK
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 72 "foreign-gml-lexer.l"
+#line 73 "foreign-gml-lexer.l"
 { igraph_gml_mylineno++; }
 	YY_BREAK
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 73 "foreign-gml-lexer.l"
+#line 74 "foreign-gml-lexer.l"
 { /* other whitespace ignored */ }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 75 "foreign-gml-lexer.l"
+#line 76 "foreign-gml-lexer.l"
 { 
                           if (igraph_gml_eof) {
 			    yyterminate();
@@ -822,10 +825,10 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 84 "foreign-gml-lexer.l"
+#line 85 "foreign-gml-lexer.l"
 ECHO;
 	YY_BREAK
-#line 829 "foreign-gml-lexer.c"
+#line 832 "foreign-gml-lexer.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1108,7 +1111,7 @@ static int yy_get_next_buffer (void)
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 28 )
+			if ( yy_current_state >= 29 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1136,11 +1139,11 @@ static int yy_get_next_buffer (void)
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 28 )
+		if ( yy_current_state >= 29 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 27);
+	yy_is_jam = (yy_current_state == 28);
 
 	return yy_is_jam ? 0 : yy_current_state;
 }
@@ -1812,7 +1815,7 @@ void igraph_gml_yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 84 "foreign-gml-lexer.l"
+#line 85 "foreign-gml-lexer.l"
 
 
 

@@ -376,17 +376,18 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[11] =
+static yyconst flex_int16_t yy_accept[13] =
     {   0,
-        2,    2,    6,    4,    2,    3,    1,    4,    2,    0
+        2,    2,    6,    4,    2,    3,    3,    1,    4,    2,
+        3,    0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
+        1,    1,    4,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    2,    1,    1,    4,    1,    1,    1,    1,    1,
+        1,    2,    1,    1,    5,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -413,33 +414,33 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst flex_int32_t yy_meta[5] =
+static yyconst flex_int32_t yy_meta[6] =
     {   0,
-        1,    2,    3,    3
+        1,    2,    3,    4,    3
     } ;
 
-static yyconst flex_int16_t yy_base[13] =
+static yyconst flex_int16_t yy_base[16] =
     {   0,
-        0,    0,    7,    0,    0,    8,    8,    0,    0,    8,
-        5,    3
+        0,    0,   11,    0,    0,    0,    7,   12,    0,    0,
+       12,   12,    5,    6,    3
     } ;
 
-static yyconst flex_int16_t yy_def[13] =
+static yyconst flex_int16_t yy_def[16] =
     {   0,
-       10,    1,   10,   11,   12,   10,   10,   11,   12,    0,
-       10,   10
+       12,    1,   12,   13,   14,   15,   13,   12,   13,   14,
+       12,    0,   12,   12,   12
     } ;
 
-static yyconst flex_int16_t yy_nxt[13] =
+static yyconst flex_int16_t yy_nxt[18] =
     {   0,
-        4,    5,    6,    7,    9,    8,   10,    3,   10,   10,
-       10,   10
+        4,    5,    6,    7,    8,    9,   11,   10,    9,   11,
+       12,    3,   12,   12,   12,   12,   12
     } ;
 
-static yyconst flex_int16_t yy_chk[13] =
+static yyconst flex_int16_t yy_chk[18] =
     {   0,
-        1,    1,    1,    1,   12,   11,    3,   10,   10,   10,
-       10,   10
+        1,    1,    1,    1,    1,   13,   15,   14,   13,    7,
+        3,   12,   12,   12,   12,   12,   12
     } ;
 
 static yy_state_type yy_last_accepting_state;
@@ -502,13 +503,14 @@ char *igraph_lgl_yytext;
 
 */
 
+#include <stdlib.h>
 #include "foreign-lgl-parser.h"
 extern long int igraph_lgl_mylineno;
 int igraph_i_lgl_eof;
 void igraph_i_lgl_reset_scanner() {
   YY_FLUSH_BUFFER;
 }
-#line 512 "foreign-lgl-lexer.c"
+#line 514 "foreign-lgl-lexer.c"
 
 #define INITIAL 0
 
@@ -661,11 +663,11 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 61 "foreign-lgl-lexer.l"
+#line 62 "foreign-lgl-lexer.l"
 
 
  /* --------------------------------------------------hashmark------*/
-#line 669 "foreign-lgl-lexer.c"
+#line 671 "foreign-lgl-lexer.c"
 
 	if ( !(yy_init) )
 		{
@@ -718,13 +720,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 11 )
+				if ( yy_current_state >= 13 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 8 );
+		while ( yy_base[yy_current_state] != 12 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -750,30 +752,30 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 64 "foreign-lgl-lexer.l"
+#line 65 "foreign-lgl-lexer.l"
 { return HASH; }
 	YY_BREAK
 /* ------------------------------------------------whitespace------*/
 case 2:
 YY_RULE_SETUP
-#line 67 "foreign-lgl-lexer.l"
+#line 68 "foreign-lgl-lexer.l"
 { }
 	YY_BREAK
 /* ---------------------------------------------------newline------*/
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 70 "foreign-lgl-lexer.l"
+#line 71 "foreign-lgl-lexer.l"
 { igraph_lgl_mylineno++; return NEWLINE; }
 	YY_BREAK
 /* ----------------------------------------------alphanumeric------*/
 case 4:
 YY_RULE_SETUP
-#line 73 "foreign-lgl-lexer.l"
+#line 74 "foreign-lgl-lexer.l"
 { return ALNUM; }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 75 "foreign-lgl-lexer.l"
+#line 76 "foreign-lgl-lexer.l"
 { if (igraph_i_lgl_eof) {
                        yyterminate();
                     } else {
@@ -784,10 +786,10 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 83 "foreign-lgl-lexer.l"
+#line 84 "foreign-lgl-lexer.l"
 ECHO;
 	YY_BREAK
-#line 791 "foreign-lgl-lexer.c"
+#line 793 "foreign-lgl-lexer.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1069,7 +1071,7 @@ static int yy_get_next_buffer (void)
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 11 )
+			if ( yy_current_state >= 13 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1097,11 +1099,11 @@ static int yy_get_next_buffer (void)
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 11 )
+		if ( yy_current_state >= 13 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 10);
+	yy_is_jam = (yy_current_state == 12);
 
 	return yy_is_jam ? 0 : yy_current_state;
 }
@@ -1771,7 +1773,7 @@ void igraph_lgl_yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 83 "foreign-lgl-lexer.l"
+#line 84 "foreign-lgl-lexer.l"
 
 
 

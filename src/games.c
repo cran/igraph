@@ -90,7 +90,7 @@ int igraph_barabasi_game(igraph_t *graph, igraph_integer_t n, igraph_integer_t m
 
   if (outseq==0 || igraph_vector_size(outseq) == 0) {
     no_of_neighbors=m;
-    bag=Calloc(no_of_nodes * no_of_neighbors + no_of_nodes +
+    bag=igraph_Calloc(no_of_nodes * no_of_neighbors + no_of_nodes +
 	       outpref * no_of_nodes * no_of_neighbors,
 	       long int);
     no_of_edges=(no_of_nodes-1)*no_of_neighbors;
@@ -99,7 +99,7 @@ int igraph_barabasi_game(igraph_t *graph, igraph_integer_t n, igraph_integer_t m
     for (i=1; i<igraph_vector_size(outseq); i++) {
       no_of_edges+=VECTOR(*outseq)[i];
     }
-    bag=Calloc(no_of_nodes + no_of_edges + outpref * no_of_edges,
+    bag=igraph_Calloc(no_of_nodes + no_of_edges + outpref * no_of_edges,
 	       long int);
   }
   
@@ -138,7 +138,7 @@ int igraph_barabasi_game(igraph_t *graph, igraph_integer_t n, igraph_integer_t m
 
   RNG_END();
 
-  Free(bag);
+  igraph_Free(bag);
   IGRAPH_CHECK(igraph_create(graph, &edges, n, directed));
   igraph_vector_destroy(&edges);
   IGRAPH_FINALLY_CLEAN(2);
@@ -201,14 +201,14 @@ int igraph_erdos_renyi_game_gnp(igraph_t *graph, igraph_integer_t n, igraph_real
 
     if (directed && loops) {
       for (i=0; i<igraph_vector_size(&s); i++) {
-	long int to=trunc(VECTOR(s)[i]/no_of_nodes);
+	long int to=floor(VECTOR(s)[i]/no_of_nodes);
 	long int from=VECTOR(s)[i]-((igraph_real_t)to)*no_of_nodes;
 	igraph_vector_push_back(&edges, from);
 	igraph_vector_push_back(&edges, to);
       }
     } else if (directed && !loops) {
       for (i=0; i<igraph_vector_size(&s); i++) {
-	long int to=trunc(VECTOR(s)[i]/no_of_nodes);
+	long int to=floor(VECTOR(s)[i]/no_of_nodes);
 	long int from=VECTOR(s)[i]-((igraph_real_t)to)*no_of_nodes;
 	if (from==to) {
 	  to=no_of_nodes-1;
@@ -289,14 +289,14 @@ int igraph_erdos_renyi_game_gnm(igraph_t *graph, igraph_integer_t n, igraph_real
       
       if (directed && loops) {
 	for (i=0; i<igraph_vector_size(&s); i++) {
-	  long int to=trunc(VECTOR(s)[i]/no_of_nodes);
+	  long int to=floor(VECTOR(s)[i]/no_of_nodes);
 	  long int from=VECTOR(s)[i]-((igraph_real_t)to)*no_of_nodes;
 	  igraph_vector_push_back(&edges, from);
 	  igraph_vector_push_back(&edges, to);
 	}
       } else if (directed && !loops) {
 	for (i=0; i<igraph_vector_size(&s); i++) {
-	  long int to=trunc(VECTOR(s)[i]/no_of_nodes);
+	  long int to=floor(VECTOR(s)[i]/no_of_nodes);
 	  long int from=VECTOR(s)[i]-((igraph_real_t)to)*no_of_nodes;
 	  if (from==to) {
 	    to=no_of_nodes-1;
@@ -428,7 +428,7 @@ int igraph_degree_sequence_game_simple(igraph_t *graph,
     no_of_edges=outsum/2;
   }
 
-  bag1=Calloc(outsum, long int);
+  bag1=igraph_Calloc(outsum, long int);
   if (bag1==0) {
     IGRAPH_ERROR("degree sequence game (simple)", IGRAPH_ENOMEM);
   }
@@ -440,7 +440,7 @@ int igraph_degree_sequence_game_simple(igraph_t *graph,
     }
   }
   if (directed) {
-    bag2=Calloc(insum, long int);
+    bag2=igraph_Calloc(insum, long int);
     if (bag2==0) {
       IGRAPH_ERROR("degree sequence game (simple)", IGRAPH_ENOMEM);
     }
@@ -483,10 +483,10 @@ int igraph_degree_sequence_game_simple(igraph_t *graph,
   
   RNG_END();
 
-  Free(bag1);
+  igraph_Free(bag1);
   IGRAPH_FINALLY_CLEAN(1);
   if (directed) {
-    Free(bag2);
+    igraph_Free(bag2);
     IGRAPH_FINALLY_CLEAN(1);
   }
 
@@ -627,9 +627,9 @@ int igraph_growing_random_game(igraph_t *graph, igraph_integer_t n,
 
 /**
  * \function igraph_callaway_traits_game
+ * \brief Simulate a growing network with vertex types.
  * 
  * </para><para>
- * This function simulates a growing network with vertex types.
  * The different types of vertices prefer to connect other types of
  * vertices with a given probability.</para><para>
  * 
@@ -687,7 +687,7 @@ int igraph_callaway_traits_game (igraph_t *graph, igraph_integer_t nodes,
     igraph_real_t uni=RNG_UNIF(0, maxcum);
     long int type;
     igraph_vector_binsearch(&cumdist, uni, &type);
-    VECTOR(nodetypes)[i]=type;
+    VECTOR(nodetypes)[i]=type-1;
   }    
 
   for (i=1; i<nodes; i++) {
@@ -717,8 +717,7 @@ int igraph_callaway_traits_game (igraph_t *graph, igraph_integer_t nodes,
 
 /**
  * \function igraph_establishment_game
- * \brief Generates a graph with a simple growing model with vertex
- * types 
+ * \brief Generates a graph with a simple growing model with vertex types.
  * 
  * </para><para>
  * The simulation goes like this: a single vertex is added at each
@@ -772,7 +771,7 @@ int igraph_establishment_game(igraph_t *graph, igraph_integer_t nodes,
     igraph_real_t uni=RNG_UNIF(0, maxcum);
     long int type;
     igraph_vector_binsearch(&cumdist, uni, &type);
-    VECTOR(nodetypes)[i]=type;
+    VECTOR(nodetypes)[i]=type-1;
   }
 
   for (i=k; i<nodes; i++) {    
@@ -935,8 +934,7 @@ int igraph_nonlinear_barabasi_game(igraph_t *graph, igraph_integer_t n,
 
 /**
  * \function igraph_recent_degree_game
- * \brief Stochastic graph generator based on the number of adjacent
- * edges a node has gained recently
+ * \brief Stochastic graph generator based on the number of adjacent edges a node has gained recently
  * 
  * \param graph Pointer to an uninitialized graph object.
  * \param n The number of vertices in the graph, this is the same as
@@ -1239,8 +1237,7 @@ int igraph_barabasi_aging_game(igraph_t *graph,
 
 /** 
  * \function igraph_recent_degree_aging_game
- * \brief Preferential attachment based on the number of edges gained
- * recently, with aging of vertices
+ * \brief Preferential attachment based on the number of edges gained recently, with aging of vertices
  * 
  * </para><para>
  * This game is very similar to \ref igraph_barabasi_aging_game(),
@@ -1432,36 +1429,48 @@ int igraph_recent_degree_aging_game(igraph_t *graph,
  */
 				    
 int igraph_grg_game(igraph_t *graph, igraph_integer_t nodes,
-		    igraph_real_t radius, igraph_bool_t torus) {
+		    igraph_real_t radius, igraph_bool_t torus,
+		    igraph_vector_t *x, igraph_vector_t *y) {
   
   long int i;
-  igraph_vector_t x, y, edges;
+  igraph_vector_t myx, myy, *xx=&myx, *yy=&myy, edges;
   igraph_real_t r2=radius*radius;
   
   IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
   IGRAPH_CHECK(igraph_vector_reserve(&edges, nodes));
-  IGRAPH_VECTOR_INIT_FINALLY(&x, nodes);
-  IGRAPH_VECTOR_INIT_FINALLY(&y, nodes);
+
+  if (x) { 
+    xx=x;
+    IGRAPH_CHECK(igraph_vector_resize(xx, nodes));
+  } else {
+    IGRAPH_VECTOR_INIT_FINALLY(xx, nodes);
+  }
+  if (y) {
+    yy=y;
+    IGRAPH_CHECK(igraph_vector_resize(yy, nodes));
+  } else {
+    IGRAPH_VECTOR_INIT_FINALLY(yy, nodes);
+  }
   
   RNG_BEGIN();
   
   for (i=0; i<nodes; i++) {
-    VECTOR(x)[i]=RNG_UNIF01();
-    VECTOR(y)[i]=RNG_UNIF01();
+    VECTOR(*xx)[i]=RNG_UNIF01();
+    VECTOR(*yy)[i]=RNG_UNIF01();
   }
   
   RNG_END();
 
-  igraph_vector_sort(&x);
+  igraph_vector_sort(xx);
 
   if (!torus) {
     for (i=0; i<nodes; i++) {
-      igraph_real_t x1=VECTOR(x)[i];
-      igraph_real_t y1=VECTOR(y)[i];
+      igraph_real_t x1=VECTOR(*xx)[i];
+      igraph_real_t y1=VECTOR(*yy)[i];
       long int j=i+1;
       igraph_real_t dx, dy;
-      while ( j<nodes && (dx=VECTOR(x)[j] - x1) < radius) {
-	dy=VECTOR(y)[j]-y1;
+      while ( j<nodes && (dx=VECTOR(*xx)[j] - x1) < radius) {
+	dy=VECTOR(*yy)[j]-y1;
 	if (dx*dx+dy*dy < r2) {
 	  IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
 	  IGRAPH_CHECK(igraph_vector_push_back(&edges, j));
@@ -1471,12 +1480,12 @@ int igraph_grg_game(igraph_t *graph, igraph_integer_t nodes,
     }
   } else { 
     for (i=0; i<nodes; i++) {
-      igraph_real_t x1=VECTOR(x)[i];
-      igraph_real_t y1=VECTOR(y)[i];
+      igraph_real_t x1=VECTOR(*xx)[i];
+      igraph_real_t y1=VECTOR(*yy)[i];
       long int j=i+1;
       igraph_real_t dx, dy;
-      while ( j<nodes && (dx=VECTOR(x)[j] - x1) < radius) {
-	dy=fabs(VECTOR(y)[j]-y1);
+      while ( j<nodes && (dx=VECTOR(*xx)[j] - x1) < radius) {
+	dy=fabs(VECTOR(*yy)[j]-y1);
 	if (dx > 0.5) {
 	  dx=1-dx;
 	}
@@ -1491,9 +1500,9 @@ int igraph_grg_game(igraph_t *graph, igraph_integer_t nodes,
       }
       if (j==nodes) {
 	j=0;      
-	while (j<i && (dx=1-x1+VECTOR(x)[j]) < radius && 
-	       x1-VECTOR(x)[j]>=radius) {
-	  dy=fabs(VECTOR(y)[j]-y1);
+	while (j<i && (dx=1-x1+VECTOR(*xx)[j]) < radius && 
+	       x1-VECTOR(*xx)[j]>=radius) {
+	  dy=fabs(VECTOR(*yy)[j]-y1);
 	  if (dy > 0.5) {
 	    dy=1-dy;
 	  }
@@ -1507,9 +1516,14 @@ int igraph_grg_game(igraph_t *graph, igraph_integer_t nodes,
     }
   }
   
-  igraph_vector_destroy(&y);
-  igraph_vector_destroy(&x);
-  IGRAPH_FINALLY_CLEAN(2);
+  if (!y) {
+    igraph_vector_destroy(yy);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  if (!x) {
+    igraph_vector_destroy(xx);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
 
   IGRAPH_CHECK(igraph_create(graph, &edges, nodes, IGRAPH_UNDIRECTED));
   igraph_vector_destroy(&edges);
@@ -1571,7 +1585,7 @@ int igraph_preference_game(igraph_t *graph, igraph_integer_t nodes,
     IGRAPH_CHECK(igraph_vector_resize(node_type_vec, nodes));
     nodetypes = node_type_vec;
   } else {
-    nodetypes = Calloc(1, igraph_vector_t);
+    nodetypes = igraph_Calloc(1, igraph_vector_t);
     if (nodetypes == 0) {
       IGRAPH_ERROR("preference_game failed", IGRAPH_ENOMEM);
     }
@@ -1590,7 +1604,7 @@ int igraph_preference_game(igraph_t *graph, igraph_integer_t nodes,
     long int type1;
     igraph_real_t uni1=RNG_UNIF(0, maxcum);
     igraph_vector_binsearch(&cumdist, uni1, &type1);
-    VECTOR(*nodetypes)[i] = type1;
+    VECTOR(*nodetypes)[i] = type1-1;
   }
 
   igraph_vector_destroy(&cumdist);
@@ -1602,10 +1616,10 @@ int igraph_preference_game(igraph_t *graph, igraph_integer_t nodes,
 
       if (!loops && i == j) continue;
 
-      type1=VECTOR(*nodetypes)[i];
-      type2=VECTOR(*nodetypes)[j];
+      type1=(long)VECTOR(*nodetypes)[i];
+      type2=(long)VECTOR(*nodetypes)[j];
 
-      if (RNG_UNIF01() < MATRIX(*pref_matrix, type1, type2)) {
+      if (RNG_UNIF01() < (igraph_real_t)MATRIX(*pref_matrix, type1, type2)) {
 	IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
 	IGRAPH_CHECK(igraph_vector_push_back(&edges, j));
       }
@@ -1616,7 +1630,7 @@ int igraph_preference_game(igraph_t *graph, igraph_integer_t nodes,
   
   if (node_type_vec == 0) {
     igraph_vector_destroy(nodetypes);
-    Free(nodetypes);
+    igraph_Free(nodetypes);
     IGRAPH_FINALLY_CLEAN(1);
   }
 
@@ -1681,7 +1695,7 @@ int igraph_asymmetric_preference_game(igraph_t *graph, igraph_integer_t nodes,
     nodetypes_in=node_type_in_vec;
     IGRAPH_CHECK(igraph_vector_resize(nodetypes_in, nodes));
   } else {
-    nodetypes_in = Calloc(1, igraph_vector_t);
+    nodetypes_in = igraph_Calloc(1, igraph_vector_t);
     if (nodetypes_in == 0) {
       IGRAPH_ERROR("asymmetric_preference_game failed", IGRAPH_ENOMEM);
     }
@@ -1692,7 +1706,7 @@ int igraph_asymmetric_preference_game(igraph_t *graph, igraph_integer_t nodes,
     nodetypes_out=node_type_out_vec;
     IGRAPH_CHECK(igraph_vector_resize(nodetypes_out, nodes));
   } else {
-    nodetypes_out = Calloc(1, igraph_vector_t);
+    nodetypes_out = igraph_Calloc(1, igraph_vector_t);
     if (nodetypes_out == 0) {
       IGRAPH_ERROR("asymmetric_preference_game failed", IGRAPH_ENOMEM);
     }
@@ -1713,8 +1727,8 @@ int igraph_asymmetric_preference_game(igraph_t *graph, igraph_integer_t nodes,
     long int type1;
     igraph_real_t uni1=RNG_UNIF(0, maxcum);
     igraph_vector_binsearch(&cumdist, uni1, &type1);
-    VECTOR(*nodetypes_in)[i] = type1 / (int)types;
-    VECTOR(*nodetypes_out)[i] = type1 % (int)types;
+    VECTOR(*nodetypes_in)[i] = (type1-1) / (int)types;
+    VECTOR(*nodetypes_out)[i] = (type1-1) % (int)types;
   }
 
   igraph_vector_destroy(&cumdist);
@@ -1726,8 +1740,8 @@ int igraph_asymmetric_preference_game(igraph_t *graph, igraph_integer_t nodes,
 
       if (!loops && i == j) continue;
 
-      type1=VECTOR(*nodetypes_out)[i];
-      type2=VECTOR(*nodetypes_in)[j];
+      type1=(long)VECTOR(*nodetypes_out)[i];
+      type2=(long)VECTOR(*nodetypes_in)[j];
 
       if (RNG_UNIF01() < MATRIX(*pref_matrix, type1, type2)) {
 	IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
@@ -1740,13 +1754,13 @@ int igraph_asymmetric_preference_game(igraph_t *graph, igraph_integer_t nodes,
   
   if (node_type_out_vec == 0) {
     igraph_vector_destroy(nodetypes_out);
-    Free(nodetypes_out);
+    igraph_Free(nodetypes_out);
     IGRAPH_FINALLY_CLEAN(1);
   }
    
   if (node_type_in_vec == 0) {
     igraph_vector_destroy(nodetypes_in);
-    Free(nodetypes_in);
+    igraph_Free(nodetypes_in);
     IGRAPH_FINALLY_CLEAN(1);
   }
   
@@ -1822,7 +1836,7 @@ int igraph_rewire_edges(igraph_t *graph, igraph_real_t prob) {
   
   IGRAPH_FINALLY(igraph_destroy, &newgraph);
   IGRAPH_I_ATTRIBUTE_DESTROY(&newgraph);
-  IGRAPH_I_ATTRIBUTE_COPY(&newgraph, graph);
+  IGRAPH_I_ATTRIBUTE_COPY(&newgraph, graph, 1,1,1);
   IGRAPH_FINALLY_CLEAN(1);
   igraph_destroy(graph);
   *graph=newgraph;
@@ -1903,6 +1917,7 @@ int igraph_watts_strogatz_game(igraph_t *graph, igraph_integer_t dim,
 
 /**
  * \function igraph_lastcit_game
+ * \brief Simulate citation network, based on time passed since the last citation.
  * 
  * This is a quite special stochastic graph generator, it models an
  * evolving graph. In each time step a single vertex is added to the 
@@ -1978,13 +1993,13 @@ int igraph_lastcit_game(igraph_t *graph,
   
   IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
 
-  lastcit=Calloc(no_of_nodes, long int);
+  lastcit=igraph_Calloc(no_of_nodes, long int);
   if (!lastcit) {
     IGRAPH_ERROR("lastcit game failed", IGRAPH_ENOMEM);
   }
   IGRAPH_FINALLY(igraph_free, lastcit);
 
-  index=Calloc(no_of_nodes+1, long int);
+  index=igraph_Calloc(no_of_nodes+1, long int);
   if (!index) {
     IGRAPH_ERROR("lastcit game failed", IGRAPH_ENOMEM);
   }
@@ -2049,6 +2064,7 @@ int igraph_lastcit_game(igraph_t *graph,
 
 /**
  * \function igraph_cited_type_game
+ * \brief Simulate a citation based on vertex types.
  * 
  * Function to create a network based on some vertex categories. This
  * function creates a citation network, in each step a single vertex
@@ -2106,9 +2122,10 @@ int igraph_cited_type_game(igraph_t *graph, igraph_integer_t nodes,
   for (i=1; i<nodes; i++) {
     for (j=0; j<edges_per_step; j++) {
       long int to;
-      igraph_vector_binsearch(&cumsum, RNG_UNIF(0, sum), &to);
-      igraph_vector_push_back(&edges, i);
-      igraph_vector_push_back(&edges, to);
+      igraph_real_t r=RNG_UNIF(0,sum);
+      igraph_vector_binsearch(&cumsum, r, &to);
+        igraph_vector_push_back(&edges, i);
+      igraph_vector_push_back(&edges, to-1);
     }
     sum+=VECTOR(*pref)[(long int) VECTOR(*types)[i] ];
     igraph_vector_push_back(&cumsum, sum);
@@ -2141,6 +2158,7 @@ void igraph_i_citing_cited_type_game_free(igraph_i_citing_cited_type_game_struct
 
 /**
  * \function igraph_citing_cited_type_game
+ * \brief Simulate a citation network based on vertex types.
  *
  * This game is similar to \ref igraph_cited_type_game() but here the
  * category of the citing vertex is also considered. 
@@ -2190,7 +2208,7 @@ int igraph_citing_cited_type_game(igraph_t *graph, igraph_integer_t nodes,
   long int i, j;
   
   IGRAPH_VECTOR_INIT_FINALLY(&edges,0);
-  str.sumtrees=sumtrees=Calloc(nocats, igraph_psumtree_t);  
+  str.sumtrees=sumtrees=igraph_Calloc(nocats, igraph_psumtree_t);  
   if (!sumtrees) {
     IGRAPH_ERROR("Citing-cited type game failed", IGRAPH_ENOMEM);
   }

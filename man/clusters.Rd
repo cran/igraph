@@ -3,12 +3,16 @@
 \alias{clusters}
 \alias{is.connected}
 \alias{cluster.distribution}
+\concept{Connectedness}
+\concept{Graph component}
 \title{Connected components of a graph}
-\description{}
+\description{Calculate the maximal (weakly or strongly) 
+  connected components of a graph
+}
 \usage{
-is.connected(graph, mode="weak")
-clusters(graph, mode="weak")
-no.clusters(graph, mode="weak")
+is.connected(graph, mode=c("weak", "strong"))
+clusters(graph, mode=c("weak", "strong"))
+no.clusters(graph, mode=c("weak", "strong"))
 cluster.distribution(graph, cumulative = FALSE, mul.size = FALSE, \dots)
 }
 \arguments{
@@ -43,11 +47,12 @@ cluster.distribution(graph, cumulative = FALSE, mul.size = FALSE, \dots)
 \value{
   For \code{is.connected} a logical constant.
   
-  For \code{clusters} a named list with two components:
+  For \code{clusters} a named list with three components:
   \itemize{
     \item{membership}{numeric vector giving the cluster id to which each
       vertex belongs.}
     \item{csize}{numeric vector giving the sizes of the clusters.}
+    \item{no}{numeric constant, the number of clusters.}
   }
 
   For \code{no.clusters} an integer constant is returned.

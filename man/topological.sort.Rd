@@ -1,5 +1,6 @@
 \name{topological.sort}
 \alias{topological.sort}
+\concept{Topological sort}
 \title{Topological sorting of vertices in a graph}
 \description{
   A topological sorting of a directed acyclic graph is a linear ordering
@@ -7,7 +8,7 @@
   edges. 
 }
 \usage{
-topological.sort(graph, mode="out")
+topological.sort(graph, mode=c("out", "all", "in"))
 }
 \arguments{
   \item{graph}{The input graph, should be directed}

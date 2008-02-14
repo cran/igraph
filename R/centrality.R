@@ -20,15 +20,19 @@
 #
 ###################################################################
 
-evcent <- function(graph, v=V(graph)) {
-  if (!is.igraph(graph)) {
-    stop("Not a graph object")
-  }
+igraph.arpack.default <- list(bmat="I", n=0, which="XX", nev=1, tol=0.0,
+                              ncv=3, ldv=0, ishift=1, maxiter=3000, nb=1,
+                              mode=1, start=0, sigma=0.0, sigmai=0.0)
 
-  ad <- get.adjacency(graph)
+arpack <- function(func, extra=NULL, sym=FALSE, options=igraph.arpack.default,
+                   env=parent.frame()) {
 
-  res <- abs(eigen(ad)$vectors[,1])
-  res <- res[as.vector(v)+1]
+  options.tmp <- igraph.arpack.default
+  options.tmp[ names(options) ] <- options
+  options <- options.tmp
 
-  res
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  .Call("R_igraph_arpack", func, extra, options, env, sym,
+        PACKAGE="igraph")
+
 }

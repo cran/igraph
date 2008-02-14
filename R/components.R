@@ -24,24 +24,14 @@
 # Connected components, subgraphs, kinda
 ###################################################################
 
-clusters <- function(graph, mode="weak") {
+no.clusters <- function(graph, mode=c("weak", "strong")) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
-  if (is.character(mode)) {
-    mode <- switch(mode, "weak"=1, "strong"=2)
-  }
-  .Call("R_igraph_clusters", graph, as.numeric(mode),
-        PACKAGE="igraph")
-}
+  mode <- igraph.match.arg(mode)
+  mode <- switch(mode, "weak"=1, "strong"=2)
 
-no.clusters <- function(graph, mode="weak") {
-  if (!is.igraph(graph)) {
-    stop("Not a graph object")
-  }
-  if (is.character(mode)) {
-    mode <- switch(mode, "weak"=1, "strong"=2)
-  }
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_no_clusters", graph, as.numeric(mode),
         PACKAGE="igraph")
 }
@@ -67,48 +57,32 @@ cluster.distribution <- function(graph, cumulative=FALSE, mul.size=FALSE,
   res
 }
 
-is.connected <- function(graph, mode="weak") {
+is.connected <- function(graph, mode=c("weak", "strong")) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
-  if (is.character(mode)) {
-    mode <- switch(mode, "weak"=1, "strong"=2)
-  }
+  mode <- igraph.match.arg(mode)
+  mode <- switch(mode, "weak"=1, "strong"=2)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_is_connected", graph, as.numeric(mode),
         PACKAGE="igraph")
 }
 
-decompose.graph <- function(graph, mode="weak", max.comps=NA,
+decompose.graph <- function(graph, mode=c("weak", "strong"), max.comps=NA,
                       min.vertices=0) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
-  if (is.character(mode)) {
-    mode <- switch(mode, "weak"=1, "strong"=2)
-  }
+  mode <- igraph.match.arg(mode)
+  mode <- switch(mode, "weak"=1, "strong"=2)
+
   if (is.na(max.comps)) {
     max.comps=-1
   }
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_decompose", graph, as.numeric(mode),
         as.numeric(max.comps), as.numeric(min.vertices),
         PACKAGE="igraph"
         )
-}
-
-biconnected.components <- function(graph) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-
-  # Function call
-  .Call("R_igraph_biconnected_components", graph,
-        PACKAGE="igraph")
-}
-
-articulation.points <- function(graph) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-
-  # Function call
-  .Call("R_igraph_articulation_points", graph,
-        PACKAGE="igraph")
 }

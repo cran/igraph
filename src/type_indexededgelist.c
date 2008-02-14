@@ -187,7 +187,7 @@ int igraph_copy(igraph_t *to, const igraph_t *from) {
   IGRAPH_CHECK(igraph_vector_copy(&to->is, &from->is));
   IGRAPH_FINALLY(igraph_vector_destroy, &to->is);
 
-  IGRAPH_I_ATTRIBUTE_COPY(to, from); /* does IGRAPH_CHECK */
+  IGRAPH_I_ATTRIBUTE_COPY(to, from, 1,1,1); /* does IGRAPH_CHECK */
 
   IGRAPH_FINALLY_CLEAN(6);
   return 0;
@@ -387,7 +387,7 @@ int igraph_delete_edges(igraph_t *graph, igraph_es_t edges) {
   int *mark;
   long int i, j;
   
-  mark=Calloc(no_of_edges, int);
+  mark=igraph_Calloc(no_of_edges, int);
   if (mark==0) {
     IGRAPH_ERROR("Cannot delete edges", IGRAPH_ENOMEM);
   }
@@ -451,7 +451,7 @@ int igraph_delete_edges(igraph_t *graph, igraph_es_t edges) {
   graph->oi=newoi;
   IGRAPH_FINALLY_CLEAN(3);
 
-  Free(mark);
+  igraph_Free(mark);
   IGRAPH_FINALLY_CLEAN(1);
   
   /* Create start vectors, no memory is needed for this */
@@ -564,7 +564,7 @@ int igraph_delete_vertices(igraph_t *graph, const igraph_vs_t vertices) {
 				     &newgraph.ii, remaining_vertices));
   
   /* attributes */
-  IGRAPH_I_ATTRIBUTE_COPY(&newgraph, graph);
+  IGRAPH_I_ATTRIBUTE_COPY(&newgraph, graph, 1,1,1);
   IGRAPH_FINALLY_CLEAN(6);
   IGRAPH_FINALLY(igraph_destroy, &newgraph);
   IGRAPH_I_ATTRIBUTE_DELETE_VERTICES(&newgraph, &edge_recoding, 
@@ -1039,7 +1039,7 @@ int igraph_get_eids(const igraph_t *graph, igraph_vector_t *eids,
     IGRAPH_ERROR("Cannot get edge ids, invalid vertex id", IGRAPH_EINVVID);
   }
 
-  seen=Calloc(no_of_edges, igraph_bool_t);
+  seen=igraph_Calloc(no_of_edges, igraph_bool_t);
   if (seen==0) {
     IGRAPH_ERROR("Cannot get edge ids", IGRAPH_ENOMEM);
   }
@@ -1095,7 +1095,7 @@ int igraph_get_eids(const igraph_t *graph, igraph_vector_t *eids,
     }
   }
   
-  Free(seen);
+  igraph_Free(seen);
   IGRAPH_FINALLY_CLEAN(1);
   return 0;
 }

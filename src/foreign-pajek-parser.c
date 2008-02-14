@@ -210,7 +210,6 @@
 #include "error.h"
 #include "attributes.h"
 #include <math.h>
-char * strndup (const char *S, size_t SIZE);
 extern int igraph_pajek_yylex(void);
 extern int igraph_pajek_mylineno;
 extern char *igraph_pajek_yytext;
@@ -275,7 +274,7 @@ extern long int igraph_i_pajek_actedge;
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 103 "foreign-pajek-parser.y"
+#line 102 "foreign-pajek-parser.y"
 {
   long int intnum;
   double   realnum;  
@@ -285,7 +284,7 @@ typedef union YYSTYPE
   } string;  
 }
 /* Line 187 of yacc.c.  */
-#line 289 "foreign-pajek-parser.c"
+#line 288 "foreign-pajek-parser.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -298,7 +297,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 302 "foreign-pajek-parser.c"
+#line 301 "foreign-pajek-parser.c"
 
 #ifdef short
 # undef short
@@ -632,20 +631,20 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   177,   177,   179,   179,   181,   183,   187,   187,   189,
-     190,   191,   191,   194,   196,   200,   201,   205,   211,   211,
-     215,   215,   218,   219,   222,   225,   230,   235,   240,   243,
-     246,   249,   252,   255,   258,   261,   264,   269,   269,   273,
-     273,   277,   277,   281,   281,   286,   286,   293,   295,   295,
-     295,   295,   295,   295,   297,   299,   299,   301,   302,   302,
-     308,   310,   312,   314,   314,   316,   317,   317,   323,   325,
-     327,   327,   331,   331,   334,   335,   340,   343,   346,   349,
-     352,   355,   358,   361,   364,   367,   370,   373,   376,   379,
-     382,   387,   387,   391,   391,   395,   395,   399,   399,   403,
-     403,   409,   411,   413,   413,   415,   415,   417,   417,   419,
-     421,   426,   428,   428,   430,   430,   432,   432,   434,   436,
-     443,   445,   447,   447,   449,   451,   451,   453,   463,   466,
-     469,   469,   471,   472,   473
+       0,   176,   176,   178,   178,   180,   182,   186,   186,   188,
+     189,   190,   190,   193,   195,   199,   200,   204,   210,   210,
+     214,   214,   217,   218,   221,   224,   229,   234,   239,   242,
+     245,   248,   251,   254,   257,   260,   263,   268,   268,   272,
+     272,   276,   276,   280,   280,   285,   285,   292,   294,   294,
+     294,   294,   294,   294,   296,   298,   298,   300,   301,   301,
+     307,   309,   311,   313,   313,   315,   316,   316,   322,   324,
+     326,   326,   330,   330,   333,   334,   339,   342,   345,   348,
+     351,   354,   357,   360,   363,   366,   369,   372,   375,   378,
+     381,   386,   386,   390,   390,   394,   394,   398,   398,   402,
+     402,   408,   410,   412,   412,   414,   414,   416,   416,   418,
+     420,   425,   427,   427,   429,   429,   431,   431,   433,   435,
+     442,   444,   446,   446,   448,   450,   450,   452,   462,   465,
+     468,   468,   470,   471,   472
 };
 #endif
 
@@ -1707,36 +1706,36 @@ yyreduce:
   switch (yyn)
     {
         case 6:
-#line 183 "foreign-pajek-parser.y"
+#line 182 "foreign-pajek-parser.y"
     {
   igraph_pajek_vcount=(yyvsp[(2) - (2)].intnum);
 }
     break;
 
   case 11:
-#line 191 "foreign-pajek-parser.y"
+#line 190 "foreign-pajek-parser.y"
     { igraph_i_pajek_actvertex=(yyvsp[(1) - (1)].intnum); }
     break;
 
   case 12:
-#line 191 "foreign-pajek-parser.y"
+#line 190 "foreign-pajek-parser.y"
     { }
     break;
 
   case 13:
-#line 194 "foreign-pajek-parser.y"
+#line 193 "foreign-pajek-parser.y"
     { (yyval.intnum)=(yyvsp[(1) - (1)].intnum); igraph_pajek_mode=1; }
     break;
 
   case 14:
-#line 196 "foreign-pajek-parser.y"
+#line 195 "foreign-pajek-parser.y"
     {
   igraph_i_pajek_add_string_vertex_attribute("id", (yyvsp[(1) - (1)].string).str, (yyvsp[(1) - (1)].string).len);
 }
     break;
 
   case 16:
-#line 201 "foreign-pajek-parser.y"
+#line 200 "foreign-pajek-parser.y"
     { 
   igraph_i_pajek_add_numeric_vertex_attribute("x", (yyvsp[(1) - (2)].realnum));
   igraph_i_pajek_add_numeric_vertex_attribute("y", (yyvsp[(2) - (2)].realnum));
@@ -1744,7 +1743,7 @@ yyreduce:
     break;
 
   case 17:
-#line 205 "foreign-pajek-parser.y"
+#line 204 "foreign-pajek-parser.y"
     { 
   igraph_i_pajek_add_numeric_vertex_attribute("x", (yyvsp[(1) - (3)].realnum));
   igraph_i_pajek_add_numeric_vertex_attribute("y", (yyvsp[(2) - (3)].realnum));
@@ -1753,28 +1752,28 @@ yyreduce:
     break;
 
   case 19:
-#line 211 "foreign-pajek-parser.y"
+#line 210 "foreign-pajek-parser.y"
     { 
   igraph_i_pajek_add_string_vertex_attribute("shape", (yyvsp[(1) - (1)].string).str, (yyvsp[(1) - (1)].string).len);	      
 }
     break;
 
   case 23:
-#line 219 "foreign-pajek-parser.y"
+#line 218 "foreign-pajek-parser.y"
     {
 	 igraph_i_pajek_add_numeric_vertex_attribute("xfact", (yyvsp[(2) - (2)].realnum));
        }
     break;
 
   case 24:
-#line 222 "foreign-pajek-parser.y"
+#line 221 "foreign-pajek-parser.y"
     {
 	 igraph_i_pajek_add_numeric_vertex_attribute("yfact", (yyvsp[(2) - (2)].realnum));
        }
     break;
 
   case 25:
-#line 225 "foreign-pajek-parser.y"
+#line 224 "foreign-pajek-parser.y"
     { /* RGB color */
          igraph_i_pajek_add_numeric_vertex_attribute("color-red", (yyvsp[(2) - (4)].realnum));
 	 igraph_i_pajek_add_numeric_vertex_attribute("color-green", (yyvsp[(3) - (4)].realnum));
@@ -1783,7 +1782,7 @@ yyreduce:
     break;
 
   case 26:
-#line 230 "foreign-pajek-parser.y"
+#line 229 "foreign-pajek-parser.y"
     {
          igraph_i_pajek_add_numeric_vertex_attribute("framecolor-red", (yyvsp[(2) - (4)].realnum));
 	 igraph_i_pajek_add_numeric_vertex_attribute("framecolor-green", (yyvsp[(3) - (4)].realnum));
@@ -1792,7 +1791,7 @@ yyreduce:
     break;
 
   case 27:
-#line 235 "foreign-pajek-parser.y"
+#line 234 "foreign-pajek-parser.y"
     {
          igraph_i_pajek_add_numeric_vertex_attribute("labelcolor-red", (yyvsp[(2) - (4)].realnum));
 	 igraph_i_pajek_add_numeric_vertex_attribute("labelcolor-green", (yyvsp[(3) - (4)].realnum));
@@ -1801,75 +1800,75 @@ yyreduce:
     break;
 
   case 28:
-#line 240 "foreign-pajek-parser.y"
+#line 239 "foreign-pajek-parser.y"
     {
          igraph_i_pajek_add_numeric_vertex_attribute("labeldist", (yyvsp[(2) - (2)].realnum));
      }
     break;
 
   case 29:
-#line 243 "foreign-pajek-parser.y"
+#line 242 "foreign-pajek-parser.y"
     {
          igraph_i_pajek_add_numeric_vertex_attribute("labeldegree2", (yyvsp[(2) - (2)].realnum));
      }
     break;
 
   case 30:
-#line 246 "foreign-pajek-parser.y"
+#line 245 "foreign-pajek-parser.y"
     {
          igraph_i_pajek_add_numeric_vertex_attribute("framewidth", (yyvsp[(2) - (2)].realnum));
      }
     break;
 
   case 31:
-#line 249 "foreign-pajek-parser.y"
+#line 248 "foreign-pajek-parser.y"
     {
          igraph_i_pajek_add_numeric_vertex_attribute("fontsize", (yyvsp[(2) - (2)].realnum));
      }
     break;
 
   case 32:
-#line 252 "foreign-pajek-parser.y"
+#line 251 "foreign-pajek-parser.y"
     {       
          igraph_i_pajek_add_numeric_vertex_attribute("rotation", (yyvsp[(2) - (2)].realnum));
      }
     break;
 
   case 33:
-#line 255 "foreign-pajek-parser.y"
+#line 254 "foreign-pajek-parser.y"
     {
          igraph_i_pajek_add_numeric_vertex_attribute("radius", (yyvsp[(2) - (2)].realnum));
      }
     break;
 
   case 34:
-#line 258 "foreign-pajek-parser.y"
+#line 257 "foreign-pajek-parser.y"
     {
          igraph_i_pajek_add_numeric_vertex_attribute("diamondratio", (yyvsp[(2) - (2)].realnum));
      }
     break;
 
   case 35:
-#line 261 "foreign-pajek-parser.y"
+#line 260 "foreign-pajek-parser.y"
     {
          igraph_i_pajek_add_numeric_vertex_attribute("labeldegree", (yyvsp[(2) - (2)].realnum));
      }
     break;
 
   case 36:
-#line 264 "foreign-pajek-parser.y"
+#line 263 "foreign-pajek-parser.y"
     {
          igraph_i_pajek_add_numeric_vertex_attribute("vertexsize", (yyvsp[(2) - (2)].realnum));
      }
     break;
 
   case 37:
-#line 269 "foreign-pajek-parser.y"
+#line 268 "foreign-pajek-parser.y"
     { igraph_pajek_mode=3; }
     break;
 
   case 38:
-#line 269 "foreign-pajek-parser.y"
+#line 268 "foreign-pajek-parser.y"
     { 
          igraph_pajek_mode=1;
 	 igraph_i_pajek_add_string_vertex_attribute("font", (yyvsp[(3) - (3)].string).str, (yyvsp[(3) - (3)].string).len);
@@ -1877,12 +1876,12 @@ yyreduce:
     break;
 
   case 39:
-#line 273 "foreign-pajek-parser.y"
+#line 272 "foreign-pajek-parser.y"
     { igraph_pajek_mode=3; }
     break;
 
   case 40:
-#line 273 "foreign-pajek-parser.y"
+#line 272 "foreign-pajek-parser.y"
     {
          igraph_pajek_mode=1;
 	 igraph_i_pajek_add_string_vertex_attribute("url", (yyvsp[(3) - (3)].string).str, (yyvsp[(3) - (3)].string).len);
@@ -1890,12 +1889,12 @@ yyreduce:
     break;
 
   case 41:
-#line 277 "foreign-pajek-parser.y"
+#line 276 "foreign-pajek-parser.y"
     { igraph_pajek_mode=3; }
     break;
 
   case 42:
-#line 277 "foreign-pajek-parser.y"
+#line 276 "foreign-pajek-parser.y"
     {
          igraph_pajek_mode=1;
 	 igraph_i_pajek_add_string_vertex_attribute("color", (yyvsp[(3) - (3)].string).str, (yyvsp[(3) - (3)].string).len);
@@ -1903,12 +1902,12 @@ yyreduce:
     break;
 
   case 43:
-#line 281 "foreign-pajek-parser.y"
+#line 280 "foreign-pajek-parser.y"
     { igraph_pajek_mode=3; }
     break;
 
   case 44:
-#line 281 "foreign-pajek-parser.y"
+#line 280 "foreign-pajek-parser.y"
     {
          igraph_pajek_mode=1;
 	 igraph_i_pajek_add_string_vertex_attribute("framecolor", 
@@ -1917,12 +1916,12 @@ yyreduce:
     break;
 
   case 45:
-#line 286 "foreign-pajek-parser.y"
+#line 285 "foreign-pajek-parser.y"
     { igraph_pajek_mode=3; }
     break;
 
   case 46:
-#line 286 "foreign-pajek-parser.y"
+#line 285 "foreign-pajek-parser.y"
     {
          igraph_pajek_mode=1;
 	 igraph_i_pajek_add_string_vertex_attribute("labelcolor", 
@@ -1931,55 +1930,55 @@ yyreduce:
     break;
 
   case 47:
-#line 293 "foreign-pajek-parser.y"
+#line 292 "foreign-pajek-parser.y"
     { (yyval.string)=(yyvsp[(1) - (1)].string); }
     break;
 
   case 54:
-#line 297 "foreign-pajek-parser.y"
+#line 296 "foreign-pajek-parser.y"
     { igraph_pajek_directed=1; }
     break;
 
   case 58:
-#line 302 "foreign-pajek-parser.y"
+#line 301 "foreign-pajek-parser.y"
     { igraph_i_pajek_actedge++;
 	                  igraph_pajek_mode=2; }
     break;
 
   case 59:
-#line 303 "foreign-pajek-parser.y"
+#line 302 "foreign-pajek-parser.y"
     { 
   igraph_vector_push_back(igraph_pajek_vector, (yyvsp[(1) - (6)].intnum)-1);
   igraph_vector_push_back(igraph_pajek_vector, (yyvsp[(2) - (6)].intnum)-1); }
     break;
 
   case 62:
-#line 312 "foreign-pajek-parser.y"
+#line 311 "foreign-pajek-parser.y"
     { igraph_pajek_directed=0; }
     break;
 
   case 66:
-#line 317 "foreign-pajek-parser.y"
+#line 316 "foreign-pajek-parser.y"
     { igraph_i_pajek_actedge++; 
 	                    igraph_pajek_mode=2; }
     break;
 
   case 67:
-#line 318 "foreign-pajek-parser.y"
+#line 317 "foreign-pajek-parser.y"
     { 
   igraph_vector_push_back(igraph_pajek_vector, (yyvsp[(1) - (6)].intnum)-1);
   igraph_vector_push_back(igraph_pajek_vector, (yyvsp[(2) - (6)].intnum)-1); }
     break;
 
   case 71:
-#line 327 "foreign-pajek-parser.y"
+#line 326 "foreign-pajek-parser.y"
     {
   igraph_i_pajek_add_numeric_edge_attribute("weight", (yyvsp[(1) - (1)].realnum));
 }
     break;
 
   case 75:
-#line 335 "foreign-pajek-parser.y"
+#line 334 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("color-red", (yyvsp[(2) - (4)].realnum));
        igraph_i_pajek_add_numeric_edge_attribute("color-green", (yyvsp[(3) - (4)].realnum));
@@ -1988,117 +1987,117 @@ yyreduce:
     break;
 
   case 76:
-#line 340 "foreign-pajek-parser.y"
+#line 339 "foreign-pajek-parser.y"
     { 
        igraph_i_pajek_add_numeric_edge_attribute("arrowsize", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 77:
-#line 343 "foreign-pajek-parser.y"
+#line 342 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("edgewidth", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 78:
-#line 346 "foreign-pajek-parser.y"
+#line 345 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("hook1", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 79:
-#line 349 "foreign-pajek-parser.y"
+#line 348 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("hook2", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 80:
-#line 352 "foreign-pajek-parser.y"
+#line 351 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("angle1", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 81:
-#line 355 "foreign-pajek-parser.y"
+#line 354 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("angle2", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 82:
-#line 358 "foreign-pajek-parser.y"
+#line 357 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("velocity1", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 83:
-#line 361 "foreign-pajek-parser.y"
+#line 360 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("velocity2", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 84:
-#line 364 "foreign-pajek-parser.y"
+#line 363 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("arrowpos", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 85:
-#line 367 "foreign-pajek-parser.y"
+#line 366 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("labelpos", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 86:
-#line 370 "foreign-pajek-parser.y"
+#line 369 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("labelangle", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 87:
-#line 373 "foreign-pajek-parser.y"
+#line 372 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("labelangle2", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 88:
-#line 376 "foreign-pajek-parser.y"
+#line 375 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("labeldegree", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 89:
-#line 379 "foreign-pajek-parser.y"
+#line 378 "foreign-pajek-parser.y"
     {		/* what is this??? */
        igraph_i_pajek_add_numeric_edge_attribute("arrowsize", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 90:
-#line 382 "foreign-pajek-parser.y"
+#line 381 "foreign-pajek-parser.y"
     {
        igraph_i_pajek_add_numeric_edge_attribute("fontsize", (yyvsp[(2) - (2)].realnum));
    }
     break;
 
   case 91:
-#line 387 "foreign-pajek-parser.y"
+#line 386 "foreign-pajek-parser.y"
     { igraph_pajek_mode=4; }
     break;
 
   case 92:
-#line 387 "foreign-pajek-parser.y"
+#line 386 "foreign-pajek-parser.y"
     {
       igraph_pajek_mode=2;
       igraph_i_pajek_add_string_edge_attribute("arrowtype", (yyvsp[(3) - (3)].string).str, (yyvsp[(3) - (3)].string).len);
@@ -2106,12 +2105,12 @@ yyreduce:
     break;
 
   case 93:
-#line 391 "foreign-pajek-parser.y"
+#line 390 "foreign-pajek-parser.y"
     { igraph_pajek_mode=4; }
     break;
 
   case 94:
-#line 391 "foreign-pajek-parser.y"
+#line 390 "foreign-pajek-parser.y"
     {
       igraph_pajek_mode=2;
       igraph_i_pajek_add_string_edge_attribute("linepattern", (yyvsp[(3) - (3)].string).str, (yyvsp[(3) - (3)].string).len);
@@ -2119,12 +2118,12 @@ yyreduce:
     break;
 
   case 95:
-#line 395 "foreign-pajek-parser.y"
+#line 394 "foreign-pajek-parser.y"
     { igraph_pajek_mode=4; }
     break;
 
   case 96:
-#line 395 "foreign-pajek-parser.y"
+#line 394 "foreign-pajek-parser.y"
     {
       igraph_pajek_mode=2;
       igraph_i_pajek_add_string_edge_attribute("label", (yyvsp[(3) - (3)].string).str, (yyvsp[(3) - (3)].string).len);
@@ -2132,12 +2131,12 @@ yyreduce:
     break;
 
   case 97:
-#line 399 "foreign-pajek-parser.y"
+#line 398 "foreign-pajek-parser.y"
     { igraph_pajek_mode=4; }
     break;
 
   case 98:
-#line 399 "foreign-pajek-parser.y"
+#line 398 "foreign-pajek-parser.y"
     {
       igraph_pajek_mode=2;
       igraph_i_pajek_add_string_edge_attribute("labelcolor", (yyvsp[(3) - (3)].string).str, (yyvsp[(3) - (3)].string).len);
@@ -2145,12 +2144,12 @@ yyreduce:
     break;
 
   case 99:
-#line 403 "foreign-pajek-parser.y"
+#line 402 "foreign-pajek-parser.y"
     { igraph_pajek_mode=4; }
     break;
 
   case 100:
-#line 403 "foreign-pajek-parser.y"
+#line 402 "foreign-pajek-parser.y"
     {
       igraph_pajek_mode=2;
       igraph_i_pajek_add_string_edge_attribute("color", (yyvsp[(3) - (3)].string).str, (yyvsp[(3) - (3)].string).len);
@@ -2158,22 +2157,22 @@ yyreduce:
     break;
 
   case 101:
-#line 409 "foreign-pajek-parser.y"
+#line 408 "foreign-pajek-parser.y"
     { igraph_pajek_mode=2; (yyval.string)=(yyvsp[(1) - (1)].string); }
     break;
 
   case 102:
-#line 411 "foreign-pajek-parser.y"
+#line 410 "foreign-pajek-parser.y"
     { igraph_pajek_directed=1; }
     break;
 
   case 109:
-#line 419 "foreign-pajek-parser.y"
+#line 418 "foreign-pajek-parser.y"
     { igraph_pajek_mode=0; igraph_pajek_actfrom=fabs((yyvsp[(1) - (1)].intnum))-1; }
     break;
 
   case 110:
-#line 421 "foreign-pajek-parser.y"
+#line 420 "foreign-pajek-parser.y"
     { 
   igraph_vector_push_back(igraph_pajek_vector, igraph_pajek_actfrom); 
   igraph_vector_push_back(igraph_pajek_vector, fabs((yyvsp[(1) - (1)].intnum))-1); 
@@ -2181,17 +2180,17 @@ yyreduce:
     break;
 
   case 111:
-#line 426 "foreign-pajek-parser.y"
+#line 425 "foreign-pajek-parser.y"
     { igraph_pajek_directed=0; }
     break;
 
   case 118:
-#line 434 "foreign-pajek-parser.y"
+#line 433 "foreign-pajek-parser.y"
     { igraph_pajek_mode=0; igraph_pajek_actfrom=fabs((yyvsp[(1) - (1)].intnum))-1; }
     break;
 
   case 119:
-#line 436 "foreign-pajek-parser.y"
+#line 435 "foreign-pajek-parser.y"
     { 
   igraph_vector_push_back(igraph_pajek_vector, igraph_pajek_actfrom); 
   igraph_vector_push_back(igraph_pajek_vector, fabs((yyvsp[(1) - (1)].intnum))-1); 
@@ -2199,17 +2198,17 @@ yyreduce:
     break;
 
   case 121:
-#line 445 "foreign-pajek-parser.y"
+#line 444 "foreign-pajek-parser.y"
     { igraph_pajek_actfrom=0; igraph_pajek_actto=0; }
     break;
 
   case 124:
-#line 449 "foreign-pajek-parser.y"
+#line 448 "foreign-pajek-parser.y"
     { igraph_pajek_actfrom++; igraph_pajek_actto=0; }
     break;
 
   case 127:
-#line 453 "foreign-pajek-parser.y"
+#line 452 "foreign-pajek-parser.y"
     {
   if ((yyvsp[(1) - (1)].intnum)>0) { 
     igraph_vector_push_back(igraph_pajek_vector, igraph_pajek_actfrom);
@@ -2220,35 +2219,35 @@ yyreduce:
     break;
 
   case 128:
-#line 463 "foreign-pajek-parser.y"
+#line 462 "foreign-pajek-parser.y"
     { (yyval.intnum)=igraph_pajek_get_number(igraph_pajek_yytext,
 					  igraph_pajek_yyleng); }
     break;
 
   case 129:
-#line 466 "foreign-pajek-parser.y"
+#line 465 "foreign-pajek-parser.y"
     { (yyval.realnum)=igraph_pajek_get_number(igraph_pajek_yytext,
 					  igraph_pajek_yyleng); }
     break;
 
   case 132:
-#line 471 "foreign-pajek-parser.y"
+#line 470 "foreign-pajek-parser.y"
     { (yyval.string).str=igraph_pajek_yytext; (yyval.string).len=igraph_pajek_yyleng; }
     break;
 
   case 133:
-#line 472 "foreign-pajek-parser.y"
+#line 471 "foreign-pajek-parser.y"
     { (yyval.string).str=igraph_pajek_yytext; (yyval.string).len=igraph_pajek_yyleng; }
     break;
 
   case 134:
-#line 473 "foreign-pajek-parser.y"
+#line 472 "foreign-pajek-parser.y"
     { (yyval.string).str=igraph_pajek_yytext+1; (yyval.string).len=igraph_pajek_yyleng-2; }
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 2252 "foreign-pajek-parser.c"
+#line 2251 "foreign-pajek-parser.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2462,7 +2461,7 @@ yyreturn:
 }
 
 
-#line 475 "foreign-pajek-parser.y"
+#line 474 "foreign-pajek-parser.y"
 
 
 int igraph_pajek_yyerror(char *s)
@@ -2476,12 +2475,12 @@ int igraph_pajek_yyerror(char *s)
 
 igraph_real_t igraph_pajek_get_number(const char *str, long int length) {
   igraph_real_t num;
-  char *tmp=Calloc(length+1, char);
+  char *tmp=igraph_Calloc(length+1, char);
   
   strncpy(tmp, str, length);
   tmp[length]='\0';
   sscanf(tmp, "%lf", &num);
-  Free(tmp);
+  igraph_Free(tmp);
   return num;
 } 
 
@@ -2501,8 +2500,8 @@ int igraph_i_pajek_add_numeric_attribute(igraph_trie_t *names,
   igraph_trie_get(names, attrname, &id);
   if (id == attrsize) {
     /* add a new attribute */
-    rec=Calloc(1, igraph_i_attribute_record_t);
-    na=Calloc(1, igraph_vector_t);
+    rec=igraph_Calloc(1, igraph_i_attribute_record_t);
+    na=igraph_Calloc(1, igraph_vector_t);
     igraph_vector_init(na, count);
     rec->name=strdup(attrname);
     rec->type=IGRAPH_ATTRIBUTE_NUMERIC;
@@ -2544,8 +2543,8 @@ int igraph_i_pajek_add_string_attribute(igraph_trie_t *names,
   igraph_trie_get(names, attrname, &id);
   if (id == attrsize) {
     /* add a new attribute */
-    rec=Calloc(1, igraph_i_attribute_record_t);
-    na=Calloc(1, igraph_strvector_t);
+    rec=igraph_Calloc(1, igraph_i_attribute_record_t);
+    na=igraph_Calloc(1, igraph_strvector_t);
     igraph_strvector_init(na, count);
     for (i=0; i<count; i++) {
       igraph_strvector_set(na, i, "");
@@ -2575,7 +2574,7 @@ int igraph_i_pajek_add_string_vertex_attribute(const char *name,
   char *tmp;
   int ret;
 
-  tmp=Calloc(len+1, char);
+  tmp=igraph_Calloc(len+1, char);
   if (tmp==0) {
     IGRAPH_ERROR("cannot add element to hash table", IGRAPH_ENOMEM);
   }
@@ -2589,7 +2588,7 @@ int igraph_i_pajek_add_string_vertex_attribute(const char *name,
 					  name, igraph_i_pajek_actvertex-1,
 					  tmp);
   
-  Free(tmp);
+  igraph_Free(tmp);
   IGRAPH_FINALLY_CLEAN(1);
   
   return ret;
@@ -2601,7 +2600,7 @@ int igraph_i_pajek_add_string_edge_attribute(const char *name,
   char *tmp;
   int ret;
 
-  tmp=Calloc(len+1, char);
+  tmp=igraph_Calloc(len+1, char);
   if (tmp==0) {
     IGRAPH_ERROR("cannot add element to hash table", IGRAPH_ENOMEM);
   }
@@ -2615,7 +2614,7 @@ int igraph_i_pajek_add_string_edge_attribute(const char *name,
 					  name, igraph_i_pajek_actedge-1,
 					  tmp);
 
-  Free(tmp);
+  igraph_Free(tmp);
   IGRAPH_FINALLY_CLEAN(1);
   
   return ret;

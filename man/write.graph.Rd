@@ -5,14 +5,16 @@
   graphs to foreign file formats, however not many formats are
   implemented right now.}
 \usage{
-write.graph(graph, file, format="edgelist", \dots)
+write.graph(graph, file, format=c("edgelist", "pajek", "ncol",
+       "lgl", "graphml", "dimacs", "gml", "dot"), \dots)
 }
 \arguments{
   \item{graph}{The graph to export.}
   \item{file}{A connection or a string giving the file name to write the
     graph to.}
   \item{format}{Character string giving the file format. Right now 
-    \code{pajek}, \code{graphml}, \code{gml}, \code{edgelist}, \code{lgl},
+    \code{pajek}, \code{graphml}, \code{dot},
+    \code{gml}, \code{edgelist}, \code{lgl},
     \code{ncol} and \code{dimacs} are implemented. As of igraph 0.4 this
     argument is case insensitive.
   }
@@ -31,6 +33,10 @@ write.graph(graph, file, format="edgelist", \dots)
   \code{\link{read.graph}} for GraphML details. Vertex and edge
   attributes are also written to the file. This format has no additional
   arguments.
+
+  The dot format is used by the popular GraphViz program. Vertex and
+  edge attributes are written to the file. There are no additional
+  arguments for this format.
   
   The \code{lgl} format is also a simple text file, this is the
   format expected by the 'Large Graph Layout' layout generator software.

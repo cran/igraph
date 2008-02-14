@@ -376,15 +376,16 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[10] =
+static yyconst flex_int16_t yy_accept[12] =
     {   0,
-        1,    1,    5,    3,    1,    2,    3,    1,    0
+        1,    1,    5,    3,    1,    2,    2,    3,    1,    2,
+        0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    4,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    2,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -413,31 +414,33 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst flex_int32_t yy_meta[4] =
+static yyconst flex_int32_t yy_meta[5] =
     {   0,
-        1,    2,    3
+        1,    2,    3,    4
     } ;
 
-static yyconst flex_int16_t yy_base[12] =
+static yyconst flex_int16_t yy_base[15] =
     {   0,
-        0,    0,    6,    0,    0,    7,    0,    0,    7,    4,
-        2
+        0,    0,   10,    0,    0,    0,    6,    0,    0,   11,
+       11,    4,    5,    2
     } ;
 
-static yyconst flex_int16_t yy_def[12] =
+static yyconst flex_int16_t yy_def[15] =
     {   0,
-        9,    1,    9,   10,   11,    9,   10,   11,    0,    9,
-        9
+       11,    1,   11,   12,   13,   14,   12,   12,   13,   11,
+        0,   11,   11,   11
     } ;
 
-static yyconst flex_int16_t yy_nxt[11] =
+static yyconst flex_int16_t yy_nxt[16] =
     {   0,
-        4,    5,    6,    8,    7,    9,    3,    9,    9,    9
+        4,    5,    6,    7,    8,   10,    9,    8,   10,   11,
+        3,   11,   11,   11,   11
     } ;
 
-static yyconst flex_int16_t yy_chk[11] =
+static yyconst flex_int16_t yy_chk[16] =
     {   0,
-        1,    1,    1,   11,   10,    3,    9,    9,    9,    9
+        1,    1,    1,    1,   12,   14,   13,   12,    7,    3,
+       11,   11,   11,   11,   11
     } ;
 
 static yy_state_type yy_last_accepting_state;
@@ -500,13 +503,14 @@ char *igraph_ncol_yytext;
 
 */
 
+#include <stdlib.h>
 #include "foreign-ncol-parser.h"
 extern long int igraph_ncol_mylineno;
 int igraph_i_ncol_eof;
 void igraph_i_ncol_reset_scanner() {
   YY_FLUSH_BUFFER;
 }
-#line 510 "foreign-ncol-lexer.c"
+#line 514 "foreign-ncol-lexer.c"
 
 #define INITIAL 0
 
@@ -659,11 +663,11 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 61 "foreign-ncol-lexer.l"
+#line 62 "foreign-ncol-lexer.l"
 
 
  /* ------------------------------------------------whitespace------*/
-#line 667 "foreign-ncol-lexer.c"
+#line 671 "foreign-ncol-lexer.c"
 
 	if ( !(yy_init) )
 		{
@@ -716,13 +720,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 10 )
+				if ( yy_current_state >= 12 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 7 );
+		while ( yy_base[yy_current_state] != 11 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -748,24 +752,24 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 64 "foreign-ncol-lexer.l"
+#line 65 "foreign-ncol-lexer.l"
 { }
 	YY_BREAK
 /* ---------------------------------------------------newline------*/
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 67 "foreign-ncol-lexer.l"
+#line 68 "foreign-ncol-lexer.l"
 { igraph_ncol_mylineno++; return NEWLINE; }
 	YY_BREAK
 /* ----------------------------------------------alphanumeric------*/
 case 3:
 YY_RULE_SETUP
-#line 70 "foreign-ncol-lexer.l"
+#line 71 "foreign-ncol-lexer.l"
 { return ALNUM; }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 72 "foreign-ncol-lexer.l"
+#line 73 "foreign-ncol-lexer.l"
 { if (igraph_i_ncol_eof) {
                        yyterminate();
                     } else {
@@ -776,10 +780,10 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 80 "foreign-ncol-lexer.l"
+#line 81 "foreign-ncol-lexer.l"
 ECHO;
 	YY_BREAK
-#line 783 "foreign-ncol-lexer.c"
+#line 787 "foreign-ncol-lexer.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1061,7 +1065,7 @@ static int yy_get_next_buffer (void)
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 10 )
+			if ( yy_current_state >= 12 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1089,11 +1093,11 @@ static int yy_get_next_buffer (void)
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 10 )
+		if ( yy_current_state >= 12 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 9);
+	yy_is_jam = (yy_current_state == 11);
 
 	return yy_is_jam ? 0 : yy_current_state;
 }
@@ -1763,7 +1767,7 @@ void igraph_ncol_yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 80 "foreign-ncol-lexer.l"
+#line 81 "foreign-ncol-lexer.l"
 
 
 

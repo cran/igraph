@@ -35,8 +35,7 @@ int igraph_clusters_strong(const igraph_t *graph, igraph_vector_t *membership,
 /**
  * \ingroup structural
  * \function igraph_clusters
- * \brief Calculates the (weakly or strongly) connected components in
- * a graph. 
+ * \brief Calculates the (weakly or strongly) connected components in a graph. 
  *
  * \param graph The graph object to analyze.
  * \param membership First half of the result will be stored here. For
@@ -90,7 +89,7 @@ int igraph_clusters_weak(const igraph_t *graph, igraph_vector_t *membership,
   long int i;
   igraph_vector_t neis=IGRAPH_VECTOR_NULL;
 
-  already_added=Calloc(no_of_nodes,char);
+  already_added=igraph_Calloc(no_of_nodes,char);
   if (already_added==0) {
     IGRAPH_ERROR("Cannot calculate clusters", IGRAPH_ENOMEM);
   }
@@ -144,7 +143,7 @@ int igraph_clusters_weak(const igraph_t *graph, igraph_vector_t *membership,
   
   if (no) { *no = no_of_clusters-1; }
   
-  Free(already_added);
+  igraph_Free(already_added);
   igraph_dqueue_destroy(&q);
   igraph_vector_destroy(&neis);
   IGRAPH_FINALLY_CLEAN(3);
@@ -309,7 +308,7 @@ int igraph_is_connected_weak(const igraph_t *graph, igraph_bool_t *res) {
   
   long int i, j;
 
-  already_added=Calloc(no_of_nodes, char);
+  already_added=igraph_Calloc(no_of_nodes, char);
   if (already_added==0) {
     IGRAPH_ERROR("is connected (weak) failed", IGRAPH_ENOMEM);
   }
@@ -339,7 +338,7 @@ int igraph_is_connected_weak(const igraph_t *graph, igraph_bool_t *res) {
   /* Connected? */
   *res = (j == no_of_nodes);
 
-  Free(already_added);
+  igraph_Free(already_added);
   igraph_dqueue_destroy(&q);
   igraph_vector_destroy(&neis);
   IGRAPH_FINALLY_CLEAN(3);
@@ -359,6 +358,7 @@ void igraph_i_decompose_free(igraph_vector_ptr_t *complist) {
 
 /**
  * \function igraph_decompose
+ * \brief Decompose a graph into connected components.
  * 
  * Create separate graph for each component of a graph. Note that the
  * vertex ids in the new graphs will be different than in the original 
@@ -416,7 +416,7 @@ int igraph_decompose(const igraph_t *graph, igraph_vector_ptr_t *components,
     maxcompno=LONG_MAX;
   }
 
-  already_added=Calloc(no_of_nodes, char);
+  already_added=igraph_Calloc(no_of_nodes, char);
   if (already_added==0) {
     IGRAPH_ERROR("Cannot decompose graph", IGRAPH_ENOMEM);
   }
@@ -453,7 +453,7 @@ int igraph_decompose(const igraph_t *graph, igraph_vector_ptr_t *components,
     /* ok, we have a component */
     if (igraph_vector_size(&verts)<minelements) { continue; }
 
-    newg=Calloc(1, igraph_t);
+    newg=igraph_Calloc(1, igraph_t);
     if (newg==0) {
       IGRAPH_ERROR("Cannot decompose graph", IGRAPH_ENOMEM);
     }
@@ -494,7 +494,7 @@ int igraph_biconnected_components(const igraph_t *graph,
   igraph_vector_t *adjedges;
   igraph_stack_t path;
   igraph_vector_t edgestack;
-  igraph_i_adjedgelist_t adjedgelist;
+  igraph_adjedgelist_t adjedgelist;
   long int i, counter, rootdfs=0;  
 
   IGRAPH_CHECK(igraph_vector_long_init(&nextptr, no_of_nodes));
@@ -511,8 +511,8 @@ int igraph_biconnected_components(const igraph_t *graph,
   IGRAPH_VECTOR_INIT_FINALLY(&edgestack, 0);
   IGRAPH_CHECK(igraph_vector_reserve(&edgestack, 100));
 
-  IGRAPH_CHECK(igraph_i_adjedgelist_init(graph, &adjedgelist, IGRAPH_ALL));
-  IGRAPH_FINALLY(igraph_i_adjedgelist_destroy, &adjedgelist);
+  IGRAPH_CHECK(igraph_adjedgelist_init(graph, &adjedgelist, IGRAPH_ALL));
+  IGRAPH_FINALLY(igraph_adjedgelist_destroy, &adjedgelist);
 
   if (no) {
     *no=0;
@@ -535,11 +535,11 @@ int igraph_biconnected_components(const igraph_t *graph,
     rootdfs=0;
     VECTOR(low)[i]=VECTOR(num)[i]=counter++;
     while (!igraph_stack_empty(&path)) {
-      long int n, edge, nei;
+      long int n;
       long int act=igraph_stack_top(&path);
       long int actnext=VECTOR(nextptr)[act];
       
-      adjedges=igraph_i_adjedgelist_get(&adjedgelist, act);
+      adjedges=igraph_adjedgelist_get(&adjedgelist, act);
       n=igraph_vector_size(adjedges);
       if (actnext < n) {
 	/* Step down (maybe) */
@@ -575,7 +575,7 @@ int igraph_biconnected_components(const igraph_t *graph,
 	    }
 	    if (no) { *no += 1; }
 	    if (components) {
-	      igraph_vector_t *v=Calloc(1, igraph_vector_t);
+	      igraph_vector_t *v=igraph_Calloc(1, igraph_vector_t);
 	      IGRAPH_CHECK(igraph_vector_init(v, 0));
 	      while (!igraph_vector_empty(&edgestack)) {
 		long int e=igraph_vector_pop_back(&edgestack);
@@ -598,7 +598,7 @@ int igraph_biconnected_components(const igraph_t *graph,
 
   } /* i < no_of_nodes */
 
-  igraph_i_adjedgelist_destroy(&adjedgelist);
+  igraph_adjedgelist_destroy(&adjedgelist);
   igraph_vector_destroy(&edgestack);
   igraph_stack_destroy(&path);
   igraph_vector_bool_destroy(&found);

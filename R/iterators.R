@@ -58,10 +58,12 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
       res <- 0:(ec-1)
     }
   } else if (!is.null(P)) {
+    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
     res <- .Call("R_igraph_es_pairs", graph, as.numeric(P),
                  as.logical(directed),
                  PACKAGE="igraph")
   } else {
+    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
     res <- .Call("R_igraph_es_path", graph, as.numeric(path),
                  as.logical(directed),
                  PACKAGE="igraph")
@@ -87,24 +89,25 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
   } else {
     # language expression, we also do attribute based indexing
     graph <- get("graph", attr(x, "env"))
-    nei <- function(v, mode=3) {
+    nei <- function(v, mode=c("all", "in", "out", "total")) {
       ## TRUE iff the vertex is a neighbor (any type)
       ## of at least one vertex in v
-      if (is.character(mode)) {
-        mode <- switch(mode, "out"=1, "in"=2, "all"=3, "total"=3)
-      }
+      mode <- igraph.match.arg(mode)
+      mode <- switch(mode, "out"=1, "in"=2, "all"=3, "total"=3)
+
       if (is.logical(v)) {
         v <- which(v)
       }
+      on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
       tmp <- .Call("R_igraph_vs_nei", graph, x, as.igraph.vs(v),
                    as.numeric(mode),
                    PACKAGE="igraph")
       tmp[as.numeric(x)+1]
     }
-    innei <- function(v, mode=2) {
+    innei <- function(v, mode=c("in", "all", "out", "total")) {
       nei(v, mode)
     }
-    outnei <- function(v, mode=1) {
+    outnei <- function(v, mode=c("out", "all", "in", "total")) {
       nei(v, mode)
     }
     adj <- function(e) {
@@ -113,6 +116,7 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
       if (is.logical(e)) {
         e <- which(e)
       }
+      on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
       tmp <- .Call("R_igraph_vs_adj", graph, x, as.igraph.es(e), as.numeric(3),
                    PACKAGE="igraph")
       tmp[as.numeric(x)+1]
@@ -122,6 +126,7 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
       if (is.logical(e)) {
         e <- which(e)
       }
+      on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
       tmp <- .Call("R_igraph_vs_adj", graph, x, as.igraph.es(e), as.numeric(1),
                    PACKAGE="igraph")
       tmp[as.numeric(x)+1]
@@ -131,6 +136,7 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
       if (is.logical(e)) {
         e <- which(e)
       }
+      on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
       tmp <- .Call("R_igraph_vs_adj", graph, x, as.igraph.es(e), as.numeric(2),
                    PACKAGE="igraph")
       tmp[as.numeric(x)+1]
@@ -168,18 +174,21 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
     i <- substitute(i)
     adj <- function(v) {
       ## TRUE iff the edge is adjacent to at least one vertex in v
+      on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
       tmp <- .Call("R_igraph_es_adj", graph, x, as.igraph.vs(v), as.numeric(3),
                    PACKAGE="igraph")
       tmp[ as.numeric(x)+1 ]
     }
     from <- function(v) {
       ## TRUE iff the edge originates from at least one vertex in v
+      on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
       tmp <- .Call("R_igraph_es_adj", graph, x, as.igraph.vs(v), as.numeric(1),
                    PACKAGE="igraph")
       tmp[ as.numeric(x)+1 ]      
     }
     to <- function(v) {
       ## TRUE iff the edge points to at least one vertex in v
+      on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
       tmp <- .Call("R_igraph_es_adj", graph, x, as.igraph.vs(v), as.numeric(2),
                    PACKAGE="igraph")
       tmp[ as.numeric(x)+1 ]

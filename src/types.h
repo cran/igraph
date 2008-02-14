@@ -51,34 +51,34 @@ typedef int    igraph_bool_t;
 /* double ended queue, very useful                    */
 /* -------------------------------------------------- */
 
-/**
- * Double ended queue data type.
- * \ingroup internal
- */
+#define BASE_IGRAPH_REAL
+#include "igraph_pmt.h"
+#include "dqueue.h"
+#include "igraph_pmt_off.h"
+#undef BASE_IGRAPH_REAL
 
-typedef struct s_dqueue {
-  igraph_real_t *begin;
-  igraph_real_t *end;
-  igraph_real_t *stor_begin;
-  igraph_real_t *stor_end;
-} igraph_dqueue_t;
+#define BASE_LONG
+#include "igraph_pmt.h"
+#include "dqueue.h"
+#include "igraph_pmt_off.h"
+#undef BASE_LONG
+
+#define BASE_CHAR
+#include "igraph_pmt.h"
+#include "dqueue.h"
+#include "igraph_pmt_off.h"
+#undef BASE_CHAR
+
+#define BASE_BOOL
+#include "igraph_pmt.h"
+#include "dqueue.h"
+#include "igraph_pmt_off.h"
+#undef BASE_BOOL
 
 #define IGRAPH_DQUEUE_NULL { 0,0,0,0 }
 #define IGRAPH_DQUEUE_INIT_FINALLY(v, size) \
   do { IGRAPH_CHECK(igraph_dqueue_init(v, size)); \
   IGRAPH_FINALLY(igraph_dqueue_destroy, v); } while (0)
-
-int igraph_dqueue_init    (igraph_dqueue_t* q, long int size);
-void igraph_dqueue_destroy (igraph_dqueue_t* q);
-igraph_bool_t igraph_dqueue_empty   (igraph_dqueue_t* q);
-void igraph_dqueue_clear   (igraph_dqueue_t* q);
-igraph_bool_t igraph_dqueue_full    (igraph_dqueue_t* q);
-long int igraph_dqueue_size    (igraph_dqueue_t* q);
-igraph_real_t igraph_dqueue_pop     (igraph_dqueue_t* q);
-igraph_real_t igraph_dqueue_pop_back(igraph_dqueue_t* q);
-igraph_real_t igraph_dqueue_head    (igraph_dqueue_t* q);
-igraph_real_t igraph_dqueue_back    (igraph_dqueue_t* q);
-int igraph_dqueue_push    (igraph_dqueue_t* q, igraph_real_t elem);
 
 /* -------------------------------------------------- */
 /* Flexible vector                                    */
@@ -98,7 +98,6 @@ int igraph_dqueue_push    (igraph_dqueue_t* q, igraph_real_t elem);
 
 #define BASE_CHAR
 #include "igraph_pmt.h"
-#include "igraph_pmt.h"
 #include "vector.h"
 #include "igraph_pmt_off.h"
 #undef BASE_CHAR
@@ -109,7 +108,62 @@ int igraph_dqueue_push    (igraph_dqueue_t* q, igraph_real_t elem);
 #include "igraph_pmt_off.h"
 #undef BASE_BOOL
 
+/* These are for internal use only */
+int igraph_vector_order(const igraph_vector_t* v, const igraph_vector_t *v2,
+			igraph_vector_t* res, igraph_real_t maxval);
+int igraph_vector_order1(const igraph_vector_t* v, 
+			 igraph_vector_t* res, igraph_real_t maxval);
 int igraph_vector_order2(igraph_vector_t *v);
+int igraph_vector_rank(const igraph_vector_t *v, igraph_vector_t *res, 
+		       long int nodes);
+
+/* -------------------------------------------------- */
+/* Matrix, very similar to vector                     */
+/* -------------------------------------------------- */
+
+#define BASE_IGRAPH_REAL
+#include "igraph_pmt.h"
+#include "matrix.h"
+#include "igraph_pmt_off.h"
+#undef BASE_IGRAPH_REAL
+
+#define BASE_LONG
+#include "igraph_pmt.h"
+#include "matrix.h"
+#include "igraph_pmt_off.h"
+#undef BASE_LONG
+
+#define BASE_CHAR
+#include "igraph_pmt.h"
+#include "matrix.h"
+#include "igraph_pmt_off.h"
+#undef BASE_CHAR
+
+#define BASE_BOOL
+#include "igraph_pmt.h"
+#include "matrix.h"
+#include "igraph_pmt_off.h"
+#undef BASE_BOOL
+
+#define IGRAPH_MATRIX_NULL { IGRAPH_VECTOR_NULL, 0, 0 }
+#define IGRAPH_MATRIX_INIT_FINALLY(m, nr, nc) \
+  do { IGRAPH_CHECK(igraph_matrix_init(m, nr, nc)); \
+  IGRAPH_FINALLY(igraph_matrix_destroy, m); } while (0)
+
+/**
+ * \ingroup matrix
+ * \define MATRIX
+ * \brief Accessing an element of a matrix.
+ *
+ * Note that there are no range checks right now. 
+ * This functionality might be redefines as a proper function later. 
+ * \param m The matrix object.
+ * \param i The index of the row, starting with zero.
+ * \param j The index of the column, starting with zero.
+ *
+ * Time complexity: O(1).
+ */
+#define MATRIX(m,i,j) ((m).data.stor_begin[(m).nrow*(j)+(i)])
 
 /* -------------------------------------------------- */
 /* Flexible vector, storing pointers                  */
@@ -152,69 +206,6 @@ void igraph_vector_ptr_copy_to(const igraph_vector_ptr_t *v, void** to);
 int igraph_vector_ptr_copy(igraph_vector_ptr_t *to, const igraph_vector_ptr_t *from);
 void igraph_vector_ptr_remove(igraph_vector_ptr_t *v, long int pos);
 void igraph_vector_ptr_sort(igraph_vector_ptr_t *v, int(*compar)(const void*, const void*));
-
-/* -------------------------------------------------- */
-/* Matrix, very similar to vector                     */
-/* -------------------------------------------------- */
-
-/** 
- * \section about_igraph_matrix_t_objects About \type igraph_matrix_t objects
- * 
- * <para>This type is just an interface to \type igraph_vector_t.</para>
- *
- * <para>The \type igraph_matrix_t type usually stores n
- * elements in O(n) space, but not always, see the documentation of
- * the vector type.</para>
- */
-typedef struct s_matrix {
-  igraph_vector_t data;
-  long int nrow, ncol;
-} igraph_matrix_t;
-
-#define IGRAPH_MATRIX_NULL { IGRAPH_VECTOR_NULL, 0, 0 }
-#define IGRAPH_MATRIX_INIT_FINALLY(m, nr, nc) \
-  do { IGRAPH_CHECK(igraph_matrix_init(m, nr, nc)); \
-  IGRAPH_FINALLY(igraph_matrix_destroy, m); } while (0)
-
-/**
- * \ingroup matrix
- * \define MATRIX
- * \brief Accessing an element of a matrix.
- *
- * Note that there are no range checks right now. 
- * This functionality might be redefines as a proper function later. 
- * \param m The matrix object.
- * \param i The index of the row, starting with zero.
- * \param j The index of the column, starting with zero.
- *
- * Time complexity: O(1).
- */
-#define MATRIX(m,i,j) ((m).data.stor_begin[(m).nrow*(j)+(i)])
-int igraph_matrix_init(igraph_matrix_t *m, long int nrow, long int ncol);
-void igraph_matrix_destroy(igraph_matrix_t *m);
-int igraph_matrix_resize(igraph_matrix_t *m, long int nrow, long int ncol);
-long int igraph_matrix_size(const igraph_matrix_t *m);
-long int igraph_matrix_nrow(const igraph_matrix_t *m);
-long int igraph_matrix_ncol(const igraph_matrix_t *m);
-int igraph_matrix_copy_to(const igraph_matrix_t *m, igraph_real_t *to);
-int igraph_matrix_null(igraph_matrix_t *m);
-int igraph_matrix_add_cols(igraph_matrix_t *m, long int n);
-int igraph_matrix_add_rows(igraph_matrix_t *m, long int n);
-int igraph_matrix_remove_col(igraph_matrix_t *m, long int col);
-int igraph_matrix_permdelete_rows(igraph_matrix_t *m, long int *index, long int nremove);
-int igraph_matrix_delete_rows_neg(igraph_matrix_t *m, igraph_vector_t *neg, long int nremove);
-int igraph_matrix_copy(igraph_matrix_t *to, const igraph_matrix_t *from);
-igraph_real_t igraph_matrix_max(const igraph_matrix_t *m);
-void igraph_matrix_multiply(igraph_matrix_t *m, igraph_real_t by);
-int igraph_matrix_select_rows(const igraph_matrix_t *m, igraph_matrix_t *res, 
-			      const igraph_vector_t *rows);
-int igraph_matrix_get_col(const igraph_matrix_t *m, igraph_vector_t *res,
-			  long int index);
-igraph_real_t igraph_matrix_sum(const igraph_matrix_t *m);
-igraph_bool_t igraph_matrix_is_equal(const igraph_matrix_t *m1, 
-				     const igraph_matrix_t *m2);
-igraph_real_t igraph_matrix_maxdifference(const igraph_matrix_t *m1,
-					  const igraph_matrix_t *m2);
 
 /* -------------------------------------------------- */
 /* Sparse matrix                                      */
@@ -269,7 +260,7 @@ igraph_real_t igraph_spmatrix_max_nonzero(const igraph_spmatrix_t *m,
     igraph_real_t *ridx, igraph_real_t *cidx);
 igraph_real_t igraph_spmatrix_max(const igraph_spmatrix_t *m,
     igraph_real_t *ridx, igraph_real_t *cidx);
-void igraph_spmatrix_multiply(igraph_spmatrix_t *m, igraph_real_t by);
+void igraph_spmatrix_scale(igraph_spmatrix_t *m, igraph_real_t by);
 int igraph_spmatrix_colsums(const igraph_spmatrix_t *m, igraph_vector_t *res);
 
 int igraph_i_spmatrix_get_col_nonzero_indices(const igraph_spmatrix_t *m,
@@ -281,53 +272,59 @@ int igraph_i_spmatrix_cleanup(igraph_spmatrix_t *m);
 /* 3D array                                           */
 /* -------------------------------------------------- */
 
-typedef struct s_array3 {
-  igraph_vector_t data;
-  long int n1, n2, n3, n1n2;
-} igraph_array3_t;
+#define BASE_IGRAPH_REAL
+#include "igraph_pmt.h"
+#include "array.h"
+#include "igraph_pmt_off.h"
+#undef BASE_IGRAPH_REAL
 
-#define IGRAPH_ARRAY3_INIT_FINALLY(a, n1, n2, n3) \
-  do { IGRAPH_CHECK(igraph_array3_init(a, n1, n2, n3)); \
-  IGRAPH_FINALLY(igraph_array3_destroy, a); } while (0)
+#define BASE_LONG
+#include "igraph_pmt.h"
+#include "array.h"
+#include "igraph_pmt_off.h"
+#undef BASE_LONG
 
-#define ARRAY3(m,i,j,k) ((m).data.stor_begin[(m).n1n2*(k)+(m).n1*(j)+(i)])
-int igraph_array3_init(igraph_array3_t *a, long int n1, long int n2, 
-		       long int n3);
-void igraph_array3_destroy(igraph_array3_t *a);
-long int igraph_array3_size(const igraph_array3_t *a);
-long int igraph_array3_n(const igraph_array3_t *a, long int idx);
-int igraph_array3_resize(igraph_array3_t *a, long int n1, long int n2, 
-			 long int n3);
-void igraph_array3_null(igraph_array3_t *a);
-igraph_real_t igraph_array3_sum(const igraph_array3_t *a);
-void igraph_array3_multiply(igraph_array3_t *a, igraph_real_t by);
+#define BASE_CHAR
+#include "igraph_pmt.h"
+#include "array.h"
+#include "igraph_pmt_off.h"
+#undef BASE_CHAR
+
+#define BASE_BOOL
+#include "igraph_pmt.h"
+#include "array.h"
+#include "igraph_pmt_off.h"
+#undef BASE_BOOL
 
 /* -------------------------------------------------- */
 /* Plain stack                                        */
 /* -------------------------------------------------- */
 
-/**
- * Stack data type.
- * \ingroup internal
- */
+#define BASE_IGRAPH_REAL
+#include "igraph_pmt.h"
+#include "stack.h"
+#include "igraph_pmt_off.h"
+#undef BASE_IGRAPH_REAL
 
-typedef struct s_stack {
-  igraph_real_t* stor_begin;
-  igraph_real_t* stor_end;
-  igraph_real_t* end;
-} igraph_stack_t;
+#define BASE_LONG
+#include "igraph_pmt.h"
+#include "stack.h"
+#include "igraph_pmt_off.h"
+#undef BASE_LONG
+
+#define BASE_CHAR
+#include "igraph_pmt.h"
+#include "stack.h"
+#include "igraph_pmt_off.h"
+#undef BASE_CHAR
+
+#define BASE_BOOL
+#include "igraph_pmt.h"
+#include "stack.h"
+#include "igraph_pmt_off.h"
+#undef BASE_BOOL
 
 #define IGRAPH_STACK_NULL { 0,0,0 }
-
-int igraph_stack_init       (igraph_stack_t* s, long int size);
-void igraph_stack_destroy    (igraph_stack_t* s);
-int igraph_stack_reserve    (igraph_stack_t* s, long int size);
-igraph_bool_t igraph_stack_empty      (igraph_stack_t* s);
-long int igraph_stack_size       (igraph_stack_t* s);
-void igraph_stack_clear      (igraph_stack_t* s);
-int igraph_stack_push       (igraph_stack_t* s, igraph_real_t elem);
-igraph_real_t igraph_stack_pop        (igraph_stack_t* s);
-igraph_real_t igraph_stack_top        (const igraph_stack_t* s);
 
 /* -------------------------------------------------- */
 /* Heap                                               */
@@ -338,29 +335,46 @@ igraph_real_t igraph_stack_top        (const igraph_stack_t* s);
  * \ingroup internal
  */
 
-typedef struct s_heap {
-  igraph_real_t* stor_begin;
-  igraph_real_t* stor_end;
-  igraph_real_t* end;
-  int destroy;
-} igraph_heap_t;
+#define BASE_IGRAPH_REAL
+#define HEAP_TYPE_MAX
+#include "igraph_pmt.h"
+#include "heap.h"
+#include "igraph_pmt_off.h"
+#undef HEAP_TYPE_MAX
+#define HEAP_TYPE_MIN
+#include "igraph_pmt.h"
+#include "heap.h"
+#include "igraph_pmt_off.h"
+#undef HEAP_TYPE_MIN
+#undef BASE_IGRAPH_REAL
+
+#define BASE_LONG
+#define HEAP_TYPE_MAX
+#include "igraph_pmt.h"
+#include "heap.h"
+#include "igraph_pmt_off.h"
+#undef HEAP_TYPE_MAX
+#define HEAP_TYPE_MIN
+#include "igraph_pmt.h"
+#include "heap.h"
+#include "igraph_pmt_off.h"
+#undef HEAP_TYPE_MIN
+#undef BASE_LONG
+
+#define BASE_CHAR
+#define HEAP_TYPE_MAX
+#include "igraph_pmt.h"
+#include "heap.h"
+#include "igraph_pmt_off.h"
+#undef HEAP_TYPE_MAX
+#define HEAP_TYPE_MIN
+#include "igraph_pmt.h"
+#include "heap.h"
+#include "igraph_pmt_off.h"
+#undef HEAP_TYPE_MIN
+#undef BASE_CHAR
 
 #define IGRAPH_HEAP_NULL { 0,0,0 }
-
-int igraph_heap_init           (igraph_heap_t* h, long int size);
-int igraph_heap_init_array     (igraph_heap_t *t, igraph_real_t* data, long int len);
-void igraph_heap_destroy        (igraph_heap_t* h);
-igraph_bool_t igraph_heap_empty          (igraph_heap_t* h);
-int igraph_heap_push           (igraph_heap_t* h, igraph_real_t elem);
-igraph_real_t igraph_heap_max       (igraph_heap_t* h);
-igraph_real_t igraph_heap_delete_max(igraph_heap_t* h);
-long int igraph_heap_size      (igraph_heap_t* h);
-int igraph_heap_reserve        (igraph_heap_t* h, long int size);
-
-void igraph_heap_i_build(igraph_real_t* arr, long int size, long int head);
-void igraph_heap_i_shift_up(igraph_real_t* arr, long int size, long int elem);
-void igraph_heap_i_sink(igraph_real_t* arr, long int size, long int head);
-void igraph_heap_i_switch(igraph_real_t* arr, long int e1, long int e2);
 
 /* -------------------------------------------------- */
 /* Indexed heap                                       */
@@ -451,6 +465,21 @@ typedef struct s_igraph_strvector {
   long int len;
 } igraph_strvector_t;
 
+/**
+ * \define STR
+ * Indexing string vectors
+ * 
+ * This is a macro which allows to query the elements of a string vector in 
+ * simpler way than \ref igraph_strvector_get(). Note this macro cannot be 
+ * used to set an element, for that use \ref igraph_strvector_set().
+ * \param sv The string vector
+ * \param i The the index of the element.
+ * \return The element at position \p i.
+ * 
+ * Time complexity: O(1).
+ */
+#define STR(sv,i) ((const char *)((sv).data[(i)]))
+
 #define IGRAPH_STRVECTOR_NULL { 0,0 }
 #define IGRAPH_STRVECTOR_INIT_FINALLY(v, size) \
   do { IGRAPH_CHECK(igraph_strvector_init(v, size)); \
@@ -465,6 +494,7 @@ int igraph_strvector_set(igraph_strvector_t *sv, long int idx,
 			 const char *value);
 int igraph_strvector_set2(igraph_strvector_t *sv, long int idx, 
 			  const char *value, int len);
+void igraph_strvector_clear(igraph_strvector_t *sv);
 void igraph_strvector_remove_section(igraph_strvector_t *v, long int from, 
 				     long int to);
 void igraph_strvector_remove(igraph_strvector_t *v, long int elem);
@@ -472,9 +502,11 @@ void igraph_strvector_move_interval(igraph_strvector_t *v, long int begin,
 				   long int end, long int to);
 int igraph_strvector_copy(igraph_strvector_t *to, 
 			  const igraph_strvector_t *from);
+int igraph_strvector_append(igraph_strvector_t *to, 
+			    const igraph_strvector_t *from);
 int igraph_strvector_resize(igraph_strvector_t* v, long int newsize);
 int igraph_strvector_add(igraph_strvector_t *v, const char *value);
-void igraph_strvector_permdelete(igraph_strvector_t *v, long int *index, 
+void igraph_strvector_permdelete(igraph_strvector_t *v, const igraph_vector_t *index,
 				 long int nremove);
 void igraph_strvector_remove_negidx(igraph_strvector_t *v, const igraph_vector_t *neg,
 				    long int nremove);
@@ -697,7 +729,10 @@ int igraph_i_snprintf(char *buffer, size_t count, const char *format, ...);
 #ifdef _MSC_VER
 #  pragma warning (disable:4244)
 
-#  define vsnprintf(a, b, c, d) _vsnprintf((a), (b), (c), (d))
+#  ifndef vsprintf
+#    define vsnprintf(a, b, c, d) _vsnprintf((a), (b), (c), (d))
+#  endif
+
 #  define isnan(x) _isnan(x)
 #  define inline __inline
 #  define strcasecmp strcmpi
@@ -708,9 +743,16 @@ int igraph_i_snprintf(char *buffer, size_t count, const char *format, ...);
 
 #if defined(INFINITY)
 #  define IGRAPH_INFINITY INFINITY
+#  define IGRAPH_POSINFINITY INFINITY
+#  define IGRAPH_NEGINFINITY (-INFINITY)
 #else
 #  define IGRAPH_INFINITY (igraph_i_fdiv(1.0, 0.0))
+#  define IGRAPH_POSINFINITY (igraph_i_fdiv(1.0, 0.0))
+#  define IGRAPH_NEGINFINITY (igraph_i_fdiv(-1.0, 0.0))
 #endif
+
+int igraph_finite(igraph_real_t x);
+#define IGRAPH_FINITE(x) igraph_finite(x)
 
 #if defined(NAN)
 #  define IGRAPH_NAN NAN
@@ -722,6 +764,9 @@ int igraph_i_snprintf(char *buffer, size_t count, const char *format, ...);
 
 #ifndef M_PI
 #  define M_PI 3.14159265358979323846
+#endif
+#if !defined(M_LN2)
+#  define M_LN2 0.69314718055994530942
 #endif
 
 __END_DECLS

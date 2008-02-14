@@ -27,7 +27,8 @@
 spinglass.community <- function(graph, weights=NULL, vertex=NULL, spins=25,
                                 parupdate=FALSE, start.temp=1,
                                 stop.temp=0.01, cool.fact=0.99,
-                                update.rule="config", gamma=1.0) {
+                                update.rule=c("config", "random", "simple"),
+                                gamma=1.0) {
 
   if (!is.igraph(graph)) {
     stop("Not a graph object")
@@ -41,10 +42,10 @@ spinglass.community <- function(graph, weights=NULL, vertex=NULL, spins=25,
     }
   }
 
-  if (is.character(update.rule)) {
-    update.rule <- switch(update.rule, "simple"=0, "random"=0, "config"=1)
-  }
+  update.rule <- igraph.match.arg(update.rule)
+  update.rule <- switch(update.rule, "simple"=0, "random"=0, "config"=1)
 
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   if (is.null(vertex)) {    
     .Call("R_igraph_spinglass_community", graph, weights,
           as.numeric(spins), as.logical(parupdate), as.numeric(start.temp),
@@ -69,6 +70,7 @@ walktrap.community <- function(graph, weights=E(graph)$weight, steps=4, merges=T
     weights <- as.numeric(weights)
   }
 
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   res <- .Call("R_igraph_walktrap_community", graph, weights, as.numeric(steps),
         as.logical(merges), as.logical(modularity),
         PACKAGE="igraph")
@@ -166,6 +168,7 @@ edge.betweenness.community <- function(graph, directed=TRUE,
     stop("Not a graph object!")
   }
 
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   res <- .Call("R_igraph_community_edge_betweenness", graph, as.logical(directed),
                as.logical(edge.betweenness),
                as.logical(merges), as.logical(bridges),
@@ -183,6 +186,7 @@ edge.betweenness.community.merges <- function(graph, edges) {
     stop("Not a graph object!")
   }
 
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_community_eb_get_merges", graph, as.numeric(edges),
         PACKAGE="igraph")
 }
@@ -268,6 +272,7 @@ fastgreedy.community <- function(graph, merges=TRUE, modularity=TRUE) {
     stop("Not a graph object")
   }
 
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_community_fastgreedy", graph, as.logical(merges),
         as.logical(modularity), 
         PACKAGE="igraph")
@@ -282,28 +287,16 @@ community.to.membership <- function(graph, merges, steps, membership=TRUE,
   merges <- as.matrix(merges)
   merges <- structure(as.numeric(merges), dim=dim(merges))
   
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_community_to_membership", graph, merges, as.numeric(steps),
         as.logical(membership), as.logical(csize),
         PACKAGE="igraph")
 }
 
-leading.eigenvector.community <- function(graph, steps=vcount(graph),
-                                          naive=FALSE) {
-  if (!is.igraph(graph)) {
-    stop("Not a graph object!")
-  }
-
-  res <- .Call("R_igraph_community_leading_eigenvector", graph, as.numeric(steps),
-               as.logical(naive),
-               PACKAGE="igraph")
-  class(res) <- "igraph.eigenc"
-  res
-}
-
 leading.eigenvector.community.step <- function(graph, fromhere=NULL,
                                                membership=rep(0, vcount(graph)),
                                                community=0,
-                                               eigenvector=TRUE) {
+                                               options=igraph.arpack.default) {
 
   if (!is.igraph(graph)) {
     stop("Not a graph object!")
@@ -314,10 +307,15 @@ leading.eigenvector.community.step <- function(graph, fromhere=NULL,
     }
     membership <- fromhere[["membership"]]
   }
-  
+
+  options.tmp <- igraph.arpack.default
+  options.tmp[names(options)] <- options
+  options <- options.tmp
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   res <- .Call("R_igraph_community_leading_eigenvector_step",
                graph, as.numeric(membership), as.numeric(community),
-               as.logical(eigenvector),
+               options,
                PACKAGE="igraph")
   class(res) <- "igraph.eigencstep"
   res
@@ -393,12 +391,3 @@ as.dendrogram.igraph.eigenc <- function(object, hang=-1,
   class(z) <- "dendrogram"
   z
 }  
-
-modularity <- function(graph, membership) {
-  if (!is.igraph(graph)) {
-    stop("Not a graph object")
-  }
-
-  .Call("R_igraph_modularity", graph, as.numeric(membership),
-        PACKAGE="igraph")
-}

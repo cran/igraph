@@ -21,20 +21,108 @@
 ###################################################################
 
 graph <- function( edges, n=max(edges)+1, directed=TRUE ) {
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_create", as.numeric(edges), as.numeric(n),
         as.logical(directed),
         PACKAGE="igraph")
 }
 
-graph.adjacency <- function( adjmatrix, mode="directed", weighted=NULL ) {
-  mode <- switch(mode,
-                 "directed"=0,
-                 "undirected"=1,
-                 "max"=1,
-                 "upper"=2,
-                 "lower"=3,
-                 "min"=4,
-                 "plus"=5)
+graph.formula <- function(...) {
+  mf <- as.list(match.call())[-1]
+
+  ## Operators first
+  f <- function(x) {
+    if (is.call(x)) {
+      return (list(as.character(x[[1]]), lapply(x[-1], f)))
+    } else {
+      return (NULL)
+    }
+  }
+  ops <- unlist(lapply(mf, f))
+  if (all(ops %in% c("-", ":"))) {
+    directed <- FALSE
+  } else if (all(ops %in% c("-", "+", ":"))) {
+    directed <- TRUE
+  } else {
+    stop("Invalid operator in formula")
+  }
+
+  f <- function(x) {
+    if (is.call(x)) {
+      if (length(x)==3) {
+        return( list(f(x[[2]]), op=as.character(x[[1]]), f(x[[3]])) )
+      } else {
+        return( list(op=as.character(x[[1]]), f(x[[2]])) )
+      }
+    } else {
+      return( c(sym=as.character(x)) )
+    }
+  }
+  
+  ret <- lapply(mf, function(x) unlist(f(x)))
+
+  v <- unique(unlist(lapply(ret, function(x) { x[ names(x)=="sym" ] })))
+
+  ## Merge symbols for ":"
+  ret <- lapply(ret, function(x) {
+    res <- list()
+    for (i in seq(along=x)) {
+      if (x[i]==":" && names(x)[i]=="op") {
+        ## SKIP
+      } else if (i>1 && x[i-1]==":" && names(x)[i-1]=="op") {
+        res[[length(res)]] <- c(res[[length(res)]], unname(x[i]))
+      } else {
+        res <- c(res, x[i])
+      }
+    }
+    res
+  })
+
+  ## Ok, create the edges
+  edges <- numeric()
+  for (i in seq(along=ret)) {
+    prev.sym <- character()
+    lhead <- rhead <- character()
+    for (j in seq(along=ret[[i]])) {
+      act <- ret[[i]][[j]]
+      if (names(ret[[i]])[j]=="op") {
+        if (length(lhead)==0) {
+          lhead <- rhead <- act
+        } else {
+          rhead <- act
+        }
+      } else if (names(ret[[i]])[j]=="sym") {
+        for (ps in prev.sym) {
+          for (ps2 in act) {
+            if (lhead=="+") {
+              edges <- c(edges, unname(c(ps2, ps)))
+            }            
+            if (!directed || rhead=="+") {
+              edges <- c(edges, unname(c(ps, ps2)))
+            }
+          }
+        }
+        lhead <- rhead <- character()
+        prev.sym <- act
+      }
+    }
+  }
+
+  ids <- seq(along=v)-1
+  names(ids) <- v
+  res <- graph( unname(ids[edges] ), n=length(v), directed=directed)
+  res <- set.vertex.attribute(res, "name", value=v)
+  res  
+}
+
+graph.adjacency <- function(adjmatrix, mode=c("directed", "undirected", "max",
+                                         "min", "upper", "lower", "plus"),
+                            weighted=NULL, diag=TRUE ) {
+
+  mode <- igraph.match.arg(mode)
+  
+  if (!diag) { diag(adjmatrix) <- 0 }
+  
   if (!is.null(weighted)) {
     if (is.logical(weighted) && weighted) {
       weighted <- "weight"
@@ -46,8 +134,29 @@ graph.adjacency <- function( adjmatrix, mode="directed", weighted=NULL ) {
     if (nrow(adjmatrix) != ncol(adjmatrix)) {
       stop("not a square matrix")
     }
+
+    if (mode == "undirected") {
+      if (!all(adjmatrix == t(adjmatrix))) {
+        stop("Please supply a symmetric matrix if you want to create a weighted graph with mode=UNDIRECTED.")
+      }
+      adjmatrix[lower.tri(adjmatrix, diag=TRUE)] <- 0
+    } else if (mode=="max") {
+      adjmatrix <- pmax(adjmatrix, t(adjmatrix))
+      adjmatrix[lower.tri(adjmatrix, diag=TRUE)] <- 0
+    } else if (mode=="upper") {
+      adjmatrix[lower.tri(adjmatrix, diag=TRUE)] <- 0
+    } else if (mode=="lower") {
+      adjmatrix[upper.tri(adjmatrix, diag=TRUE)] <- 0
+    } else if (mode=="min") {
+      adjmatrix <- pmin(adjmatrix, t(adjmatrix))
+      adjmatrix[lower.tri(adjmatrix, diag=TRUE)] <- 0
+    } else if (mode=="plus") {
+      adjmatrix <- adjmatrix + t(adjmatrix)
+      adjmatrix[lower.tri(adjmatrix, diag=TRUE)] <- 0
+      diag(adjmatrix) <- diag(adjmatrix) / 2
+    }
     
-    no.edges <- sum(adjmatrix > 0)
+    no.edges <- sum(adjmatrix != 0)
     edges <- numeric(2*no.edges)
     weight <- numeric(no.edges)
     ptr <- 1
@@ -74,29 +183,40 @@ graph.adjacency <- function( adjmatrix, mode="directed", weighted=NULL ) {
     }
     
   } else {
-  
+    mode <- switch(mode,
+                   "directed"=0,
+                   "undirected"=1,
+                   "max"=1,
+                   "upper"=2,
+                   "lower"=3,
+                   "min"=4,
+                   "plus"=5)
+    
     adjmatrix <- as.matrix(adjmatrix)
     attrs <- attributes(adjmatrix)
     adjmatrix <- as.numeric(adjmatrix)
     attributes(adjmatrix) <- attrs
     
+    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
     .Call("R_igraph_graph_adjacency", adjmatrix, as.numeric(mode),
           PACKAGE="igraph")
   }
 }
   
 
-graph.star <- function(n, mode="in", center=0 ) {
+graph.star <- function(n, mode=c("in", "out", "undirected"), center=0 ) {
 
-  if (is.character(mode)) {
-    mode <- switch(mode, "out"=0, "in"=1, "undirected"=2)
-  }
+  mode <- igraph.match.arg(mode)
+  mode <- switch(mode, "out"=0, "in"=1, "undirected"=2)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_star", as.numeric(n), as.numeric(mode),
         as.numeric(center),
         PACKAGE="igraph")
 }
 
 graph.full <- function(n, directed=FALSE, loops=FALSE) {
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_full", as.numeric(n), as.logical(directed),
         as.logical(loops),
         PACKAGE="igraph")
@@ -156,6 +276,7 @@ graph.lattice <- function(dimvector=NULL,length=NULL, dim=NULL, nei=1,
     dimvector <- rep(length, dim)
   }
   
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_lattice", as.numeric(dimvector), as.numeric(nei),
         as.logical(directed), as.logical(mutual),
         as.logical(circular),
@@ -163,6 +284,7 @@ graph.lattice <- function(dimvector=NULL,length=NULL, dim=NULL, nei=1,
 }
 
 graph.ring <- function(n, directed=FALSE, mutual=FALSE, circular=TRUE) {
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_ring", as.numeric(n), as.logical(directed),
         as.logical(mutual), as.logical(circular),
         PACKAGE="igraph")
@@ -172,11 +294,12 @@ graph.ring <- function(n, directed=FALSE, mutual=FALSE, circular=TRUE) {
 # Trees, regular
 ###################################################################
 
-graph.tree <- function(n, children=2, mode="out") {
-  if (is.character(mode)) {
-    mode <- switch(mode, "out"=0, "in"=1, "undirected"=2);
-  }
+graph.tree <- function(n, children=2, mode=c("out", "in", "undirected")) {
 
+  mode <- igraph.match.arg(mode)
+  mode <- switch(mode, "out"=0, "in"=1, "undirected"=2);
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_tree", as.numeric(n), as.numeric(children),
         as.numeric(mode),
         PACKAGE="igraph")
@@ -188,6 +311,7 @@ graph.tree <- function(n, children=2, mode="out") {
 
 graph.atlas <- function(n) {
 
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_atlas", as.numeric(n),
         PACKAGE="igraph")
 }
@@ -261,7 +385,41 @@ graph.edgelist <- function(el, directed=TRUE) {
 
 graph.extended.chordal.ring <- function(n, w) {
   
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_extended_chordal_ring", as.numeric(n),
         as.matrix(w),
+        PACKAGE="igraph")
+}
+
+line.graph <- function(graph) {
+
+  if (!is.igraph(graph)) {
+    stop("Not a graph object")
+  }
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  .Call("R_igraph_line_graph", graph,
+        PACKAGE="igraph")
+}
+  
+  
+graph.de.bruijn <- function(m, n) {
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  .Call("R_igraph_de_bruijn", as.numeric(m), as.numeric(n),
+        PACKAGE="igraph")
+}
+
+graph.kautz <- function(m, n) {
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  .Call("R_igraph_kautz", as.numeric(m), as.numeric(n),
+        PACKAGE="igraph")
+}
+
+graph.famous <- function(name) {
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  .Call("R_igraph_famous", as.character(name),
         PACKAGE="igraph")
 }

@@ -1,11 +1,15 @@
 \name{transitivity}
 \alias{transitivity}
+\concept{Transitivity}
+\concept{Clustering coefficient}
 \title{Transitivity of a graph}
 \description{Transitivity measures the probability that the adjacent
   vertices of a vertex are connected. This is sometimes also called the
   clustering coefficient. }
 \usage{
-transitivity(graph, type="undirected", vids=NULL)
+transitivity(graph, type=c("undirected", "global", "globalundirected",
+       "localundirected", "local", "average", "localaverage",
+       "localaverageundirected"), vids=NULL)
 }
 \arguments{
   \item{graph}{The graph to analyze.}

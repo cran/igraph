@@ -1,2 +1,0 @@
-PKG_CFLAGS=-DUSING_R -I. -g -O2 -I/usr/include/libxml2 -g -O2 -I/usr/include/libxml2
-PKG_LIBS=-L/usr/lib -lxml2

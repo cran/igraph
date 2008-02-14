@@ -1,17 +1,20 @@
 \name{modularity}
 \alias{modularity}
+\concept{Modularity}
 \title{Modularity of a community structure of a graph}
 \description{This function calculates how modular is a given division of a
   graph into subgraphs.
 }
 \usage{
-modularity(graph, membership)
+modularity(graph, membership, weights = NULL)
 }
 \arguments{
   \item{graph}{The input graph.}
   \item{membership}{Numeric vector, for each vertex it gives its
     community. The communities are numbered from zero.
   }
+  \item{weights}{If not \code{NULL} then a numeric vector giving edge
+    weights.}
 }
 \details{
   The modularity of a graph with respect to some division (or vertex
@@ -25,6 +28,10 @@ modularity(graph, membership)
   component) of \eqn{i}, \eqn{c_j}{cj} that of \eqn{j}, the sum goes
   over all \eqn{i} and \eqn{j} pairs of vertices, and
   \eqn{\delta(x,y)}{delta(x,y)} is 1 if \eqn{x=y} and 0 otherwise.
+
+  If edge weights are given, then these are considered as the element of
+  the \eqn{A} adjacency matrix, and \eqn{k_i}{ki} is the sum of weights
+  of adjacent edges for vertex \eqn{i}.
 }
 \value{
   A numeric scalar, the modularity score of the given configuration.

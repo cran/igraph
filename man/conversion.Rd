@@ -1,11 +1,14 @@
 \name{conversion}
 \alias{get.adjacency}
 \alias{get.edgelist}
+\concept{Edge list}
+\concept{Adjacency list}
 \title{Convert a graph to an adjacency matrix or an edge list}
 \description{Sometimes it is useful to have a standard representation of
   a graph, like an adjacency matrix or an edge list.}
 \usage{
-get.adjacency(graph, type="both", attr=NULL, names=TRUE, binary=FALSE)
+get.adjacency(graph, type=c("both", "upper", "lower"),
+       attr=NULL, names=TRUE, binary=FALSE)
 get.edgelist(graph, names=TRUE)
 }
 \arguments{

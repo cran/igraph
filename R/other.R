@@ -28,6 +28,7 @@ running.mean <- function(v, binwidth) {
     stop("Vector too short for this binwidth.")
   }
   
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_running_mean", v, binwidth,
        PACKAGE="igraph");
 }
@@ -37,7 +38,21 @@ igraph.sample <- function(low, high, length) {
     stop("length too big for this interval")
   }
   
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_random_sample", as.numeric(low), as.numeric(high),
         as.numeric(length),
         PACKAGE="igraph")
 }
+
+igraph.match.arg <- function(arg, choices, several.ok=FALSE) {
+  if (missing(choices)) {
+    formal.args <- formals(sys.function(sys.parent()))
+    choices <- eval(formal.args[[deparse(substitute(arg))]])
+  }
+
+  arg <- tolower(arg)
+  choices <- tolower(choices)
+
+  match.arg(arg=arg, choices=choices, several.ok=several.ok)
+}
+

@@ -1,19 +1,23 @@
 \name{spinglass.community}
 \alias{spinglass.community}
+\concept{Statistical mechanics}
+\concept{Spin-glass}
+\concept{Community structure}
 \title{Finding communities in graphs based on statistical meachanics}
 \description{This function tries to find communities in graphs via
   a spin-glass model and simulated annealing.}
 \synopsis{
 spinglass.community(graph, weights=NULL, vertex=NULL, spins=25,
                     parupdate=FALSE, start.temp=1, stop.temp=0.01,
-                    cool.fact=0.99, update.rule="config", gamma=1)
+                    cool.fact=0.99, update.rule=c("config", "random",
+                    "simple"), gamma=1)
 }
 \usage{
 spinglass.community(graph, weights=NULL, spins=25, parupdate=FALSE,
                     start.temp=1, stop.temp=0.1, cool.fact=0.99,
-                    update.rule="config", gamma=1)
+                    update.rule=c("config", "random", "simple"), gamma=1)
 spinglass.community(graph, weights=NULL, vertex, spins=25,
-                    update.rule="config", gamma=1)
+                    update.rule=c("config", "random", "simple"), gamma=1)
 }
 \arguments{
   \item{graph}{The input graph, can be directed but the direction of the
@@ -58,7 +62,7 @@ spinglass.community(graph, weights=NULL, vertex, spins=25,
   \item{vertex}{This parameter can be used to calculate the community of
       a given vertex without calculating all communities. Note that if
       this argument is present then some other arguments are ignored.}
-  }
+}
 \details{
   This function tries to find communities in a graph. A community is a
   set of nodes with many edges inside the community and  few edges

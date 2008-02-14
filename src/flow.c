@@ -53,7 +53,7 @@ int igraph_i_maxflow_value_undirected(const igraph_t *graph,
     VECTOR(edges)[no_of_edges*2+i*2] = VECTOR(edges)[i*2+1];
     VECTOR(edges)[no_of_edges*2+i*2+1] = VECTOR(edges)[i*2];
     VECTOR(newcapacity)[i] = VECTOR(newcapacity)[no_of_edges+i] = 
-      VECTOR(*capacity)[i];
+      capacity ? VECTOR(*capacity)[i] : 1.0;
   }
   
   IGRAPH_CHECK(igraph_create(&newgraph, &edges, no_of_nodes, IGRAPH_DIRECTED));
@@ -99,7 +99,7 @@ int igraph_i_maxflow_value_undirected(const igraph_t *graph,
  * (L. R. Ford Jr. and D. R. Fulkerson. Maximal flow through a
  * network. Canadian J. Math., 8:399-404, 1956.) the maximum flow
  * between two vertices is the same as the 
- * minimum between them (also called the minimum s-t cut). So the \ref
+ * minimum cut between them (also called the minimum s-t cut). So \ref
  * igraph_st_mincut_value() gives the same result in all cases as \c
  * igraph_maxflow_value().</para>
  * 
@@ -109,7 +109,8 @@ int igraph_i_maxflow_value_undirected(const igraph_t *graph,
  * \param value Pointer to a real number, the result will be placed here.
  * \param source The id of the source vertex.
  * \param target The id of the target vertex.
- * \param capacity Vector containing the capacity of the edges.
+ * \param capacity Vector containing the capacity of the edges. If NULL, then
+ *        every edge is considered to have capacity 1.0.
  * \return Error code.
  * 
  * Time complexity: O(|V|^3). In practice it is much faster, but i
@@ -146,7 +147,7 @@ int igraph_maxflow_value(const igraph_t *graph, igraph_real_t *value,
     return 0;
   }
 
-  if (igraph_vector_size(capacity) != no_of_orig_edges) {
+  if (capacity && igraph_vector_size(capacity) != no_of_orig_edges) {
     IGRAPH_ERROR("Invalid capacity vector", IGRAPH_EINVAL);
   }
   if (source<0 || source>=no_of_nodes || target<0 || target>=no_of_nodes) {
@@ -177,7 +178,7 @@ int igraph_maxflow_value(const igraph_t *graph, igraph_real_t *value,
     VECTOR(to)[pos2]   = VECTOR(edges)[i];
     VECTOR(rev)[pos] = pos2;
     VECTOR(rev)[pos2] = pos;
-    VECTOR(rescap)[pos] = VECTOR(*capacity)[i/2];
+    VECTOR(rescap)[pos] = capacity ? VECTOR(*capacity)[i/2] : 1.0;
     VECTOR(rescap)[pos2] = 0.0;
   }  
  
@@ -350,7 +351,8 @@ int igraph_maxflow_value(const igraph_t *graph, igraph_real_t *value,
  * \param target The id of the target vertex.
  * \param capacity Pointer to the capacity vector, it should contain
  *        non-negative numbers and its length should be the same the
- *        the number of edges in the graph.
+ *        the number of edges in the graph. It can be a null pointer, then
+ *        every edge has unit capacity.
  * \return Error code.
  * 
  * Time complexity: O(|V|^3), see also the discussion for \ref
@@ -396,7 +398,7 @@ int igraph_st_mincut_value(const igraph_t *graph, igraph_real_t *value,
 /*     VECTOR(edges)[no_of_edges*2+i*2] = VECTOR(edges)[i*2+1]; */
 /*     VECTOR(edges)[no_of_edges*2+i*2+1] = VECTOR(edges)[i*2]; */
 /*     VECTOR(newcapacity)[i] = VECTOR(newcapacity)[no_of_edges+i] =  */
-/* l      VECTOR(*capacity)[i]; */
+/*       capacity ? VECTOR(*capacity)[i] : 1.0 ; */
 /*   } */
   
 /*   IGRAPH_CHECK(igraph_create(&newgraph, &edges, no_of_nodes, IGRAPH_DIRECTED)); */
@@ -426,14 +428,14 @@ int igraph_i_mincut_undirected(const igraph_t *graph,
   igraph_real_t mincut=IGRAPH_INFINITY;	/* infinity */
   long int i;
   
-  igraph_i_adjlist_t adjlist;
-  igraph_i_adjedgelist_t adjedgelist;
+  igraph_adjlist_t adjlist;
+  igraph_adjedgelist_t adjedgelist;
 
   igraph_vector_t mergehist;
   igraph_bool_t calc_cut=partition || partition2 || cut;
   long int act_step=0, mincut_step=0;
   
-  if (igraph_vector_size(capacity) != no_of_edges) {
+  if (capacity && igraph_vector_size(capacity) != no_of_edges) {
     IGRAPH_ERROR("Invalid capacity vector size", IGRAPH_EINVAL);
   }
 
@@ -445,11 +447,11 @@ int igraph_i_mincut_undirected(const igraph_t *graph,
   IGRAPH_CHECK(igraph_i_cutheap_init(&heap, no_of_nodes));
   IGRAPH_FINALLY(igraph_i_cutheap_destroy, &heap);
 
-  IGRAPH_CHECK(igraph_i_adjedgelist_init(graph, &adjedgelist, IGRAPH_OUT));
-  IGRAPH_FINALLY(igraph_i_adjedgelist_destroy, &adjedgelist);
+  IGRAPH_CHECK(igraph_adjedgelist_init(graph, &adjedgelist, IGRAPH_OUT));
+  IGRAPH_FINALLY(igraph_adjedgelist_destroy, &adjedgelist);
 
-  IGRAPH_CHECK(igraph_i_adjlist_init(graph, &adjlist, IGRAPH_OUT));
-  IGRAPH_FINALLY(igraph_i_adjlist_destroy, &adjlist);
+  IGRAPH_CHECK(igraph_adjlist_init(graph, &adjlist, IGRAPH_OUT));
+  IGRAPH_FINALLY(igraph_adjlist_destroy, &adjlist);
 
   while (igraph_i_cutheap_size(&heap) >= 2) {
 
@@ -463,13 +465,13 @@ int igraph_i_mincut_undirected(const igraph_t *graph,
       a=igraph_i_cutheap_popmax(&heap);
 
       /* update the weights of the active vertices connected to a */
-      edges=igraph_i_adjedgelist_get(&adjedgelist, a);
-      neis=igraph_i_adjlist_get(&adjlist, a);
+      edges=igraph_adjedgelist_get(&adjedgelist, a);
+      neis=igraph_adjlist_get(&adjlist, a);
       n=igraph_vector_size(edges);
       for (i=0; i<n; i++) {
 	igraph_integer_t edge=VECTOR(*edges)[i];
 	igraph_integer_t to=VECTOR(*neis)[i];
-	igraph_real_t weight=VECTOR(*capacity)[(long int)edge];
+	igraph_real_t weight=capacity ? VECTOR(*capacity)[(long int)edge] : 1.0;
 	igraph_i_cutheap_update(&heap, to, weight);
       }
             
@@ -498,8 +500,8 @@ int igraph_i_mincut_undirected(const igraph_t *graph,
     }
     /* First remove the a--last edge if there is one, a is still the
        last deactivated vertex */
-    edges=igraph_i_adjedgelist_get(&adjedgelist, a);
-    neis=igraph_i_adjlist_get(&adjlist, a);
+    edges=igraph_adjedgelist_get(&adjedgelist, a);
+    neis=igraph_adjlist_get(&adjlist, a);
     n=igraph_vector_size(edges);
     for (i=0; i<n; ) {
       if (VECTOR(*neis)[i]==last) {
@@ -513,8 +515,8 @@ int igraph_i_mincut_undirected(const igraph_t *graph,
       }
     }
     
-    edges=igraph_i_adjedgelist_get(&adjedgelist, last);
-    neis=igraph_i_adjlist_get(&adjlist, last);
+    edges=igraph_adjedgelist_get(&adjedgelist, last);
+    neis=igraph_adjlist_get(&adjlist, last);
     n=igraph_vector_size(edges);
     for (i=0; i<n; ) {
       if (VECTOR(*neis)[i] == a) {
@@ -529,12 +531,12 @@ int igraph_i_mincut_undirected(const igraph_t *graph,
     }
 
     /* Now rewrite the edge lists of last's neighbors */
-    neis=igraph_i_adjlist_get(&adjlist, last);
+    neis=igraph_adjlist_get(&adjlist, last);
     n=igraph_vector_size(neis);    
     for (i=0; i<n; i++) {     
       igraph_integer_t nei=VECTOR(*neis)[i];
       long int n2, j;
-      neis2=igraph_i_adjlist_get(&adjlist, nei);
+      neis2=igraph_adjlist_get(&adjlist, nei);
       n2=igraph_vector_size(neis2);
       for (j=0; j<n2; j++) {
 	if (VECTOR(*neis2)[j] == last) {
@@ -544,10 +546,10 @@ int igraph_i_mincut_undirected(const igraph_t *graph,
     }
     
     /* And append the lists of last to the lists of a */
-    edges=igraph_i_adjedgelist_get(&adjedgelist, a);
-    neis=igraph_i_adjlist_get(&adjlist, a);
-    edges2=igraph_i_adjedgelist_get(&adjedgelist, last);
-    neis2=igraph_i_adjlist_get(&adjlist, last);
+    edges=igraph_adjedgelist_get(&adjedgelist, a);
+    neis=igraph_adjlist_get(&adjlist, a);
+    edges2=igraph_adjedgelist_get(&adjedgelist, last);
+    neis2=igraph_adjlist_get(&adjlist, last);
     IGRAPH_CHECK(igraph_vector_append(edges, edges2));
     IGRAPH_CHECK(igraph_vector_append(neis, neis2));
     igraph_vector_clear(edges2); /* TODO: free it */
@@ -559,8 +561,8 @@ int igraph_i_mincut_undirected(const igraph_t *graph,
 
   *res=mincut;
 
-  igraph_i_adjedgelist_destroy(&adjedgelist);
-  igraph_i_adjlist_destroy(&adjlist);
+  igraph_adjedgelist_destroy(&adjedgelist);
+  igraph_adjlist_destroy(&adjlist);
   igraph_i_cutheap_destroy(&heap);
   IGRAPH_FINALLY_CLEAN(3);
 
@@ -569,7 +571,7 @@ int igraph_i_mincut_undirected(const igraph_t *graph,
     long int i, idx;
     long int size=1;
     char *mark;
-    mark=Calloc(no_of_nodes, char);
+    mark=igraph_Calloc(no_of_nodes, char);
     if (!mark) { 
       IGRAPH_ERROR("Not enough memory for minumum cut", IGRAPH_ENOMEM);
     }
@@ -635,7 +637,7 @@ int igraph_i_mincut_undirected(const igraph_t *graph,
 
 /** 
  * \function igraph_mincut
- * Calculates the minimum cut in a graph.
+ * \brief Calculates the minimum cut in a graph.
  * 
  * This function calculates the minimum cut in a graph. Right now it
  * is implemented only for undirected graphs, in which case it uses
@@ -666,7 +668,7 @@ int igraph_i_mincut_undirected(const igraph_t *graph,
  *    in the cut will be stored here. This argument is ignored if it
  *    is a NULL pointer.
  * \param capacity A numeric vector giving the capacities of the
- *    edges. 
+ *    edges. If a null pointer then all edges have unit capacity.
  * \return Error code.
  * 
  * \sa \ref igraph_mincut_value(), a simpler interface for calculating
@@ -729,7 +731,7 @@ int igraph_i_mincut_value_undirected(const igraph_t *graph,
  *    here.
  * \param capacity Pointer to the capacity vector, it should contain
  *    the same number of non-negative numbers as the number of edges in
- *    the graph.
+ *    the graph. If a null pointer then all edges will have unit capacity.
  * \return Error code.
  *
  * \sa \ref igraph_mincut(), \ref igraph_maxflow_value(), \ref
@@ -783,7 +785,6 @@ int igraph_i_st_vertex_connectivity_directed(const igraph_t *graph,
   long int no_of_nodes=igraph_vcount(graph);
   long int no_of_edges=igraph_ecount(graph);
   igraph_vector_t edges;
-  igraph_vector_t capacity;
   igraph_t newgraph;
   long int i;
   igraph_bool_t conn1;
@@ -848,17 +849,11 @@ int igraph_i_st_vertex_connectivity_directed(const igraph_t *graph,
   no_of_nodes=igraph_vcount(&newgraph);
   no_of_edges=igraph_ecount(&newgraph);
   
-  IGRAPH_VECTOR_INIT_FINALLY(&capacity, no_of_edges);
-  for (i=0; i<no_of_edges; i++) {
-    VECTOR(capacity)[i] = 1.0;
-  }
-  
   IGRAPH_CHECK(igraph_maxflow_value(&newgraph, res, 
-				    source, target, &capacity));
+				    source, target, 0));
   
-  igraph_vector_destroy(&capacity);
   igraph_destroy(&newgraph);
-  IGRAPH_FINALLY_CLEAN(2);
+  IGRAPH_FINALLY_CLEAN(1);
   
   return 0;
 }
@@ -915,7 +910,7 @@ int igraph_i_st_vertex_connectivity_undirected(const igraph_t *graph,
 
 /**
  * \function igraph_st_vertex_connectivity
- * The vertex connectivity of a pair of vertices
+ * \brief The vertex connectivity of a pair of vertices
  * 
  * </para><para>The vertex connectivity of two vertices (\c source and
  * \c target) is the minimum number of vertices that have to be
@@ -1136,7 +1131,6 @@ int igraph_st_edge_connectivity(const igraph_t *graph, igraph_integer_t *res,
 				igraph_integer_t target) {
   
   long int no_of_edges=igraph_ecount(graph);
-  igraph_vector_t capacity;
   igraph_real_t flow;
   long int i;
 
@@ -1144,16 +1138,9 @@ int igraph_st_edge_connectivity(const igraph_t *graph, igraph_integer_t *res,
     IGRAPH_ERROR("source and target vertices are the same", IGRAPH_EINVAL);
   }
 
-  IGRAPH_VECTOR_INIT_FINALLY(&capacity, no_of_edges);
-  for (i=0; i<no_of_edges; i++) {
-    VECTOR(capacity)[i]=1.0;
-  }
-  
-  IGRAPH_CHECK(igraph_maxflow_value(graph, &flow, source, target, &capacity));
+  IGRAPH_CHECK(igraph_maxflow_value(graph, &flow, source, target, 0));
   *res = flow;
 
-  igraph_vector_destroy(&capacity);
-  IGRAPH_FINALLY_CLEAN(1);
   return 0;
 }
 
@@ -1193,7 +1180,6 @@ int igraph_edge_connectivity(const igraph_t *graph, igraph_integer_t *res,
 			     igraph_bool_t checks) {
   
   long int no_of_edges=igraph_ecount(graph);
-  igraph_vector_t capacity;
   long int i;
   igraph_bool_t ret;
   
@@ -1203,15 +1189,7 @@ int igraph_edge_connectivity(const igraph_t *graph, igraph_integer_t *res,
   }  
 
   if (!ret) {
-    IGRAPH_VECTOR_INIT_FINALLY(&capacity, no_of_edges);
-    for (i=0; i<no_of_edges; i++) {
-      VECTOR(capacity)[i]=1.0;
-    }
-    
-    IGRAPH_CHECK(igraph_mincut_value(graph, res, &capacity));
-    
-    igraph_vector_destroy(&capacity);
-    IGRAPH_FINALLY_CLEAN(1);
+    IGRAPH_CHECK(igraph_mincut_value(graph, res, 0));
   }
 
   return 0;
@@ -1219,8 +1197,7 @@ int igraph_edge_connectivity(const igraph_t *graph, igraph_integer_t *res,
 
 /**
  * \function igraph_edge_disjoint_paths
- * \brief The maximum number of edge-disjoint paths between two
- * vertices. 
+ * \brief The maximum number of edge-disjoint paths between two vertices. 
  * 
  * </para><para> A set of paths between two vertices is called
  * edge-disjoint if they do not share any edges. The maximum number of
@@ -1249,7 +1226,6 @@ int igraph_edge_disjoint_paths(const igraph_t *graph, igraph_integer_t *res,
 			       igraph_integer_t target) {
 
   long int no_of_edges=igraph_ecount(graph);
-  igraph_vector_t capacity;
   igraph_real_t flow;
   long int i;
 
@@ -1257,26 +1233,16 @@ int igraph_edge_disjoint_paths(const igraph_t *graph, igraph_integer_t *res,
     IGRAPH_ERROR("Not implemented for source=target", IGRAPH_UNIMPLEMENTED);
   }
 
+  IGRAPH_CHECK(igraph_maxflow_value(graph, &flow, source, target, 0));
 
-  IGRAPH_VECTOR_INIT_FINALLY(&capacity, no_of_edges);
-  for (i=0; i<no_of_edges; i++) {
-    VECTOR(capacity)[i]=1.0;
-  }
-  
-  IGRAPH_CHECK(igraph_maxflow_value(graph, &flow, source, target,
-				    &capacity));
   *res = flow;
   
-  igraph_vector_destroy(&capacity);
-  IGRAPH_FINALLY_CLEAN(1);
-
   return 0;
 }
 
 /**
  * \function igraph_vertex_disjoint_paths
- * \brief Maximum number of vertex-disjoint paths between two
- * vertices.
+ * \brief Maximum number of vertex-disjoint paths between two vertices.
  * 
  * </para><para> A set of paths between two vertices is called
  * vertex-disjoint if they share no vertices. The calculation is
@@ -1362,8 +1328,7 @@ int igraph_vertex_disjoint_paths(const igraph_t *graph, igraph_integer_t *res,
 
 /**
  * \function igraph_adhesion
- * \brief Graph adhesion, this is (almost) the same as edge
- * connectivity.
+ * \brief Graph adhesion, this is (almost) the same as edge connectivity.
  * 
  * </para><para> This quantity is defined by White and Harary in
  * The cohesiveness of blocks in social networks: node connectivity and
@@ -1396,8 +1361,7 @@ int igraph_adhesion(const igraph_t *graph, igraph_integer_t *res,
 
 /**
  * \function igraph_cohesion
- * \brief Graph cohesion, this is the same as vertex
- * connectivity. 
+ * \brief Graph cohesion, this is the same as vertex connectivity. 
  * 
  * </para><para> This quantity was defined by White and Harary in <quote>The
  * cohesiveness of blocks in social networks: node connectivity and

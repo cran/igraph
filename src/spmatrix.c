@@ -336,8 +336,7 @@ int igraph_spmatrix_add_e(igraph_spmatrix_t *m, long int row, long int col,
 
 /**
  * \function igraph_spmatrix_add_col_values
- *
- * Adds the values of a column to another column.
+ * \brief Adds the values of a column to another column.
  *
  * \param to The index of the column to be added to
  * \param from The index of the column to be added
@@ -554,8 +553,7 @@ int igraph_spmatrix_add_rows(igraph_spmatrix_t *m, long int n) {
 
 /**
  * \function igraph_spmatrix_clear_row
- *
- * Clears a row in the matrix (sets all of its elements to zero)
+ * \brief Clears a row in the matrix (sets all of its elements to zero)
  * \param m The matrix.
  * \param row The index of the row to be cleared.
  *
@@ -563,14 +561,11 @@ int igraph_spmatrix_add_rows(igraph_spmatrix_t *m, long int n) {
  */
 
 int igraph_spmatrix_clear_row(igraph_spmatrix_t *m, long int row) {
-  long int ci, ei, i, j, nremove=0, nremove_old=0, *permvec;
+  long int ci, ei, i, j, nremove=0, nremove_old=0;
+  igraph_vector_t permvec;
 
   assert(m != NULL);
-  permvec=Calloc(igraph_vector_size(&m->data), long int);
-  if (permvec == 0) {
-    IGRAPH_ERROR("can't clear row in sparse matrix", IGRAPH_ENOMEM);
-  }
-  IGRAPH_FINALLY(free, permvec);
+  IGRAPH_VECTOR_INIT_FINALLY(&permvec, igraph_vector_size(&m->data));
   for (ci=0, i=0, j=1; ci < m->ncol; ci++) {
     for (ei=VECTOR(m->cidx)[ci]; ei < VECTOR(m->cidx)[ci+1]; ei++) {
       if (VECTOR(m->ridx)[ei] == row) {
@@ -579,7 +574,7 @@ int igraph_spmatrix_clear_row(igraph_spmatrix_t *m, long int row) {
         nremove++;
       } else {
         /* this element will be kept */
-        permvec[i] = j;
+        VECTOR(permvec)[i] = j;
         j++;
       }
       i++;
@@ -590,9 +585,9 @@ int igraph_spmatrix_clear_row(igraph_spmatrix_t *m, long int row) {
     nremove_old = nremove;
   }
   VECTOR(m->cidx)[m->ncol] -= nremove;
-  igraph_vector_permdelete(&m->ridx, permvec, nremove);
-  igraph_vector_permdelete(&m->data, permvec, nremove);
-  free(permvec);
+  igraph_vector_permdelete(&m->ridx, &permvec, nremove);
+  igraph_vector_permdelete(&m->data, &permvec, nremove);
+  igraph_vector_destroy(&permvec);
   IGRAPH_FINALLY_CLEAN(1);
   return 0;
 }
@@ -609,14 +604,11 @@ int igraph_i_spmatrix_clear_row_fast(igraph_spmatrix_t *m, long int row) {
 }
 
 int igraph_i_spmatrix_cleanup(igraph_spmatrix_t *m) {
-  long int ci, ei, i, j, nremove=0, nremove_old=0, *permvec;
+  long int ci, ei, i, j, nremove=0, nremove_old=0;
+  igraph_vector_t permvec;
 
   assert(m != NULL);
-  permvec=Calloc(igraph_vector_size(&m->data), long int);
-  if (permvec == 0) {
-    IGRAPH_ERROR("can't perform cleanup on sparse matrix", IGRAPH_ENOMEM);
-  }
-  IGRAPH_FINALLY(free, permvec);
+  IGRAPH_VECTOR_INIT_FINALLY(&permvec, igraph_vector_size(&m->data));
   for (ci=0, i=0, j=1; ci < m->ncol; ci++) {
     for (ei=VECTOR(m->cidx)[ci]; ei < VECTOR(m->cidx)[ci+1]; ei++) {
       if (VECTOR(m->data)[ei] == 0.0) {
@@ -625,7 +617,7 @@ int igraph_i_spmatrix_cleanup(igraph_spmatrix_t *m) {
         nremove++;
       } else {
         /* this element will be kept */
-        permvec[i] = j;
+        VECTOR(permvec)[i] = j;
         j++;
       }
       i++;
@@ -636,17 +628,16 @@ int igraph_i_spmatrix_cleanup(igraph_spmatrix_t *m) {
     nremove_old = nremove;
   }
   VECTOR(m->cidx)[m->ncol] -= nremove;
-  igraph_vector_permdelete(&m->ridx, permvec, nremove);
-  igraph_vector_permdelete(&m->data, permvec, nremove);
-  free(permvec);
+  igraph_vector_permdelete(&m->ridx, &permvec, nremove);
+  igraph_vector_permdelete(&m->data, &permvec, nremove);
+  igraph_vector_destroy(&permvec);
   IGRAPH_FINALLY_CLEAN(1);
   return 0;
 }
 
 /**
  * \function igraph_spmatrix_clear_col
- *
- * Clears a column in the matrix (sets all of its elements to zero)
+ * \brief Clears a column in the matrix (sets all of its elements to zero)
  * \param m The matrix.
  * \param col The index of the column to be cleared.
  * \return Error code. The current implementation always succeeds.
@@ -668,24 +659,22 @@ int igraph_spmatrix_clear_col(igraph_spmatrix_t *m, long int col) {
 }
 
 /**
- * \function igraph_spmatrix_multiply
- * 
- * Multiplies each element of the sparse matrix by a constant.
+ * \function igraph_spmatrix_scale
+ * \brief Multiplies each element of the sparse matrix by a constant.
  * \param m The matrix.
  * \param by The constant.
  * 
  * Time complexity: O(n), the number of elements in the matrix.
  */
 
-void igraph_spmatrix_multiply(igraph_spmatrix_t *m, igraph_real_t by) {
+void igraph_spmatrix_scale(igraph_spmatrix_t *m, igraph_real_t by) {
   assert(m != NULL);
-  igraph_vector_multiply(&m->data, by);
+  igraph_vector_scale(&m->data, by);
 }
 
 /**
  * \function igraph_spmatrix_colsums
- *
- * Calculates the column sums of the matrix.
+ * \brief Calculates the column sums of the matrix.
  * \param m The matrix.
  * \param res An initialized \c igraph_vector_t, the result will be stored here.
  *   The vector will be resized as needed.
@@ -708,8 +697,7 @@ int igraph_spmatrix_colsums(const igraph_spmatrix_t *m, igraph_vector_t *res) {
 
 /**
  * \function igraph_spmatrix_max_nonzero
- *
- * Returns the maximum nonzero element of a matrix.
+ * \brief Returns the maximum nonzero element of a matrix.
  * If the matrix is empty, zero is returned.
  *
  * \param m the matrix object.
@@ -747,8 +735,7 @@ igraph_real_t igraph_spmatrix_max_nonzero(const igraph_spmatrix_t *m,
 
 /**
  * \function igraph_spmatrix_max
- *
- * Returns the maximum element of a matrix.
+ * \brief Returns the maximum element of a matrix.
  * If the matrix is empty, zero is returned.
  *
  * \param m the matrix object.

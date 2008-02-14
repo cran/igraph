@@ -96,3 +96,19 @@
 #ifdef ZERO
 #undef ZERO
 #endif
+
+#ifdef HEAPMORE
+#undef HEAPMORE
+#endif
+
+#ifdef HEAPLESS
+#undef HEAPLESS
+#endif
+
+#ifdef HEAPMOREEQ
+#undef HEAPMOREEQ
+#endif
+
+#ifdef HEAPLESSEQ
+#undef HEAPLESSEQ
+#endif

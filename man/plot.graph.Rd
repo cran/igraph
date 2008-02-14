@@ -1,11 +1,13 @@
 \name{plot.igraph}
 \alias{plot.igraph}
+\concept{Visualization}
 \title{Plotting of graphs}
 \description{\code{plot.graph} is able to plot graphs to any R
   device. It is the non-interactive companion of the \code{tkplot}
   function.}
 \usage{
-plot.igraph(x, axes=FALSE, xlab="", ylab="", xlim=c(-1,1), ylim=c(-1,1), \dots)
+plot.igraph(x, axes=FALSE, xlab="", ylab="", add=FALSE,
+      xlim=c(-1,1), ylim=c(-1,1), main="", sub="", \dots)
 }
 \arguments{
   \item{x}{The graph to plot.}
@@ -13,10 +15,14 @@ plot.igraph(x, axes=FALSE, xlab="", ylab="", xlim=c(-1,1), ylim=c(-1,1), \dots)
   \item{xlab}{The label of the horizontal axis. Defaults to the empty string.}
   \item{ylab}{The label of the vertical axis. Defaults to the empty
     string.}
+  \item{add}{Logical scalar, whether to add the plot to the current
+    device, or delete the device's current contents first.}
   \item{xlim}{The limits for the horizontal axis, it is unlikely that
     you want to modify this.}
   \item{ylim}{The limits for the vertical axis, it is unlikely that you
     want to modify this.}
+  \item{main}{Main title.}
+  \item{sub}{Subtitle.}
   \item{\dots}{Additional arguments, passed to \code{\link{plot}}.}
 }
 \details{

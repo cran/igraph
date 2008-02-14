@@ -1,5 +1,6 @@
 \name{Drawing graphs}
 \alias{igraph.plotting}
+\concept{Visualization}
 \title{Drawing graphs}
 \description{The common bits of the three plotting functions
   \code{plot.igraph}, \code{tkplot} and \code{rglplot} are discussed in
@@ -112,7 +113,13 @@
       formats are allowed as for the fill color.
 
       By default it is \dQuote{black}.
-    }    
+    }
+    \item{shape}{The shape of the vertex, currently only
+      \dQuote{\code{circle}} and \dQuote{\code{square}} is supported,
+      and only by the \code{\link{plot.igraph}} command.
+
+      By default vertices are drawn as circles.
+    }
     \item{label}{The vertex labels. They will be converted to
       character. Specify \code{NA} to omit vertex labels.
 
@@ -320,6 +327,24 @@
       
       Its default value is 0.
     }
+    \item{rescale}{Logical constant, whether to rescale the coordinates
+      to the [-1,1]x[-1,1](x[-1,1]) interval. This parameter is not
+      implemented for \code{tkplot}.
+
+      Defaults to \code{TRUE}, the layout will be rescaled.
+    }
+    \item{asp}{A numeric constant, it gives the \code{asp} parameter
+      for \code{\link{plot}}, the aspect ratio. Supply 0 here if you
+      don't want to give an aspect ratio. It is ignored by \code{tkplot}
+      and \code{rglplot}.
+
+      Defaults to 1.
+    }
+    \item{frame}{Boolean, whether to plot a frame around the graph. It
+      is ignored by \code{tkplot} and \code{rglplot}.
+
+      Defaults to \code{FALSE}.
+    }
   }
 }
 \author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
@@ -330,7 +355,7 @@
 
 # plotting a simple ring graph, all default parameters, except the layout
 g <- graph.ring(10)
-g <- set.graph.attribute(g, "layout", layout.circle)
+g$layout <- layout.circle
 plot(g)
 tkplot(g)
 rglplot(g)

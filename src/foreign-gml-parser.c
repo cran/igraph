@@ -1078,7 +1078,7 @@ yydestruct (yymsg, yytype, yyvaluep)
     {
       case 5: /* "KEYWORD" */
 #line 102 "foreign-gml-parser.y"
-	{ Free((yyvaluep->str).s); };
+	{ igraph_Free((yyvaluep->str).s); };
 #line 1083 "foreign-gml-parser.c"
 	break;
       case 11: /* "list" */
@@ -1093,12 +1093,12 @@ yydestruct (yymsg, yytype, yyvaluep)
 	break;
       case 13: /* "key" */
 #line 102 "foreign-gml-parser.y"
-	{ Free((yyvaluep->str).s); };
+	{ igraph_Free((yyvaluep->str).s); };
 #line 1098 "foreign-gml-parser.c"
 	break;
       case 15: /* "string" */
 #line 102 "foreign-gml-parser.y"
-	{ Free((yyvaluep->str).s); };
+	{ igraph_Free((yyvaluep->str).s); };
 #line 1103 "foreign-gml-parser.c"
 	break;
 
@@ -1696,7 +1696,7 @@ int igraph_gml_yyerror(char *s)
 
 void igraph_i_gml_get_keyword(char *s, int len, void *res) {
   struct { char *s; int len; } *p=res;
-  p->s=Calloc(len+1, char);
+  p->s=igraph_Calloc(len+1, char);
   if (!p->s) { 
     igraph_error("Cannot read GML file", __FILE__, __LINE__, IGRAPH_PARSEERROR);
   }
@@ -1707,7 +1707,7 @@ void igraph_i_gml_get_keyword(char *s, int len, void *res) {
 
 void igraph_i_gml_get_string(char *s, int len, void *res) {
   struct { char *s; int len; } *p=res;
-  p->s=Calloc(len-1, char);
+  p->s=igraph_Calloc(len-1, char);
   if (!p->s) { 
     igraph_error("Cannot read GML file", __FILE__, __LINE__, IGRAPH_PARSEERROR);
   }
@@ -1726,7 +1726,7 @@ double igraph_i_gml_get_real(char *s, int len) {
 } 
 
 igraph_gml_tree_t *igraph_i_gml_make_numeric(char* s, int len, double value) {
-  igraph_gml_tree_t *t=Calloc(1, igraph_gml_tree_t);
+  igraph_gml_tree_t *t=igraph_Calloc(1, igraph_gml_tree_t);
   if (!t) { 
     igraph_error("Cannot build GML tree", __FILE__, __LINE__, IGRAPH_ENOMEM);
     return 0;
@@ -1742,7 +1742,7 @@ igraph_gml_tree_t *igraph_i_gml_make_numeric(char* s, int len, double value) {
 
 igraph_gml_tree_t *igraph_i_gml_make_numeric2(char* s, int len, 
 					      char *v, int vlen) {
-  igraph_gml_tree_t *t=Calloc(1, igraph_gml_tree_t);
+  igraph_gml_tree_t *t=igraph_Calloc(1, igraph_gml_tree_t);
   char tmp=v[vlen];
   igraph_real_t value=0;
   if (!t) { 
@@ -1765,7 +1765,7 @@ igraph_gml_tree_t *igraph_i_gml_make_numeric2(char* s, int len,
 
 igraph_gml_tree_t *igraph_i_gml_make_string(char* s, int len, 
 					    char *value, int valuelen) {
-  igraph_gml_tree_t *t=Calloc(1, igraph_gml_tree_t);
+  igraph_gml_tree_t *t=igraph_Calloc(1, igraph_gml_tree_t);
   if (!t) { 
     igraph_error("Cannot build GML tree", __FILE__, __LINE__, IGRAPH_ENOMEM);
     return 0;
@@ -1778,7 +1778,7 @@ igraph_gml_tree_t *igraph_i_gml_make_string(char* s, int len,
 igraph_gml_tree_t *igraph_i_gml_make_list(char* s, int len, 
 					  igraph_gml_tree_t *list) {
   
-  igraph_gml_tree_t *t=Calloc(1, igraph_gml_tree_t);
+  igraph_gml_tree_t *t=igraph_Calloc(1, igraph_gml_tree_t);
   if (!t) { 
     igraph_error("Cannot build GML tree", __FILE__, __LINE__, IGRAPH_ENOMEM);
     return 0;
@@ -1791,7 +1791,7 @@ igraph_gml_tree_t *igraph_i_gml_make_list(char* s, int len,
 igraph_gml_tree_t *igraph_i_gml_merge(igraph_gml_tree_t *t1, igraph_gml_tree_t* t2) {
 
   igraph_gml_tree_mergedest(t1, t2);
-  Free(t2);
+  igraph_Free(t2);
 
   return t1;
 }

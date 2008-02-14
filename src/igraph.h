@@ -43,6 +43,7 @@ __BEGIN_DECLS
 #include "types.h"
 #include "error.h"
 #include "interrupt.h"
+#include "arpack.h"
 
 #include <stdio.h> 		/* FILE */
 
@@ -98,8 +99,6 @@ typedef struct igraph_s {
 /* Constants                                          */
 /* -------------------------------------------------- */
 
-#define IGRAPH_VERSION_STRING "0.4"
-
 typedef enum { IGRAPH_UNDIRECTED=0, IGRAPH_DIRECTED=1 } igraph_i_directed_t;
 
 typedef enum { IGRAPH_NO_LOOPS=0, IGRAPH_LOOPS=1 } igraph_i_loops_t;
@@ -154,9 +153,15 @@ typedef enum { IGRAPH_VCONN_NEI_ERROR=0,
 typedef enum { IGRAPH_SPINCOMM_UPDATE_SIMPLE=0,
 	       IGRAPH_SPINCOMM_UPDATE_CONFIG } igraph_spincomm_update_t; 
 
-typedef enum { IGRAPH_I_DONT_SIMPLIFY=0,
-	       IGRAPH_I_SIMPLIFY } igraph_i_lazy_adlist_simplify_t;
-	       
+typedef enum { IGRAPH_DONT_SIMPLIFY=0,
+	       IGRAPH_SIMPLIFY } igraph_lazy_adlist_simplify_t;
+
+typedef igraph_real_t  igraph_scalar_function_t(const igraph_vector_t *var, 
+						const igraph_vector_t *par,
+						void* extra);
+typedef void igraph_vector_function_t(const igraph_vector_t *var, 
+				      const igraph_vector_t *par,
+				      igraph_vector_t* res, void* extra);
 
 /* -------------------------------------------------- */
 /* Vertex selectors                                   */
@@ -219,8 +224,13 @@ void igraph_vs_destroy(igraph_vs_t *vs);
 
 igraph_bool_t igraph_vs_is_all(igraph_vs_t *vs);
 
+int igraph_vs_copy(igraph_vs_t* dest, const igraph_vs_t* src);
+
 int igraph_vs_as_vector(const igraph_t *graph, igraph_vs_t vs, 
 			igraph_vector_t *v);
+int igraph_vs_size(const igraph_t *graph, const igraph_vs_t *vs,
+  igraph_integer_t *result);
+inline int igraph_vs_type(const igraph_vs_t *vs);
 
 /* -------------------------------------------------- */
 /* Vertex iterators                                   */
@@ -274,6 +284,7 @@ typedef struct igraph_vit_t {
 
 /**
  * \define IGRAPH_VIT_NEXT
+ * \brief Next vertex.
  * 
  * Steps the iterator to the next vertex. Only call this function if
  * \ref IGRAPH_VIT_END() returns false.
@@ -284,6 +295,7 @@ typedef struct igraph_vit_t {
 #define IGRAPH_VIT_NEXT(vit)  (++((vit).pos))
 /**
  * \define IGRAPH_VIT_END
+ * \brief Are we at the end?
  * 
  * Checks whether there are more vertices to step to.
  * \param vit The vertex iterator to check.
@@ -295,6 +307,7 @@ typedef struct igraph_vit_t {
 #define IGRAPH_VIT_END(vit)   ((vit).pos >= (vit).end)
 /**
  * \define IGRAPH_VIT_SIZE
+ * \brief Size of a vertex iterator.
  * 
  * Gives the number of vertices in a vertex iterator.
  * \param vit The vertex iterator.
@@ -305,6 +318,7 @@ typedef struct igraph_vit_t {
 #define IGRAPH_VIT_SIZE(vit)  ((vit).end - (vit).start)
 /**
  * \define IGRAPH_VIT_RESET
+ * \brief Reset a vertex iterator.
  * 
  * Resets a vertex iterator. After calling this macro the iterator
  * will point to the first vertex.
@@ -315,6 +329,7 @@ typedef struct igraph_vit_t {
 #define IGRAPH_VIT_RESET(vit) ((vit).pos = (vit).start)
 /**
  * \define IGRAPH_VIT_GET
+ * \brief Query the current position.
  * 
  * Gives the vertex id of the current vertex poited to by the
  * iterator. 
@@ -394,6 +409,8 @@ int igraph_es_fromto(igraph_es_t *es,
 int igraph_es_seq(igraph_es_t *es, igraph_integer_t from, igraph_integer_t to);
 igraph_es_t igraph_ess_seq(igraph_integer_t from, igraph_integer_t to);
 
+int igraph_es_vector_copy(igraph_es_t *es, const igraph_vector_t *v);
+
 int igraph_es_pairs(igraph_es_t *es, const igraph_vector_t *v, 
 		    igraph_bool_t directed);
 int igraph_es_pairs_small(igraph_es_t *es, igraph_bool_t directed, ...);
@@ -409,8 +426,14 @@ void igraph_es_destroy(igraph_es_t *es);
 
 igraph_bool_t igraph_es_is_all(igraph_es_t *es);
 
+int igraph_es_copy(igraph_es_t* dest, const igraph_es_t* src);
+
 int igraph_es_as_vector(const igraph_t *graph, igraph_es_t es, 
 			igraph_vector_t *v);
+int igraph_es_size(const igraph_t *graph, const igraph_es_t *es,
+  igraph_integer_t *result);
+inline int igraph_es_type(const igraph_es_t *es);
+
 
 /* -------------------------------------------------- */
 /* Edge Iterators                                     */
@@ -442,6 +465,7 @@ typedef struct igraph_eit_t {
 
 /**
  * \define IGRAPH_EIT_NEXT
+ * \brief Next edge.
  * 
  * Steps the iterator to the next edge. Call this function only if
  * \ref IGRAPH_EIT_END() returns false.
@@ -452,6 +476,7 @@ typedef struct igraph_eit_t {
 #define IGRAPH_EIT_NEXT(eit) (++((eit).pos))
 /**
  * \define IGRAPH_EIT_END
+ * \brief Are we at the end?
  * 
  * Checks whether there are more edges to step to.
  * \param wit The edge iterator to check.
@@ -463,6 +488,7 @@ typedef struct igraph_eit_t {
 #define IGRAPH_EIT_END(eit)   ((eit).pos >= (eit).end)
 /**
  * \define IGRAPH_EIT_SIZE
+ * \brief Number of edges in the iterator.
  * 
  * Gives the number of edges in an edge iterator.
  * \param eit The edge iterator.
@@ -473,6 +499,7 @@ typedef struct igraph_eit_t {
 #define IGRAPH_EIT_SIZE(eit)  ((eit).end - (eit).start)
 /**
  * \define IGRAPH_EIT_RESET
+ * \brief Reset an edge iterator.
  * 
  * Resets an ege iterator. After calling this macro the iterator will
  * point to the first edge.
@@ -483,6 +510,7 @@ typedef struct igraph_eit_t {
 #define IGRAPH_EIT_RESET(eit) ((eit).pos = (eit).start)
 /**
  * \define IGRAPH_EIT_GET
+ * \brief Query an edge iterator.
  * 
  * Gives the edge id of the current edge pointed to by an iterator.
  * \param eit The edge iterator.
@@ -557,11 +585,22 @@ int igraph_ring(igraph_t *graph, igraph_integer_t n, igraph_bool_t directed,
 int igraph_tree(igraph_t *graph, igraph_integer_t n, igraph_integer_t children, 
 		igraph_tree_mode_t type);
 int igraph_full(igraph_t *graph, igraph_integer_t n, igraph_bool_t directed, igraph_bool_t loops);
+int igraph_full_citation(igraph_t *graph, igraph_integer_t n, 
+			 igraph_bool_t directed);
 int igraph_atlas(igraph_t *graph, int number);
 int igraph_extended_chordal_ring(igraph_t *graph, igraph_integer_t nodes, 
 				 const igraph_matrix_t *W);
 int igraph_connect_neighborhood(igraph_t *graph, igraph_integer_t order,
 				igraph_neimode_t mode);
+int igraph_linegraph(const igraph_t *graph, igraph_t *linegraph);
+
+int igraph_de_bruijn(igraph_t *graph, igraph_integer_t m, igraph_integer_t n);
+int igraph_kautz(igraph_t *graph, igraph_integer_t m, igraph_integer_t n);
+int igraph_famous(igraph_t *graph, const char *name);
+int igraph_lcf_vector(igraph_t *graph, igraph_integer_t n,
+		      const igraph_vector_t *shifts, 
+		      igraph_integer_t repeats);
+int igraph_lcf(igraph_t *graph, igraph_integer_t n, ...);
 
 /* -------------------------------------------------- */
 /* Constructors, games (=stochastic)                  */
@@ -581,6 +620,8 @@ int igraph_erdos_renyi_game(igraph_t *graph, igraph_erdos_renyi_t type,
 			    igraph_integer_t n, igraph_real_t p,
 			    igraph_bool_t directed, igraph_bool_t loops);
 int igraph_erdos_renyi_game_gnp(igraph_t *graph, igraph_integer_t n, igraph_real_t p,
+				igraph_bool_t directed, igraph_bool_t loops);
+int igraph_erdos_renyi_game_gnm(igraph_t *graph, igraph_integer_t n, igraph_real_t m,
 				igraph_bool_t directed, igraph_bool_t loops);
 int igraph_degree_sequence_game(igraph_t *graph, const igraph_vector_t *out_deg,
 				const igraph_vector_t *in_deg, 
@@ -630,7 +671,8 @@ int igraph_establishment_game(igraph_t *graph, igraph_integer_t nodes,
 			      igraph_matrix_t *pref_matrix,
 			      igraph_bool_t directed);
 int igraph_grg_game(igraph_t *graph, igraph_integer_t nodes,
-		    igraph_real_t radius, igraph_bool_t torus);
+		    igraph_real_t radius, igraph_bool_t torus,
+		    igraph_vector_t *x, igraph_vector_t *y);
 int igraph_preference_game(igraph_t *graph, igraph_integer_t nodes,
 			   igraph_integer_t types, igraph_vector_t *type_dist,
 			   igraph_matrix_t *pref_matrix,
@@ -666,6 +708,10 @@ int igraph_citing_cited_type_game(igraph_t *graph, igraph_integer_t nodes,
 				  igraph_integer_t edges_per_step,
 				  igraph_bool_t directed);
 
+int igraph_forest_fire_game(igraph_t *graph, igraph_integer_t nodes,
+			    igraph_real_t fw_prob, igraph_real_t bw_factor,
+			    igraph_integer_t ambs, igraph_bool_t directed);
+
 /* -------------------------------------------------- */
 /* Basic query functions                              */
 /* -------------------------------------------------- */
@@ -686,6 +732,9 @@ int igraph_minimum_spanning_tree_prim(const igraph_t *graph, igraph_t *mst,
 				      const igraph_vector_t *weights);
 int igraph_closeness(const igraph_t *graph, igraph_vector_t *res, 
 		     const igraph_vs_t vids, igraph_neimode_t mode);
+int igraph_closeness_estimate(const igraph_t *graph, igraph_vector_t *res, 
+		              const igraph_vs_t vids, igraph_neimode_t mode,
+                              igraph_integer_t cutoff);
 int igraph_shortest_paths(const igraph_t *graph, igraph_matrix_t *res, 
 			  const igraph_vs_t from, igraph_neimode_t mode);
 int igraph_get_shortest_paths(const igraph_t *graph, igraph_vector_ptr_t *res,
@@ -698,18 +747,31 @@ int igraph_get_all_shortest_paths(const igraph_t *graph,
 				  igraph_neimode_t mode);
 int igraph_subcomponent(const igraph_t *graph, igraph_vector_t *res, igraph_real_t vid, 
 			igraph_neimode_t mode);	
-int igraph_betweenness (const igraph_t *graph, igraph_vector_t *res, 
-			const igraph_vs_t vids, igraph_bool_t directed);
-int igraph_edge_betweenness (const igraph_t *graph, igraph_vector_t *result,
-			     igraph_bool_t directed); /* eee + add */
-int igraph_pagerank(const igraph_t *graph, igraph_vector_t *res, 
-		    const igraph_vs_t vids, igraph_bool_t directed, igraph_integer_t niter, 
-		    igraph_real_t eps, igraph_real_t damping);
+int igraph_betweenness(const igraph_t *graph, igraph_vector_t *res, 
+                       const igraph_vs_t vids, igraph_bool_t directed);
+int igraph_betweenness_estimate(const igraph_t *graph, igraph_vector_t *res, 
+			        const igraph_vs_t vids, igraph_bool_t directed,
+                                igraph_integer_t cutoff);
+int igraph_edge_betweenness(const igraph_t *graph, igraph_vector_t *result,
+                            igraph_bool_t directed);
+int igraph_edge_betweenness_estimate(const igraph_t *graph, igraph_vector_t *result,
+                            igraph_bool_t directed, igraph_integer_t cutoff);
+int igraph_pagerank_old(const igraph_t *graph, igraph_vector_t *res, 
+			const igraph_vs_t vids, igraph_bool_t directed,
+			igraph_integer_t niter, igraph_real_t eps, 
+			igraph_real_t damping, igraph_bool_t old);
+int igraph_pagerank(const igraph_t *graph, igraph_vector_t *vector,
+		    igraph_real_t *value, const igraph_vs_t vids,
+		    igraph_bool_t directed, igraph_real_t damping, 
+		    const igraph_vector_t *weights,
+		    igraph_arpack_options_t *options);
 int igraph_rewire(igraph_t *graph, igraph_integer_t n, igraph_rewiring_t mode);
 int igraph_subgraph(const igraph_t *graph, igraph_t *res, 
 		    const igraph_vs_t vids);
 int igraph_average_path_length(const igraph_t *graph, igraph_real_t *res,
 			       igraph_bool_t directed, igraph_bool_t unconn);
+int igraph_path_length_hist(const igraph_t *graph, igraph_vector_t *res,
+			    igraph_real_t *unconnected, igraph_bool_t directed);
 int igraph_simplify(igraph_t *graph, igraph_bool_t multiple, igraph_bool_t loops);
 int igraph_transitivity_undirected(const igraph_t *graph, 
 				   igraph_real_t *res);
@@ -749,10 +811,17 @@ int igraph_neighborhood_graphs(const igraph_t *graph, igraph_vector_ptr_t *res,
 			       igraph_neimode_t mode);
 int igraph_topological_sorting(const igraph_t *graph, igraph_vector_t *res,
 			       igraph_neimode_t mode);
-int igraph_is_loop(const igraph_t *graph, igraph_vector_t *res, igraph_es_t es);
-int igraph_is_multiple(const igraph_t *graph, igraph_vector_t *res, igraph_es_t es);
+int igraph_is_loop(const igraph_t *graph, igraph_vector_bool_t *res, 
+		   igraph_es_t es);
+int igraph_is_simple(const igraph_t *graph, igraph_bool_t *res);
+int igraph_is_multiple(const igraph_t *graph, igraph_vector_bool_t *res, 
+		       igraph_es_t es);
+int igraph_count_multiple(const igraph_t *graph, igraph_vector_t *res, igraph_es_t es);
 int igraph_girth(const igraph_t *graph, igraph_integer_t *girth, 
 		 igraph_vector_t *circle);
+int igraph_add_edge(igraph_t *graph, igraph_integer_t from, igraph_integer_t to);
+int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
+         igraph_vector_t *ins, igraph_vector_t *outs);
 
 /* -------------------------------------------------- */
 /* Spectral Properties                                */
@@ -810,7 +879,8 @@ int igraph_layout_circle(const igraph_t *graph, igraph_matrix_t *res);
 int igraph_layout_fruchterman_reingold(const igraph_t *graph, igraph_matrix_t *res,
 				       igraph_integer_t niter, igraph_real_t maxdelta,
 				       igraph_real_t area, igraph_real_t coolexp, 
-				       igraph_real_t repulserad, igraph_bool_t use_seed);
+				       igraph_real_t repulserad, igraph_bool_t use_seed,
+				       const igraph_vector_t *weight);
 int igraph_layout_grid_fruchterman_reingold(const igraph_t *graph, 
 					    igraph_matrix_t *res,
 					    igraph_integer_t niter, igraph_real_t maxdelta, 
@@ -820,7 +890,7 @@ int igraph_layout_grid_fruchterman_reingold(const igraph_t *graph,
 int igraph_layout_kamada_kawai(const igraph_t *graph, igraph_matrix_t *res,
 			       igraph_integer_t niter, igraph_real_t sigma, 
 			       igraph_real_t initemp, igraph_real_t coolexp,
-			       igraph_real_t kkconst);
+			       igraph_real_t kkconst, igraph_bool_t use_seed);
 int igraph_layout_springs(const igraph_t *graph, igraph_matrix_t *res,
 			  igraph_real_t mass, igraph_real_t equil, igraph_real_t k,
 			  igraph_real_t repeqdis, igraph_real_t kfr, igraph_bool_t repulse);
@@ -840,11 +910,20 @@ int igraph_layout_fruchterman_reingold_3d(const igraph_t *graph,
 					  igraph_integer_t niter, igraph_real_t maxdelta,
 					  igraph_real_t volume, igraph_real_t coolexp,
 					  igraph_real_t repulserad,
-					  igraph_bool_t use_seed);
+					  igraph_bool_t use_seed,
+					  const igraph_vector_t *weight);
 int igraph_layout_kamada_kawai_3d(const igraph_t *graph, igraph_matrix_t *res,
 				  igraph_integer_t niter, igraph_real_t sigma, 
 				  igraph_real_t initemp, igraph_real_t coolexp, 
-				  igraph_real_t kkconst);
+				  igraph_real_t kkconst, igraph_bool_t use_seed);
+
+int igraph_layout_graphopt(const igraph_t *graph, 
+			   igraph_matrix_t *res, igraph_integer_t niter,
+			   igraph_real_t node_charge, igraph_real_t node_mass,
+			   igraph_real_t spring_length,
+			   igraph_real_t spring_constant, 
+			   igraph_real_t max_sa_movement,
+			   igraph_bool_t use_seed);
 
 int igraph_layout_merge_dla(igraph_vector_ptr_t *graphs,
 			    igraph_vector_ptr_t *coords, 
@@ -862,25 +941,39 @@ int igraph_bfs(igraph_t *graph, igraph_integer_t vid, igraph_neimode_t mode,
 /* Centrality                                         */
 /* -------------------------------------------------- */
 
-/* TODO: evcent */
+int igraph_eigenvector_centrality(const igraph_t *graph, igraph_vector_t *vector,
+				  igraph_real_t *value, igraph_bool_t scale,
+				  const igraph_vector_t *weights,
+				  igraph_arpack_options_t *options);
+
+int igraph_hub_score(const igraph_t *graph, igraph_vector_t *vector,
+		     igraph_real_t *value, igraph_bool_t scale,
+		     igraph_arpack_options_t *options);
+int igraph_authority_score(const igraph_t *graph, igraph_vector_t *vector,
+			   igraph_real_t *value, igraph_bool_t scale,
+			   igraph_arpack_options_t *options);
 
 /* -------------------------------------------------- */
-/* Cocitation                                         */
+/* Cocitation and other similarity measures           */
 /* -------------------------------------------------- */
 
 int igraph_cocitation(const igraph_t *graph, igraph_matrix_t *res, 
 		      const igraph_vs_t vids);
 int igraph_bibcoupling(const igraph_t *graph, igraph_matrix_t *res, 
 		       const igraph_vs_t vids);
+int igraph_similarity_jaccard(const igraph_t *graph, igraph_matrix_t *res,
+              const igraph_vs_t vids, igraph_neimode_t mode,
+			  igraph_bool_t loops);
+int igraph_similarity_dice(const igraph_t *graph, igraph_matrix_t *res,
+              const igraph_vs_t vids, igraph_neimode_t mode,
+			  igraph_bool_t loops);
 
 /* -------------------------------------------------- */
 /* Community Structure                                */
 /* -------------------------------------------------- */
 
-/* TODO: eb.community */
 /* TODO: cut.community */
 /* TODO: edge.type.matrix */
-/* TODO: modularity */
 /* TODO:  */
 
 int igraph_community_spinglass(const igraph_t *graph,
@@ -951,33 +1044,43 @@ int igraph_community_eb_get_merges(const igraph_t *graph,
 				   igraph_vector_t *bridges);
 
 int igraph_community_fastgreedy(const igraph_t *graph,
+				const igraph_vector_t *weights,
 				igraph_matrix_t *merges,
 				igraph_vector_t *modularity);
 
-int igraph_community_to_membership(const igraph_t *graph,
-				   const igraph_matrix_t *merges,
+int igraph_community_to_membership(const igraph_matrix_t *merges,
+				   igraph_integer_t nodes,
 				   igraph_integer_t steps,
 				   igraph_vector_t *membership,
 				   igraph_vector_t *csize);
+int igraph_le_community_to_membership(const igraph_matrix_t *merges,
+				      igraph_integer_t steps,
+				      igraph_vector_t *membership,
+				      igraph_vector_t *csize);
 
 int igraph_modularity(const igraph_t *graph, 
 		      const igraph_vector_t *membership,
-		      igraph_real_t *modularity);
+		      igraph_real_t *modularity,
+              const igraph_vector_t *weights);
 
 int igraph_community_leading_eigenvector_naive(const igraph_t *graph,
 					       igraph_matrix_t *merges,
 					       igraph_vector_t *membership,
-					       long int steps);
+					       igraph_integer_t steps,
+					       igraph_arpack_options_t *options);
 int igraph_community_leading_eigenvector(const igraph_t *graph,
 					 igraph_matrix_t *merges,
 					 igraph_vector_t *membership,
-					 long int steps);
+					 igraph_integer_t steps,
+					 igraph_arpack_options_t *options);
 int igraph_community_leading_eigenvector_step(const igraph_t *graph,
 					      igraph_vector_t *membership,
 					      igraph_integer_t community,
 					      igraph_bool_t *split,
 					      igraph_vector_t *eigenvector,
-					      igraph_real_t *eigenvalue);
+					      igraph_real_t *eigenvalue, 
+					      igraph_arpack_options_t *options,
+					      igraph_arpack_storage_t *storage);
 
 /* -------------------------------------------------- */
 /* Conversion                                         */
@@ -1009,6 +1112,8 @@ int igraph_read_graph_pajek(igraph_t *graph, FILE *instream);
 int igraph_read_graph_graphml(igraph_t *graph, FILE *instream,
 			      int index);
 int igraph_read_graph_dimacs(igraph_t *graph, FILE *instream,
+			     igraph_strvector_t *problem,
+			     igraph_vector_t *label,
 			     igraph_integer_t *source, 
 			     igraph_integer_t *target, 
 			     igraph_vector_t *capacity, 
@@ -1030,20 +1135,135 @@ int igraph_write_graph_dimacs(const igraph_t *graph, FILE *outstream,
 			      const igraph_vector_t *capacity);
 int igraph_write_graph_gml(const igraph_t *graph, FILE *outstream, 
 			   const igraph_vector_t *id, const char *creator);
+int igraph_write_graph_dot(const igraph_t *graph, FILE *outstream);
 
 /* -------------------------------------------------- */
 /* Graph isomorphisms                                 */
 /* -------------------------------------------------- */
 
-int igraph_isoclass(const igraph_t *graph, int *isoclass);
+/* Common functions */
+int igraph_permute_vertices(const igraph_t *graph, igraph_t *res,
+			    const igraph_vector_t *permutation);
+
+/* Generic interface */
 int igraph_isomorphic(const igraph_t *graph1, const igraph_t *graph2,
 		      igraph_bool_t *iso);
+int igraph_subisomorphic(const igraph_t *graph1, const igraph_t *graph2,
+			 igraph_bool_t *iso);
+
+/* VF2 family*/
+/** 
+ * \typedef igraph_isohandler_t
+ * Callback type, called when an isomorphism was found
+ * 
+ * See the details at the documentation of \ref
+ * igraph_isomorphic_function_vf2().
+ * \param map12 The mapping from the first graph to the second.
+ * \param map21 The mapping from the second graph to the first, the
+ *   inverse of \p map12 basically.
+ * \param arg This extra argument was passed to \ref
+ *   igraph_isomorphic_function_vf2() when it was called.
+ * \return Boolean, whether to continue with the isomorphism search.
+ */
+typedef igraph_bool_t igraph_isohandler_t(const igraph_vector_t *map12, 
+					  const igraph_vector_t *map21, void *arg);
+
+int igraph_isomorphic_vf2(const igraph_t *graph1, const igraph_t *graph2, 
+			  igraph_bool_t *iso, igraph_vector_t *map12, 
+			  igraph_vector_t *map21);
+int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph2,
+				   igraph_vector_t *map12, igraph_vector_t *map21,
+				   igraph_isohandler_t *function,
+				   void *arg);
+int igraph_count_isomorphisms_vf2(const igraph_t *graph1, const igraph_t *graph2, 
+				  igraph_integer_t *count);
+int igraph_get_isomorphisms_vf2(const igraph_t *graph1,
+				const igraph_t *graph2,
+				igraph_vector_ptr_t *maps);
+
+int igraph_subisomorphic_vf2(const igraph_t *graph1, const igraph_t *graph2, 
+			     igraph_bool_t *iso, igraph_vector_t *map12, 
+			     igraph_vector_t *map21);
+int igraph_subisomorphic_function_vf2(const igraph_t *graph1, 
+				      const igraph_t *graph2,
+				      igraph_vector_t *map12,
+				      igraph_vector_t *map21,
+				      igraph_isohandler_t *function,
+				      void *arg);
+int igraph_count_subisomorphisms_vf2(const igraph_t *graph1, const igraph_t *graph2, 
+				     igraph_integer_t *count);
+int igraph_get_subisomorphisms_vf2(const igraph_t *graph1,
+				   const igraph_t *graph2,
+				   igraph_vector_ptr_t *maps);
+
+/* BLISS family */
+/**
+ * \struct igraph_bliss_info_t 
+ * Information about a BLISS run
+ * 
+ * Some secondary information found by the BLISS algorithm is stored
+ * here. It is useful if you wany to study the internal working of the
+ * algorithm.
+ * \member nof_nodes The number of nodes in the search tree.
+ * \member nof_leaf_nodes The number of leaf nodes in the search tree.
+ * \member nof_bad_nodes Number of bad nodes.
+ * \member nof_canupdates Number of canrep updates.
+ * \member max_level Maximum level.
+ * \member group_size The size of the automorphism group of the graph,
+ *    given as a string. It should be deallocated via
+ *    <function>free()</function> if not needed any more.
+ * 
+ * See http://www.tcs.hut.fi/Software/bliss/index.html
+ * for details about the algorithm and these parameters.
+ */
+typedef struct igraph_bliss_info_t {
+  unsigned long nof_nodes;
+  unsigned long nof_leaf_nodes;
+  unsigned long nof_bad_nodes;
+  unsigned long nof_canupdates;
+  unsigned long max_level;
+  char *group_size;
+} igraph_bliss_info_t;
+
+/**
+ * \typedef igraph_bliss_sh_t
+ * Splitting heuristics for BLISS
+ * 
+ * \enumval IGRAPH_BLISS_F First non-singleton cell.
+ * \enumval IGRAPH_BLISS_FL First largest non-singleton cell.
+ * \enumval IGRAPH_BLISS_FS First smallest non-singleton cell.
+ * \enumval IGRAPH_BLISS_FM First maximally non-trivially connected
+ *      non-singleton cell.
+ * \enumval IGRAPH_BLISS_FLM Largest maximally non-trivially connected
+ *      non-singleton cell.
+ * \enumval IGRAPH_BLISS_FSM Smallest maximally non-trivially
+ *      connected non-singletion cell.
+ */
+
+typedef enum { IGRAPH_BLISS_F=0, IGRAPH_BLISS_FL, 
+	       IGRAPH_BLISS_FS, IGRAPH_BLISS_FM, 
+	       IGRAPH_BLISS_FLM, IGRAPH_BLISS_FSM } igraph_bliss_sh_t;
+
+int igraph_canonical_permutation(const igraph_t *graph, igraph_vector_t *labeling, 
+				 igraph_bliss_sh_t sh, igraph_bliss_info_t *info);
+int igraph_isomorphic_bliss(const igraph_t *graph1, const igraph_t *graph2,
+			    igraph_bool_t *iso, igraph_vector_t *map12, 
+			    igraph_vector_t *map21,
+			    igraph_bliss_sh_t sh1, igraph_bliss_sh_t sh2, 
+			    igraph_bliss_info_t *info1, igraph_bliss_info_t *info2);
+
+int igraph_automorphisms(const igraph_t *graph,
+			 igraph_bliss_sh_t sh, igraph_bliss_info_t *info);
+
+/* Functions for 3-4 graphs */
+int igraph_isomorphic_34(const igraph_t *graph1, const igraph_t *graph2, 
+			 igraph_bool_t *iso);
+int igraph_isoclass(const igraph_t *graph, igraph_integer_t *isoclass);
 int igraph_isoclass_subgraph(const igraph_t *graph, igraph_vector_t *vids,
-			     int *isoclass);
+			     igraph_integer_t *isoclass);
 int igraph_isoclass_create(igraph_t *graph, igraph_integer_t size,
 			   igraph_integer_t number, igraph_bool_t directed);
-int igraph_isomorphic_vf2(const igraph_t *graph1, const igraph_t *graph2, 
-			  igraph_bool_t *iso);
+
 
 /* -------------------------------------------------- */
 /* Graph motifs                                       */
@@ -1058,6 +1278,11 @@ int igraph_motifs_randesu_estimate(const igraph_t *graph, igraph_integer_t *est,
 				   const igraph_vector_t *sample);
 int igraph_motifs_randesu_no(const igraph_t *graph, igraph_integer_t *no,
 			     int size, const igraph_vector_t *cut_prob);
+int igraph_dyad_census(const igraph_t *graph, igraph_integer_t *mut,
+		       igraph_integer_t *asym, igraph_integer_t *null);
+int igraph_triad_census(const igraph_t *igraph, igraph_vector_t *res);
+int igraph_triad_census_24(const igraph_t *graph, igraph_integer_t *res2,
+			   igraph_integer_t *res4);
 
 /* -------------------------------------------------- */
 /* Progress handlers                                  */
@@ -1072,6 +1297,14 @@ igraph_progress_handler_t *
 igraph_set_progress_handler(igraph_progress_handler_t new_handler);
 
 int igraph_progress(const char *message, igraph_real_t percent, void *data);
+
+#define IGRAPH_PROGRESS(message, percent, data) \
+  do { \
+    if (igraph_progress((message), (percent), (data)) != IGRAPH_SUCCESS) { \
+      IGRAPH_FINALLY_FREE(); \
+      return IGRAPH_INTERRUPTED; \
+    } \
+  } while (0)
 
 /* -------------------------------------------------- */
 /* Graph operators                                    */
@@ -1476,6 +1709,7 @@ int igraph_revolver_e(const igraph_t *graph,
 		     igraph_integer_t niter,
 		     const igraph_vector_t *cats,
 		     igraph_vector_t *kernel,
+		     igraph_vector_t *st,
 		     igraph_vector_t *sd,
 		     igraph_vector_t *norm,
 		     igraph_vector_t *cites,
@@ -2077,12 +2311,12 @@ int igraph_revolver_error2_air(const igraph_t *graph,
 			       igraph_real_t *lognull);
 
 /* Should be moved to to types.h? */
-typedef struct igraph_i_lazy_adjedgelist_t {
+typedef struct igraph_lazy_adjedgelist_t {
   const igraph_t *graph;
   igraph_integer_t length;
   igraph_vector_t **adjs;
   igraph_neimode_t mode;
-} igraph_i_lazy_adjedgelist_t;
+} igraph_lazy_adjedgelist_t;
 
 /* Non-citation networks */
 
@@ -2100,7 +2334,7 @@ int igraph_revolver_d_d(const igraph_t *graph,
 			const igraph_matrix_t *debug,
 			igraph_vector_ptr_t *debugres);
 int igraph_revolver_mes_d_d(const igraph_t *graph, 
-			    igraph_i_lazy_adjedgelist_t *adjlist,
+			    igraph_lazy_adjedgelist_t *adjlist,
 			    igraph_matrix_t *kernel,
 			    igraph_matrix_t *sd,
 			    igraph_matrix_t *norm,
@@ -2115,7 +2349,7 @@ int igraph_revolver_mes_d_d(const igraph_t *graph,
 			    igraph_integer_t pno_of_events,
 			    igraph_integer_t pmaxdegree);
 int igraph_revolver_st_d_d(const igraph_t *graph,
-			   igraph_i_lazy_adjedgelist_t *adjlist,
+			   igraph_lazy_adjedgelist_t *adjlist,
 			   igraph_vector_t *st,
 			   const igraph_matrix_t *kernel,
 			   const igraph_vector_t *vtime,
@@ -2124,7 +2358,7 @@ int igraph_revolver_st_d_d(const igraph_t *graph,
 			   const igraph_vector_t *etimeidx,
 			   igraph_integer_t pno_of_events);
 int igraph_revolver_exp_d_d(const igraph_t *graph,
-			    igraph_i_lazy_adjedgelist_t *adjlist,
+			    igraph_lazy_adjedgelist_t *adjlist,
 			    igraph_matrix_t *expected,
 			    const igraph_matrix_t *kernel,
 			    const igraph_vector_t *st,
@@ -2135,7 +2369,7 @@ int igraph_revolver_exp_d_d(const igraph_t *graph,
 			    igraph_integer_t pno_of_events,
 			    igraph_integer_t pmaxdegree);
 int igraph_revolver_error_d_d(const igraph_t *graph,
-			      igraph_i_lazy_adjedgelist_t *adjlist,
+			      igraph_lazy_adjedgelist_t *adjlist,
 			      const igraph_matrix_t *kernel,
 			      const igraph_vector_t *st,
 			      const igraph_vector_t *vtime,
@@ -2163,7 +2397,7 @@ int igraph_revolver_p_p(const igraph_t *graph,
 			const igraph_matrix_t *debug,
 			igraph_vector_ptr_t *debugres);
 int igraph_revolver_mes_p_p(const igraph_t *graph,
-			    igraph_i_lazy_adjedgelist_t *adjlist,
+			    igraph_lazy_adjedgelist_t *adjlist,
 			    igraph_matrix_t *kernel,
 			    igraph_matrix_t *sd,
 			    igraph_matrix_t *norm,
@@ -2180,7 +2414,7 @@ int igraph_revolver_mes_p_p(const igraph_t *graph,
 			    const igraph_vector_t *eventsizes,
 			    igraph_integer_t pmaxpapers);
 int igraph_revolver_st_p_p(const igraph_t *graph,
-			   igraph_i_lazy_adjedgelist_t *adjlist,
+			   igraph_lazy_adjedgelist_t *adjlist,
 			   igraph_vector_t *st,
 			   const igraph_matrix_t *kernel,
 			   const igraph_vector_t *vtime,
@@ -2192,7 +2426,7 @@ int igraph_revolver_st_p_p(const igraph_t *graph,
 			   const igraph_vector_t *eventsizes,
 			   igraph_integer_t pmaxpapers);
 int igraph_revolver_exp_p_p(const igraph_t *graph,
-			    igraph_i_lazy_adjedgelist_t *adjlist,
+			    igraph_lazy_adjedgelist_t *adjlist,
 			    igraph_matrix_t *expected,
 			    const igraph_matrix_t *kernel,
 			    const igraph_vector_t *st,
@@ -2205,7 +2439,7 @@ int igraph_revolver_exp_p_p(const igraph_t *graph,
 			    const igraph_vector_t *eventsizes,
 			    igraph_integer_t pmaxpapers);
 int igraph_revolver_error_p_p(const igraph_t *graph,
-			      igraph_i_lazy_adjedgelist_t *adjlist,
+			      igraph_lazy_adjedgelist_t *adjlist,
 			      const igraph_matrix_t *kernel,
 			      const igraph_vector_t *st,
 			      const igraph_vector_t *vtime,
@@ -2220,6 +2454,265 @@ int igraph_revolver_error_p_p(const igraph_t *graph,
 			      igraph_real_t *lognull);
 
 /* -------------------------------------------------- */
+/* Maximum likelihood revolver                        */
+/* -------------------------------------------------- */
+
+int igraph_revolver_ml_d(const igraph_t *graph,
+			 igraph_integer_t niter,
+			 igraph_vector_t *kernel,
+			 igraph_vector_t *cites,
+			 igraph_real_t delta,
+			 const igraph_vector_t *filter,
+			 igraph_real_t *logprob,
+			 igraph_real_t *logmax);
+
+int igraph_revolver_probs_d(const igraph_t *graph,
+			    const igraph_vector_t *kernel,
+			    igraph_vector_t *logprobs,
+			    igraph_vector_t *logcited,
+			    igraph_vector_t *logciting,
+			    igraph_bool_t ntk);
+
+int igraph_revolver_ml_de(const igraph_t *graph,
+			  igraph_integer_t niter,
+			  igraph_matrix_t *kernel,
+			  const igraph_vector_t *cats,
+			  igraph_matrix_t *cites,
+			  igraph_real_t delta,
+			  const igraph_vector_t *filter,
+			  igraph_real_t *logprob,
+			  igraph_real_t *logmax);
+
+int igraph_revolver_probs_de(const igraph_t *graph,
+			     const igraph_matrix_t *kernel,
+			     const igraph_vector_t *cats,
+			     igraph_vector_t *logprobs,
+			     igraph_vector_t *logcited,
+			     igraph_vector_t *logciting);
+
+int igraph_revolver_ml_ade(const igraph_t *graph,
+			   igraph_integer_t niter,
+			   igraph_array3_t *kernel,
+			   const igraph_vector_t *cats,
+			   igraph_array3_t *cites,
+			   igraph_integer_t pagebins,
+			   igraph_real_t delta,
+			   const igraph_vector_t *filter,
+			   igraph_real_t *logprob,
+			   igraph_real_t *logmax);
+
+int igraph_revolver_probs_ade(const igraph_t *graph,
+			      const igraph_array3_t *kernel,
+			      const igraph_vector_t *cats,
+			      igraph_vector_t *logprobs,
+			      igraph_vector_t *logcited,
+			      igraph_vector_t *logciting);
+
+int igraph_revolver_ml_f(const igraph_t *graph,
+			 igraph_integer_t niter,
+			 igraph_vector_t *kernel,
+			 igraph_vector_t *cites,
+			 igraph_real_t delta,
+			 igraph_real_t *logprob,
+			 igraph_real_t *logmax);
+
+int igraph_revolver_ml_df(const igraph_t *graph,
+			  igraph_integer_t niter,
+			  igraph_matrix_t *kernel,
+			  igraph_matrix_t *cites,
+			  igraph_real_t delta,
+			  igraph_real_t *logprob,
+			  igraph_real_t *logmax);
+
+int igraph_revolver_ml_l(const igraph_t *graph,
+			 igraph_integer_t niter,
+			 igraph_vector_t *kernel,
+			 igraph_vector_t *cites,
+			 igraph_integer_t pagebins,
+			 igraph_real_t delta,
+			 igraph_real_t *logprob,
+			 igraph_real_t *logmax);
+
+int igraph_revolver_ml_ad(const igraph_t *graph,
+			  igraph_integer_t niter,
+			  igraph_matrix_t *kernel,
+			  igraph_matrix_t *cites,
+			  igraph_integer_t pagebins,
+			  igraph_real_t delta,
+			  const igraph_vector_t *filter,
+			  igraph_real_t *logprob,
+			  igraph_real_t *logmax);
+
+int igraph_revolver_probs_ad(const igraph_t *graph,
+			     const igraph_matrix_t *kernel,
+			     igraph_vector_t *logprobs,
+			     igraph_vector_t *logcited,
+			     igraph_vector_t *logciting,
+			     igraph_bool_t ntk);
+
+int igraph_revolver_ml_D(const igraph_t *graph,
+			 igraph_vector_t *res,
+			 igraph_real_t *Fmin,			 
+			 igraph_real_t abstol, igraph_real_t reltol, int maxit,
+			 igraph_scalar_function_t *A_fun,
+			 igraph_vector_function_t *dA_fun,
+			 const igraph_vector_t *filter,
+			 igraph_integer_t *fncount, igraph_integer_t *grcount);
+
+int igraph_revolver_ml_D_alpha(const igraph_t *graph,
+			       igraph_real_t *alpha, igraph_real_t *Fmin,
+			       igraph_real_t abstol, igraph_real_t reltol, 
+			       int maxit, const igraph_vector_t *filter,
+			       igraph_integer_t *fncount, 
+			       igraph_integer_t *grcount);
+
+int igraph_revolver_ml_D_alpha_a(const igraph_t *graph,
+				 igraph_real_t *alpha, igraph_real_t *a,
+				 igraph_real_t *Fmin,
+				 igraph_real_t abstol, igraph_real_t reltol,
+				 int maxit, const igraph_vector_t *filter,
+				 igraph_integer_t *fncount, 
+				 igraph_integer_t *grcount);
+
+int igraph_revolver_ml_DE(const igraph_t *graph,
+			  const igraph_vector_t *cats,
+			  igraph_vector_t *res,
+			  igraph_real_t *Fmin,
+			  igraph_real_t abstol, igraph_real_t reltol, int maxit,
+			  igraph_scalar_function_t *A_fun,
+			  igraph_vector_function_t *dA_fun,
+			  const igraph_vector_t *filter,
+			  igraph_integer_t *fncount, 
+			  igraph_integer_t *grcount,
+			  igraph_vector_t *lastderiv);
+
+int igraph_revolver_ml_DE_alpha_a(const igraph_t *graph,
+				  const igraph_vector_t *cats,
+				  igraph_real_t *alpha, igraph_real_t *a,
+				  igraph_vector_t *coeffs,
+				  igraph_real_t *Fmin,
+				  igraph_real_t abstol, igraph_real_t reltol,
+				  int maxit, const igraph_vector_t *filter,
+				  igraph_integer_t *fncount,
+				  igraph_integer_t *grcount);
+
+int igraph_revolver_ml_AD(const igraph_t *graph,
+			  igraph_vector_t *res,
+			  igraph_real_t *Fmin,
+			  igraph_real_t abstol, igraph_real_t reltol, int maxit,
+			  igraph_scalar_function_t *A_fun,
+			  igraph_vector_function_t *dA_fun,
+			  int agebins, const igraph_vector_t *filter,
+			  igraph_integer_t *fncount, 
+			  igraph_integer_t *grcount,
+			  igraph_vector_t *lastderiv);
+
+int igraph_revolver_ml_AD_alpha_a_beta(const igraph_t *graph,
+				       igraph_real_t *alpha, igraph_real_t *a,
+				       igraph_real_t *beta, igraph_real_t *Fmin,
+				       igraph_real_t abstol, igraph_real_t reltol,
+				       int maxit, int agebins, 
+				       const igraph_vector_t *filter,
+				       igraph_integer_t *fncount,
+				       igraph_integer_t *grcount);
+
+int igraph_revolver_ml_AD_dpareto(const igraph_t *graph,
+				  igraph_real_t *alpha, igraph_real_t *a,
+				  igraph_real_t *paralpha, igraph_real_t *parbeta,
+				  igraph_real_t *parscale,
+				  igraph_real_t *Fmin,
+				  igraph_real_t abstol, igraph_real_t reltol,
+				  int maxit, int agebins, 
+				  const igraph_vector_t *filter,
+				  igraph_integer_t *fncount,
+				  igraph_integer_t *grcount);
+
+int igraph_revolver_ml_AD_dpareto_eval(const igraph_t *graph,
+				       igraph_real_t alpha, igraph_real_t a,
+				       igraph_real_t paralpha, 
+				       igraph_real_t parbeta,
+				       igraph_real_t parscale,
+				       igraph_real_t *value,
+				       igraph_vector_t *deriv,
+				       int agebins,
+				       const igraph_vector_t *filter);
+
+
+
+int igraph_revolver_ml_ADE(const igraph_t *graph,
+			   const igraph_vector_t *cats,
+			   igraph_vector_t *res,
+			   igraph_real_t *Fmin,
+			   igraph_real_t abstol, igraph_real_t reltol, int maxit,
+			   igraph_scalar_function_t *A_fun,
+			   igraph_vector_function_t *dA_fun,
+			   int agebins, const igraph_vector_t *filter,
+			   igraph_integer_t *fncount, 
+			   igraph_integer_t *grcount,
+			   igraph_vector_t *lastderiv);
+
+int igraph_revolver_probs_ADE(const igraph_t *graph,
+			      igraph_scalar_function_t *A_fun,
+			      const igraph_matrix_t *par,
+			      const igraph_vector_t *cats,
+			      const igraph_vector_t *gcats,
+			      int agebins,
+			      igraph_vector_t *logprobs,
+			      igraph_vector_t *logcited,
+			      igraph_vector_t *logciting);
+
+int igraph_revolver_ml_ADE_alpha_a_beta(const igraph_t *graph,
+					const igraph_vector_t *cats,
+					igraph_real_t *alpha, igraph_real_t *a,
+					igraph_real_t *beta, igraph_vector_t *coeffs,
+					igraph_real_t *Fmin,
+					igraph_real_t abstol, igraph_real_t reltol,
+					int maxit, int agebins, 
+					const igraph_vector_t *filter,
+					igraph_integer_t *fncount,
+					igraph_integer_t *grcount);
+
+int igraph_revolver_ml_ADE_dpareto(const igraph_t *graph,
+				   const igraph_vector_t *cats,
+				   igraph_real_t *alpha, igraph_real_t *a,
+				   igraph_real_t *paralpha, igraph_real_t *parbeta,
+				   igraph_real_t *parscale, igraph_vector_t *coeffs,
+				   igraph_real_t *Fmin,
+				   igraph_real_t abstol, igraph_real_t reltol,
+				   int maxit, int agebins, 
+				   const igraph_vector_t *filter,
+				   igraph_integer_t *fncount,
+				   igraph_integer_t *grcount);
+
+int igraph_revolver_ml_ADE_dpareto_eval(const igraph_t *graph,
+					const igraph_vector_t *cats,
+					igraph_real_t alpha, igraph_real_t a,
+					igraph_real_t paralpha, 
+					igraph_real_t parbeta,
+					igraph_real_t parscale,
+					const igraph_vector_t *coeffs,
+					igraph_real_t *value,
+					igraph_vector_t *deriv,
+					int agebins,
+					const igraph_vector_t *filter);
+
+int igraph_revolver_ml_ADE_dpareto_evalf(const igraph_t *graph,
+					 const igraph_vector_t *cats,
+					 const igraph_matrix_t *par,
+					 igraph_vector_t *value,
+					 int agebins, 
+					 const igraph_vector_t *filter);
+
+int igraph_revolver_probs_ADE_dpareto(const igraph_t *graph,
+				      const igraph_matrix_t *par,
+				      const igraph_vector_t *cats,
+				      const igraph_vector_t *gcats,
+				      int agebins,
+				      igraph_vector_t *logprobs,
+				      igraph_vector_t *logcited,
+				      igraph_vector_t *logciting);
+
+/* -------------------------------------------------- */
 /* Other, not graph related                           */
 /* -------------------------------------------------- */
 
@@ -2229,69 +2722,135 @@ int igraph_random_sample(igraph_vector_t *res, igraph_integer_t l, igraph_intege
 			 igraph_integer_t length);
 int igraph_convex_hull(const igraph_matrix_t *data, igraph_vector_t *resverts,
 		       igraph_matrix_t *rescoords);
+int igraph_zeroin(igraph_real_t *ax, igraph_real_t *bx,
+		  igraph_real_t (*f)(igraph_real_t x, void *info),
+		  void *info, igraph_real_t *Tol, int *Maxit, igraph_real_t *res);
+int igraph_bfgs(igraph_vector_t *b, igraph_real_t *Fmin, 
+		igraph_scalar_function_t fminfn, igraph_vector_function_t fmingr,
+		int maxit, int trace,
+		igraph_real_t abstol, igraph_real_t reltol, int nREPORT, void *ex,
+		igraph_integer_t *fncount, igraph_integer_t *grcount);
+
+typedef struct igraph_adjlist_t { 
+  igraph_integer_t length;
+  igraph_vector_t *adjs;
+} igraph_adjlist_t;
+
+int igraph_adjlist_init(const igraph_t *graph, igraph_adjlist_t *al, 
+			  igraph_neimode_t mode);
+int igraph_adjlist_init_complementer(const igraph_t *graph,
+				     igraph_adjlist_t *al, 
+				     igraph_neimode_t mode,
+				     igraph_bool_t loops);
+void igraph_adjlist_destroy(igraph_adjlist_t *al);
+void igraph_adjlist_sort(igraph_adjlist_t *al);
+int igraph_adjlist_simplify(igraph_adjlist_t *al);
+/* igraph_vector_t *igraph_adjlist_get(const igraph_adjlist_t *al,  */
+/* 			       igraph_integer_t no); */
+/**
+ * \define igraph_adjlist_get
+ * Query a vector in an adjlist
+ * 
+ * Returns a pointer to an <type>igraph_vector_t</type> object from an
+ * adjacency list. The vector can be modified as desired. 
+ * \param al The adjacency list object.
+ * \param no The vertex of which the vertex of adjacent vertices are
+ *   returned.
+ * \return Pointer to the <type>igraph_vector_t</type> object.
+ * 
+ * Time complexity: O(1).
+ */
+#define igraph_adjlist_get(al,no) (&(al)->adjs[(long int)(no)])
+
+typedef struct igraph_adjedgelist_t {
+  igraph_integer_t length;
+  igraph_vector_t *adjs;
+} igraph_adjedgelist_t;
+
+int igraph_adjedgelist_init(const igraph_t *graph, 
+			    igraph_adjedgelist_t *eal, 
+			    igraph_neimode_t mode);
+void igraph_adjedgelist_destroy(igraph_adjedgelist_t *ael);
+/**
+ * \define igraph_adjedgelist_get
+ * Query a vector in an adjedgelist
+ *
+ * Returns a pointer to an <type>igraph_vector_t</type> object from an
+ * adjacency list containing edge ids. The vector can be modified,
+ * resized, etc. as desired. 
+ * \param graph ael The edge adjacency list.
+ * \param no The vertex of which the adjacent edges are returned.
+ * \return Pointer to an <type>igraph_vector_t</type> object.
+ * 
+ * Time complexity: O(1).
+ */
+#define igraph_adjedgelist_get(ael,no) (&(ael)->adjs[(long int)(no)])
 
 /* -------------------------------------------------- */
 /* For internal use only, should move to other header */
 /* -------------------------------------------------- */
 
-typedef struct igraph_i_adjlist_t { 
-  igraph_integer_t length;
-  igraph_vector_t *adjs;
-} igraph_i_adjlist_t;
-
-int igraph_i_adjlist_init(const igraph_t *graph, igraph_i_adjlist_t *al, 
-			  igraph_neimode_t mode);
-int igraph_i_adjlist_init_complementer(const igraph_t *graph,
-				       igraph_i_adjlist_t *al, 
-				       igraph_neimode_t mode,
-				       igraph_bool_t loops);
-void igraph_i_adjlist_destroy(igraph_i_adjlist_t *al);
-void igraph_i_adjlist_sort(igraph_i_adjlist_t *al);
-int igraph_i_adjlist_simplify(igraph_i_adjlist_t *al);
-/* igraph_vector_t *igraph_i_adjlist_get(const igraph_i_adjlist_t *al,  */
-/* 			       igraph_integer_t no); */
-#define igraph_i_adjlist_get(al, no) (&(al)->adjs[(long int)(no)])
-
-typedef struct igraph_i_adjedgelist_t {
-  igraph_integer_t length;
-  igraph_vector_t *adjs;
-} igraph_i_adjedgelist_t;
-
-int igraph_i_adjedgelist_init(const igraph_t *graph, 
-			      igraph_i_adjedgelist_t *eal, 
-			      igraph_neimode_t mode);
-void igraph_i_adjedgelist_destroy(igraph_i_adjedgelist_t *ael);
-#define igraph_i_adjedgelist_get(ael, no) (&(ael)->adjs[(long int)(no)])
-
-typedef struct igraph_i_lazy_adjlist_t {
+typedef struct igraph_lazy_adjlist_t {
   const igraph_t *graph;
   igraph_integer_t length;
   igraph_vector_t **adjs;
   igraph_neimode_t mode;
-  igraph_i_lazy_adlist_simplify_t simplify;
-} igraph_i_lazy_adjlist_t;
+  igraph_lazy_adlist_simplify_t simplify;
+} igraph_lazy_adjlist_t;
 
-int igraph_i_lazy_adjlist_init(const igraph_t *graph,
-			       igraph_i_lazy_adjlist_t *al,
+int igraph_lazy_adjlist_init(const igraph_t *graph,
+			       igraph_lazy_adjlist_t *al,
 			       igraph_neimode_t mode,
-			       igraph_i_lazy_adlist_simplify_t simplify);
-void igraph_i_lazy_adjlist_destroy(igraph_i_lazy_adjlist_t *al);
-/* igraph_vector_t *igraph_i_lazy_adjlist_get(igraph_i_lazy_adjlist_t *al, */
+			       igraph_lazy_adlist_simplify_t simplify);
+void igraph_lazy_adjlist_destroy(igraph_lazy_adjlist_t *al);
+/* igraph_vector_t *igraph_lazy_adjlist_get(igraph_lazy_adjlist_t *al, */
 /* 					   igraph_integer_t no); */
-#define igraph_i_lazy_adjlist_get(al, no) \
+/**
+ * \define igraph_lazy_adjlist_get
+ * Query neighbor vertices
+ * 
+ * If the function is called for the first time for a vertex then the
+ * result is stored in the adjacency list and no further query
+ * operations are needed when the neighbors of the same vertex are
+ * queried again.
+ * \param al The lazy adjacency list.
+ * \param no The vertex id to query.
+ * \return Pointer to a vector. It is allowed to modify it and
+ *   modification does not affect the original graph.
+ * 
+ * Time complexity: O(d), the number of neighbor vertices for the
+ * first time, O(1) for subsequent calls.
+ */
+#define igraph_lazy_adjlist_get(al,no) \
   ((al)->adjs[(long int)(no)] != 0 ? ((al)->adjs[(long int)(no)]) : \
-   (igraph_i_lazy_adjlist_get_real(al, no)))
-igraph_vector_t *igraph_i_lazy_adjlist_get_real(igraph_i_lazy_adjlist_t *al,
+   (igraph_lazy_adjlist_get_real(al, no)))
+igraph_vector_t *igraph_lazy_adjlist_get_real(igraph_lazy_adjlist_t *al,
 						igraph_integer_t no);
 
-int igraph_i_lazy_adjedgelist_init(const igraph_t *graph,
-				   igraph_i_lazy_adjedgelist_t *al,
+int igraph_lazy_adjedgelist_init(const igraph_t *graph,
+				   igraph_lazy_adjedgelist_t *al,
 				   igraph_neimode_t mode);
-void igraph_i_lazy_adjedgelist_destroy(igraph_i_lazy_adjedgelist_t *al);
-#define igraph_i_lazy_adjedgelist_get(al, no) \
+void igraph_lazy_adjedgelist_destroy(igraph_lazy_adjedgelist_t *al);
+/**
+ * \define igraph_lazy_adjedgelist_get
+ * Query adjacent edges
+ * 
+ * If the function is called for the first time for a vertex, then the
+ * result is stored in the adjacency list and no further query
+ * operations are needed when the adjacent edges of the same vertex are
+ * queried again.
+ * \param al The lazy adjacency list object.
+ * \param no The vertex id to query.
+ * \return Pointer to a vector. It is allowed to modify it and
+ *   modification does not affect the original graph.
+ * 
+ * Time complexity: O(d), the number of adjacent edges for the first
+ * time, O(1) for subsequent calls with the same \p no argument.
+ */
+#define igraph_lazy_adjedgelist_get(al,no) \
   ((al)->adjs[(long int)(no)] != 0 ? ((al)->adjs[(long int)(no)]) : \
-   (igraph_i_lazy_adjedgelist_get_real(al, no)))
-igraph_vector_t *igraph_i_lazy_adjedgelist_get_real(igraph_i_lazy_adjedgelist_t *al,
+   (igraph_lazy_adjedgelist_get_real(al, no)))
+igraph_vector_t *igraph_lazy_adjedgelist_get_real(igraph_lazy_adjedgelist_t *al,
 						    igraph_integer_t no);
 
 extern unsigned int igraph_i_isoclass_3[];

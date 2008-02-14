@@ -25,27 +25,6 @@
 #include "memory.h"
 #include "igraph.h"
 
-/**
- * \section about_attributes
- * 
- * <para>Attributes are numbers or strings (or basically any data
- * structure) associated with the vertices or edges of a graph, or
- * with the graph itself. Eg. you may associate symbolic names with
- * vertices or numeric weights with the edges of a graph. </para>
- * 
- * <para>Attribute handling has been largely changed in \a igraph
- * 0.2. From now on it is possible to attach an attribute handling
- * interface to \a igraph. This is simply a table of functions, of
- * type \ref igraph_attribute_table_t. This functions are invoked to
- * notify the attribute handling code about the structural changes in
- * a graph. See the documentation of this type for details.</para>
- *
- * <para>By default there is no attribute interface attached to \a igraph,
- * to attach one, call \ref igraph_i_set_attribute_table with your new
- * table. </para>
- *
- */
-
 int igraph_i_attribute_init(igraph_t *graph, void *attr) {
   graph->attr=0;
   if (igraph_i_attribute_table) {
@@ -61,9 +40,10 @@ void igraph_i_attribute_destroy(igraph_t *graph) {
   }
 }
   
-int igraph_i_attribute_copy(igraph_t *to, const igraph_t *from) {
+int igraph_i_attribute_copy(igraph_t *to, const igraph_t *from, igraph_bool_t ga,
+			    igraph_bool_t va, igraph_bool_t ea) {
   if (igraph_i_attribute_table) {
-    return igraph_i_attribute_table->copy(to, from);
+    return igraph_i_attribute_table->copy(to, from, ga, va, ea);
   } else {
     return 0;
     }
@@ -217,6 +197,8 @@ igraph_attribute_table_t *igraph_i_attribute_table=0;
 
 /**
  * \function igraph_i_set_attribute_table
+ * \brief Attach an attribute table.
+ * 
  * This function attaches attribute handling code to the igraph library.
  * \param table Pointer to an \ref igraph_attribute_table_t object
  *    containing the functions for attribute manipulation. Supply \c

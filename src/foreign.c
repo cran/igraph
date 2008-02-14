@@ -125,8 +125,9 @@ igraph_trie_t *igraph_ncol_trie=0;
 /**
  * \ingroup loadsave
  * \function igraph_read_graph_ncol
- * \brief Reads a <code>.ncol</code> file used by LGL, also
- * useful for creating graphs from \quote named\endquote (and
+ * \brief Reads a <code>.ncol</code> file used by LGL.
+ *
+ * Also useful for creating graphs from \quote named\endquote (and
  * optionally weighted) edge lists. 
  * 
  * </para><para>
@@ -580,13 +581,13 @@ int igraph_read_graph_pajek(igraph_t *graph, FILE *instream) {
     if (rec->type == IGRAPH_ATTRIBUTE_NUMERIC) {
       igraph_vector_t *vec=(igraph_vector_t*) rec->value;
       igraph_vector_destroy(vec);
-      Free(vec);
+      igraph_Free(vec);
     } else if (rec->type==IGRAPH_ATTRIBUTE_STRING) {
       igraph_strvector_t *strvec=(igraph_strvector_t *)rec->value;
       igraph_strvector_destroy(strvec);
-      Free(strvec);
+      igraph_Free(strvec);
     }
-    Free(rec);
+    igraph_Free(rec);
   }
 
   for (i=0; i<igraph_vector_ptr_size(&eattrs); i++) {
@@ -594,13 +595,13 @@ int igraph_read_graph_pajek(igraph_t *graph, FILE *instream) {
     if (rec->type == IGRAPH_ATTRIBUTE_NUMERIC) {
       igraph_vector_t *vec=(igraph_vector_t*) rec->value;
       igraph_vector_destroy(vec);
-      Free(vec);
+      igraph_Free(vec);
     } else if (rec->type==IGRAPH_ATTRIBUTE_STRING) {
       igraph_strvector_t *strvec=(igraph_strvector_t *)rec->value;
       igraph_strvector_destroy(strvec);
-      Free(strvec);
+      igraph_Free(strvec);
     }
-    Free(rec);
+    igraph_Free(rec);
   }
 
   igraph_vector_destroy(&edges);  
@@ -615,6 +616,7 @@ int igraph_read_graph_pajek(igraph_t *graph, FILE *instream) {
 
 /**
  * \function igraph_read_graph_dimacs
+ * \brief Read a graph in DIMACS format.
  * 
  * This function reads the DIMACS file format, more specifically the 
  * version for network flow problems, see the files at
@@ -658,9 +660,11 @@ int igraph_read_graph_pajek(igraph_t *graph, FILE *instream) {
  */
 
 int igraph_read_graph_dimacs(igraph_t *graph, FILE *instream,
+			     igraph_strvector_t *problem,
+			     igraph_vector_t *label,
 			     igraph_integer_t *source, 
-			     igraph_integer_t *target, 
-			     igraph_vector_t *capacity, 
+			     igraph_integer_t *target,
+			     igraph_vector_t *capacity,			     
 			     igraph_bool_t directed) {
   
   igraph_vector_t edges;
@@ -668,9 +672,13 @@ int igraph_read_graph_dimacs(igraph_t *graph, FILE *instream,
   long int no_of_edges=-1;
   long int tsource=-1;
   long int ttarget=-1;
-  char problem[6];
+  char prob[21];
   char c;      
-  
+  int problem_type=0;
+
+#define PROBLEM_EDGE  1
+#define PROBLEM_MAX   2  
+
   IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
   if (capacity) {
     igraph_vector_clear(capacity);
@@ -690,7 +698,7 @@ int igraph_read_graph_dimacs(igraph_t *graph, FILE *instream,
       IGRAPH_ERROR("parsing dimacs file failed", IGRAPH_PARSEERROR);
     }
     switch (str[0]) {
-      long int tmp;
+      long int tmp, tmp2;
       long int from, to;
       igraph_real_t cap;
 
@@ -703,41 +711,77 @@ int igraph_read_graph_dimacs(igraph_t *graph, FILE *instream,
 	IGRAPH_ERROR("reading dimacs file failed, double 'p' line", 
 		     IGRAPH_PARSEERROR);
       }
-      read=fscanf(instream, "%5s %li %li", problem, 
+      read=fscanf(instream, "%20s %li %li", prob, 
 		  &no_of_nodes, &no_of_edges);
       if (read != 3) {
 	IGRAPH_ERROR("reading dimacs file failed", IGRAPH_PARSEERROR);
       }
-      IGRAPH_CHECK(igraph_vector_reserve(&edges, no_of_edges*2));
-      if (capacity) {
-	IGRAPH_CHECK(igraph_vector_reserve(capacity, no_of_edges));
+      if (!strcmp(prob, "edge")) {
+	/* edge list */
+	problem_type=PROBLEM_EDGE;
+	if (label) {
+	  long int i;
+	  IGRAPH_CHECK(igraph_vector_resize(label, no_of_nodes));
+	  for (i=0; i<no_of_nodes; i++) {
+	    VECTOR(*label)[i]=i+1;
+	  }
+	}
+      } else if (!strcmp(prob, "max")) {
+	/* maximum flow problem */
+	problem_type=PROBLEM_MAX;
+	if (capacity) {
+	  IGRAPH_CHECK(igraph_vector_reserve(capacity, no_of_edges));
+	}
+      } else {
+	IGRAPH_ERROR("Unknown problem type, should be 'edge' or 'max'",
+		     IGRAPH_PARSEERROR);
       }
+      if (problem) {
+	igraph_strvector_clear(problem);
+	IGRAPH_CHECK(igraph_strvector_add(problem, prob));
+      }
+      IGRAPH_CHECK(igraph_vector_reserve(&edges, no_of_edges*2));
       break;
 
     case 'n':
-      read=fscanf(instream, "%li %1c", &tmp, str);
-      if (str[0]=='s') {
-	if (tsource != -1) {
-	  IGRAPH_ERROR("reading dimacsfile: multiple source vertex line", 
-		       IGRAPH_PARSEERROR);
+      /* for MAX this is either the source or target vertex,
+	 for EDGE this is a vertex label */
+      if (problem_type == PROBLEM_MAX) {
+	str[0]='x';
+	read=fscanf(instream, "%li %1s", &tmp, str);
+	if (str[0]=='s') {
+	  if (tsource != -1) {
+	    IGRAPH_ERROR("reading dimacsfile: multiple source vertex line", 
+			 IGRAPH_PARSEERROR);
+	  } else {
+	    tsource=tmp;
+	  }
+	} else if (str[0]=='t') {
+	  if (ttarget != -1) {
+	    IGRAPH_ERROR("reading dimacsfile: multiple target vertex line", 
+			 IGRAPH_PARSEERROR);
+	  } else {
+	    ttarget=tmp;
+	  }
 	} else {
-	  tsource=tmp;
-	}
-      } else if (str[0]=='t') {
-	if (ttarget != -1) {
-	  IGRAPH_ERROR("reading dimacsfile: multiple source vertex line", 
+	  IGRAPH_ERROR("invalid node descriptor line in dimacs file",
 		       IGRAPH_PARSEERROR);
-	} else {
-	  ttarget=tmp;
 	}
       } else {
-	IGRAPH_ERROR("invalid node descriptor line in dimacs file",
-		     IGRAPH_PARSEERROR);
+	read=fscanf(instream, "%li %li", &tmp, &tmp2);
+	if (label) {
+	  VECTOR(*label)[tmp]=tmp2;
+	}
       }
       
       break;
       
     case 'a':
+      /* This is valid only for MAX, a weighted edge */
+      if (problem_type != PROBLEM_MAX) { 
+	IGRAPH_ERROR("'a' lines are allowed only in MAX problem files", 
+		     IGRAPH_PARSEERROR);
+      }
       read=fscanf(instream, "%li %li %lf", &from, &to, &cap);
       if (read != 3) {
 	IGRAPH_ERROR("reading dimacs file", IGRAPH_PARSEERROR);
@@ -747,7 +791,21 @@ int igraph_read_graph_dimacs(igraph_t *graph, FILE *instream,
       if (capacity) {
 	IGRAPH_CHECK(igraph_vector_push_back(capacity, cap));
       }
-      break;           
+      break;
+      
+    case 'e':
+      /* Edge line, only in EDGE */
+      if (problem_type != PROBLEM_EDGE) {
+	IGRAPH_ERROR("'e' lines are allowed only in EDGE problem files",
+		     IGRAPH_PARSEERROR);
+      }
+      read=fscanf(instream, "%li %li", &from, &to);
+      if (read != 2) {
+	IGRAPH_ERROR("reading dimacs file", IGRAPH_PARSEERROR);
+      }
+      IGRAPH_CHECK(igraph_vector_push_back(&edges, from-1));
+      IGRAPH_CHECK(igraph_vector_push_back(&edges, to-1));
+      break;
 
     default:
       IGRAPH_ERROR("unknown line type in dimacs file", IGRAPH_PARSEERROR);
@@ -787,7 +845,7 @@ int igraph_i_read_graph_graphdb_getword(FILE *instream) {
 
 /**
  * \function igraph_read_graph_graphdb
- * Read a graph in the binary graph database format.
+ * \brief Read a graph in the binary graph database format.
  * 
  * This is a binary format, used in the graph database
  * for isomorphism testing (http://amalfi.dis.unina.it/graph/)
@@ -879,14 +937,14 @@ void igraph_i_gml_destroy_attrs(igraph_vector_ptr_t **ptr) {
       if (atrec->type == IGRAPH_ATTRIBUTE_NUMERIC) {
 	igraph_vector_t *value=(igraph_vector_t*)atrec->value;
 	igraph_vector_destroy(value);
-	Free(value);
+	igraph_Free(value);
       } else {
 	igraph_strvector_t *value=(igraph_strvector_t*)atrec->value;
 	igraph_strvector_destroy(value);
-	Free(value);
+	igraph_Free(value);
       }
-      Free(atrec->name);
-      Free(atrec);
+      igraph_Free(atrec->name);
+      igraph_Free(atrec);
     }
     igraph_vector_ptr_destroy(vec);
   }
@@ -1048,7 +1106,7 @@ int igraph_read_graph_gml(igraph_t *graph, FILE *instream) {
   /* Is is directed? */
   i=igraph_gml_tree_find(gtree, "directed", 0);
   if (i>=0 && igraph_gml_tree_type(gtree, i)==IGRAPH_I_GML_TREE_INTEGER) {
-    if (igraph_gml_tree_get_integer(gtree, i) == 0) {
+    if (igraph_gml_tree_get_integer(gtree, i) == 1) {
       directed=IGRAPH_DIRECTED;
     }
   }
@@ -1074,7 +1132,7 @@ int igraph_read_graph_gml(igraph_t *graph, FILE *instream) {
 	IGRAPH_CHECK(igraph_trie_get(&vattrnames, name, &trieid));
 	if (trieid==triesize) {
 	  /* new attribute */
-	  igraph_i_attribute_record_t *atrec=Calloc(1, igraph_i_attribute_record_t);
+	  igraph_i_attribute_record_t *atrec=igraph_Calloc(1, igraph_i_attribute_record_t);
 	  int type=igraph_gml_tree_type(node, j);
 	  if (!atrec) {
 	    IGRAPH_ERROR("Cannot read GML file", IGRAPH_ENOMEM);
@@ -1138,7 +1196,7 @@ int igraph_read_graph_gml(igraph_t *graph, FILE *instream) {
 	  IGRAPH_CHECK(igraph_trie_get(&eattrnames, name, &trieid));
 	  if (trieid==triesize) {
 	    /* new attribute */
-	    igraph_i_attribute_record_t *atrec=Calloc(1, igraph_i_attribute_record_t);
+	    igraph_i_attribute_record_t *atrec=igraph_Calloc(1, igraph_i_attribute_record_t);
 	    int type=igraph_gml_tree_type(edge, j);
 	    if (!atrec) {
 	      IGRAPH_ERROR("Cannot read GML file", IGRAPH_ENOMEM);
@@ -1182,11 +1240,11 @@ int igraph_read_graph_gml(igraph_t *graph, FILE *instream) {
     igraph_i_attribute_record_t *atrec=VECTOR(vattrs)[i];
     int type=atrec->type;
     if (type == IGRAPH_ATTRIBUTE_NUMERIC) {
-      igraph_vector_t *p=Calloc(1, igraph_vector_t);
+      igraph_vector_t *p=igraph_Calloc(1, igraph_vector_t);
       atrec->value=p;
       IGRAPH_CHECK(igraph_vector_init(p, no_of_nodes));
     } else if (type == IGRAPH_ATTRIBUTE_STRING) {
-      igraph_strvector_t *p=Calloc(1, igraph_strvector_t);
+      igraph_strvector_t *p=igraph_Calloc(1, igraph_strvector_t);
       atrec->value=p;
       IGRAPH_CHECK(igraph_strvector_init(p, no_of_nodes));
     } else {
@@ -1198,11 +1256,11 @@ int igraph_read_graph_gml(igraph_t *graph, FILE *instream) {
     igraph_i_attribute_record_t *atrec=VECTOR(eattrs)[i];
     int type=atrec->type;
     if (type == IGRAPH_ATTRIBUTE_NUMERIC) {
-      igraph_vector_t *p=Calloc(1, igraph_vector_t);
+      igraph_vector_t *p=igraph_Calloc(1, igraph_vector_t);
       atrec->value=p;
       IGRAPH_CHECK(igraph_vector_init(p, no_of_edges));
     } else if (type == IGRAPH_ATTRIBUTE_STRING) {
-      igraph_strvector_t *p=Calloc(1, igraph_strvector_t);
+      igraph_strvector_t *p=igraph_Calloc(1, igraph_strvector_t);
       atrec->value=p;
       IGRAPH_CHECK(igraph_strvector_init(p, no_of_edges));
     } else {
@@ -2112,6 +2170,7 @@ int igraph_write_graph_pajek(const igraph_t *graph, FILE *outstream) {
 
 /**
  * \function igraph_write_graph_dimacs
+ * \brief Write a graph in DIMACS format.
  * 
  * This function writes a graph to an output stream in DIMACS format,
  * describing a maximum flow problem.
@@ -2192,7 +2251,7 @@ int igraph_i_gml_convert_to_key(const char *orig, char **key) {
   for (i=0; i<len; i++) {
     if (isalnum(orig[i])) { newlen++; }
   }
-  *key=Calloc(newlen+1, char);
+  *key=igraph_Calloc(newlen+1, char);
   if (! *key) {
     IGRAPH_ERROR("Writing GML file failed", IGRAPH_ENOMEM);
   }
@@ -2277,7 +2336,7 @@ int igraph_write_graph_gml(const igraph_t *graph, FILE *outstream,
   
   CHECK(fprintf(outstream, 
 		"Creator \"igraph version %s %s\"\nVersion 1\ngraph\n[\n", 
-		IGRAPH_VERSION_STRING, creator ? creator : timestr));
+		PACKAGE_VERSION, creator ? creator : timestr));
   
   IGRAPH_STRVECTOR_INIT_FINALLY(&gnames, 0);
   IGRAPH_STRVECTOR_INIT_FINALLY(&vnames, 0);
@@ -2323,13 +2382,13 @@ int igraph_write_graph_gml(const igraph_t *graph, FILE *outstream,
     if (VECTOR(gtypes)[i] == IGRAPH_ATTRIBUTE_NUMERIC) {
       IGRAPH_CHECK(igraph_i_attribute_get_numeric_graph_attr(graph, name, &numv));
       CHECK(fprintf(outstream, "  %s %g\n", newname, VECTOR(numv)[0]));
-      Free(newname);
+      igraph_Free(newname);
     } else if (VECTOR(gtypes)[i] == IGRAPH_ATTRIBUTE_STRING) {
       char *s;
       IGRAPH_CHECK(igraph_i_attribute_get_string_graph_attr(graph, name, &strv));
       igraph_strvector_get(&strv, 0, &s);
       CHECK(fprintf(outstream, "  %s \"%s\"\n", newname, s));
-      Free(newname);
+      igraph_Free(newname);
     } else { 
       IGRAPH_WARNING("A non-numeric, non-string graph attribute ignored");
     }
@@ -2360,7 +2419,7 @@ int igraph_write_graph_gml(const igraph_t *graph, FILE *outstream,
 							       &strv));
 	igraph_strvector_get(&strv, 0, &s);
 	CHECK(fprintf(outstream, "    %s \"%s\"\n", newname, s));
-	Free(newname);
+	igraph_Free(newname);
       }
     }
     CHECK(fprintf(outstream, "  ]\n"));
@@ -2397,7 +2456,7 @@ int igraph_write_graph_gml(const igraph_t *graph, FILE *outstream,
 							     &strv));
 	igraph_strvector_get(&strv, 0, &s);
 	CHECK(fprintf(outstream, "    %s \"%s\"\n", newname, s));
-	Free(newname);
+	igraph_Free(newname);
       }
     }
     CHECK(fprintf(outstream, "  ]\n"));
@@ -2410,6 +2469,221 @@ int igraph_write_graph_gml(const igraph_t *graph, FILE *outstream,
     IGRAPH_FINALLY_CLEAN(1);
   }
 
+  igraph_strvector_destroy(&strv);
+  igraph_vector_destroy(&numv);
+  igraph_vector_destroy(&etypes);
+  igraph_vector_destroy(&vtypes);
+  igraph_vector_destroy(&gtypes);
+  igraph_strvector_destroy(&enames);
+  igraph_strvector_destroy(&vnames);
+  igraph_strvector_destroy(&gnames);
+  IGRAPH_FINALLY_CLEAN(8);
+  
+  return 0;
+}
+
+int igraph_i_dot_escape(const char *orig, char **result) {
+  /* do we have to escape the string at all? */
+  long int i, j, len=strlen(orig), newlen=0;
+  igraph_bool_t need_quote=0, is_number=1;
+  for (i=0; i<len; i++) {
+	if (isdigit(orig[i])) { newlen++; }
+	else if (orig[i] == '-' && i==0) { newlen++; }
+	else if (orig[i] == '.') {
+	  if (is_number) { newlen++; }
+	  else { need_quote=1; newlen++; }
+	} else if (orig[i] == '_') {
+	  is_number=0; newlen++;
+	} else if (orig[i] == '\\') {
+	  need_quote=1; is_number=0; newlen+=2; /* will be escaped */
+	} else if (orig[i] == '"') {
+	  need_quote=1; is_number=0; newlen+=2; /* will be escaped */
+	} else if (isalpha(orig[i])) {
+	  is_number=0; newlen++;
+	} else {
+	  is_number=0; need_quote=1; newlen++;
+	}
+  }
+  if (is_number && orig[len-1] == '.') is_number=0;
+  if (!is_number && isdigit(orig[0])) need_quote=1;
+
+  if (is_number || !need_quote) {
+	*result=strdup(orig);
+	if (!*result) IGRAPH_ERROR("Writing DOT file failed", IGRAPH_ENOMEM);
+  } else {
+	*result=igraph_Calloc(newlen+3, char);
+	(*result)[0]='"';
+	(*result)[newlen+1]='"';
+	(*result)[newlen+2]='\0';
+	for (i=0, j=1; i<len; i++) {
+	  if (orig[i] == '\\' || orig[i] == '"') (*result)[j++] = '\\';
+	  (*result)[j++] = orig[i];
+	}
+  }
+  
+  return 0;
+}
+
+/**
+ * \function igraph_write_graph_dot
+ * \brief Write the graph to a stream in DOT format
+ *
+ * DOT is the format used by the widely known GraphViz software, see
+ * http://www.graphviz.org for details. The grammar of the DOT format
+ * can be found here: http://www.graphviz.org/doc/info/lang.html
+ *
+ * </para><para>This is only a preliminary implementation, only the vertices
+ * and the edges are written but not the attributes or any visualization
+ * information.
+ *
+ * \param graph The graph to write to the stream.
+ * \param outstream The stream to write the file to.
+ *
+ * Time complexity: should be proportional to the number of characters written
+ * to the file.
+ * 
+ * \sa \ref igraph_write_graph_graphml() for a more modern format.
+ */
+int igraph_write_graph_dot(const igraph_t *graph, FILE* outstream) {
+  int ret;
+  long int i, j;
+  long int no_of_nodes=igraph_vcount(graph);
+  long int no_of_edges=igraph_ecount(graph);
+  char edgeop[3];
+  igraph_strvector_t gnames, vnames, enames;
+  igraph_vector_t gtypes, vtypes, etypes;
+  igraph_vector_t numv;
+  igraph_strvector_t strv;
+
+  IGRAPH_STRVECTOR_INIT_FINALLY(&gnames, 0);
+  IGRAPH_STRVECTOR_INIT_FINALLY(&vnames, 0);
+  IGRAPH_STRVECTOR_INIT_FINALLY(&enames, 0);
+  IGRAPH_VECTOR_INIT_FINALLY(&gtypes, 0);
+  IGRAPH_VECTOR_INIT_FINALLY(&vtypes, 0);
+  IGRAPH_VECTOR_INIT_FINALLY(&etypes, 0);
+  IGRAPH_CHECK(igraph_i_attribute_get_info(graph, 
+					   &gnames, &gtypes,
+					   &vnames, &vtypes,
+					   &enames, &etypes));  
+
+  IGRAPH_VECTOR_INIT_FINALLY(&numv, 1);
+  IGRAPH_STRVECTOR_INIT_FINALLY(&strv, 1);
+
+  CHECK(fprintf(outstream, "/* Created by igraph %s */\n",
+	PACKAGE_VERSION));
+
+  if (igraph_is_directed(graph)) {
+	CHECK(fprintf(outstream, "digraph {\n"));
+	strcpy(edgeop, "->");
+  } else {
+	CHECK(fprintf(outstream, "graph {\n"));
+	strcpy(edgeop, "--");
+  }
+
+  /* Write the graph attributes */
+  if (igraph_vector_size(&gtypes)>0) {
+	CHECK(fprintf(outstream, "  graph [\n"));
+	for (i=0; i<igraph_vector_size(&gtypes); i++) {
+	  char *name, *newname;
+	  igraph_strvector_get(&gnames, i, &name);
+	  IGRAPH_CHECK(igraph_i_dot_escape(name, &newname));
+	  if (VECTOR(gtypes)[i] == IGRAPH_ATTRIBUTE_NUMERIC) {
+		IGRAPH_CHECK(igraph_i_attribute_get_numeric_graph_attr(graph, name, &numv));
+		if (VECTOR(numv)[0] == (long)VECTOR(numv)[0])
+		  CHECK(fprintf(outstream, "    %s=%ld\n", newname, (long)VECTOR(numv)[0]));
+		else
+		  CHECK(fprintf(outstream, "    %s=%f\n", newname, VECTOR(numv)[0]));
+		igraph_Free(newname);
+	  } else if (VECTOR(gtypes)[i] == IGRAPH_ATTRIBUTE_STRING) {
+		char *s, *news;
+		IGRAPH_CHECK(igraph_i_attribute_get_string_graph_attr(graph, name, &strv));
+		igraph_strvector_get(&strv, 0, &s);
+		IGRAPH_CHECK(igraph_i_dot_escape(s, &news));
+		CHECK(fprintf(outstream, "    %s=%s\n", newname, news));
+		igraph_Free(newname);
+		igraph_Free(news);
+	  } else {
+		IGRAPH_WARNING("A non-numeric, non-string graph attribute ignored");
+	  }
+	}
+	CHECK(fprintf(outstream, "  ];\n"));
+  }
+
+  /* Write the vertices */
+  if (igraph_vector_size(&vtypes) > 0) {
+	for (i=0; i<no_of_nodes; i++) {
+	  CHECK(fprintf(outstream, "  %ld [\n", i));
+	  for (j=0; j<igraph_vector_size(&vtypes); j++) {
+		char *name, *newname;
+		igraph_strvector_get(&vnames, j, &name);
+		IGRAPH_CHECK(igraph_i_dot_escape(name, &newname));
+		if (VECTOR(vtypes)[j] == IGRAPH_ATTRIBUTE_NUMERIC) {
+		  IGRAPH_CHECK(igraph_i_attribute_get_numeric_vertex_attr(graph, name, igraph_vss_1(i), &numv));
+		  if (VECTOR(numv)[0] == (long)VECTOR(numv)[0])
+			CHECK(fprintf(outstream, "    %s=%ld\n", newname, (long)VECTOR(numv)[0]));
+		  else
+			CHECK(fprintf(outstream, "    %s=%f\n", newname, VECTOR(numv)[0]));
+		  igraph_Free(newname);
+		} else if (VECTOR(vtypes)[j] == IGRAPH_ATTRIBUTE_STRING) {
+		  char *s, *news;
+		  IGRAPH_CHECK(igraph_i_attribute_get_string_vertex_attr(graph, name, igraph_vss_1(i), &strv));
+		  igraph_strvector_get(&strv, 0, &s);
+		  IGRAPH_CHECK(igraph_i_dot_escape(s, &news));
+		  CHECK(fprintf(outstream, "    %s=%s\n", newname, news));
+		  igraph_Free(newname);
+		  igraph_Free(news);
+		} else {
+		  IGRAPH_WARNING("A non-numeric, non-string graph attribute ignored");
+		}
+	  }
+	  CHECK(fprintf(outstream, "  ];\n"));
+	}
+  } else {
+	for (i=0; i<no_of_nodes; i++)
+	  CHECK(fprintf(outstream, "  %ld;\n", i));
+  }
+  CHECK(fprintf(outstream, "\n"));
+
+  /* Write the edges */
+  if (igraph_vector_size(&etypes) > 0) {
+	for (i=0; i<no_of_edges; i++) {
+	  long int from=IGRAPH_FROM(graph, i);
+	  long int to=IGRAPH_TO(graph, i);
+	  CHECK(fprintf(outstream, "  %ld %s %ld [\n", from, edgeop, to));
+	  for (j=0; j<igraph_vector_size(&etypes); j++) {
+		char *name, *newname;
+		igraph_strvector_get(&enames, j, &name);
+		IGRAPH_CHECK(igraph_i_dot_escape(name, &newname));
+		if (VECTOR(etypes)[j] == IGRAPH_ATTRIBUTE_NUMERIC) {
+		  IGRAPH_CHECK(igraph_i_attribute_get_numeric_edge_attr(graph, name, igraph_ess_1(i), &numv));
+		  if (VECTOR(numv)[0] == (long)VECTOR(numv)[0])
+			CHECK(fprintf(outstream, "    %s=%ld\n", newname, (long)VECTOR(numv)[0]));
+		  else
+			CHECK(fprintf(outstream, "    %s=%f\n", newname, VECTOR(numv)[0]));
+		  igraph_Free(newname);
+		} else if (VECTOR(etypes)[j] == IGRAPH_ATTRIBUTE_STRING) {
+		  char *s, *news;
+		  IGRAPH_CHECK(igraph_i_attribute_get_string_edge_attr(graph, name, igraph_ess_1(i), &strv));
+		  igraph_strvector_get(&strv, 0, &s);
+		  IGRAPH_CHECK(igraph_i_dot_escape(s, &news));
+		  CHECK(fprintf(outstream, "    %s=%s\n", newname, news));
+		  igraph_Free(newname);
+		  igraph_Free(news);
+		} else {
+		  IGRAPH_WARNING("A non-numeric, non-string graph attribute ignored");
+		}
+	  }
+	  CHECK(fprintf(outstream, "  ];\n"));
+	}
+  } else {
+	for (i=0; i<no_of_edges; i++) {
+	  long int from=IGRAPH_FROM(graph, i);
+	  long int to=IGRAPH_TO(graph, i);
+	  CHECK(fprintf(outstream, "  %ld %s %ld;\n", from, edgeop, to));
+	}
+  }
+  CHECK(fprintf(outstream, "}\n"));
+  
   igraph_strvector_destroy(&strv);
   igraph_vector_destroy(&numv);
   igraph_vector_destroy(&etypes);
