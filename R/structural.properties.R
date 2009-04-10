@@ -113,14 +113,19 @@ closeness <- function(graph, v=V(graph), mode=c("all", "out", "in")) {
 }
 
 shortest.paths <- function(graph, v=V(graph), mode=c("all", "out", "in"),
-                           weights=NULL) {
+                           weights=NULL,
+                           algorithm=c("automatic", "unweighted", "dijkstra",
+                             "bellman-ford", "johnson")) {
 
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
   mode <- igraph.match.arg(mode)
-  mode <- switch(mode, "out"=1, "in"=2, "all"=3)
-
+  mode <- switch(mode, "out"=1, "in"=2, "all"=3)  
+  algorithm <- igraph.match.arg(algorithm)
+  algorithm <- switch(algorithm, "automatic"=0, "unweighted"=1,
+                      "dijkstra"=2, "bellman-ford"=3, "johnson"=4)
+  
   if (is.null(weights)) {
     if ("weight" %in% list.edge.attributes(graph)) {
       weights <- as.numeric(E(graph)$weight)
@@ -133,9 +138,14 @@ shortest.paths <- function(graph, v=V(graph), mode=c("all", "out", "in"),
     }
   }
 
+  if (! is.null(weights) && algorithm==1) {
+    weights <- NULL
+    warning("Unweighted algorithm chosen, weights ignored")
+  }
+  
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_shortest_paths", graph, as.igraph.vs(v),
-        as.numeric(mode), weights,
+        as.numeric(mode), weights, as.numeric(algorithm),
         PACKAGE="igraph")
 }
 
@@ -245,14 +255,14 @@ simplify <- function(graph, remove.multiple=TRUE,
 ##   res
 }
 
-betweenness <- function(graph, v=V(graph), directed=TRUE) {
+betweenness <- function(graph, v=V(graph), directed=TRUE, verbose=igraph.par("verbose")) {
   
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_betweenness", graph, as.igraph.vs(v),
-        as.logical(directed),
+        as.logical(directed), as.logical(verbose),
         PACKAGE="igraph")
 }
 
@@ -484,7 +494,7 @@ bonpow <- function(graph, nodes=V(graph),
 }
 
 alpha.centrality <- function(graph, nodes=V(graph), alpha=1,
-                             loops=FALSE, exo=1,
+                             loops=FALSE, exo=1, weights=NULL,
                              tol=1e-7) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
@@ -493,7 +503,22 @@ alpha.centrality <- function(graph, nodes=V(graph), alpha=1,
   exo <- rep(exo, length=vcount(graph))
   exo <- matrix(exo, nc=1)
 
-  d <- t(get.adjacency(graph))
+  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) {
+    ## weights == NULL and there is a "weight" edge attribute
+    attr <- "weight"
+  } else if (is.null(weights)) {
+    ## weights == NULL, but there is no "weight" edge attribute
+    attr <- NULL
+  } else if (any(!is.na(weights))) {
+    ## weights != NULL and weights != rep(NA, x)
+    graph <- set.edge.attribute(graph, "weight", value=as.numeric(weights))
+    attr <- "weight"
+  } else {
+    ## weights != NULL, but weights == rep(NA, x)
+    attr <- NULL
+  }
+
+  d <- t(get.adjacency(graph, attr=attr))
   if (!loops) {
     diag(d) <- 0
   }

@@ -7,7 +7,7 @@
 }
 \usage{
 alpha.centrality(graph, nodes=V(graph), alpha=1, loops=FALSE,
-                 exo=1, tol=1e-7)
+                 exo=1, weights=NULL, tol=1e-7)
 }
 \arguments{
   \item{graph}{The input graph, can be directed or undirected}
@@ -23,6 +23,9 @@ alpha.centrality(graph, nodes=V(graph), alpha=1, loops=FALSE,
     constant -- the same factor for every node, or a vector giving the
     factor for every vertex. Note that long vectors will be truncated and
     short vectors will be replicated.}
+  \item{weights}{Optional positive weight vector for calculating
+    weighted closeness. If the graph has a \code{weight} edge
+    attribute, then this is used by default.}
   \item{tol}{Tolerance for near-singularities during matrix inversion,
     see \code{\link{solve}}.}
 }

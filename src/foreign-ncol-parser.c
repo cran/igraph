@@ -122,6 +122,7 @@ int igraph_ncol_yyerror(char *s);
 #include "types.h" 
 #include "memory.h"
 #include "error.h"
+#include "config.h"
 extern igraph_vector_t *igraph_ncol_vector;
 extern igraph_vector_t *igraph_ncol_weights;
 extern igraph_trie_t *igraph_ncol_trie;
@@ -149,13 +150,13 @@ void igraph_i_ncol_reset_scanner(void);
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 69 "foreign-ncol-parser.y"
+#line 70 "foreign-ncol-parser.y"
 {
   long int edgenum;
   double weightnum;
 }
 /* Line 187 of yacc.c.  */
-#line 159 "foreign-ncol-parser.c"
+#line 160 "foreign-ncol-parser.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -168,7 +169,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 172 "foreign-ncol-parser.c"
+#line 173 "foreign-ncol-parser.c"
 
 #ifdef short
 # undef short
@@ -451,7 +452,7 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    82,    82,    83,    84,    87,    92,    99,   103
+       0,    83,    83,    84,    85,    88,    93,   100,   104
 };
 #endif
 
@@ -1353,7 +1354,7 @@ yyreduce:
   switch (yyn)
     {
         case 5:
-#line 87 "foreign-ncol-parser.y"
+#line 88 "foreign-ncol-parser.y"
     { 
            igraph_vector_push_back(igraph_ncol_vector, (yyvsp[(1) - (3)].edgenum));
            igraph_vector_push_back(igraph_ncol_vector, (yyvsp[(2) - (3)].edgenum));
@@ -1362,7 +1363,7 @@ yyreduce:
     break;
 
   case 6:
-#line 92 "foreign-ncol-parser.y"
+#line 93 "foreign-ncol-parser.y"
     { 
            igraph_vector_push_back(igraph_ncol_vector, (yyvsp[(1) - (4)].edgenum));
            igraph_vector_push_back(igraph_ncol_vector, (yyvsp[(2) - (4)].edgenum));
@@ -1371,21 +1372,21 @@ yyreduce:
     break;
 
   case 7:
-#line 99 "foreign-ncol-parser.y"
+#line 100 "foreign-ncol-parser.y"
     { igraph_trie_get2(igraph_ncol_trie, 
 				   igraph_ncol_yytext, 
 				   igraph_ncol_yyleng, &(yyval.edgenum)); }
     break;
 
   case 8:
-#line 103 "foreign-ncol-parser.y"
+#line 104 "foreign-ncol-parser.y"
     { (yyval.weightnum)=igraph_ncol_get_number(igraph_ncol_yytext, 
 					   igraph_ncol_yyleng); }
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1389 "foreign-ncol-parser.c"
+#line 1390 "foreign-ncol-parser.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1599,7 +1600,7 @@ yyreturn:
 }
 
 
-#line 106 "foreign-ncol-parser.y"
+#line 107 "foreign-ncol-parser.y"
 
 
 int igraph_ncol_yyerror (char *s)

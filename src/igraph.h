@@ -223,7 +223,7 @@ igraph_vs_t igraph_vss_seq(igraph_integer_t from, igraph_integer_t to);
 
 void igraph_vs_destroy(igraph_vs_t *vs);
 
-igraph_bool_t igraph_vs_is_all(igraph_vs_t *vs);
+igraph_bool_t igraph_vs_is_all(const igraph_vs_t *vs);
 
 int igraph_vs_copy(igraph_vs_t* dest, const igraph_vs_t* src);
 
@@ -271,7 +271,7 @@ typedef struct igraph_vit_t {
  * ...
  * igraph_vs_adj(&amp;vs, 0, IGRAPH_ALL);
  * igraph_vit_create(&amp;graph, vs, &amp;vit);
- * while (!IGRAPH_VIT_END(VIT)) {
+ * while (!IGRAPH_VIT_END(vit)) {
  *   printf(" %li", (long int) IGRAPH_VIT_GET(vit));
  *   IGRAPH_VIT_NEXT(vit);
  * }
@@ -425,7 +425,7 @@ int igraph_es_path_small(igraph_es_t *es, igraph_bool_t directed, ...);
 
 void igraph_es_destroy(igraph_es_t *es);
 
-igraph_bool_t igraph_es_is_all(igraph_es_t *es);
+igraph_bool_t igraph_es_is_all(const igraph_es_t *es);
 
 int igraph_es_copy(igraph_es_t* dest, const igraph_es_t* src);
 
@@ -558,6 +558,9 @@ int igraph_edges(const igraph_t *graph, igraph_es_t eids,
 int igraph_get_eid(const igraph_t *graph, igraph_integer_t *eid,
 		   igraph_integer_t from, igraph_integer_t to,
 		   igraph_bool_t directed);
+int igraph_get_eid2(const igraph_t *graph, igraph_integer_t *eid,
+		   igraph_integer_t pfrom, igraph_integer_t pto,
+		    igraph_bool_t directed);
 int igraph_get_eids(const igraph_t *graph, igraph_vector_t *eids,
 		    const igraph_vector_t *pairs, igraph_bool_t directed);
 int igraph_adjacent(const igraph_t *graph, igraph_vector_t *eids, igraph_integer_t vid,
@@ -590,6 +593,11 @@ int igraph_tree(igraph_t *graph, igraph_integer_t n, igraph_integer_t children,
 int igraph_full(igraph_t *graph, igraph_integer_t n, igraph_bool_t directed, igraph_bool_t loops);
 int igraph_full_citation(igraph_t *graph, igraph_integer_t n, 
 			 igraph_bool_t directed);
+int igraph_full_bipartite(igraph_t *graph, 
+			  igraph_vector_bool_t *types,
+			  igraph_integer_t n1, igraph_integer_t n2,
+			  igraph_bool_t directed, 
+			  igraph_neimode_t mode);
 int igraph_atlas(igraph_t *graph, int number);
 int igraph_extended_chordal_ring(igraph_t *graph, igraph_integer_t nodes, 
 				 const igraph_matrix_t *W);
@@ -760,10 +768,14 @@ int igraph_shortest_paths_bellman_ford(const igraph_t *graph,
 				   igraph_neimode_t mode);
 int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
                                        igraph_vector_ptr_t *res,
-									   igraph_integer_t from,
-									   igraph_vs_t to,
-									   const igraph_vector_t *weights,
-									   igraph_neimode_t mode); 
+				       igraph_integer_t from,
+				       igraph_vs_t to,
+				       const igraph_vector_t *weights,
+				       igraph_neimode_t mode); 
+int igraph_shortest_paths_johnson(const igraph_t *graph,
+				  igraph_matrix_t *res,
+				  const igraph_vs_t from,
+				  const igraph_vector_t *weights);
 
 int igraph_subcomponent(const igraph_t *graph, igraph_vector_t *res, igraph_real_t vid, 
 			igraph_neimode_t mode);	
@@ -842,6 +854,54 @@ int igraph_girth(const igraph_t *graph, igraph_integer_t *girth,
 int igraph_add_edge(igraph_t *graph, igraph_integer_t from, igraph_integer_t to);
 int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
          igraph_vector_t *ins, igraph_vector_t *outs);
+
+int igraph_avg_nearest_neighbor_degree(const igraph_t *graph,
+				       igraph_vs_t vids,
+				       igraph_vector_t *knn,
+				       igraph_vector_t *knnk, 
+				       const igraph_vector_t *weights);
+int igraph_strength(const igraph_t *graph, igraph_vector_t *res,
+		    const igraph_vs_t vids, igraph_neimode_t mode,
+		    igraph_bool_t loops, const igraph_vector_t *weights);
+
+/* -------------------------------------------------- */
+/* Bipartite networks                                 */
+/* -------------------------------------------------- */
+
+int igraph_create_bipartite(igraph_t *g, const igraph_vector_bool_t *types,
+			    const igraph_vector_t *edges, 
+			    igraph_bool_t directed);
+
+int igraph_bipartite_projection_size(const igraph_t *graph,
+				     const igraph_vector_bool_t *types,
+				     igraph_integer_t *vcount1,
+				     igraph_integer_t *ecount1,
+				     igraph_integer_t *vcount2,
+				     igraph_integer_t *ecount2);
+
+int igraph_bipartite_projection(const igraph_t *graph, 
+				const igraph_vector_bool_t *types,
+				igraph_t *proj1,
+				igraph_t *proj2,
+				igraph_integer_t probe1);
+
+int igraph_incidence(igraph_t *graph, igraph_vector_bool_t *types,
+		     const igraph_matrix_t *incidence,  igraph_bool_t directed,
+		     igraph_neimode_t mode, igraph_bool_t multiple);
+
+int igraph_get_incidence(const igraph_t *graph,
+			 const igraph_vector_bool_t *types,
+			 igraph_matrix_t *res,
+			 igraph_vector_t *row_ids,
+			 igraph_vector_t *col_ids);
+
+int igraph_is_bipartite(const igraph_t *graph,
+			igraph_bool_t *res,
+			igraph_vector_bool_t *type);
+
+int igraph_unfold_tree(const igraph_t *graph, igraph_t *tree,
+		       igraph_neimode_t mode, const igraph_vector_t *roots,
+		       igraph_vector_t *vertex_index);
 
 /* -------------------------------------------------- */
 /* Spectral Properties                                */
@@ -1040,6 +1100,12 @@ int igraph_layout_drl(const igraph_t *graph, igraph_matrix_t *res,
 		      const igraph_vector_t *weights, 
 		      const igraph_vector_bool_t *fixed);
 
+int igraph_layout_drl_3d(const igraph_t *graph, igraph_matrix_t *res, 
+			 igraph_bool_t use_seed,
+			 igraph_layout_drl_options_t *options,
+			 const igraph_vector_t *weights,
+			 const igraph_vector_bool_t *fixed);
+
 int igraph_layout_merge_dla(igraph_vector_ptr_t *graphs,
 			    igraph_vector_ptr_t *coords, 
 			    igraph_matrix_t *res);
@@ -1199,6 +1265,11 @@ int igraph_community_leading_eigenvector_step(const igraph_t *graph,
 					      igraph_real_t *eigenvalue, 
 					      igraph_arpack_options_t *options,
 					      igraph_arpack_storage_t *storage);
+int igraph_community_label_propagation(const igraph_t *graph,
+                                       igraph_vector_t *membership,
+                                       const igraph_vector_t *weights,
+                                       const igraph_vector_t *initial,
+                                       igraph_vector_bool_t *fixed);
 
 /* -------------------------------------------------- */
 /* Conversion                                         */

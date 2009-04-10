@@ -25,6 +25,8 @@
 #include "memory.h"
 #include "random.h"
 #include "error.h"
+#include "config.h"
+#include "igraph_math.h"
 
 #include <assert.h>
 #include <string.h> 		/* memcpy & co. */
@@ -61,6 +63,11 @@ int igraph_indheap_init           (igraph_indheap_t* h, long int alloc_size) {
  h->destroy=1;
  
  return 0;  
+}
+
+int igraph_indheap_clear(igraph_indheap_t *h) {
+  h->end=h->stor_begin;
+  return 0;
 }
 
 /**

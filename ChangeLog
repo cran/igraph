@@ -1,3 +1,132 @@
+2009-02-26  Gabor Csardi  <csardi@szaffi>
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph)
+	* interfaces/R/igraph/R/plot.common.R (igraph.check.shapes) : 
+	Better error message for unknown vertex shapes
+
+2009-02-02  Gabor Csardi  <csardi@szaffi>
+
+	* interfaces/R/igraph/R/structural.properties.R
+	(alpha.centrality) : weights can be given in the usual form now
+
+2009-01-16  Gabor Csardi  <csardi@szaffi>
+
+	* interfaces/R/igraph/R/structure.generators.R (graph.bipartite) : 
+	fixed a typo bug in .Call, 'PACKAGE' was mistyped
+
+	* interfaces/R/igraph/R/conversion.R (get.incidence.dense) : 
+	fixed a 'g' instead of 'graph' bug
+
+	* interfaces/R/igraph/R/structure.generators.R 
+	(graph.incidence) : fixed some typo bugs
+
+	* interfaces/R/igraph/R/foreign.R (read.graph.edgelist)
+	(write.graph.edgelist, read.graph.ncol, write.graph.ncol)
+	(read.graph.lgl, write.graph.lgl, read.graph.pajek)
+	(write.graph.pajek, read.graph.dimacs, write.graph.dimacs)
+	(read.graph.graphml, write.graph.graphml, read.graph.gml)
+	(write.graph.gml, write.graph.dot, read.graph.graphdb) : 
+	give error message for unknown arguments, so far these were ignored
+
+2008-11-14  Gabor Csardi  <csardi@szaffi>
+
+	* interfaces/R/igraph/R/plot.R (igraph.Arrows) : handle 
+	different edge line types and width for curved edges
+	* interfaces/R/igraph/R/tkplot.R: curve the edges the same 
+	direction as plot
+
+2008-11-03  Gabor Csardi  <csardi@szaffi>
+
+	* interfaces/R/igraph/R/tkplot.R :
+	added support for curved edges
+
+	* interfaces/R/igraph/R/plot.common.R (i.default.values) : 
+	added 'curved' edge parameter
+	* interfaces/R/igraph/R/plot.R (plot.igraph, igraph.Arrows) : 
+	added support for curved edges
+
+2008-11-02  Gabor Csardi  <csardi@szaffi>
+
+	* interfaces/R/igraph/R/conversion.R (get.incidence) : added
+	support for attributes
+
+	* interfaces/R/igraph/R/conversion.R (get.incidence) : added
+	support for vertex names
+
+	* interfaces/R/igraph/R/conversion.R (get.incidence) : updated,
+	sparse matrix support was added
+
+	* interfaces/R/igraph/R/conversion.R (get.incidence) : added
+
+	* interfaces/R/igraph/R/structure.generators.R
+	(graph.incidence) : added sparse graph support
+
+	* interfaces/R/igraph/R/structure.generators.R
+	(graph.incidence) : added 'weighted' argument
+
+2008-11-01  Gabor Csardi  <csardi@szaffi>
+
+	* interfaces/R/igraph/R/structure.generators.R
+	(graph.incidence) : 'directed' argument added, remove unnneded 
+	'add.colnames' attribute
+
+	* interfaces/R/igraph/R/structure.generators.R
+	(graph.incidence) : added
+
+2008-10-31  Gabor Csardi  <csardi@szaffi>
+
+	* interfaces/R/igraph/R/structure.generators.R
+	(graph.bipartite) : added
+
+2008-10-27  Gabor Csardi  <csardi@szaffi>
+
+	* interfaces/R/igraph/R/structure.generators.R
+	(graph.full.bipartite) : added
+
+2008-10-24  Gabor Csardi  <csardi@szaffi>
+
+	* interfaces/R/igraph/R/print.R (print.igraph) : quote symbolic
+	vertex names by default
+
+	* interfaces/R/igraph/R/structural.properties.R (shortest.paths)
+	* interfaces/R/src/rinterface.c.in (R_igraph_shortest_paths) :
+	make it possible to choose shortest path algorithm by hand
+	
+	* interfaces/R/src/rinterface.c.in (R_igraph_shortest_paths) :
+	call Johnson's algorithm, if appropriate
+
+2008-09-26  Gabor Csardi  <csardi@szaffi>
+
+	* interfaces/R/igraph/R/CohesiveBlocks.R (cohesive.blocks) : 
+	add 'cutsetAlgorithm' argument
+
+	* interfaces/R/igraph/R/flow.R (igraph.mincut) : report error 
+	if (unimplemented) s-t minimum cut is requested
+
+2008-08-20  Gabor Csardi  <csardi@szaffi>
+
+	* interface/R/igraph/R/conversion.R (get.adjacency.sparse) : 
+	fixed a bug, when graph.adjacency.sparse is called with 
+	a named graph
+
+2008-07-21  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/plot.R (plot.igraph) : corrected a bug 
+	when using multiple vertex shapes
+
+2008-07-17  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structural.properties.R (betweenness)
+	* interfaces/R/src/rinterface.c.in (R_igraph_betweenness) : 
+	add support for weights
+
+2008-07-14  Gabor Csardi  <csardi@rmki.kfki.hu>
+
+	* interfaces/R/igraph/R/structural.properties.R (betweenness) : added 
+	progress bar support
+	* interfaces/R/src/rinterface.c.in (R_igraph_betweenness) : added
+	progress bar support
+
 2008-06-24  Gabor Csardi  <csardi@rmki.kfki.hu>
 
 	* interfaces/R/igraph/R/structure.generators.R (graph.adjacency) :

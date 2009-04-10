@@ -57,6 +57,7 @@
 #include "igraph.h"
 #include "error.h"
 #include "random.h"
+#include "igraph_math.h"
 
 /**
  * \function igraph_community_spinglass
@@ -69,7 +70,8 @@
  * \param graph The input graph, it may be directed but the direction
  *     of the edge is not used in the algorithm.
  * \param weights The vector giving the edge weights, it may be \c NULL, 
- *     in which case all edges are weighted equally.
+ *     in which case all edges are weighted equally. Edge weights
+ *     should be positive, altough this is not tested.
  * \param modularity Pointer to a real number, if not \c NULL then the
  *     modularity score of the solution will be stored here, see
  *     M. E. J. Newman and M. Girvan, Phys. Rev. E 69, 026113 (2004)

@@ -48,17 +48,18 @@ cluster.distribution(graph, cumulative = FALSE, mul.size = FALSE, \dots)
   For \code{is.connected} a logical constant.
   
   For \code{clusters} a named list with three components:
-  \itemize{
-    \item{membership}{numeric vector giving the cluster id to which each
-      vertex belongs.}
-    \item{csize}{numeric vector giving the sizes of the clusters.}
-    \item{no}{numeric constant, the number of clusters.}
-  }
+  \item{membership}{numeric vector giving the cluster id to which each
+    vertex belongs.}
+  \item{csize}{numeric vector giving the sizes of the clusters.}
+  \item{no}{numeric constant, the number of clusters.}
 
   For \code{no.clusters} an integer constant is returned.
   
   For \code{cluster.distribution} a numeric vector with the relative
-  frequencies. The length of the vector is the number of components.
+  frequencies. The length of the vector is the size of the largest
+  component plus one. Note that (for currently unknown reasons) the
+  first element of the vector is the number of clusters of size zero, so
+  this is always zero.
 }
 % \references{}
 \author{Gabor Csardi \email{csardi@rmki.kfki.hu}}

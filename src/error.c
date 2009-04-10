@@ -22,6 +22,7 @@
 */
 
 #include "igraph.h"
+#include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,6 +69,7 @@ static char *igraph_i_error_strings[]=
     /* 35 */ "LAPACK (dtrevc) error for calculating eigenvectors",
     /* 36 */ "Unknown ARPACK error",
     /* 37 */ "Negative loop detected while calculating shortest paths",
+    /* 38 */ "Internal error, likely a bug in igraph"
 };
 
 const char* igraph_strerror(const int igraph_errno) {
@@ -146,7 +148,7 @@ void IGRAPH_FINALLY_FREE(void) {
   igraph_i_finally_stack[0].all=0;
 }
 
-inline int IGRAPH_FINALLY_STACK_SIZE(void) {
+int IGRAPH_FINALLY_STACK_SIZE(void) {
   return igraph_i_finally_stack[0].all;
 }
 

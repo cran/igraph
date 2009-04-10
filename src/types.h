@@ -42,6 +42,7 @@ __BEGIN_DECLS
 
 #include "error.h"
 #include <stddef.h>
+#include <math.h>
 
 typedef double igraph_integer_t;
 typedef double igraph_real_t;
@@ -198,6 +199,7 @@ long int igraph_vector_ptr_size      (const igraph_vector_ptr_t* v);
 void igraph_vector_ptr_clear     (igraph_vector_ptr_t* v);
 void igraph_vector_ptr_null      (igraph_vector_ptr_t* v);
 int igraph_vector_ptr_push_back (igraph_vector_ptr_t* v, void* e);
+void *igraph_vector_ptr_pop_back (igraph_vector_ptr_t *v);
 int igraph_vector_ptr_insert(igraph_vector_ptr_t *v, long int pos, void* e);
 void* igraph_vector_ptr_e         (const igraph_vector_ptr_t* v, long int pos);
 void igraph_vector_ptr_set       (igraph_vector_ptr_t* v, long int pos, void* value);
@@ -398,6 +400,7 @@ typedef struct s_indheap {
 int igraph_indheap_init           (igraph_indheap_t* h, long int size);
 int igraph_indheap_init_array     (igraph_indheap_t *t, igraph_real_t* data, long int len);
 void igraph_indheap_destroy        (igraph_indheap_t* h);
+int igraph_indheap_clear(igraph_indheap_t *h);
 igraph_bool_t igraph_indheap_empty          (igraph_indheap_t* h);
 int igraph_indheap_push           (igraph_indheap_t* h, igraph_real_t elem);
 int igraph_indheap_push_with_index(igraph_indheap_t* h, long int idx, igraph_real_t elem);
@@ -720,27 +723,6 @@ igraph_bool_t igraph_set_contains (igraph_set_t* set, igraph_integer_t e);
 igraph_bool_t igraph_set_iterate (igraph_set_t* set, long int* state,
 				  igraph_integer_t* element);
 
-/*
- * Compiler-related hacks, mostly because of Microsoft Visual C++
- */
-double igraph_i_fdiv(const double a, const double b);
-int igraph_i_snprintf(char *buffer, size_t count, const char *format, ...);
-
-#ifdef _MSC_VER
-#  pragma warning (disable:4244)
-
-#  ifndef vsprintf
-#    define vsnprintf(a, b, c, d) _vsnprintf((a), (b), (c), (d))
-#  endif
-
-#  define isnan(x) _isnan(x)
-#  define inline __inline
-#  define strcasecmp strcmpi
-#ifndef snprintf
-#  define snprintf igraph_i_snprintf
-#endif
-#endif
-
 #if defined(INFINITY)
 #  define IGRAPH_INFINITY INFINITY
 #  define IGRAPH_POSINFINITY INFINITY
@@ -751,7 +733,7 @@ int igraph_i_snprintf(char *buffer, size_t count, const char *format, ...);
 #  define IGRAPH_NEGINFINITY (igraph_i_fdiv(-1.0, 0.0))
 #endif
 
-int igraph_finite(igraph_real_t x);
+int igraph_finite(double x);
 #define IGRAPH_FINITE(x) igraph_finite(x)
 
 #if defined(NAN)
@@ -760,13 +742,6 @@ int igraph_finite(igraph_real_t x);
 #  define IGRAPH_NAN (INFINITY/INFINITY)
 #else
 #  define IGRAPH_NAN (igraph_i_fdiv(0.0, 0.0))
-#endif
-
-#ifndef M_PI
-#  define M_PI 3.14159265358979323846
-#endif
-#if !defined(M_LN2)
-#  define M_LN2 0.69314718055994530942
 #endif
 
 __END_DECLS

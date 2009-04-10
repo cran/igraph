@@ -245,6 +245,16 @@ i.get.arrow.mode <- function(graph, arrow.mode=NULL) {
   arrow.mode
 }
 
+igraph.check.shapes <- function(x) {
+  xx <- unique(x)
+  bad.shapes <- ! xx %in% names(.igraph.shapes)
+  if (any(bad.shapes)) {
+    bs <- paste(xx[bad.shapes], collapse=", ")
+    stop("Bad vertex shape(s): ", bs, ".")
+  }
+  x
+}
+
 i.default.values <- list(vertex=list(color="SkyBlue2",
                            size=15,
                            size2=15,
@@ -269,6 +279,7 @@ i.default.values <- list(vertex=list(color="SkyBlue2",
                            label.color="darkblue",
                            arrow.size=1,
                            arrow.mode=i.get.arrow.mode,
+                           curved=FALSE,
                            arrow.width=1),
                          plot=list(layout=layout.random,
                            margin=c(0,0,0,0),

@@ -10,9 +10,9 @@
 		http://www.netlib.org/f2c/libf2c.zip
 */
 
-#include "f2c.h"
 #include "config.h"
 #include "arpack_internal.h"
+#include "f2c.h"
 #include <stdio.h>
 
 doublereal igraphdlamch_(char *cmach)
@@ -653,7 +653,7 @@ L10:
 	if (iwarn) {
 	    first = TRUE_;
 	    printf("\n\n WARNING. The value EMIN may be incorrect:- ");
-	    printf("EMIN = %8i\n",lemin);
+	    printf("EMIN = %8li\n",lemin);
 	    printf("If, after inspection, the value EMIN looks acceptable");
             printf("please comment out \n the IF block as marked within the"); 
             printf("code of routine DLAMC2, \n otherwise supply EMIN"); 

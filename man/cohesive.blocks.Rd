@@ -8,6 +8,7 @@
 \usage{
 cohesive.blocks(graph, db=NULL,
                 useDB=(vcount(graph)>400 && require(RSQLite)),
+                cutsetHeuristic=TRUE,
                 verbose=igraph.par("verbose"))
 is.bgraph(graph)
 }
@@ -18,20 +19,21 @@ is.bgraph(graph)
     \item{useDB}{Logical. Whether to use an external SQLite database
       instead of internal R datastructures (see details). By default an
       SQLite database is used if the graph has more than 400 vertices
-      and the \code{RSQLite} package is installed.} 
+      and the \code{RSQLite} package is installed.}
+    \item{cutsetHeuristic}{Logical scalar. TODO}
     \item{verbose}{Level of console output. Supply \code{TRUE} here to
       follow the progress of the computation.}
 }
 \details{
 Cohesive blocking is a method of determining hierarchical subsets of
 graph vertices based on their structural cohesion (or vertex
-connectivity). For a given graph $G$, a subset of its vertices $S\subset
-V(G)$ is said to be maximally $k$-cohesive if there is no superset of
-$S$ with vertex connectivity greater than or equal to $k$. Cohesive
-blocking is a process through which, given a $k$-cohesive set of
-vertices, maximally $l$-cohesive subsets are recursively identified with
-$l>k$. Thus a hiearchy of vertex subsets is found, whith the entire
-graph $G$ at its root. 
+connectivity). For a given graph \eqn{G}, a subset of its vertices \eqn{S\subset
+V(G)} is said to be maximally \eqn{k}-cohesive if there is no superset of
+\eqn{S} with vertex connectivity greater than or equal to \eqn{k}. Cohesive
+blocking is a process through which, given a \eqn{k}-cohesive set of
+vertices, maximally \eqn{l}-cohesive subsets are recursively identified with
+\eqn{l>k}. Thus a hiearchy of vertex subsets is found, whith the entire
+graph \eqn{G} at its root. 
 
 For certain larger graphs this algorithm can be quite memory-intensive
 due to the number of vertex subsets that are examined. In these cases it
@@ -50,29 +52,28 @@ object.
 \value{
 \code{cohesive.blocks} returns a graph of class \code{c(bgraph,igraph)},
 with four (new) graph attributes:
-\itemize{
-  \item{blocks}{A list with one element for each cohesive block found. The
-    elements are numeric vectors listing the indices of the nodes within
-    that block.} 
-  \item{block.cohesion}{A numeric vector with length equal to the number
-    of cohesive blocks found, listing the cohesion of those blocks.} 
-  \item{tree}{The hierarchical tree of the cohesive blocks. Each node of
-    this graph represents a cohesive block, and directed edges represent
-    inclusion as proper subset.} 
-  \item{data}{A list containing supplementary data from the
-    calculation.}
-}
+\item{blocks}{A list with one element for each cohesive block found. The
+  elements are numeric vectors listing the indices of the nodes within
+  that block.} 
+\item{block.cohesion}{A numeric vector with length equal to the number
+  of cohesive blocks found, listing the cohesion of those blocks.} 
+\item{tree}{The hierarchical tree of the cohesive blocks. Each node of
+  this graph represents a cohesive block, and directed edges represent
+  inclusion as proper subset.} 
+\item{data}{A list containing supplementary data from the
+  calculation.}
 
 \code{is.bgraph} returns a logical scalar.
 }
 \references{
-  C. Patvardhan, V. C. Prasad, V. Prem Pyara. Vertex Cutsets of
-  Undirected Graphs. \emph{IEEE Transactions on Reliability},
-  44(2):347--353, June, 1995.
+  A. Kanevsky. On the number of minimum size separating vertex sets
+  in a graph and how to find all of them
+  \emph{Proceedings of the first annual ACM-SIAM symposium on Discrete algorithms}
+  San Francisco, California, United States. 411--421, 1990.
   
-J. Moody and D. R. White. Structural cohesion and embeddedness: A
-hierarchical concept of social groups. \emph{American Sociological
-  Review}, 68(1):103--127, Feb 2003. 
+  J. Moody and D. R. White. Structural cohesion and embeddedness: A
+  hierarchical concept of social groups. \emph{American Sociological
+    Review}, 68(1):103--127, Feb 2003. 
 }
 \author{Peter McMahan \email{peter.mcmahan@gmail.com}}
 \seealso{\code{\link{graph.cohesion}}, \code{\link{plot.bgraph}} for
@@ -102,6 +103,12 @@ plot(gBlocks, vertex.size=7, layout=layout.kamada.kawai)
 ## Save the results as Pajek ".net" and ".clu" files:
 \dontrun{
 write.pajek.bgraph(gBlocks,file="gBlocks")
+}
+
+## An example that works better with the "kanevsky" cutset algorithm
+\dontrun{
+g <- read.graph(file="http://intersci.ss.uci.edu/wiki/Vlado/SanJuanSur.net", format="pajek")
+gBlocks <- cohesive.blocks(g, cutsetAlgorithm="kanevsky")
 }
 }
 \keyword{graphs}

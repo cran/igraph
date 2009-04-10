@@ -88,7 +88,7 @@ closeness.estimate <- function(graph, vids=V(graph), mode=c("out", "in", "all", 
   res
 }
 
-betweenness.estimate <- function(graph, vids=V(graph), directed=TRUE, cutoff) {
+betweenness.estimate <- function(graph, vids=V(graph), directed=TRUE, cutoff, verbose=igraph.par("verbose")) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
   vids <- as.igraph.vs(vids)
@@ -97,7 +97,7 @@ betweenness.estimate <- function(graph, vids=V(graph), directed=TRUE, cutoff) {
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
-  res <- .Call("R_igraph_betweenness_estimate", graph, vids, directed, cutoff,
+  res <- .Call("R_igraph_betweenness_estimate", graph, vids, directed, cutoff, as.logical(verbose),
         PACKAGE="igraph")
   res
 }
@@ -132,7 +132,7 @@ page.rank.old <- function(graph, vids=V(graph), directed=TRUE, niter=1000, eps=0
   res
 }
 
-page.rank <- function(graph, vids=V(graph), directed=FALSE, damping=0.85, weights=NULL, options=igraph.arpack.default) {
+page.rank <- function(graph, vids=V(graph), directed=TRUE, damping=0.85, weights=NULL, options=igraph.arpack.default) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
   vids <- as.igraph.vs(vids)
@@ -238,6 +238,19 @@ arpack.unpack.complex <- function(vectors, values, nev) {
   res
 }
 
+unfold.tree <- function(graph, mode=c("all", "out", "in", "total"), roots) {
+  # Argument checks
+  if (!is.igraph(graph)) { stop("Not a graph object") }
+  mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
+  roots <- as.numeric(roots)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_unfold_tree", graph, mode, roots,
+        PACKAGE="igraph")
+  res
+}
+
 is.mutual <- function(graph, es=E(graph)) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
@@ -246,6 +259,98 @@ is.mutual <- function(graph, es=E(graph)) {
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
   res <- .Call("R_igraph_is_mutual", graph, es,
+        PACKAGE="igraph")
+  res
+}
+
+graph.knn <- function(graph, vids=V(graph), weights=NULL) {
+  # Argument checks
+  if (!is.igraph(graph)) { stop("Not a graph object") }
+  vids <- as.igraph.vs(vids)
+  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
+  weights <- E(graph)$weight 
+  } 
+  if (!is.null(weights) && any(!is.na(weights))) { 
+  weights <- as.numeric(weights) 
+  } else { 
+  weights <- NULL 
+  }
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_avg_nearest_neighbor_degree", graph, vids, weights,
+        PACKAGE="igraph")
+  res
+}
+
+graph.strength <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total"), loops=TRUE, weights=NULL) {
+  # Argument checks
+  if (!is.igraph(graph)) { stop("Not a graph object") }
+  vids <- as.igraph.vs(vids)
+  mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
+  loops <- as.logical(loops)
+  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
+  weights <- E(graph)$weight 
+  } 
+  if (!is.null(weights) && any(!is.na(weights))) { 
+  weights <- as.numeric(weights) 
+  } else { 
+  weights <- NULL 
+  }
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_strength", graph, vids, mode, loops, weights,
+        PACKAGE="igraph")
+  res
+}
+
+bipartite.projection.size <- function(graph, types=NULL) {
+  # Argument checks
+  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (is.null(types) && "type" %in% list.vertex.attributes(graph)) { 
+  types <- V(graph)$type 
+  } 
+  if (!is.null(types)) { 
+  types <- as.logical(types) 
+  } else { 
+  stop("Not a bipartite graph, supply `types' argument") 
+  }
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_bipartite_projection_size", graph, types,
+        PACKAGE="igraph")
+  res
+}
+
+bipartite.projection <- function(graph, types=NULL, probe1=-1) {
+  # Argument checks
+  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (is.null(types) && "type" %in% list.vertex.attributes(graph)) { 
+  types <- V(graph)$type 
+  } 
+  if (!is.null(types)) { 
+  types <- as.logical(types) 
+  } else { 
+  stop("Not a bipartite graph, supply `types' argument") 
+  }
+  probe1 <- as.numeric(probe1)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_bipartite_projection", graph, types, probe1,
+        PACKAGE="igraph")
+  res
+}
+
+is.bipartite <- function(graph) {
+  # Argument checks
+  if (!is.igraph(graph)) { stop("Not a graph object") }
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_is_bipartite", graph,
         PACKAGE="igraph")
   res
 }
@@ -376,6 +481,27 @@ leading.eigenvector.community.naive <- function(graph, steps=-1, options=igraph.
   res <- .Call("R_igraph_community_leading_eigenvector_naive", graph, steps, options,
         PACKAGE="igraph")
   class(res) <- "igraph.eigenc"
+  res
+}
+
+label.propagation.community <- function(graph, weights=NULL, initial=NULL, fixed=NULL) {
+  # Argument checks
+  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
+  weights <- E(graph)$weight 
+  } 
+  if (!is.null(weights) && any(!is.na(weights))) { 
+  weights <- as.numeric(weights) 
+  } else { 
+  weights <- NULL 
+  }
+  if (!is.null(initial)) initial <- as.numeric(initial)
+  if (!is.null(fixed)) fixed <- as.logical(fixed)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_community_label_propagation", graph, weights, initial, fixed,
+        PACKAGE="igraph")
   res
 }
 

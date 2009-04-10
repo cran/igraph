@@ -6,7 +6,7 @@
 \description{ Calculates the Google PageRank for the specified
   vertices.}
 \usage{
-page.rank (graph, vids = V(graph), directed = FALSE, damping = 0.85, 
+page.rank (graph, vids = V(graph), directed = TRUE, damping = 0.85, 
     weights = NULL, options = igraph.arpack.default) 
 page.rank.old (graph, vids = V(graph), directed = TRUE, niter = 1000, 
     eps = 0.001, damping = 0.85, old = FALSE) 
@@ -75,13 +75,11 @@ page.rank.old (graph, vids = V(graph), directed = TRUE, niter = 1000,
 }
 \value{
   For \code{page.rank} a named list with entries:
-  \itemize{
-    \item{vector}{A numeric vector with the PageRank scores.}
-    \item{value}{The eigenvalue corresponding to the eigenvector with
-      the page rank scores. It should be always exactly one.}
-    \item{options}{Some information about the underlying ARPACK
-      calculation. See \code{\link{arpack}} for details.}
-  }
+  \item{vector}{A numeric vector with the PageRank scores.}
+  \item{value}{The eigenvalue corresponding to the eigenvector with
+    the page rank scores. It should be always exactly one.}
+  \item{options}{Some information about the underlying ARPACK
+    calculation. See \code{\link{arpack}} for details.}
   
   For \code{page.rank.old} a numeric vector of Page Rank scores.
 }

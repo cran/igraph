@@ -24,6 +24,7 @@
 #include "igraph.h"
 #include "memory.h"
 #include "random.h"
+#include "config.h"
 
 #include <string.h>
 #include <stdarg.h>
@@ -483,7 +484,7 @@ void igraph_vs_destroy(igraph_vs_t *vs) {
  * Time complexity: O(1).
  */
 
-igraph_bool_t igraph_vs_is_all(igraph_vs_t *vs) {
+igraph_bool_t igraph_vs_is_all(const igraph_vs_t *vs) {
   return vs->type == IGRAPH_VS_ALL;
 }
 
@@ -1297,7 +1298,7 @@ void igraph_es_destroy(igraph_es_t *es) {
  * Time complexity: O(1).
  */
 
-igraph_bool_t igraph_es_is_all(igraph_es_t *es) {
+igraph_bool_t igraph_es_is_all(const igraph_es_t *es) {
   return es->type == IGRAPH_ES_ALL;
 }
 

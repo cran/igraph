@@ -28,7 +28,7 @@
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 5
-#define YY_FLEX_SUBMINOR_VERSION 34
+#define YY_FLEX_SUBMINOR_VERSION 35
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
 #endif
@@ -73,7 +73,6 @@ typedef int flex_int32_t;
 typedef unsigned char flex_uint8_t; 
 typedef unsigned short int flex_uint16_t;
 typedef unsigned int flex_uint32_t;
-#endif /* ! C99 */
 
 /* Limits of integral types. */
 #ifndef INT8_MIN
@@ -103,6 +102,8 @@ typedef unsigned int flex_uint32_t;
 #ifndef UINT32_MAX
 #define UINT32_MAX             (4294967295U)
 #endif
+
+#endif /* ! C99 */
 
 #endif /* ! FLEXINT_H */
 
@@ -197,13 +198,6 @@ extern FILE *igraph_gml_yyin, *igraph_gml_yyout;
 	while ( 0 )
 
 #define unput(c) yyunput( c, (yytext_ptr)  )
-
-/* The following is because we cannot portably get our hands on size_t
- * (without autoconf's help, which isn't available because we want
- * flex-generated scanners to compile on their own).
- * Given that the standard has decreed that size_t exists since 1989,
- * I guess we can afford to depend on it. Manoj.
- */
 
 #ifndef YY_TYPEDEF_YY_SIZE_T
 #define YY_TYPEDEF_YY_SIZE_T
@@ -539,6 +533,7 @@ char *igraph_gml_yytext;
 
 */
 
+#include "config.h"
 #include <stdlib.h>
 #include "foreign-gml-parser.h"
 extern long int igraph_gml_mylineno;
@@ -547,7 +542,8 @@ int igraph_gml_eof;
 void igraph_i_gml_reset_scanner() {
   YY_FLUSH_BUFFER;
 }
-#line 551 "foreign-gml-lexer.c"
+#define YY_NO_INPUT 1
+#line 547 "foreign-gml-lexer.c"
 
 #define INITIAL 0
 
@@ -565,6 +561,35 @@ void igraph_i_gml_reset_scanner() {
 
 static int yy_init_globals (void );
 
+/* Accessor methods to globals.
+   These are made visible to non-reentrant scanners for convenience. */
+
+int igraph_gml_yylex_destroy (void );
+
+int igraph_gml_yyget_debug (void );
+
+void igraph_gml_yyset_debug (int debug_flag  );
+
+YY_EXTRA_TYPE igraph_gml_yyget_extra (void );
+
+void igraph_gml_yyset_extra (YY_EXTRA_TYPE user_defined  );
+
+FILE *igraph_gml_yyget_in (void );
+
+void igraph_gml_yyset_in  (FILE * in_str  );
+
+FILE *igraph_gml_yyget_out (void );
+
+void igraph_gml_yyset_out  (FILE * out_str  );
+
+int igraph_gml_yyget_leng (void );
+
+char *igraph_gml_yyget_text (void );
+
+int igraph_gml_yyget_lineno (void );
+
+void igraph_gml_yyset_lineno (int line_number  );
+
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
  */
@@ -577,8 +602,6 @@ extern int igraph_gml_yywrap (void );
 #endif
 #endif
 
-    static void yyunput (int c,char *buf_ptr  );
-    
 #ifndef yytext_ptr
 static void yy_flex_strncpy (char *,yyconst char *,int );
 #endif
@@ -607,7 +630,7 @@ static int input (void );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
-#define ECHO fwrite( igraph_gml_yytext, igraph_gml_yyleng, 1, igraph_gml_yyout )
+#define ECHO do { if (fwrite( igraph_gml_yytext, igraph_gml_yyleng, 1, igraph_gml_yyout )) {} } while (0)
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or YY_NULL,
@@ -618,7 +641,7 @@ static int input (void );
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) \
 		{ \
 		int c = '*'; \
-		int n; \
+		size_t n; \
 		for ( n = 0; n < max_size && \
 			     (c = getc( igraph_gml_yyin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
@@ -703,10 +726,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 64 "foreign-gml-lexer.l"
+#line 67 "foreign-gml-lexer.l"
 
 
-#line 710 "foreign-gml-lexer.c"
+#line 733 "foreign-gml-lexer.c"
 
 	if ( !(yy_init) )
 		{
@@ -793,49 +816,49 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 66 "foreign-gml-lexer.l"
+#line 69 "foreign-gml-lexer.l"
 { igraph_gml_mylineno++; /* comments ignored */ }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 68 "foreign-gml-lexer.l"
+#line 71 "foreign-gml-lexer.l"
 { return STRING; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 69 "foreign-gml-lexer.l"
+#line 72 "foreign-gml-lexer.l"
 { return NUM; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 70 "foreign-gml-lexer.l"
+#line 73 "foreign-gml-lexer.l"
 { return KEYWORD; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 71 "foreign-gml-lexer.l"
+#line 74 "foreign-gml-lexer.l"
 { return LISTOPEN; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 72 "foreign-gml-lexer.l"
+#line 75 "foreign-gml-lexer.l"
 { return LISTCLOSE; }
 	YY_BREAK
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 73 "foreign-gml-lexer.l"
+#line 76 "foreign-gml-lexer.l"
 { igraph_gml_mylineno++; }
 	YY_BREAK
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 74 "foreign-gml-lexer.l"
+#line 77 "foreign-gml-lexer.l"
 { /* other whitespace ignored */ }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 76 "foreign-gml-lexer.l"
+#line 79 "foreign-gml-lexer.l"
 { 
                           if (igraph_gml_eof) {
 			    yyterminate();
@@ -847,10 +870,10 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 85 "foreign-gml-lexer.l"
+#line 88 "foreign-gml-lexer.l"
 ECHO;
 	YY_BREAK
-#line 854 "foreign-gml-lexer.c"
+#line 877 "foreign-gml-lexer.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1176,43 +1199,6 @@ static int yy_get_next_buffer (void)
 	yy_is_jam = (yy_current_state == 28);
 
 	return yy_is_jam ? 0 : yy_current_state;
-}
-
-    static void yyunput (int c, register char * yy_bp )
-{
-	register char *yy_cp;
-    
-    yy_cp = (yy_c_buf_p);
-
-	/* undo effects of setting up igraph_gml_yytext */
-	*yy_cp = (yy_hold_char);
-
-	if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
-		{ /* need to shift things up to make room */
-		/* +2 for EOB chars. */
-		register int number_to_move = (yy_n_chars) + 2;
-		register char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
-					YY_CURRENT_BUFFER_LVALUE->yy_buf_size + 2];
-		register char *source =
-				&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move];
-
-		while ( source > YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
-			*--dest = *--source;
-
-		yy_cp += (int) (dest - source);
-		yy_bp += (int) (dest - source);
-		YY_CURRENT_BUFFER_LVALUE->yy_n_chars =
-			(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_buf_size;
-
-		if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
-			YY_FATAL_ERROR( "flex scanner push-back overflow" );
-		}
-
-	*--yy_cp = (char) c;
-
-	(yytext_ptr) = yy_bp;
-	(yy_hold_char) = *yy_cp;
-	(yy_c_buf_p) = yy_cp;
 }
 
 #ifndef YY_NO_INPUT
@@ -1849,7 +1835,7 @@ void igraph_gml_yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 85 "foreign-gml-lexer.l"
+#line 88 "foreign-gml-lexer.l"
 
 
 

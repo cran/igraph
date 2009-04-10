@@ -60,7 +60,7 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 80 "foreign-gml-parser.y"
+#line 82 "foreign-gml-parser.y"
 {
    struct {
       char *s;

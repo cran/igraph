@@ -23,6 +23,7 @@
 
 #include "igraph.h"
 #include "memory.h"
+#include "config.h"
 
 unsigned int igraph_i_isoclass_3[] = {  0, 1, 1, 3, 1, 5, 6, 7,
                                          1, 6,10,11, 3, 7,11,15,
@@ -1170,7 +1171,7 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
 	cand2=last2;
       } else {
 	i=0;
-	while (cand2<0) {
+	while (cand2<0 && i<no_of_nodes) {
 	  if (VECTOR(*core_2)[i]==0) { 
 	    cand2=i;
 	  }

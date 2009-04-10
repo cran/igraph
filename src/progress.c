@@ -22,6 +22,7 @@
 */
 
 #include "igraph.h"
+#include "config.h"
 
 static igraph_progress_handler_t *igraph_i_progress_handler=0;
 
@@ -35,7 +36,7 @@ int igraph_progress(const char *message, igraph_real_t percent, void *data) {
 
 int igraph_progress_handler_stderr(const char *message, igraph_real_t percent,
 				  void* data) {
-  fprintf(stderr, message);
+  fputs(message, stderr);
   fprintf(stderr, "%.1f percent ready\n", (double)percent);
   return 0;
 }

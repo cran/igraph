@@ -24,6 +24,8 @@
 #include "igraph.h"
 #include "memory.h"
 #include "random.h"
+#include "config.h"
+#include "igraph_math.h"
 
 #include <math.h>
 
@@ -267,7 +269,7 @@ igraph_real_t igraph_i_revolver_ml_D_alpha_f(const igraph_vector_t *var,
 					     const igraph_vector_t *par,
 					     void *extra) {
   igraph_real_t deg=VECTOR(*var)[0];
-  igraph_real_t alpha=VECTOR(*var)[1];
+  igraph_real_t alpha=VECTOR(*par)[0];
   if (deg != 0) {
     return pow(deg, alpha) + 1.0;
   } else {
@@ -280,7 +282,7 @@ void igraph_i_revolver_ml_D_alpha_df(const igraph_vector_t *var,
 				     igraph_vector_t *res, 
 				     void *extra) {
   igraph_real_t deg=VECTOR(*var)[0];
-  igraph_real_t alpha=VECTOR(*var)[1];
+  igraph_real_t alpha=VECTOR(*par)[0];
   if (deg != 0) {
     VECTOR(*res)[0] = log(deg) * pow(deg, alpha);
   } else {
@@ -3448,10 +3450,11 @@ int igraph_revolver_probs_ADE(const igraph_t *graph,
     for (n=0; n<nneis; n++) {
       long int edge=VECTOR(neis)[n];
       long int to=IGRAPH_OTHER(graph, edge, t);
+      igraph_real_t prob;
       VECTOR(var)[0] = VECTOR(*cats)[to];
       VECTOR(var)[1] = VECTOR(degree)[to];
       VECTOR(var)[2] = (t-to)/binwidth;
-      igraph_real_t prob=log( A_fun(&var, &gpar, 0) / VECTOR(S)[tcat] );
+      prob=log( A_fun(&var, &gpar, 0) / VECTOR(S)[tcat] );
       if (logprobs) {
 	VECTOR(*logprobs)[edge] = prob;
       } 

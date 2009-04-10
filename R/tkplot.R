@@ -34,7 +34,7 @@ if (!exists(".tkplot.env")) {
 # Main function
 ###################################################################
 
-tkplot <- function(graph, ...) {
+tkplot <- function(graph, canvas.width=450, canvas.height=450, ...) {
 
   if (!is.igraph(graph)) {
     stop("Not a graph object")
@@ -67,6 +67,8 @@ tkplot <- function(graph, ...) {
                                           params("edge", "label.cex"))
   edge.label.color <- params("edge", "label.color")
   arrow.size  <- params("edge", "arrow.size")[1]
+  curved <- params("edge", "curved")
+  curved <- rep(curved, length=ecount(graph))
   
   layout <- params("plot", "layout")
   layout[,2] <- -layout[,2]
@@ -81,7 +83,8 @@ tkplot <- function(graph, ...) {
 
   # Create window & canvas
   top <- tktoplevel(background="lightgrey")
-  canvas <- tkcanvas(top, relief="raised", width=450, height=450,
+  canvas <- tkcanvas(top, relief="raised",
+                     width=canvas.width, height=canvas.height,
                      borderwidth=2)
   tkpack(canvas, fill="both", expand=1)
 
@@ -95,7 +98,8 @@ tkplot <- function(graph, ...) {
                  vertex.frame.color=vertex.frame.color,
                  loop.angle=loop.angle, edge.lty=edge.lty, arrow.mode=arrow.mode,
                  edge.label.font=edge.label.font,
-                 edge.label.color=edge.label.color, arrow.size=arrow.size)
+                 edge.label.color=edge.label.color, arrow.size=arrow.size,
+                 curved=curved)
 
   # The popup menu
   popup.menu <- tkmenu(canvas)
@@ -217,7 +221,7 @@ tkplot <- function(graph, ...) {
   .tkplot.create.edges(tkp.id)
   .tkplot.create.vertices(tkp.id)
   # we would need an update here
-  tkplot.fit.to.screen(tkp.id, 450, 450)
+  tkplot.fit.to.screen(tkp.id, canvas.width, canvas.height)
 
   # Kill myself if window was closed
   tkbind(top, "<Destroy>", function() tkplot.close(tkp.id, FALSE))
@@ -777,17 +781,32 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
                        tkp$params$arrow.mode[[id]],
                        tkp$params$arrow.mode)
   arrow.size <- tkp$params$arrow.size
+  curved <- tkp$params$curved[[id]]
   arrow <- c("none", "first", "last", "both")[arrow.mode+1]
   
   if (from != to) {
     ## non-loop edge
-    tkcreate(tkp$canvas, "line", from.c[1], from.c[2], to.c[1], to.c[2],
-             width=edge.width, activewidth=2*edge.width,
-             arrow=arrow, arrowshape=arrow.size * c(10, 10, 5),
-             fill=edge.color, activefill="red", dash=edge.lty,
-             tags=c("edge", paste(sep="", "edge-", id),
-               paste(sep="", "from-", from),
-               paste(sep="", "to-", to)))
+    if (is.logical(curved)) curved <- curved * 0.5
+    if (curved != 0) {
+      smooth <- TRUE
+      midx <- (from.c[1]+to.c[1])/2
+      midy <- (from.c[2]+to.c[2])/2        
+      spx <- midx - curved * 1/2 * (from.c[2]-to.c[2])
+      spy <- midy + curved * 1/2 * (from.c[1]-to.c[1])
+      coords <- c(from.c[1], from.c[2], spx, spy, to.c[1], to.c[2])
+    } else {
+      smooth <- FALSE
+      coords <- c(from.c[1], from.c[2], to.c[1], to.c[2])
+    }
+    args <- c(list(tkp$canvas, "line"),
+              coords, 
+              list(width=edge.width, activewidth=2*edge.width,
+                   arrow=arrow, arrowshape=arrow.size * c(10, 10, 5),
+                   fill=edge.color, activefill="red", dash=edge.lty,
+                   tags=c("edge", paste(sep="", "edge-", id),
+                     paste(sep="", "from-", from),
+                     paste(sep="", "to-", to))), smooth=smooth)
+    do.call(tkcreate, args)
   } else {
     ## loop edge
     ## the coordinates are not correct but we will call update anyway...
@@ -849,11 +868,22 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
     vertex.size2 <- ifelse(length(tkp$params$vertex.size)>1,
                            tkp$params$vertex.size[from+1],
                            tkp$params$vertex.size)
+    curved <- tkp$params$curved[[edgeid]]
     to.c[1] <- from.c[1] + (r-vertex.size)*cos(phi)
     to.c[2] <- from.c[2] + (r-vertex.size)*sin(phi)
     from.c[1] <- from.c[1] + vertex.size2*cos(phi)
     from.c[2] <- from.c[2] + vertex.size2*sin(phi)
-    tkcoords(tkp$canvas, itemid, from.c[1], from.c[2], to.c[1], to.c[2])
+    if (is.logical(curved)) curved <- curved * 0.5
+    if (curved == 0) {
+      tkcoords(tkp$canvas, itemid, from.c[1], from.c[2], to.c[1], to.c[2])
+    } else {
+      midx <- (from.c[1]+to.c[1])/2
+      midy <- (from.c[2]+to.c[2])/2        
+      spx <- midx - curved * 1/2 * (from.c[2]-to.c[2])
+      spy <- midy + curved * 1/2 * (from.c[1]-to.c[1])
+      tkcoords(tkp$canvas, itemid, from.c[1], from.c[2], spx, spy,
+               to.c[1], to.c[2])
+    }
   } else {
     vertex.size <- ifelse(length(tkp$params$vertex.size)>1,
                           tkp$params$vertex.size[to+1],
