@@ -525,6 +525,16 @@ graph.data.frame <- function(d, directed=TRUE, vertices=NULL) {
     stop("the data frame should contain at least two columns")
   }
 
+  ## Handle if some elements are 'NA'
+  if (any(is.na(d))) {
+    warning("In `d' `NA' elements were replaced with string \"NA\"")
+    d[ is.na(d) ] <- 'NA'
+  }
+  if (!is.null(vertices) && any(is.na(vertices[,1]))) {
+    warning("In `vertices[,1]' `NA' elements were replaced with string \"NA\"")
+    vertices[,1][is.na(vertices[,1])] <- 'NA'
+  }    
+  
   names <- unique( c(as.character(d[,1]), as.character(d[,2])) )
   if (!is.null(vertices)) {
     names2 <- names
@@ -720,6 +730,14 @@ graph.incidence.sparse <- function(incidence, directed, mode, multiple,
       el[,3] <- el[,3] != 0
     }
 
+    if (!directed || mode==1) {
+      ## nothing do to
+    } else if (mode==2) {
+      el[,1:2] <- el[,c(2,1)]
+    } else if (mode==3) {
+      el <- rbind(el, el[,c(2,1,3)])
+    }
+    
     edges <- unlist(apply(el, 1, function(x) rep(unname(x[1:2]), x[3])))
     res <- graph(n=n1+n2, edges, directed=directed)
   } 
@@ -781,7 +799,7 @@ graph.incidence.dense <- function(incidence, directed, mode, multiple,
     mode(incidence) <- "double"
     on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
     ## Function call
-    res <- .Call("R_igraph_incidence", incidence, mode, directed, multiple,
+    res <- .Call("R_igraph_incidence", incidence, directed, mode, multiple,
                  PACKAGE="igraph")
     res <- set.vertex.attribute(res$graph, "type", value=res$types)
 

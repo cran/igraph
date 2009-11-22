@@ -118,9 +118,13 @@ get.adjacency.sparse <- function(graph, type=c("both", "upper", "lower"),
                       j=pmin(el[,1],el[,2])+1, x=value)
     } else if (type=="both") {
       ## both
-      pn <- pmin(el[,1],el[,2])+1
-      px <- pmax(el[,1],el[,2])+1
-      res <- spMatrix(vc, vc, i=c(pn,px), j=c(px,pn), x=rep(value,2))
+      i <- pn <- pmin(el[,1],el[,2])+1
+      j <- px <- pmax(el[,1],el[,2])+1
+      non.loop <- pn != px
+      i <- c(pn, px[non.loop])
+      j <- c(px, pn[non.loop])
+      x <- c(value, value[non.loop])
+      res <- spMatrix(vc, vc, i=i, j=j, x=x)
     }
   }
 
@@ -219,6 +223,11 @@ igraph.from.graphNEL <- function(graphNEL, name=TRUE, weight=TRUE,
   }
   
   al <- lapply(edgeL(graphNEL), "[[", "edges")
+  if (edgemode(graphNEL)=="undirected") {
+    al <- mapply(seq_along(al), al, FUN=function(n, l) {
+      c(l, rep(n, sum(l==n)))
+    })
+  }
   al <- lapply(al, function(x) x-1)
   g <- graph.adjlist(al, directed= edgemode(graphNEL)=="directed")
   if (name) {
