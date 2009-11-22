@@ -1677,12 +1677,16 @@ int igraph_community_label_propagation(const igraph_t *graph,
       } else {
         VECTOR(*membership)[i] = VECTOR(*initial)[i] + 1;
       }
-      if (VECTOR(*fixed)[i]) {
-        if (VECTOR(*membership)[i] == 0) {
-          IGRAPH_WARNING("Fixed nodes cannot be unlabeled, ignoring them");
-          VECTOR(*fixed)[i] = 0;
-        } else {
-          no_of_not_fixed_nodes--;
+    }
+    if (fixed) {
+      for (i=0; i<no_of_nodes; i++) {
+        if (VECTOR(*fixed)[i]) {
+          if (VECTOR(*membership)[i] == 0) {
+            IGRAPH_WARNING("Fixed nodes cannot be unlabeled, ignoring them");
+            VECTOR(*fixed)[i] = 0;
+          } else {
+            no_of_not_fixed_nodes--;
+          }
         }
       }
     }
@@ -1748,6 +1752,7 @@ int igraph_community_label_propagation(const igraph_t *graph,
 
       /* Count the weights corresponding to different labels */
       igraph_vector_null(&label_counters);
+      igraph_vector_clear(&dominant_labels);
       max_count = 0.0;
       if (weights) {
         neis = igraph_adjedgelist_get(&ael, v1);

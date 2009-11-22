@@ -54,18 +54,22 @@ spinglass.community <- function(graph, weights=NULL, vertex=NULL, spins=25,
           PACKAGE="igraph")
   } else {
     .Call("R_igraph_spinglass_my_community", graph, weights,
-          as.numeric(vertex), as.numeric(spins), 
+          as.igraph.vs(graph, vertex), as.numeric(spins), 
           as.numeric(update.rule), as.numeric(gamma),
           PACKAGE="igraph")
   }    
 }
 
 walktrap.community <- function(graph, weights=E(graph)$weight, steps=4, merges=TRUE,
-                               modularity=FALSE, labels=TRUE) {
+                               modularity=TRUE, labels=TRUE, membership=TRUE) {
   if (!is.igraph(graph)) {
     stop("Not a graph object!")
   }
 
+  if (membership && !modularity) {
+    modularity <- TRUE
+  }
+  
   if (!is.null(weights)) {
     weights <- as.numeric(weights)
   }
@@ -77,6 +81,14 @@ walktrap.community <- function(graph, weights=E(graph)$weight, steps=4, merges=T
   if (labels && "name" %in% list.vertex.attributes(graph)) {
     res$labels <- V(graph)$name
   }
+
+  res <- append(res, list(membership=NULL))
+  if (membership) {
+    res$membership <-
+      community.to.membership(graph, res$merges,
+                              steps=which.max(res$modularity)-1)$membership
+  }
+  
   class(res) <- "igraph.walktrap"
   res
 }

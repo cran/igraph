@@ -672,9 +672,13 @@ int R_igraph_attribute_get_numeric_graph_attr(const igraph_t *graph,
   if (ga == R_NilValue) {
     IGRAPH_ERROR("No such attribute", IGRAPH_EINVAL);
   }
+
+  PROTECT(ga=AS_NUMERIC(ga));
   
   IGRAPH_CHECK(igraph_vector_resize(value, 1));
   VECTOR(*value)[0]=REAL(ga)[0];
+
+  UNPROTECT(1);
 
   return 0;
 }
@@ -689,10 +693,14 @@ int R_igraph_attribute_get_string_graph_attr(const igraph_t *graph,
   if (ga == R_NilValue) {
     IGRAPH_ERROR("No such attribute", IGRAPH_EINVAL);
   }
-  
+
+  PROTECT(ga=AS_CHARACTER(ga));
+
   IGRAPH_CHECK(igraph_strvector_resize(value, 1));
   IGRAPH_CHECK(igraph_strvector_set(value, 0, CHAR(STRING_ELT(ga, 0))));
-  
+
+  UNPROTECT(1);
+
   return 0;
 }
 
@@ -746,9 +754,11 @@ int R_igraph_attribute_get_string_vertex_attr(const igraph_t *graph,
   if (va == R_NilValue) {
     IGRAPH_ERROR("No such attribute", IGRAPH_EINVAL);
   }
+
+  PROTECT(va=AS_CHARACTER(va));
   
   if (igraph_vs_is_all(&vs)) {
-    R_igraph_SEXP_to_strvector_copy(AS_CHARACTER(va), value);
+    R_igraph_SEXP_to_strvector_copy(va, value);
   } else {
     igraph_vit_t it;
     long int i=0;
@@ -757,7 +767,7 @@ int R_igraph_attribute_get_string_vertex_attr(const igraph_t *graph,
     IGRAPH_CHECK(igraph_strvector_resize(value, IGRAPH_VIT_SIZE(it)));
     while (!IGRAPH_VIT_END(it)) {
       long int v=IGRAPH_VIT_GET(it);
-      const char *str=CHAR(STRING_ELT(AS_CHARACTER(va), v));
+      const char *str=CHAR(STRING_ELT(va, v));
       IGRAPH_CHECK(igraph_strvector_set(value, i, str));
       IGRAPH_VIT_NEXT(it);
       i++;
@@ -765,7 +775,9 @@ int R_igraph_attribute_get_string_vertex_attr(const igraph_t *graph,
     igraph_vit_destroy(&it);
     IGRAPH_FINALLY_CLEAN(1);
   }
-  
+
+  UNPROTECT(1);
+
   return 0;
 }
 
@@ -818,9 +830,11 @@ int R_igraph_attribute_get_string_edge_attr(const igraph_t *graph,
   if (ea == R_NilValue) {
     IGRAPH_ERROR("No such attribute", IGRAPH_EINVAL);
   }
+
+  PROTECT(ea=AS_CHARACTER(ea));
   
   if (igraph_es_is_all(&es)) {
-    R_igraph_SEXP_to_strvector_copy(AS_CHARACTER(ea), value);
+    R_igraph_SEXP_to_strvector_copy(ea, value);
   } else {
     igraph_eit_t it;
     long int i=0;
@@ -829,7 +843,7 @@ int R_igraph_attribute_get_string_edge_attr(const igraph_t *graph,
     IGRAPH_CHECK(igraph_strvector_resize(value, IGRAPH_EIT_SIZE(it)));
     while (!IGRAPH_EIT_END(it)) {
       long int e=IGRAPH_EIT_GET(it);
-      const char *str=CHAR(STRING_ELT(AS_CHARACTER(ea), e));
+      const char *str=CHAR(STRING_ELT(ea, e));
       IGRAPH_CHECK(igraph_strvector_set(value, i, str));
       IGRAPH_EIT_NEXT(it);
       i++;
@@ -837,6 +851,8 @@ int R_igraph_attribute_get_string_edge_attr(const igraph_t *graph,
     igraph_eit_destroy(&it);
     IGRAPH_FINALLY_CLEAN(1);
   }
+  
+  UNPROTECT(1);
   
   return 0;
 }
@@ -5498,11 +5514,11 @@ SEXP R_igraph_spinglass_community(SEXP graph, SEXP pweights,
   return result;
 }
 
-SEXP R_igraph_spinglass_my_community(SEXP graph, SEXP pweights,
+SEXP R_igraph_spinglass_my_community(SEXP graph, SEXP weights,
 				     SEXP pvertex, SEXP pspins,
 				     SEXP pupdate_rule, SEXP pgamma) {
   igraph_t g;
-  igraph_vector_t weights;
+  igraph_vector_t v_weights, *pweights=0;
   igraph_integer_t vertex=REAL(pvertex)[0];
   igraph_integer_t spins=REAL(pspins)[0];
   igraph_spincomm_update_t update_rule=REAL(pupdate_rule)[0];
@@ -5517,9 +5533,11 @@ SEXP R_igraph_spinglass_my_community(SEXP graph, SEXP pweights,
   R_igraph_before();
   
   R_SEXP_to_igraph(graph, &g);
-  R_SEXP_to_vector(pweights, &weights);
+  if (!isNull(weights)) { 
+    pweights=&v_weights; R_SEXP_to_vector(weights, &v_weights);
+  }
   igraph_vector_init(&community, 0);
-  igraph_community_spinglass_single(&g, &weights, vertex, &community,
+  igraph_community_spinglass_single(&g, pweights, vertex, &community,
 				    &cohesion, &adhesion, &inner_links,
 				    &outer_links, spins, update_rule, gamma);
   
@@ -9723,6 +9741,43 @@ SEXP R_igraph_biconnected_components(SEXP graph) {
   SET_STRING_ELT(names, 2, CREATE_STRING_VECTOR("articulation_points"));
   SET_NAMES(result, names);
   UNPROTECT(4);
+
+  R_igraph_after();
+
+  UNPROTECT(1);
+  return(result);
+}
+
+/*-------------------------------------------/
+/ igraph_layout_star                         /
+/-------------------------------------------*/
+SEXP R_igraph_layout_star(SEXP graph, SEXP center, SEXP order) {
+                                        /* Declarations */
+  igraph_t c_graph;
+  igraph_matrix_t c_res;
+  igraph_integer_t c_center;
+  igraph_vector_t c_order;
+  SEXP res;
+  int c_result;
+  SEXP result, names;
+
+  R_igraph_before();
+                                        /* Convert input */
+  R_SEXP_to_igraph(graph, &c_graph);
+  if (0 != igraph_matrix_init(&c_res, 0, 0)) { 
+  igraph_error("", __FILE__, __LINE__, IGRAPH_ENOMEM); 
+  } 
+  IGRAPH_FINALLY(igraph_matrix_destroy, &c_res);
+  c_center=REAL(center)[0];
+  if (!isNull(order)) { R_SEXP_to_vector(order, &c_order); }
+                                        /* Call igraph */
+  c_result=igraph_layout_star(&c_graph, &c_res, c_center, (isNull(order) ? 0 : &c_order));
+
+                                        /* Convert output */
+  PROTECT(res=R_igraph_matrix_to_SEXP(&c_res)); 
+  igraph_matrix_destroy(&c_res); 
+  IGRAPH_FINALLY_CLEAN(1);
+  result=res;
 
   R_igraph_after();
 

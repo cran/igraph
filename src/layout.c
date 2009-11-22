@@ -145,6 +145,57 @@ int igraph_layout_circle(const igraph_t *graph, igraph_matrix_t *res) {
 }
 
 /**
+ * \function igraph_layout_star
+ * Generate a star-like layout
+ * 
+ * \param graph The input graph.
+ * \param res Pointer to an initialized matrix, the layout is stored here.
+ * \param center The id of the vertex to put in the center.
+ * \param order A numeric vector giving the order of the vertices 
+ *      (including the center vertex!). If a null pointer, then the
+ *      vertices are placed in increasing vertex id order.
+ * \return Error code.
+ * 
+ * Time complexity: O(|V|), linear in the number of vertices.
+ * 
+ * \sa \ref igraph_layout_circle() and other layout generators.
+ */
+
+int igraph_layout_star(const igraph_t *graph, igraph_matrix_t *res,
+		       igraph_integer_t center, const igraph_vector_t *order) {
+  
+  long int no_of_nodes=igraph_vcount(graph);
+  long int c=center;
+  long int i;
+  igraph_real_t step;
+  igraph_real_t phi;
+
+  if (order && igraph_vector_size(order) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid order vector length", IGRAPH_EINVAL);
+  }
+  
+  IGRAPH_CHECK(igraph_matrix_resize(res, no_of_nodes, 2));
+
+  if (no_of_nodes==1) {
+    MATRIX(*res, 0, 0) = MATRIX(*res, 0, 1) = 0.0; 
+  } else {
+    for (i=0, step=2*M_PI/(no_of_nodes-1), phi=0; 
+	 i<no_of_nodes; i++) {
+      long int node = order ? VECTOR(*order)[i] : i;
+      if (node != c) { 
+	MATRIX(*res, node, 0) = cos(phi);
+	MATRIX(*res, node, 1) = sin(phi);
+	phi += step;
+      } else {
+	MATRIX(*res, node, 0) = MATRIX(*res, node, 1) = 0.0;
+      }
+    }
+  }
+  
+  return 0;
+}
+
+/**
  * \function igraph_layout_sphere
  * \brief Places vertices (more or less) uniformly on a sphere.
  *
@@ -216,14 +267,19 @@ int igraph_layout_sphere(const igraph_t *graph, igraph_matrix_t *res) {
  * \param graph Pointer to an initialized graph object.
  * \param res Pointer to an initialized matrix object. This will
  *        contain the result and will be resized in needed.
- * \param niter The number of iterations to do.
+ * \param niter The number of iterations to do. A reasonable
+ *        default value is 500.
  * \param maxdelta The maximum distance to move a vertex in an
- *        iteration.
- * \param area The area parameter of the algorithm.
+ *        iteration. A reasonable default value is the number of
+ *        vertices.
+ * \param area The area parameter of the algorithm. A reasonable
+ *        default is the square of the number of vertices.
  * \param coolexp The cooling exponent of the simulated annealing.
+ *        A reasonable default is 1.5.
  * \param repulserad Determines the radius at which
  *        vertex-vertex repulsion cancels out attraction of
- *        adjacent vertices.
+ *        adjacent vertices. A reasonable default is \p area
+ *        times the number of vertices.
  * \param use_seed Logical, if true the supplied values in the
  *        \p res argument are used as an initial layout, if
  *        false a random initial layout is used.
@@ -353,14 +409,19 @@ int igraph_layout_fruchterman_reingold(const igraph_t *graph, igraph_matrix_t *r
  * \param graph Pointer to an initialized graph object.
  * \param res Pointer to an initialized matrix object. This will
  *        contain the result and will be resized in needed.
- * \param niter The number of iterations to do.
+ * \param niter The number of iterations to do. A reasonable
+ *        default value is 500.
  * \param maxdelta The maximum distance to move a vertex in an
- *        iteration.
- * \param volume The volume parameter of the algorithm.
+ *        iteration. A reasonable default value is the number of
+ *        vertices.
+ * \param volume The volume parameter of the algorithm. A reasonable
+ *        default is the number of vertices^3.
  * \param coolexp The cooling exponent of the simulated annealing.
+ *        A reasonable default is 1.5.
  * \param repulserad Determines the radius at which
  *        vertex-vertex repulsion cancels out attraction of
- *        adjacent vertices.
+ *        adjacent vertices. A reasonable default is \p volume
+ *        times the number of vertices.
  * \param use_seed Logical, if true the supplied values in the
  *        \p res argument are used as an initial layout, if
  *        false a random initial layout is used.
@@ -511,11 +572,15 @@ int igraph_layout_fruchterman_reingold_3d(const igraph_t *graph,
  * \param graph A graph object.
  * \param res Pointer to an initialized matrix object. This will
  *        contain the result and will be resized if needed.
- * \param niter The number of iterations to perform.
+ * \param niter The number of iterations to perform. A reasonable
+ *        default value is 1000.  
  * \param sigma Sets the base standard deviation of position
- *        change proposals. 
+ *        change proposals. A reasonable default value is the
+ *        number of vertices / 4.
  * \param initemp Sets the initial temperature for the annealing.
+ *        A reasonable default value is 10.
  * \param coolexp The cooling exponent of the annealing.
+ *        A reasonable default value is 0.99.
  * \param kkconst The Kamada-Kawai vertex attraction constant.
  * \param use_seed Boolean, whether to use the values cupplied in the \p res 
  *     argument as the initial configuration. If zero then a random initial 
@@ -613,12 +678,17 @@ int igraph_layout_kamada_kawai(const igraph_t *graph, igraph_matrix_t *res,
  * \param graph A graph object.
  * \param res Pointer to an initialized matrix object. This will
  *        contain the result and will be resized if needed.
- * \param niter The number of iterations to perform.
+ * \param niter The number of iterations to perform. A reasonable
+ *        default value is 1000.  
  * \param sigma Sets the base standard deviation of position
- *        change proposals. 
+ *        change proposals. A reasonable default value is the
+ *        number of vertices / 4.
  * \param initemp Sets the initial temperature for the annealing.
- * \param coolexp The cooling exponent of the annealing.
+ *        A reasonable default value is 10.
+ * \param coolexp The cooling exponent of the annealing.  
+ *        A reasonable default value is 0.99.
  * \param kkconst The Kamada-Kawai vertex attraction constant.
+ *        Typical value: (number of vertices)^2
  * \param use_seed Boolean, whether to use the values cupplied in the \p res 
  *     argument as the initial configuration. If zero then a random initial 
  *     configuration is used.
@@ -739,16 +809,22 @@ void igraph_i_norm2d(igraph_real_t *x, igraph_real_t *y) {
  * \param res Pointer to an initialized matrix object to hold the
  *   result. It will be resized if needed.
  * \param maxit The maximum number of cooling iterations to perform
- *   for each layout step.
+ *   for each layout step. A reasonable default is 150.
  * \param maxdelta The maximum length of the move allowed for a vertex
- *   in a single iteration. 
+ *   in a single iteration. A reasonable default is the number of
+ *   vertices.
  * \param area This parameter gives the area of the square on which
- *   the vertices will be placed.
- * \param coolexp The cooling exponent. 
+ *   the vertices will be placed. A reasonable default value is the
+ *   number of vertices squared.
+ * \param coolexp The cooling exponent. A reasonable default value is
+ *   1.5.
  * \param repulserad Determines the radius at which vertex-vertex 
- *   repulsion cancels out attraction of adjacenct vertices.
+ *   repulsion cancels out attraction of adjacenct vertices. A
+ *   reasonable default value is \p area times the number of vertices.
  * \param cellsize The size of the grid cells, one side of the
- *   square. 
+ *   square. A reasonable default value is the fourth root of
+ *   \p area (or the square root of the number of vertices if \p area
+ *   is also left at its default value).
  * \param proot The root vertex, this is placed first, its neighbors
  *   in the first iteration, second neighbors in the second, etc. If
  *   negative then a random vertex is chosen.
@@ -1021,14 +1097,23 @@ int igraph_layout_lgl(const igraph_t *graph, igraph_matrix_t *res,
  * \param graph The graph object. 
  * \param res The result, the coordinates in a matrix. The parameter
  *   should point to an initialized matrix object and will be resized.
- * \param niter Number of iterations to perform.
- * \param maxdelta Maximum distance to move a vertex in an iteration.
- * \param area The area of the square on which the vertices will be
- *   placed.
- * \param coolexp The cooling exponent.
- * \param repulserad Determines the radius at which vertex-vertex 
- *   repulsion cancels out attraction of adjacenct vertices.
- * \param cellsize The size of the grid cells.
+ * \param niter The number of iterations to do. A reasonable
+ *        default value is 500.
+ * \param maxdelta The maximum distance to move a vertex in an
+ *        iteration. A reasonable default value is the number of
+ *        vertices.
+ * \param area The area parameter of the algorithm. A reasonable
+ *        default is the square of the number of vertices.
+ * \param coolexp The cooling exponent of the simulated annealing.
+ *        A reasonable default is 1.5.
+ * \param repulserad Determines the radius at which
+ *        vertex-vertex repulsion cancels out attraction of
+ *        adjacent vertices. A reasonable default is \p area
+ *        times the number of vertices.
+ * \param cellsize The size of the grid cells. A reasonable default is
+ *        the fourth root of \p area (or the square root of the
+ *        number of vertices if \p area is also left at its default
+ *        value)
  * \param use_seed Logical, if true, the coordinates passed in \p res
  *   (should have the appropriate size) will be used for the first
  *   iteration.
@@ -2049,6 +2134,8 @@ int igraph_i_layout_merge_dla(igraph_i_layout_mergegrid_t *grid,
   igraph_real_t angle, len;
   long int steps=0;
 
+  RNG_BEGIN();
+
   while (sp < 0) {
     /* start particle */
     do {
@@ -2073,6 +2160,8 @@ int igraph_i_layout_merge_dla(igraph_i_layout_mergegrid_t *grid,
       }
     }
   }
+
+  RNG_END();
 
 /*   fprintf(stderr, "%li ", steps); */
   return 0;

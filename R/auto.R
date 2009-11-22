@@ -77,7 +77,7 @@ forest.fire.game <- function(nodes, fw.prob, bw.factor=1, ambs=1, directed=TRUE,
 closeness.estimate <- function(graph, vids=V(graph), mode=c("out", "in", "all", "total"), cutoff) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
-  vids <- as.igraph.vs(vids)
+  vids <- as.igraph.vs(graph, vids)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
   cutoff <- as.numeric(cutoff)
 
@@ -91,7 +91,7 @@ closeness.estimate <- function(graph, vids=V(graph), mode=c("out", "in", "all", 
 betweenness.estimate <- function(graph, vids=V(graph), directed=TRUE, cutoff, verbose=igraph.par("verbose")) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
-  vids <- as.igraph.vs(vids)
+  vids <- as.igraph.vs(graph, vids)
   directed <- as.logical(directed)
   cutoff <- as.numeric(cutoff)
 
@@ -118,7 +118,7 @@ edge.betweenness.estimate <- function(graph, directed=TRUE, cutoff) {
 page.rank.old <- function(graph, vids=V(graph), directed=TRUE, niter=1000, eps=0.001, damping=0.85, old=FALSE) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
-  vids <- as.igraph.vs(vids)
+  vids <- as.igraph.vs(graph, vids)
   directed <- as.logical(directed)
   niter <- as.numeric(niter)
   eps <- as.numeric(eps)
@@ -135,7 +135,7 @@ page.rank.old <- function(graph, vids=V(graph), directed=TRUE, niter=1000, eps=0
 page.rank <- function(graph, vids=V(graph), directed=TRUE, damping=0.85, weights=NULL, options=igraph.arpack.default) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
-  vids <- as.igraph.vs(vids)
+  vids <- as.igraph.vs(graph, vids)
   directed <- as.logical(directed)
   damping <- as.numeric(damping)
   if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
@@ -266,7 +266,7 @@ is.mutual <- function(graph, es=E(graph)) {
 graph.knn <- function(graph, vids=V(graph), weights=NULL) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
-  vids <- as.igraph.vs(vids)
+  vids <- as.igraph.vs(graph, vids)
   if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
   weights <- E(graph)$weight 
   } 
@@ -286,7 +286,7 @@ graph.knn <- function(graph, vids=V(graph), weights=NULL) {
 graph.strength <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total"), loops=TRUE, weights=NULL) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
-  vids <- as.igraph.vs(vids)
+  vids <- as.igraph.vs(graph, vids)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
   loops <- as.logical(loops)
   if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
@@ -389,10 +389,23 @@ biconnected.components <- function(graph) {
   res
 }
 
+layout.star <- function(graph, center=V(graph)[0], order=NULL) {
+  # Argument checks
+  if (!is.igraph(graph)) { stop("Not a graph object") }
+  center <- as.igraph.vs(graph, center)
+  if (!is.null(order)) order <- as.numeric(order)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_layout_star", graph, center, order,
+        PACKAGE="igraph")
+  res
+}
+
 similarity.jaccard <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total"), loops=FALSE) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
-  vids <- as.igraph.vs(vids)
+  vids <- as.igraph.vs(graph, vids)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
   loops <- as.logical(loops)
 
@@ -406,7 +419,7 @@ similarity.jaccard <- function(graph, vids=V(graph), mode=c("all", "out", "in", 
 similarity.dice <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total"), loops=FALSE) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
-  vids <- as.igraph.vs(vids)
+  vids <- as.igraph.vs(graph, vids)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
   loops <- as.logical(loops)
 
@@ -420,7 +433,7 @@ similarity.dice <- function(graph, vids=V(graph), mode=c("all", "out", "in", "to
 similarity.invlogweighted <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total")) {
   # Argument checks
   if (!is.igraph(graph)) { stop("Not a graph object") }
-  vids <- as.igraph.vs(vids)
+  vids <- as.igraph.vs(graph, vids)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )

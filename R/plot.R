@@ -160,7 +160,7 @@ plot.igraph <- function(x,
     loop <- function(x0, y0, cx=x0, cy=y0, color, angle=0, label=NA,
                      width=1, arr=2, lty=1, arrow.size=arrow.size, arr.w=arr.w) {
 
-      rad <- angle/180*pi
+      rad <- angle
       center <- c(cx,cy)
       cp <- matrix( c(x0,y0, x0+.4,y0+.2, x0+.4,y0-.2, x0,y0),
                    nc=2, byrow=TRUE)
@@ -174,7 +174,7 @@ plot.igraph <- function(x,
 
       plot.bezier(cp, 50, color, width, arr=arr, lty=lty, arrow.size=arrow.size, arr.w=arr.w)
 
-      if (!is.na(label)) {
+      if (is.language(label) || !is.na(label)) {
         lx <- x0+.3
         ly <- y0
         phi <- atan2(ly-center[2], lx-center[1])
@@ -204,10 +204,10 @@ plot.igraph <- function(x,
     if (length(arrow.mode)>1) { arr <- arrow.mode[loops.e] }
     asize <- arrow.size
     if (length(arrow.size)>1) { asize <- arrow.size[loops.e] }
-    xx0 <- layout[loops.v,1] + cos(la/180*pi) * vs
-    yy0 <- layout[loops.v,2] + sin(la/180*pi) * vs
+    xx0 <- layout[loops.v,1] + cos(la) * vs
+    yy0 <- layout[loops.v,2] - sin(la) * vs
     mapply(loop, xx0, yy0,
-           color=ec, angle=la, label=loop.labels, lty=lty,
+           color=ec, angle=-la, label=loop.labels, lty=lty,
            width=ew, arr=arr, arrow.size=asize, arr.w=arrow.width)
   }
 
@@ -219,9 +219,10 @@ plot.igraph <- function(x,
     if (length(edge.lty)>1) { edge.lty <- edge.lty[nonloops.e] }
     if (length(arrow.mode)>1) { arrow.mode <- arrow.mode[nonloops.e] }
     if (length(arrow.size)>1) { arrow.size <- arrow.size[nonloops.e] }
+    if (length(curved)>1) { curved <- curved[nonloops.e] }
     if (length(unique(arrow.mode))==1) {
       igraph.Arrows(x0, y0, x1, y1, h.col=edge.color, sh.col=edge.color,
-                    sh.lwd=edge.width, h.lwd=1, open=FALSE, code=arrow.mode,
+                    sh.lwd=edge.width, h.lwd=1, open=FALSE, code=arrow.mode[1],
                     sh.lty=edge.lty, h.lty=1, size=arrow.size,
                     width=arrow.width, curved=curved)
     } else {

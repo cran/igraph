@@ -1,5 +1,5 @@
 Package: igraph
-Version: 0.5.3
+Version: 0.5.4
 Date: Nov 22, 2009
 Title: Network analysis and visualization
 Author: Gabor Csardi <Gabor.Csardi@unil.ch>
@@ -12,6 +12,7 @@ Depends: stats
 Suggests: stats4, rgl, tcltk, RSQLite, digest, graph, Matrix
 License: GPL (>= 2)
 URL: http://igraph.sourceforge.net
-Packaged: 2009-11-22 12:32:44 UTC; csardi
+SystemRequirements: gmp, libxml2
+Packaged: 2010-08-06 14:25:42 UTC; gaborcsardi
 Repository: CRAN
-Date/Publication: 2009-11-22 16:20:35
+Date/Publication: 2010-08-06 16:35:45

@@ -37,7 +37,7 @@
 __BEGIN_DECLS
 
 #ifndef _GNU_SOURCE
-# define _GNU_SOURCE
+# define _GNU_SOURCE 1
 #endif
 
 #include "types.h"
@@ -929,6 +929,7 @@ int igraph_clusters(const igraph_t *graph, igraph_vector_t *membership,
 		    igraph_connectedness_t mode);
 int igraph_is_connected(const igraph_t *graph, igraph_bool_t *res, 
 			igraph_connectedness_t mode);
+void igraph_decompose_destroy(igraph_vector_ptr_t *complist);
 int igraph_decompose(const igraph_t *graph, igraph_vector_ptr_t *components, 
 		     igraph_connectedness_t mode, 
 		     long int maxcompno, long int minelements);
@@ -966,6 +967,8 @@ int igraph_independence_number(const igraph_t *graph, igraph_integer_t *no);
 
 int igraph_layout_random(const igraph_t *graph, igraph_matrix_t *res);
 int igraph_layout_circle(const igraph_t *graph, igraph_matrix_t *res);
+int igraph_layout_star(const igraph_t *graph, igraph_matrix_t *res,
+		       igraph_integer_t center, const igraph_vector_t *order);
 int igraph_layout_fruchterman_reingold(const igraph_t *graph, igraph_matrix_t *res,
 				       igraph_integer_t niter, igraph_real_t maxdelta,
 				       igraph_real_t area, igraph_real_t coolexp, 

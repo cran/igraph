@@ -57,7 +57,7 @@ typedef union YYSTYPE
   long int edgenum;
   double weightnum;
 }
-/* Line 1489 of yacc.c.  */
+/* Line 1529 of yacc.c.  */
 #line 62 "foreign-ncol-parser.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

@@ -86,6 +86,9 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
     # simple indexing by logical vector
     res <- as.numeric(x) [ i ]
     attributes(res) <- attributes(x)
+  } else if (is.character(i)) {
+    res <- as.igraph.vs(get("graph", attr(x, "env")), i)
+    attributes(res) <- attributes(x)
   } else {
     # language expression, we also do attribute based indexing
     graph <- get("graph", attr(x, "env"))
@@ -99,7 +102,7 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
         v <- which(v)
       }
       on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-      tmp <- .Call("R_igraph_vs_nei", graph, x, as.igraph.vs(v),
+      tmp <- .Call("R_igraph_vs_nei", graph, x, as.igraph.vs(graph, v),
                    as.numeric(mode),
                    PACKAGE="igraph")
       tmp[as.numeric(x)+1]
@@ -141,14 +144,18 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
                    PACKAGE="igraph")
       tmp[as.numeric(x)+1]
     }
-    i <- eval(i, c(graph[[9]][[3]], adj=adj, nei=nei, from=from, to=to,
-                   as.list(parent.frame())))
+    i <- eval(i, envir=c(graph[[9]][[3]], nei=nei, innei=innei,
+                   outnei=outnei, adj=adj, from=from, to=to),
+              enclos=parent.frame())
     if (is.numeric(i) || is.integer(i)) {
       i <- as.numeric(i)
       res <- i[ i %in% x ]
       attributes(res) <- attributes(x)
     } else if (is.logical(i)) {
       res <- as.numeric(x) [ i ]
+      attributes(res) <- attributes(x)
+    } else if (is.character(i)) {
+      res <- as.igraph.vs(get("graph", attr(x, "env")), i)
       attributes(res) <- attributes(x)
     } else {
       stop("invalid indexing of vertex seq")
@@ -175,27 +182,31 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
     adj <- function(v) {
       ## TRUE iff the edge is adjacent to at least one vertex in v
       on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-      tmp <- .Call("R_igraph_es_adj", graph, x, as.igraph.vs(v), as.numeric(3),
+      tmp <- .Call("R_igraph_es_adj", graph, x, as.igraph.vs(graph, v), as.numeric(3),
                    PACKAGE="igraph")
       tmp[ as.numeric(x)+1 ]
     }
     from <- function(v) {
       ## TRUE iff the edge originates from at least one vertex in v
       on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-      tmp <- .Call("R_igraph_es_adj", graph, x, as.igraph.vs(v), as.numeric(1),
+      tmp <- .Call("R_igraph_es_adj", graph, x, as.igraph.vs(graph, v), as.numeric(1),
                    PACKAGE="igraph")
       tmp[ as.numeric(x)+1 ]      
     }
     to <- function(v) {
       ## TRUE iff the edge points to at least one vertex in v
       on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-      tmp <- .Call("R_igraph_es_adj", graph, x, as.igraph.vs(v), as.numeric(2),
+      tmp <- .Call("R_igraph_es_adj", graph, x, as.igraph.vs(graph, v), as.numeric(2),
                    PACKAGE="igraph")
       tmp[ as.numeric(x)+1 ]
     }
-    i <- eval(i, c(graph[[9]][[4]], from=list(graph[[3]][ as.numeric(x)+1 ]),
-                   to=list(graph[[4]][as.numeric(x)+1]), graph=list(graph),
-                   adj=adj, as.list(parent.frame())))
+    i <- eval(i, envir=c(graph[[9]][[4]],
+                   adj=adj, from=from, to=to,
+                   .igraph.from=list(graph[[3]][ as.numeric(x)+1 ]),
+                   .igraph.to=list(graph[[4]][as.numeric(x)+1]),
+                   .igraph.graph=list(graph),
+                   `%--%`=`%--%`, `%->%`=`%->%`, `%<-%`=`%<-%`),
+              enclos=parent.frame())
     if (is.numeric(i) || is.integer(i)) {
       i <- as.numeric(i)
       res <- i[ i %in% x ]
@@ -212,15 +223,15 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
 } 
 
 "%--%" <- function(f, t) {
-  from <- get("from", parent.frame())
-  to <- get("to", parent.frame())
+  from <- get(".igraph.from", parent.frame())
+  to <- get(".igraph.to", parent.frame())
   (from %in% f & to %in% t) | (to %in% f & from %in% t)
 }
 
 "%->%" <- function(f, t) {
-  from <- get("from", parent.frame())
-  to <- get("to", parent.frame())
-  graph <- get("graph", parent.frame())
+  from <- get(".igraph.from", parent.frame())
+  to <- get(".igraph.to", parent.frame())
+  graph <- get(".igraph.graph", parent.frame())
   if (is.directed(graph)) {
     from %in% f & to %in% t
   } else {
@@ -229,9 +240,9 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
 }
 
 "%<-%" <- function(t, value) {
-  from <- get("from", parent.frame())
-  to <- get("to", parent.frame())
-  graph <- get("graph", parent.frame())
+  from <- get(".igraph.from", parent.frame())
+  to <- get(".igraph.to", parent.frame())
+  graph <- get(".igraph.graph", parent.frame())
   if (is.directed(graph)) {
     from %in% value & to %in% t
   } else {
@@ -338,7 +349,16 @@ print.igraph.es <- function(x, ...) {
 
 # these are internal
 
-as.igraph.vs <- as.numeric
+as.igraph.vs <- function(graph, v) {
+  if (is.character(v) && "name" %in% list.vertex.attributes(graph)) {
+    v <- as.numeric(match(v, V(graph)$name)-1)
+    if (any(is.na(v))) {
+      stop("Invalid vertex names")
+    }
+    v
+  } else {
+    as.numeric(v)
+  }
+}
+
 as.igraph.es <- as.numeric
-
-

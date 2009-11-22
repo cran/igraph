@@ -54,8 +54,7 @@ export(erdos.renyi.game, random.graph.game, degree.sequence.game,
        growing.random.game, barabasi.game, ba.game,
        callaway.traits.game, establishment.game, grg.game,
        preference.game, asymmetric.preference.game, connect.neighborhood,
-       rewire.edges, watts.strogatz.game, lastcit.game, cited.type.game,
-       citing.cited.type.game)
+       rewire.edges, watts.strogatz.game)
 
 # community structure
 
@@ -120,33 +119,6 @@ export(cluster.distribution, is.connected, decompose.graph,
 
 export(evcent, bonpow, alpha.centrality)
 export(igraph.arpack.default)
-
-# dynamics measurement
-
-export(measure.dynamics.id, measure.dynamics.idage, measure.dynamics.d.d,
-       measure.dynamics.citedcat.id.age, measure.dynamics.citingcat.id.age,
-       measure.dynamics.lastcit, measure.dynamics.age, measure.dynamics.citedcat,
-       measure.dynamics.citingcat.citedcat)
-
-export(revolver.d, revolver.error.d,
-       revolver.ad, revolver.error.ad,
-       revolver.ade, revolver.error.ade,
-       revolver.e, revolver.error.e,
-       revolver.de, revolver.error.de,
-       revolver.l, revolver.error.l,
-       revolver.dl, revolver.error.dl,
-       revolver.el, revolver.error.el,
-       revolver.r, revolver.error.r,
-       revolver.ar, revolver.error.ar,
-       revolver.di, revolver.error.di,
-       revolver.adi, revolver.error.adi,
-       revolver.il, revolver.error.il,
-       revolver.ir, revolver.error.ir,
-       revolver.air, revolver.error.air)
-
-export (revolver.d.d, revolver.p.p)
-
-export (evolver.d)
 
 # isomorphism, motifs
 
@@ -232,6 +204,7 @@ export(is.bipartite)
 export(clusters)
 export(articulation.points)
 export(biconnected.components)
+export(layout.star)
 export(layout.fruchterman.reingold)
 export(layout.graphopt)
 export(layout.drl)
@@ -262,25 +235,3 @@ export(canonical.permutation)
 export(permute.vertices)
 export(graph.isomorphic.bliss)
 export(graph.automorphisms)
-export(revolver.ml.d)
-export(revolver.probs.d)
-export(revolver.ml.de)
-export(revolver.probs.de)
-export(revolver.ml.ade)
-export(revolver.probs.ade)
-export(revolver.ml.f)
-export(revolver.ml.df)
-export(revolver.ml.l)
-export(revolver.ml.ad)
-export(revolver.probs.ad)
-export(revolver.ml.D.alpha)
-export(revolver.ml.D.alpha.a)
-export(revolver.ml.DE.alpha.a)
-export(revolver.ml.AD.alpha.a.beta)
-export(revolver.ml.AD.dpareto)
-export(revolver.ml.AD.dpareto.eval)
-export(revolver.ml.ADE.alpha.a.beta)
-export(revolver.ml.ADE.dpareto)
-export(revolver.ml.ADE.dpareto.eval)
-export(revolver.ml.ADE.dpareto.evalf)
-export(revolver.probs.ADE.dpareto)

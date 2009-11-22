@@ -73,6 +73,7 @@ typedef int flex_int32_t;
 typedef unsigned char flex_uint8_t; 
 typedef unsigned short int flex_uint16_t;
 typedef unsigned int flex_uint32_t;
+#endif /* ! C99 */
 
 /* Limits of integral types. */
 #ifndef INT8_MIN
@@ -102,8 +103,6 @@ typedef unsigned int flex_uint32_t;
 #ifndef UINT32_MAX
 #define UINT32_MAX             (4294967295U)
 #endif
-
-#endif /* ! C99 */
 
 #endif /* ! FLEXINT_H */
 
@@ -173,7 +172,12 @@ typedef unsigned int flex_uint32_t;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 #endif
 
-extern int igraph_ncol_yyleng;
+#ifndef YY_TYPEDEF_YY_SIZE_T
+#define YY_TYPEDEF_YY_SIZE_T
+typedef size_t yy_size_t;
+#endif
+
+extern yy_size_t igraph_ncol_yyleng;
 
 extern FILE *igraph_ncol_yyin, *igraph_ncol_yyout;
 
@@ -199,11 +203,6 @@ extern FILE *igraph_ncol_yyin, *igraph_ncol_yyout;
 
 #define unput(c) yyunput( c, (yytext_ptr)  )
 
-#ifndef YY_TYPEDEF_YY_SIZE_T
-#define YY_TYPEDEF_YY_SIZE_T
-typedef size_t yy_size_t;
-#endif
-
 #ifndef YY_STRUCT_YY_BUFFER_STATE
 #define YY_STRUCT_YY_BUFFER_STATE
 struct yy_buffer_state
@@ -221,7 +220,7 @@ struct yy_buffer_state
 	/* Number of characters read into yy_ch_buf, not including EOB
 	 * characters.
 	 */
-	int yy_n_chars;
+	yy_size_t yy_n_chars;
 
 	/* Whether we "own" the buffer - i.e., we know we created it,
 	 * and can realloc() it to grow it, and should free() it to
@@ -291,8 +290,8 @@ static YY_BUFFER_STATE * yy_buffer_stack = 0; /**< Stack as an array. */
 
 /* yy_hold_char holds the character lost when igraph_ncol_yytext is formed. */
 static char yy_hold_char;
-static int yy_n_chars;		/* number of characters read into yy_ch_buf */
-int igraph_ncol_yyleng;
+static yy_size_t yy_n_chars;		/* number of characters read into yy_ch_buf */
+yy_size_t igraph_ncol_yyleng;
 
 /* Points to current character in buffer. */
 static char *yy_c_buf_p = (char *) 0;
@@ -320,7 +319,7 @@ static void igraph_ncol_yy_init_buffer (YY_BUFFER_STATE b,FILE *file  );
 
 YY_BUFFER_STATE igraph_ncol_yy_scan_buffer (char *base,yy_size_t size  );
 YY_BUFFER_STATE igraph_ncol_yy_scan_string (yyconst char *yy_str  );
-YY_BUFFER_STATE igraph_ncol_yy_scan_bytes (yyconst char *bytes,int len  );
+YY_BUFFER_STATE igraph_ncol_yy_scan_bytes (yyconst char *bytes,yy_size_t len  );
 
 void *igraph_ncol_yyalloc (yy_size_t  );
 void *igraph_ncol_yyrealloc (void *,yy_size_t  );
@@ -528,7 +527,7 @@ void igraph_i_ncol_reset_scanner() {
   YY_FLUSH_BUFFER;
 }
 #define YY_NO_INPUT 1
-#line 532 "foreign-ncol-lexer.c"
+#line 531 "foreign-ncol-lexer.c"
 
 #define INITIAL 0
 
@@ -567,7 +566,7 @@ FILE *igraph_ncol_yyget_out (void );
 
 void igraph_ncol_yyset_out  (FILE * out_str  );
 
-int igraph_ncol_yyget_leng (void );
+yy_size_t igraph_ncol_yyget_leng (void );
 
 char *igraph_ncol_yyget_text (void );
 
@@ -615,7 +614,7 @@ static int input (void );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
-#define ECHO do { if (fwrite( igraph_ncol_yytext, igraph_ncol_yyleng, 1, igraph_ncol_yyout )) {} } while (0)
+#define ECHO fwrite( igraph_ncol_yytext, igraph_ncol_yyleng, 1, igraph_ncol_yyout )
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or YY_NULL,
@@ -626,7 +625,7 @@ static int input (void );
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) \
 		{ \
 		int c = '*'; \
-		size_t n; \
+		yy_size_t n; \
 		for ( n = 0; n < max_size && \
 			     (c = getc( igraph_ncol_yyin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
@@ -712,7 +711,7 @@ YY_DECL
 
 
  /* ------------------------------------------------whitespace------*/
-#line 716 "foreign-ncol-lexer.c"
+#line 715 "foreign-ncol-lexer.c"
 
 	if ( !(yy_init) )
 		{
@@ -828,7 +827,7 @@ YY_RULE_SETUP
 #line 84 "foreign-ncol-lexer.l"
 ECHO;
 	YY_BREAK
-#line 832 "foreign-ncol-lexer.c"
+#line 831 "foreign-ncol-lexer.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1012,7 +1011,7 @@ static int yy_get_next_buffer (void)
 
 	else
 		{
-			int num_to_read =
+			yy_size_t num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
@@ -1026,7 +1025,7 @@ static int yy_get_next_buffer (void)
 
 			if ( b->yy_is_our_buffer )
 				{
-				int new_size = b->yy_buf_size * 2;
+				yy_size_t new_size = b->yy_buf_size * 2;
 
 				if ( new_size <= 0 )
 					b->yy_buf_size += b->yy_buf_size / 8;
@@ -1057,7 +1056,7 @@ static int yy_get_next_buffer (void)
 
 		/* Read in more data. */
 		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
-			(yy_n_chars), (size_t) num_to_read );
+			(yy_n_chars), num_to_read );
 
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars = (yy_n_chars);
 		}
@@ -1179,7 +1178,7 @@ static int yy_get_next_buffer (void)
 
 		else
 			{ /* need more input */
-			int offset = (yy_c_buf_p) - (yytext_ptr);
+			yy_size_t offset = (yy_c_buf_p) - (yytext_ptr);
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -1203,7 +1202,7 @@ static int yy_get_next_buffer (void)
 				case EOB_ACT_END_OF_FILE:
 					{
 					if ( igraph_ncol_yywrap( ) )
-						return EOF;
+						return 0;
 
 					if ( ! (yy_did_buffer_switch_on_eof) )
 						YY_NEW_FILE;
@@ -1455,7 +1454,7 @@ void igraph_ncol_yypop_buffer_state (void)
  */
 static void igraph_ncol_yyensure_buffer_stack (void)
 {
-	int num_to_alloc;
+	yy_size_t num_to_alloc;
     
 	if (!(yy_buffer_stack)) {
 
@@ -1552,12 +1551,11 @@ YY_BUFFER_STATE igraph_ncol_yy_scan_string (yyconst char * yystr )
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE igraph_ncol_yy_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
+YY_BUFFER_STATE igraph_ncol_yy_scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_len )
 {
 	YY_BUFFER_STATE b;
 	char *buf;
-	yy_size_t n;
-	int i;
+	yy_size_t n, i;
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = _yybytes_len + 2;
@@ -1639,7 +1637,7 @@ FILE *igraph_ncol_yyget_out  (void)
 /** Get the length of the current token.
  * 
  */
-int igraph_ncol_yyget_leng  (void)
+yy_size_t igraph_ncol_yyget_leng  (void)
 {
         return igraph_ncol_yyleng;
 }
