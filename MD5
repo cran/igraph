@@ -1,5 +1,5 @@
 95678d8742d4b2ae664cee23ee45dd48 *ChangeLog
-7763b7f4cc840416f717aa1cd4c08bb0 *DESCRIPTION
+01e0486bf6daaa53f85f817492835018 *DESCRIPTION
 eb723b61539feef013de476e68b5c50a *LICENSE
 83eb4dc8f008715d7d0860571741432d *NAMESPACE
 599478b1daf73d8959c77a7eb67595b3 *R/CohesiveBlocks.R
@@ -9,7 +9,7 @@ cda588cc8638d63e737b9d442c780e8e *R/basic.R
 6ebd20152dbc163be28407991184fb13 *R/centrality.R
 82d9fc5d683eddb7f867da57fa4ddfb5 *R/cliques.R
 916f136381033ea0fbd850faf880dc9e *R/cocitation.R
-66be2b5b6ba21db54112876cededfe7f *R/community.R
+4436706f1c86ea76688a9e6260f0461a *R/community.R
 149eff00385a03eebd00478b2127a3a8 *R/components.R
 44bb0d88f0f1fb2639ed2c7f45ef798b *R/config.R.in
 9bfb34969249176875add26271279f8a *R/configwin.R
@@ -37,7 +37,8 @@ a7045c1a7683fe63df925c2506ac0017 *R/print.R
 b93daf12b17b2e297e3982b7c7576f7c *R/structure.info.R
 4a68207e2264f3e63bf34a60e5e74b9b *R/tkplot.R
 de3707d5fd747e94cdde21249e498014 *R/topology.R
-0e5a7d8be8ad207fc755af378e6bb3aa *configure
+78480b30f61de1c581db622c84992c7f *configure
+361d257f0f91a601adbb918035c94a8b *configure.in
 a5c6df9fad5dc4299f6e34e641396d38 *configure.win
 74d5a3562c00e68b6af53be34e828c52 *inst/CITATION
 9f15757aae0fc33c5e1c8fd7546173a1 *inst/html_library.license.terms
@@ -48,7 +49,7 @@ a4d42a365d914cf200be7d08cbbeb386 *inst/my_html_library.tcl
 b836ba1ad253b94013d430cf0ba3e7c2 *inst/tkigraph_help/index.html
 11db5e3c8a97b9b22418aecf954b961a *inst/tkigraph_help/style.css
 4cbf1010c7a8edb8b8576853eb8898d6 *inst/tkigraph_help/tkigraph-main.gif
-3b162aae16deb45edbff60f7b4505933 *man/aaa-igraph-package.Rd
+9089f8cc03892d925396d69997a748a9 *man/aaa-igraph-package.Rd
 3956a91b05e4c19ab0c9948a0c9fa172 *man/aging.prefatt.game.Rd
 e9b2b4f7a08d69122c95cf1a01a41cda *man/alpha.centrality.Rd
 b61faaa71a0f3a4accefb6c6003649c4 *man/arpack.Rd
@@ -107,7 +108,7 @@ c12c65b4cf13246ac531fc543b470999 *man/graph.kcores.Rd
 c677ead322c35df3feccdbde5ddfd5f2 *man/graph.motifs.Rd
 7abcd1d39f7eb3d00ff4ef18aa93dbe0 *man/graph.strength.Rd
 c368ab4ef5f73725bac5c728d77a662c *man/graph.structure.Rd
-c94cfb906344c7385f42424089a9a183 *man/graphNEL.Rd
+87182518ada1efb8756e6956ea63d3d5 *man/graphNEL.Rd
 a1a809ce2a72992cc6969606b2c0c7a9 *man/grg.game.Rd
 e3c90b57185cb0f450daf7c980d5fc88 *man/growing.random.game.Rd
 26c8143b91b48b471af4a7b999414a8a *man/igraph.par.Rd
@@ -167,9 +168,9 @@ aaf5630bd8c5c89549e61639e12ab125 *man/write.pajek.bgraph.Rd
 365dd6efca06aa18ab3976e39a9d454b *src/DensityGrid.h
 42559d6e28a3a0cf6fd5337bf2ce3147 *src/DensityGrid_3d.cpp
 fbd23d9cac9dba880832f6c0ac861643 *src/DensityGrid_3d.h
-99a0e3a84161d3ff03316fd4fc5151cf *src/Makevars
+15019178600a3259f883a5d480af4cce *src/Makevars
 f52b8117308a918c64175d300e0b4144 *src/Makevars.in
-37238d38550094e980ac348587c0c4cd *src/Makevars.win
+cd917efc5cab97878d45ea0ad6eb26b7 *src/Makevars.win
 f4e7769c87f74f49e186ae94c11166f0 *src/NetDataTypes.cpp
 a72fdc4b08d8763fd9220a4314980ee9 *src/NetDataTypes.h
 b7b4425dc69902878aa58db89eab4fee *src/NetRoutines.cpp
@@ -215,7 +216,7 @@ bb1c1702764ef7d2e24c715c0ecb01a4 *src/clustertool.cpp
 c5835e4eecab489bcf2220b8c9d51984 *src/community.c
 58eb781015c45051cb4a64321f254ed5 *src/components.c
 d41d8cd98f00b204e9800998ecf8427e *src/config.h
-948e067f196211837a0b0e4e588e1dbf *src/config.h.in
+617bc7e2ffcbbd829f7207d190f8966a *src/config.h.in
 a75651bd0c804da63fa8f8110f9be684 *src/conversion.c
 443432b4f2690a603ee5546da74fc47c *src/cores.c
 0d32c21eec7f43372cc9adac8477802c *src/d_lg10.c
@@ -316,7 +317,7 @@ b820670b0847175947527134ac67632e *src/f2c.h
 4e6d4f9fb6ea1dc3f2c04a98a71a22e8 *src/foreign-gml-lexer.c
 ba202668eaf76347d0394a3663f25923 *src/foreign-gml-parser.c
 aa12a85e79935d6b483fb5660038669c *src/foreign-gml-parser.h
-8abe065db285bc1cb2d649e505fd1a18 *src/foreign-graphml.c
+5b165d6f93b185254a15a72700a0220d *src/foreign-graphml.c
 05564cd34e448c535fb4deae6f68b494 *src/foreign-lgl-lexer.c
 c1ea0521c8bffc21d1fd56eb09baeab0 *src/foreign-lgl-parser.c
 75132dcb804c7eea1f011fac639df70a *src/foreign-lgl-parser.h
@@ -401,7 +402,7 @@ d739f8556f8ecf464015a9af27306f6a *src/spectral_properties.c
 c3cf3fce20186b21b5d1bd102d7d304f *src/spmatrix.c
 4867f174cecdd552c04f3c00ea76b3bd *src/stack.h
 f277cba25ab04743d28498837f4d56ac *src/stack.pmt
-e719360197c7891183132a242aa78752 *src/structural_properties.c
+f98e2c6460eecc2c89f6d7cd81b9080a *src/structural_properties.c
 e1ff07a94918bf5ffd574f1e43d209d2 *src/structure_generators.c
 07a345fbe689d5d4246d46f3a83fa9aa *src/topology.c
 369a954f73bf238500f65c1dc1aa9d7f *src/type_indexededgelist.c
