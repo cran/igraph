@@ -21,14 +21,25 @@
 graph.isomorphic(graph1, graph2)
 graph.isomorphic.34(graph1, graph2)
 graph.isomorphic.bliss(graph1, graph2, sh1="fm", sh2="fm")
-graph.isomorphic.vf2(graph1, graph2)
+graph.isomorphic.vf2(graph1, graph2, vertex.color1, vertex.color2,
+     edge.color1, edge.color2)
 
-graph.count.isomorphisms.vf2(graph1, graph2)
-graph.get.isomorphisms.vf2(graph1, graph2)
+graph.count.isomorphisms.vf2(graph1, graph2,
+     vertex.color1, vertex.color2,
+     edge.color1, edge.color2)
+graph.get.isomorphisms.vf2(graph1, graph2,
+     vertex.color1, vertex.color2,
+     edge.color1, edge.color2)
 
-graph.subisomorphic.vf2(graph1, graph2)
-graph.count.subisomorphisms.vf2(graph1, graph2)
-graph.get.subisomorphisms.vf2(graph1, graph2)
+graph.subisomorphic.vf2(graph1, graph2,
+     vertex.color1, vertex.color2,
+     edge.color1, edge.color2)
+graph.count.subisomorphisms.vf2(graph1, graph2,
+     vertex.color1, vertex.color2,
+     edge.color1, edge.color2)
+graph.get.subisomorphisms.vf2(graph1, graph2,
+     vertex.color1, vertex.color2,
+     edge.color1, edge.color2)
 
 graph.isoclass(graph)
 graph.isoclass.subgraph(graph, vids)
@@ -37,6 +48,18 @@ graph.isocreate(size, number, directed=TRUE)
 \arguments{
   \item{graph}{A graph object.}
   \item{graph1,graph2}{Graph objects}
+  \item{vertex.color1,vertex.color2}{
+    Optional integer vectors giving the colors of the
+    vertices for colored (sub)graph isomorphism. If they are not given,
+    but the graph has a \dQuote{color} vertex attribute, then it will be
+    used. If you want to ignore these attributes, then supply
+    \code{NULL} for both of these arguments. See also examples below.}
+  \item{edge.color1,edge.color2}{
+    Optional integer vectors giving the colors of the edges
+    for edge-colored (sub)graph isomorphism. If they are not given,
+    but the graph has a \dQuote{color} edge attribute, then it will be
+    used. If you want to ignore these attributes, then supply
+    \code{NULL} for both of these arguments.}
   \item{size}{A numeric integer giving the number of vertices in the
     graph to create. Only three or four are suppported right now.}
   \item{number}{The number of the isomorphism class of the graph to be
@@ -189,7 +212,7 @@ graph.isocreate(size, number, directed=TRUE)
   \emph{Proc. of the 3rd IAPR TC-15 Workshop on Graphbased
     Representations in Pattern Recognition}, 149--159, 2001.
 }
-\author{ Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{ Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{\code{\link{graph.motifs}}}
 \examples{
 # create some non-isomorphic graphs
@@ -201,11 +224,29 @@ graph.isomorphic(g1, g2)
 
 # create two isomorphic graphs, by
 # permuting the vertices of the first 
-g1 <- simplify(barabasi.game(30, m=2, directed=FALSE))
-g2 <- permute.vertices(g1, sample(vcount(g1))-1)
+g1 <- barabasi.game(30, m=2, directed=FALSE)
+g2 <- permute.vertices(g1, sample(vcount(g1)))
 # should be TRUE
 graph.isomorphic(g1, g2)
 graph.isomorphic.bliss(g1, g2)
 graph.isomorphic.vf2(g1, g2)
+
+# colored graph isomorphism
+g1 <- graph.ring(10)
+g2 <- graph.ring(10)
+graph.isomorphic.vf2(g1, g2)
+
+V(g1)$color <- rep(1:2, length=vcount(g1))
+V(g2)$color <- rep(1:2, length=vcount(g2))
+graph.count.isomorphisms.vf2(g1, g2)
+graph.count.isomorphisms.vf2(g1, g2, vertex.color1=NULL,
+    vertex.color2=NULL)
+
+V(g1)$color <- 1
+V(g2)$color <- 2
+graph.isomorphic.vf2(g1, g2)
+graph.isomorphic.vf2(g2, g2, vertex.color1=NULL,
+    vertex.color2=NULL)
+
 }
 \keyword{graphs}

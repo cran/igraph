@@ -1,7 +1,7 @@
 
 #   IGraph R package
-#   Copyright (C) 2006  Gabor Csardi <csardi@rmki.kfki.hu>
-#   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+#   Copyright (C) 2006-2012  Gabor Csardi <csardi.gabor@gmail.com>
+#   334 Harvard street, Cambridge, MA 02139 USA
 #   
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ graph.motifs <- function(graph, size=3, cut.prob=rep(0, size)) {
   }
   
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_motifs_randesu", graph, as.numeric(size),
+  .Call("R_igraph_motifs_randesu", graph, as.integer(size),
         as.numeric(cut.prob),
         PACKAGE="igraph")
 }
@@ -49,7 +49,7 @@ graph.motifs.no <- function(graph, size=3, cut.prob=rep(0, size)) {
   }
   
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_motifs_randesu_no", graph, as.numeric(size),
+  .Call("R_igraph_motifs_randesu_no", graph, as.integer(size),
         as.numeric(cut.prob),
         PACKAGE="igraph")
 }
@@ -67,8 +67,8 @@ graph.motifs.est <- function(graph, size=3, cut.prob=rep(0, size),
   }
   
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_motifs_randesu_estimate", graph, as.numeric(size),
-        as.numeric(cut.prob), as.numeric(sample.size), as.numeric(sample),
+  .Call("R_igraph_motifs_randesu_estimate", graph, as.integer(size),
+        as.numeric(cut.prob), as.integer(sample.size), as.numeric(sample),
         PACKAGE="igraph")
 }
   

@@ -4,8 +4,7 @@
 \title{Merging graph layouts}
 \description{Place several graphs on the same layout}
 \usage{
-layout.merge(graphs, layouts, method = "dla",
-       verbose = igraph.par("verbose"))
+layout.merge(graphs, layouts, method = "dla")
 piecewise.layout(graph, layout=layout.kamada.kawai, \dots)
 }
 \arguments{
@@ -13,8 +12,6 @@ piecewise.layout(graph, layout=layout.kamada.kawai, \dots)
   \item{layouts}{A list of two-column matrices.}
   \item{method}{Character constant giving the method to use. Right now
     only \code{dla} is implemented.}
-  \item{verbose}{Logical constant, whether to show a progress bar while
-    doing the calculation.}
   \item{graph}{The input graph.}
   \item{layout}{A function object, the layout function to use.}
   \item{\dots}{Additional arguments to pass to the \code{layout} layout
@@ -45,7 +42,7 @@ piecewise.layout(graph, layout=layout.kamada.kawai, \dots)
   vertices in the graphs.
 }
 % \references
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{\code{\link{plot.igraph}}, \code{\link{tkplot}},
   \code{\link{layout}}, \code{\link{graph.disjoint.union}}
 }

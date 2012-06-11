@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2005-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,10 +21,14 @@
 
 */
 
-#include "attributes.h"
-#include "memory.h"
-#include "igraph.h"
+#include "igraph_attributes.h"
+#include "igraph_memory.h"
 #include "config.h"
+
+#include <string.h>
+#include <stdarg.h>
+
+IGRAPH_THREAD_LOCAL igraph_attribute_table_t *igraph_i_attribute_table=0;
 
 int igraph_i_attribute_init(igraph_t *graph, void *attr) {
   graph->attr=0;
@@ -58,14 +62,29 @@ int igraph_i_attribute_add_vertices(igraph_t *graph, long int nv, void *attr) {
   }
 }
 
-void igraph_i_attribute_delete_vertices(igraph_t *graph, 
-					const igraph_vector_t *eidx,
-					const igraph_vector_t *vidx) {
+int igraph_i_attribute_permute_vertices(const igraph_t *graph, 
+					igraph_t *newgraph,
+					const igraph_vector_t *idx) {
+  
   if (igraph_i_attribute_table) {
-    igraph_i_attribute_table->delete_vertices(graph, eidx, vidx);
+    return igraph_i_attribute_table->permute_vertices(graph, newgraph, idx);
+  } else {
+    return 0;
   }
 }
-  
+
+int igraph_i_attribute_combine_vertices(const igraph_t *graph,
+			igraph_t *newgraph,
+			const igraph_vector_ptr_t *merges,
+			const igraph_attribute_combination_t *comb) {
+  if (igraph_i_attribute_table) {
+    return igraph_i_attribute_table->combine_vertices(graph, newgraph, 
+						      merges,
+						      comb);
+  } else {
+    return 0;
+  }
+} 
   
 int igraph_i_attribute_add_edges(igraph_t *graph, 
 				 const igraph_vector_t *edges, void *attr) {
@@ -76,21 +95,28 @@ int igraph_i_attribute_add_edges(igraph_t *graph,
   }
 }
   
-void igraph_i_attribute_delete_edges(igraph_t *graph, 
+int igraph_i_attribute_permute_edges(const igraph_t *graph, 
+				     igraph_t *newgraph,
 				     const igraph_vector_t *idx) {
   if (igraph_i_attribute_table) {
-    igraph_i_attribute_table->delete_edges(graph, idx);
-  }
-}
-
-int igraph_i_attribute_permute_edges(igraph_t *graph, 
-				      const igraph_vector_t *idx) {
-  if (igraph_i_attribute_table) {
-    return igraph_i_attribute_table->permute_edges(graph, idx);
+    return igraph_i_attribute_table->permute_edges(graph, newgraph, idx);
   } else {
     return 0;
   }
 }
+
+int igraph_i_attribute_combine_edges(const igraph_t *graph,
+			igraph_t *newgraph,
+			const igraph_vector_ptr_t *merges,
+			const igraph_attribute_combination_t *comb) {
+  if (igraph_i_attribute_table) {
+    return igraph_i_attribute_table->combine_edges(graph, newgraph, 
+						   merges, 
+						   comb);
+  } else {
+    return 0;
+  }
+} 
 
 int igraph_i_attribute_get_info(const igraph_t *graph,
 				igraph_strvector_t *gnames, 
@@ -194,8 +220,6 @@ int igraph_i_attribute_get_string_edge_attr(const igraph_t *graph,
   }
 }
 
-igraph_attribute_table_t *igraph_i_attribute_table=0;
-
 /**
  * \function igraph_i_set_attribute_table
  * \brief Attach an attribute table.
@@ -210,9 +234,159 @@ igraph_attribute_table_t *igraph_i_attribute_table=0;
  */
   
 igraph_attribute_table_t *
-igraph_i_set_attribute_table(igraph_attribute_table_t * table) {
+igraph_i_set_attribute_table(const igraph_attribute_table_t * table) {
   igraph_attribute_table_t *old=igraph_i_attribute_table;
-  igraph_i_attribute_table=table;
+  igraph_i_attribute_table=(igraph_attribute_table_t*) table;
   return old;
 }
+
+igraph_bool_t igraph_has_attribute_table() {
+  return igraph_i_attribute_table != 0;
+}
   
+int igraph_attribute_combination_init(igraph_attribute_combination_t *comb) {
+  IGRAPH_CHECK(igraph_vector_ptr_init(&comb->list, 0));
+  return 0;
+}
+
+void igraph_attribute_combination_destroy(igraph_attribute_combination_t *comb) {
+  long int i, n=igraph_vector_ptr_size(&comb->list);
+  for (i=0; i<n; i++) {
+    igraph_attribute_combination_record_t *rec=VECTOR(comb->list)[i];
+    if (rec->name) { igraph_Free(rec->name); }
+    igraph_Free(rec);    
+  }
+  igraph_vector_ptr_destroy(&comb->list);
+}
+
+int igraph_attribute_combination_add(igraph_attribute_combination_t *comb, 
+				     const char *name,
+				     igraph_attribute_combination_type_t type,
+				     void *func) {
+  long int i, n=igraph_vector_ptr_size(&comb->list);
+
+  /* Search, in case it is already there */
+  for (i=0; i<n; i++) {
+    igraph_attribute_combination_record_t *r=VECTOR(comb->list)[i];
+    const char *n=r->name;
+    if ( (!name && !n) ||
+	 (name && n && !strcmp(n, name)) ) {
+      r->type=type;
+      r->func=func;
+      break;
+    }
+  }
+
+  if (i==n) {
+    /* This is a new attribute name */
+    igraph_attribute_combination_record_t *rec=
+      igraph_Calloc(1, igraph_attribute_combination_record_t);
+
+    if (!rec) {
+      IGRAPH_ERROR("Cannot create attribute combination data",
+		   IGRAPH_ENOMEM);
+    }
+    if (!name) { 
+      rec->name=0;
+    } else {
+      rec->name=strdup(name);
+    }
+    rec->type=type;
+    rec->func=func;
+    
+    IGRAPH_CHECK(igraph_vector_ptr_push_back(&comb->list, rec));
+    
+  }
+  
+  return 0;
+}
+
+int igraph_attribute_combination_remove(igraph_attribute_combination_t *comb, 
+					const char *name) {
+  long int i, n=igraph_vector_ptr_size(&comb->list);
+
+  /* Search, in case it is already there */
+  for (i=0; i<n; i++) {
+    igraph_attribute_combination_record_t *r=VECTOR(comb->list)[i];
+    const char *n=r->name;
+    if ( (!name && !n) ||
+	 (name && n && !strcmp(n, name)) ) {
+      break;
+    }
+  }
+  
+  if (i!=n) {
+    igraph_attribute_combination_record_t *r=VECTOR(comb->list)[i];
+    if (r->name) { igraph_Free(r->name); }
+    igraph_Free(r);
+    igraph_vector_ptr_remove(&comb->list, i);
+  } else {
+    /* It is not there, we don't do anything */
+  }
+  
+  return 0;
+}
+
+int igraph_attribute_combination_query(const igraph_attribute_combination_t *comb,
+				       const char *name,
+				       igraph_attribute_combination_type_t *type,
+				       void **func) {
+  long int i, def=-1, len=igraph_vector_ptr_size(&comb->list);
+
+  for (i=0; i<len; i++) {
+    igraph_attribute_combination_record_t *rec=VECTOR(comb->list)[i];
+    const char *n=rec->name;
+    if ( (!name && !n) ||
+	 (name && n && !strcmp(n, name)) ) {
+      *type=rec->type;
+      *func=rec->func;
+      return 0;
+    }
+    if (!n) {
+      def=i;
+    }
+  }
+  
+  if (def==-1) {
+    /* Did not find anything */
+    *type=IGRAPH_ATTRIBUTE_COMBINE_DEFAULT;
+    *func=0;
+  } else {
+    igraph_attribute_combination_record_t *rec=VECTOR(comb->list)[def];
+    *type=rec->type;
+    *func=rec->func;
+  }
+
+  return 0;
+}
+
+int igraph_attribute_combination(igraph_attribute_combination_t *comb, ...) {
+
+  va_list ap;
+
+  IGRAPH_CHECK(igraph_attribute_combination_init(comb));
+  
+  va_start(ap, comb);
+  while (1) { 
+    void *func=0;
+    int type;
+    const char *name;
+    
+    name=va_arg(ap, const char *);
+    
+    if (name == IGRAPH_NO_MORE_ATTRIBUTES) { break; }
+    
+    type=(igraph_attribute_combination_type_t)va_arg(ap, int);
+    if (type == IGRAPH_ATTRIBUTE_COMBINE_FUNCTION) {
+      func=va_arg(ap, void*);      
+    }
+
+    if (strlen(name)==0) { name=0; }
+    
+    IGRAPH_CHECK(igraph_attribute_combination_add(comb, name, type, func));
+  }
+  
+  va_end(ap);
+  
+  return 0;
+}

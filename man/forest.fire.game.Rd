@@ -6,8 +6,7 @@
 \description{This is a growing network model, which resembles of how the
   forest fire spreads by igniting trees close by.}
 \usage{
-forest.fire.game (nodes, fw.prob, bw.factor = 1, ambs = 1, directed = TRUE, 
-    verbose = igraph.par("verbose")) 
+forest.fire.game (nodes, fw.prob, bw.factor = 1, ambs = 1, directed = TRUE)
 }
 \arguments{
   \item{nodes}{The number of vertices in the graph.}
@@ -16,7 +15,6 @@ forest.fire.game (nodes, fw.prob, bw.factor = 1, ambs = 1, directed = TRUE,
     probability is calculated as \code{bw.factor*fw.prob}.}
   \item{ambs}{The number of ambassador vertices.}
   \item{directed}{Logical scalar, whether to create a directed graph.}
-  \item{verbose}{Logical scalar, whether to \dQuote{draw} a progress bar.}
 }
 \details{
   The forest fire model intends to reproduce the following network
@@ -63,7 +61,7 @@ forest.fire.game (nodes, fw.prob, bw.factor = 1, ambs = 1, directed = TRUE,
     conference on Knowledge discovery in data mining}, 177--187, 2005.
 }
 \author{
-  Gabor Csardi \email{csardi@rmki.kfki.hu}
+  Gabor Csardi \email{csardi.gabor@gmail.com}
 }
 \seealso{
   \code{\link{barabasi.game}} for the basic preferential attachment

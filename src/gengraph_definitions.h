@@ -1,3 +1,23 @@
+/*
+ *
+ * gengraph - generation of random simple connected graphs with prescribed
+ *            degree sequence
+ *
+ * Copyright (C) 2006  Fabien Viger
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
@@ -111,13 +131,13 @@ inline int* fast_search(int *m, const int size, const int a) {
 }
 
 // Lovely percentage print
-inline void print_percent(double yo, FILE *f = stderr) {
-  int arf = int(100.0*yo);
-  if(double(arf)>100.0*yo) arf--;
-  if(arf<100) fprintf(f," ");
-  if(arf<10) fprintf(f," ");
-  fprintf(f,"%d.%d%%",arf,int(1000.0*yo-double(10*arf)));
-}
+// inline void print_percent(double yo, FILE *f = stderr) {
+//   int arf = int(100.0*yo);
+//   if(double(arf)>100.0*yo) arf--;
+//   if(arf<100) fprintf(f," ");
+//   if(arf<10) fprintf(f," ");
+//   fprintf(f,"%d.%d%%",arf,int(1000.0*yo-double(10*arf)));
+// }
 
 // Skips non-numerical chars, then numerical chars, then non-numerical chars.
 inline char skip_int(char* &c) {

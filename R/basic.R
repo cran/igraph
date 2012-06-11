@@ -1,7 +1,7 @@
 
 #   IGraph R package
-#   Copyright (C) 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-#   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+#   Copyright (C) 2005-2012  Gabor Csardi <csardi.gabor@gmail.com>
+#   334 Harvard street, Cambridge, MA 02139 USA
 #   
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -43,13 +43,14 @@ get.edge <- function(graph, id) {
   id <- as.numeric(id)
   ec <- ecount(graph)
   
-  if (id < 0 || id >= ec) {
+  if (id < 1 || id > ec) {
     stop("No such edge")
   }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_get_edge", graph, as.numeric(id),
-        PACKAGE="igraph")
+  res <- .Call("R_igraph_get_edge", graph, as.numeric(id)-1,
+               PACKAGE="igraph")
+  res+1
 }
 
 

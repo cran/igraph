@@ -53,10 +53,10 @@
 #define YYSKELETON_NAME "yacc.c"
 
 /* Pure parsers.  */
-#define YYPURE 0
+#define YYPURE 1
 
 /* Using locations.  */
-#define YYLSP_NEEDED 0
+#define YYLSP_NEEDED 1
 
 /* Substitute the variable and function names.  */
 #define yyparse igraph_gml_yyparse
@@ -66,7 +66,7 @@
 #define yychar  igraph_gml_yychar
 #define yydebug igraph_gml_yydebug
 #define yynerrs igraph_gml_yynerrs
-
+#define yylloc igraph_gml_yylloc
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -99,8 +99,8 @@
 
 /* 
    IGraph library.
-   Copyright (C) 2007  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2009-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard st, Cambridge, MA, 02138 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -123,20 +123,21 @@
 #include <math.h>
 #include <string.h>
 
-#include "error.h"
-#include "memory.h"
+#include "igraph_error.h"
+#include "igraph_memory.h"
 #include "config.h"
 #include "igraph_math.h"
-#include "gml_tree.h"
+#include "igraph_gml_tree.h"
+#include "foreign-gml-header.h"
+#include "foreign-gml-parser.h"
 
-extern int igraph_gml_yylex(void);
-extern long int igraph_gml_mylineno;
-extern char *igraph_gml_yytext;
-extern int igraph_gml_yyleng;
-igraph_gml_tree_t *igraph_i_gml_parsed_tree=0;
-char *igraph_i_gml_errmsg=0;
-int igraph_gml_yyerror(char *s);
-void igraph_i_gml_reset_scanner(void);
+#define yyscan_t void*
+
+int igraph_gml_yylex(YYSTYPE* lvalp, YYLTYPE* llocp, void *scanner);
+int igraph_gml_yyerror(YYLTYPE* locp, igraph_i_gml_parsedata_t *context, 
+		       char *s);
+char *igraph_gml_yyget_text (yyscan_t yyscanner );
+int igraph_gml_yyget_leng (yyscan_t yyscanner );
 void igraph_i_gml_get_keyword(char *s, int len, void *res);
 void igraph_i_gml_get_string(char *s, int len, void *res);
 double igraph_i_gml_get_real(char *s, int len);
@@ -149,6 +150,10 @@ igraph_gml_tree_t *igraph_i_gml_make_list(char* s, int len,
 					  igraph_gml_tree_t *list);
 igraph_gml_tree_t *igraph_i_gml_merge(igraph_gml_tree_t *t1, igraph_gml_tree_t* t2);
 
+#define scanner context->scanner
+#define USE(x) /*(x)*/
+
+
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -160,7 +165,7 @@ igraph_gml_tree_t *igraph_i_gml_merge(igraph_gml_tree_t *t1, igraph_gml_tree_t* 
 # undef YYERROR_VERBOSE
 # define YYERROR_VERBOSE 1
 #else
-# define YYERROR_VERBOSE 0
+# define YYERROR_VERBOSE 1
 #endif
 
 /* Enabling the token table.  */
@@ -170,7 +175,7 @@ igraph_gml_tree_t *igraph_i_gml_merge(igraph_gml_tree_t *t1, igraph_gml_tree_t* 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 82 "foreign-gml-parser.y"
+#line 92 "foreign-gml-parser.y"
 {
    struct {
       char *s;
@@ -180,20 +185,32 @@ typedef union YYSTYPE
    double real;
 }
 /* Line 193 of yacc.c.  */
-#line 184 "foreign-gml-parser.c"
+#line 189 "foreign-gml-parser.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1
 #endif
 
+#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
+typedef struct YYLTYPE
+{
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+} YYLTYPE;
+# define yyltype YYLTYPE /* obsolescent; will be withdrawn */
+# define YYLTYPE_IS_DECLARED 1
+# define YYLTYPE_IS_TRIVIAL 1
+#endif
 
 
 /* Copy the second part of user declarations.  */
 
 
 /* Line 216 of yacc.c.  */
-#line 197 "foreign-gml-parser.c"
+#line 214 "foreign-gml-parser.c"
 
 #ifdef short
 # undef short
@@ -351,14 +368,16 @@ void free (void *); /* INFRINGES ON USER NAME SPACE */
 
 #if (! defined yyoverflow \
      && (! defined __cplusplus \
-	 || (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
+	 || (defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL \
+	     && defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
 
 /* A type that is properly aligned for any stack member.  */
 union yyalloc
 {
   yytype_int16 yyss;
   YYSTYPE yyvs;
-  };
+    YYLTYPE yyls;
+};
 
 /* The size of the maximum gap between one aligned stack and the next.  */
 # define YYSTACK_GAP_MAXIMUM (sizeof (union yyalloc) - 1)
@@ -366,8 +385,8 @@ union yyalloc
 /* The size of an array large to enough to hold all stacks, each with
    N elements.  */
 # define YYSTACK_BYTES(N) \
-     ((N) * (sizeof (yytype_int16) + sizeof (YYSTYPE)) \
-      + YYSTACK_GAP_MAXIMUM)
+     ((N) * (sizeof (yytype_int16) + sizeof (YYSTYPE) + sizeof (YYLTYPE)) \
+      + 2 * YYSTACK_GAP_MAXIMUM)
 
 /* Copy COUNT objects from FROM to TO.  The source and destination do
    not overlap.  */
@@ -479,8 +498,8 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   109,   109,   110,   113,   114,   116,   118,   120,   122,
-     126,   128,   130
+       0,   119,   119,   120,   123,   124,   126,   128,   130,   132,
+     136,   139,   142
 };
 #endif
 
@@ -603,7 +622,7 @@ do								\
     }								\
   else								\
     {								\
-      yyerror (YY_("syntax error: cannot back up")); \
+      yyerror (&yylloc, context, YY_("syntax error: cannot back up")); \
       YYERROR;							\
     }								\
 while (YYID (0))
@@ -658,9 +677,9 @@ while (YYID (0))
 /* YYLEX -- calling `yylex' with the right arguments.  */
 
 #ifdef YYLEX_PARAM
-# define YYLEX yylex (YYLEX_PARAM)
+# define YYLEX yylex (&yylval, &yylloc, YYLEX_PARAM)
 #else
-# define YYLEX yylex ()
+# define YYLEX yylex (&yylval, &yylloc, scanner)
 #endif
 
 /* Enable debugging if requested.  */
@@ -683,7 +702,7 @@ do {									  \
     {									  \
       YYFPRINTF (stderr, "%s ", Title);					  \
       yy_symbol_print (stderr,						  \
-		  Type, Value); \
+		  Type, Value, Location, context); \
       YYFPRINTF (stderr, "\n");						  \
     }									  \
 } while (YYID (0))
@@ -697,17 +716,21 @@ do {									  \
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
+yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, igraph_i_gml_parsedata_t* context)
 #else
 static void
-yy_symbol_value_print (yyoutput, yytype, yyvaluep)
+yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, context)
     FILE *yyoutput;
     int yytype;
     YYSTYPE const * const yyvaluep;
+    YYLTYPE const * const yylocationp;
+    igraph_i_gml_parsedata_t* context;
 #endif
 {
   if (!yyvaluep)
     return;
+  YYUSE (yylocationp);
+  YYUSE (context);
 # ifdef YYPRINT
   if (yytype < YYNTOKENS)
     YYPRINT (yyoutput, yytoknum[yytype], *yyvaluep);
@@ -729,13 +752,15 @@ yy_symbol_value_print (yyoutput, yytype, yyvaluep)
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
+yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, igraph_i_gml_parsedata_t* context)
 #else
 static void
-yy_symbol_print (yyoutput, yytype, yyvaluep)
+yy_symbol_print (yyoutput, yytype, yyvaluep, yylocationp, context)
     FILE *yyoutput;
     int yytype;
     YYSTYPE const * const yyvaluep;
+    YYLTYPE const * const yylocationp;
+    igraph_i_gml_parsedata_t* context;
 #endif
 {
   if (yytype < YYNTOKENS)
@@ -743,7 +768,9 @@ yy_symbol_print (yyoutput, yytype, yyvaluep)
   else
     YYFPRINTF (yyoutput, "nterm %s (", yytname[yytype]);
 
-  yy_symbol_value_print (yyoutput, yytype, yyvaluep);
+  YY_LOCATION_PRINT (yyoutput, *yylocationp);
+  YYFPRINTF (yyoutput, ": ");
+  yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, context);
   YYFPRINTF (yyoutput, ")");
 }
 
@@ -783,12 +810,14 @@ do {								\
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_reduce_print (YYSTYPE *yyvsp, int yyrule)
+yy_reduce_print (YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule, igraph_i_gml_parsedata_t* context)
 #else
 static void
-yy_reduce_print (yyvsp, yyrule)
+yy_reduce_print (yyvsp, yylsp, yyrule, context)
     YYSTYPE *yyvsp;
+    YYLTYPE *yylsp;
     int yyrule;
+    igraph_i_gml_parsedata_t* context;
 #endif
 {
   int yynrhs = yyr2[yyrule];
@@ -802,7 +831,7 @@ yy_reduce_print (yyvsp, yyrule)
       fprintf (stderr, "   $%d = ", yyi + 1);
       yy_symbol_print (stderr, yyrhs[yyprhs[yyrule] + yyi],
 		       &(yyvsp[(yyi + 1) - (yynrhs)])
-		       		       );
+		       , &(yylsp[(yyi + 1) - (yynrhs)])		       , context);
       fprintf (stderr, "\n");
     }
 }
@@ -810,7 +839,7 @@ yy_reduce_print (yyvsp, yyrule)
 # define YY_REDUCE_PRINT(Rule)		\
 do {					\
   if (yydebug)				\
-    yy_reduce_print (yyvsp, Rule); \
+    yy_reduce_print (yyvsp, yylsp, Rule, context); \
 } while (YYID (0))
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
@@ -1061,16 +1090,20 @@ yysyntax_error (char *yyresult, int yystate, int yychar)
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep)
+yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocationp, igraph_i_gml_parsedata_t* context)
 #else
 static void
-yydestruct (yymsg, yytype, yyvaluep)
+yydestruct (yymsg, yytype, yyvaluep, yylocationp, context)
     const char *yymsg;
     int yytype;
     YYSTYPE *yyvaluep;
+    YYLTYPE *yylocationp;
+    igraph_i_gml_parsedata_t* context;
 #endif
 {
   YYUSE (yyvaluep);
+  YYUSE (yylocationp);
+  YYUSE (context);
 
   if (!yymsg)
     yymsg = "Deleting";
@@ -1079,29 +1112,29 @@ yydestruct (yymsg, yytype, yyvaluep)
   switch (yytype)
     {
       case 5: /* "KEYWORD" */
-#line 104 "foreign-gml-parser.y"
+#line 114 "foreign-gml-parser.y"
 	{ igraph_Free((yyvaluep->str).s); };
-#line 1085 "foreign-gml-parser.c"
+#line 1118 "foreign-gml-parser.c"
 	break;
       case 11: /* "list" */
-#line 105 "foreign-gml-parser.y"
+#line 115 "foreign-gml-parser.y"
 	{ igraph_gml_tree_destroy((yyvaluep->tree)); };
-#line 1090 "foreign-gml-parser.c"
+#line 1123 "foreign-gml-parser.c"
 	break;
       case 12: /* "keyvalue" */
-#line 105 "foreign-gml-parser.y"
+#line 115 "foreign-gml-parser.y"
 	{ igraph_gml_tree_destroy((yyvaluep->tree)); };
-#line 1095 "foreign-gml-parser.c"
+#line 1128 "foreign-gml-parser.c"
 	break;
       case 13: /* "key" */
-#line 104 "foreign-gml-parser.y"
+#line 114 "foreign-gml-parser.y"
 	{ igraph_Free((yyvaluep->str).s); };
-#line 1100 "foreign-gml-parser.c"
+#line 1133 "foreign-gml-parser.c"
 	break;
       case 15: /* "string" */
-#line 104 "foreign-gml-parser.y"
+#line 114 "foreign-gml-parser.y"
 	{ igraph_Free((yyvaluep->str).s); };
-#line 1105 "foreign-gml-parser.c"
+#line 1138 "foreign-gml-parser.c"
 	break;
 
       default:
@@ -1120,7 +1153,7 @@ int yyparse ();
 #endif
 #else /* ! YYPARSE_PARAM */
 #if defined __STDC__ || defined __cplusplus
-int yyparse (void);
+int yyparse (igraph_i_gml_parsedata_t* context);
 #else
 int yyparse ();
 #endif
@@ -1128,14 +1161,6 @@ int yyparse ();
 
 
 
-/* The look-ahead symbol.  */
-int yychar;
-
-/* The semantic value of the look-ahead symbol.  */
-YYSTYPE yylval;
-
-/* Number of syntax errors so far.  */
-int yynerrs;
 
 
 
@@ -1157,15 +1182,25 @@ yyparse (YYPARSE_PARAM)
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 int
-yyparse (void)
+yyparse (igraph_i_gml_parsedata_t* context)
 #else
 int
-yyparse ()
-
+yyparse (context)
+    igraph_i_gml_parsedata_t* context;
 #endif
 #endif
 {
-  
+  /* The look-ahead symbol.  */
+int yychar;
+
+/* The semantic value of the look-ahead symbol.  */
+YYSTYPE yylval;
+
+/* Number of syntax errors so far.  */
+int yynerrs;
+/* Location data for the look-ahead symbol.  */
+YYLTYPE yylloc;
+
   int yystate;
   int yyn;
   int yyresult;
@@ -1198,16 +1233,21 @@ yyparse ()
   YYSTYPE *yyvs = yyvsa;
   YYSTYPE *yyvsp;
 
+  /* The location stack.  */
+  YYLTYPE yylsa[YYINITDEPTH];
+  YYLTYPE *yyls = yylsa;
+  YYLTYPE *yylsp;
+  /* The locations where the error started and ended.  */
+  YYLTYPE yyerror_range[2];
 
-
-#define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N))
+#define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N), yylsp -= (N))
 
   YYSIZE_T yystacksize = YYINITDEPTH;
 
   /* The variables used to return semantic value and location from the
      action routines.  */
   YYSTYPE yyval;
-
+  YYLTYPE yyloc;
 
   /* The number of symbols on the RHS of the reduced rule.
      Keep to zero when no symbol should be popped.  */
@@ -1227,6 +1267,12 @@ yyparse ()
 
   yyssp = yyss;
   yyvsp = yyvs;
+  yylsp = yyls;
+#if defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL
+  /* Initialize the default location before parsing starts.  */
+  yylloc.first_line   = yylloc.last_line   = 1;
+  yylloc.first_column = yylloc.last_column = 0;
+#endif
 
   goto yysetstate;
 
@@ -1253,7 +1299,7 @@ yyparse ()
 	   memory.  */
 	YYSTYPE *yyvs1 = yyvs;
 	yytype_int16 *yyss1 = yyss;
-
+	YYLTYPE *yyls1 = yyls;
 
 	/* Each stack pointer address is followed by the size of the
 	   data in use in that stack, in bytes.  This used to be a
@@ -1262,9 +1308,9 @@ yyparse ()
 	yyoverflow (YY_("memory exhausted"),
 		    &yyss1, yysize * sizeof (*yyssp),
 		    &yyvs1, yysize * sizeof (*yyvsp),
-
+		    &yyls1, yysize * sizeof (*yylsp),
 		    &yystacksize);
-
+	yyls = yyls1;
 	yyss = yyss1;
 	yyvs = yyvs1;
       }
@@ -1287,7 +1333,7 @@ yyparse ()
 	  goto yyexhaustedlab;
 	YYSTACK_RELOCATE (yyss);
 	YYSTACK_RELOCATE (yyvs);
-
+	YYSTACK_RELOCATE (yyls);
 #  undef YYSTACK_RELOCATE
 	if (yyss1 != yyssa)
 	  YYSTACK_FREE (yyss1);
@@ -1297,7 +1343,7 @@ yyparse ()
 
       yyssp = yyss + yysize - 1;
       yyvsp = yyvs + yysize - 1;
-
+      yylsp = yyls + yysize - 1;
 
       YYDPRINTF ((stderr, "Stack size increased to %lu\n",
 		  (unsigned long int) yystacksize));
@@ -1374,7 +1420,7 @@ yybackup:
 
   yystate = yyn;
   *++yyvsp = yylval;
-
+  *++yylsp = yylloc;
   goto yynewstate;
 
 
@@ -1405,70 +1451,74 @@ yyreduce:
      GCC warning that YYVAL may be used uninitialized.  */
   yyval = yyvsp[1-yylen];
 
-
+  /* Default location.  */
+  YYLLOC_DEFAULT (yyloc, (yylsp - yylen), yylen);
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
         case 2:
-#line 109 "foreign-gml-parser.y"
-    { igraph_i_gml_parsed_tree=(yyvsp[(1) - (1)].tree); }
+#line 119 "foreign-gml-parser.y"
+    { context->tree=(yyvsp[(1) - (1)].tree); }
     break;
 
   case 3:
-#line 110 "foreign-gml-parser.y"
-    { igraph_i_gml_parsed_tree=(yyvsp[(1) - (2)].tree); }
+#line 120 "foreign-gml-parser.y"
+    { context->tree=(yyvsp[(1) - (2)].tree); }
     break;
 
   case 4:
-#line 113 "foreign-gml-parser.y"
+#line 123 "foreign-gml-parser.y"
     { (yyval.tree)=(yyvsp[(1) - (1)].tree); }
     break;
 
   case 5:
-#line 114 "foreign-gml-parser.y"
+#line 124 "foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_merge((yyvsp[(1) - (2)].tree), (yyvsp[(2) - (2)].tree)); }
     break;
 
   case 6:
-#line 117 "foreign-gml-parser.y"
+#line 127 "foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_numeric((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].real)); }
     break;
 
   case 7:
-#line 119 "foreign-gml-parser.y"
+#line 129 "foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_string((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].str).s, (yyvsp[(2) - (2)].str).len); }
     break;
 
   case 8:
-#line 121 "foreign-gml-parser.y"
+#line 131 "foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_list((yyvsp[(1) - (4)].str).s, (yyvsp[(1) - (4)].str).len, (yyvsp[(3) - (4)].tree)); }
     break;
 
   case 9:
-#line 123 "foreign-gml-parser.y"
+#line 133 "foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_numeric2((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].str).s, (yyvsp[(2) - (2)].str).len); }
     break;
 
   case 10:
-#line 126 "foreign-gml-parser.y"
-    { igraph_i_gml_get_keyword(igraph_gml_yytext, 
-					igraph_gml_yyleng, &(yyval.str)); }
+#line 136 "foreign-gml-parser.y"
+    { igraph_i_gml_get_keyword(igraph_gml_yyget_text(scanner), 
+					igraph_gml_yyget_leng(scanner), 
+					&(yyval.str)); USE((yyvsp[(1) - (1)].str)) }
     break;
 
   case 11:
-#line 128 "foreign-gml-parser.y"
-    { (yyval.real)=igraph_i_gml_get_real(igraph_gml_yytext, igraph_gml_yyleng); }
+#line 139 "foreign-gml-parser.y"
+    { (yyval.real)=igraph_i_gml_get_real(igraph_gml_yyget_text(scanner), 
+				     igraph_gml_yyget_leng(scanner)); }
     break;
 
   case 12:
-#line 130 "foreign-gml-parser.y"
-    { igraph_i_gml_get_string(igraph_gml_yytext, 
-					 igraph_gml_yyleng, &(yyval.str)); }
+#line 142 "foreign-gml-parser.y"
+    { igraph_i_gml_get_string(igraph_gml_yyget_text(scanner), 
+					 igraph_gml_yyget_leng(scanner), 
+					 &(yyval.str)); }
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1472 "foreign-gml-parser.c"
+#line 1522 "foreign-gml-parser.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1478,7 +1528,7 @@ yyreduce:
   YY_STACK_PRINT (yyss, yyssp);
 
   *++yyvsp = yyval;
-
+  *++yylsp = yyloc;
 
   /* Now `shift' the result of the reduction.  Determine what state
      that goes to, based on the state we popped back to and the rule
@@ -1504,7 +1554,7 @@ yyerrlab:
     {
       ++yynerrs;
 #if ! YYERROR_VERBOSE
-      yyerror (YY_("syntax error"));
+      yyerror (&yylloc, context, YY_("syntax error"));
 #else
       {
 	YYSIZE_T yysize = yysyntax_error (0, yystate, yychar);
@@ -1528,11 +1578,11 @@ yyerrlab:
 	if (0 < yysize && yysize <= yymsg_alloc)
 	  {
 	    (void) yysyntax_error (yymsg, yystate, yychar);
-	    yyerror (yymsg);
+	    yyerror (&yylloc, context, yymsg);
 	  }
 	else
 	  {
-	    yyerror (YY_("syntax error"));
+	    yyerror (&yylloc, context, YY_("syntax error"));
 	    if (yysize != 0)
 	      goto yyexhaustedlab;
 	  }
@@ -1540,7 +1590,7 @@ yyerrlab:
 #endif
     }
 
-
+  yyerror_range[0] = yylloc;
 
   if (yyerrstatus == 3)
     {
@@ -1556,7 +1606,7 @@ yyerrlab:
       else
 	{
 	  yydestruct ("Error: discarding",
-		      yytoken, &yylval);
+		      yytoken, &yylval, &yylloc, context);
 	  yychar = YYEMPTY;
 	}
     }
@@ -1577,6 +1627,7 @@ yyerrorlab:
   if (/*CONSTCOND*/ 0)
      goto yyerrorlab;
 
+  yyerror_range[0] = yylsp[1-yylen];
   /* Do not reclaim the symbols of the rule which action triggered
      this YYERROR.  */
   YYPOPSTACK (yylen);
@@ -1610,9 +1661,9 @@ yyerrlab1:
       if (yyssp == yyss)
 	YYABORT;
 
-
+      yyerror_range[0] = *yylsp;
       yydestruct ("Error: popping",
-		  yystos[yystate], yyvsp);
+		  yystos[yystate], yyvsp, yylsp, context);
       YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
@@ -1623,6 +1674,11 @@ yyerrlab1:
 
   *++yyvsp = yylval;
 
+  yyerror_range[1] = yylloc;
+  /* Using YYLLOC is tempting, but would change the location of
+     the look-ahead.  YYLOC is available though.  */
+  YYLLOC_DEFAULT (yyloc, (yyerror_range - 1), 2);
+  *++yylsp = yyloc;
 
   /* Shift the error token.  */
   YY_SYMBOL_PRINT ("Shifting", yystos[yyn], yyvsp, yylsp);
@@ -1650,7 +1706,7 @@ yyabortlab:
 | yyexhaustedlab -- memory exhaustion comes here.  |
 `-------------------------------------------------*/
 yyexhaustedlab:
-  yyerror (YY_("memory exhausted"));
+  yyerror (&yylloc, context, YY_("memory exhausted"));
   yyresult = 2;
   /* Fall through.  */
 #endif
@@ -1658,7 +1714,7 @@ yyexhaustedlab:
 yyreturn:
   if (yychar != YYEOF && yychar != YYEMPTY)
      yydestruct ("Cleanup: discarding lookahead",
-		 yytoken, &yylval);
+		 yytoken, &yylval, &yylloc, context);
   /* Do not reclaim the symbols of the rule which action triggered
      this YYABORT or YYACCEPT.  */
   YYPOPSTACK (yylen);
@@ -1666,7 +1722,7 @@ yyreturn:
   while (yyssp != yyss)
     {
       yydestruct ("Cleanup: popping",
-		  yystos[*yyssp], yyvsp);
+		  yystos[*yyssp], yyvsp, yylsp, context);
       YYPOPSTACK (1);
     }
 #ifndef yyoverflow
@@ -1682,17 +1738,14 @@ yyreturn:
 }
 
 
-#line 133 "foreign-gml-parser.y"
+#line 146 "foreign-gml-parser.y"
 
 
-int igraph_gml_yyerror(char *s)
-{
-  static char str[300];
-  igraph_i_gml_reset_scanner();
-
-  snprintf(str, sizeof(str)-1, "Parse error in GML file, line %li (%s)", 
-	   (long)igraph_gml_mylineno, s);
-  igraph_i_gml_errmsg=str;
+int igraph_gml_yyerror(YYLTYPE* locp, igraph_i_gml_parsedata_t *context, 
+		       char *s) {
+  snprintf(context->errmsg, sizeof(context->errmsg)/sizeof(char)-1, 
+	   "Parse error in GML file, line %i (%s)", 
+	   locp->first_line, s);
   return 0;
 }
 

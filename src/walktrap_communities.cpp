@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2007  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2007-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -59,14 +59,16 @@
 #include <cmath>
 #include <algorithm>
 
-int Probabilities::length = 0;
-Communities* Probabilities::C = 0;
-float* Probabilities::tmp_vector1 = 0;
-float* Probabilities::tmp_vector2 = 0;
-int* Probabilities::id = 0;
-int* Probabilities::vertices1 = 0;
-int* Probabilities::vertices2 = 0;
-int Probabilities::current_id = 0;
+#include "config.h"
+
+IGRAPH_THREAD_LOCAL int Probabilities::length = 0;
+IGRAPH_THREAD_LOCAL Communities* Probabilities::C = 0;
+IGRAPH_THREAD_LOCAL float* Probabilities::tmp_vector1 = 0;
+IGRAPH_THREAD_LOCAL float* Probabilities::tmp_vector2 = 0;
+IGRAPH_THREAD_LOCAL int* Probabilities::id = 0;
+IGRAPH_THREAD_LOCAL int* Probabilities::vertices1 = 0;
+IGRAPH_THREAD_LOCAL int* Probabilities::vertices2 = 0;
+IGRAPH_THREAD_LOCAL int Probabilities::current_id = 0;
 
 
 Neighbor::Neighbor() {

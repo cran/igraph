@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2007  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2007-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,12 +21,16 @@
 
 */
 
-#include "igraph.h"
 #include <math.h>
 #include <float.h>
 #include <stdarg.h>
 #include "config.h"
 #include "igraph_math.h"
+#include "igraph_types.h"
+
+#ifdef _MSC_VER
+#  define isinf(x) (!_finite(x) && !_isnan(x))
+#endif
 
 int igraph_finite(double x)
 {
@@ -167,8 +171,8 @@ double igraph_log1p(double x)
 	+.63533936180236187354180266666666e-31,
     };
 
-    static int nlnrel = 0;
-    static double xmin = 0.0;
+    static IGRAPH_THREAD_LOCAL int nlnrel = 0;
+    static IGRAPH_THREAD_LOCAL double xmin = 0.0;
 
     if (xmin == 0.0) xmin = -1 + sqrt(DBL_EPSILON);/*was sqrt(d1mach(4)); */
     if (nlnrel == 0) /* initialize chebychev coefficients */
@@ -195,6 +199,14 @@ double igraph_log1p(double x)
 /*         ML_ERROR(ME_PRECISION, "log1p"); */
 /*     } */
     return log(1 + x);
+}
+
+long double igraph_fabsl(long double a) { 
+  if (a<0) {
+    return -a;
+  } else {
+    return a;
+  }
 }
 
 double igraph_fmin(double a, double b) { 
@@ -240,3 +252,19 @@ int igraph_i_snprintf(char *buffer, size_t count, const char *format, ...) {
 }
 
 #endif
+
+int igraph_is_nan(double x) {
+  return isnan(x);
+}
+
+int igraph_is_inf(double x) {
+  return isinf(x) != 0;
+}
+
+int igraph_is_posinf(double x) {
+  return isinf(x) == 1;
+}
+
+int igraph_is_neginf(double x) {
+  return isinf(x) == -1;
+}

@@ -1,8 +1,9 @@
 /* -*- mode: C -*-  */
+/* vim:set ts=2 sts=2 sw=2 et: */
 /* 
    IGraph library.
-   Copyright (C) 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2005-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,12 +22,26 @@
 
 */
 
-#include "igraph.h"
+#include "igraph_structural.h"
+#include "igraph_transitivity.h"
+#include "igraph_paths.h"
 #include "igraph_math.h"
-#include "memory.h"
-#include "random.h"
+#include "igraph_memory.h"
+#include "igraph_random.h"
+#include "igraph_adjlist.h"
+#include "igraph_interface.h"
+#include "igraph_progress.h"
+#include "igraph_interrupt_internal.h"
+#include "igraph_centrality.h"
+#include "igraph_components.h"
+#include "igraph_constructors.h"
+#include "igraph_conversion.h"
+#include "igraph_types_internal.h"
+#include "igraph_dqueue.h"
+#include "igraph_attributes.h"
 #include "config.h"
 
+#include <assert.h>
 #include <string.h>
 #include <limits.h>
 
@@ -66,6 +81,8 @@
  *
  * Time complexity: O(|V||E|), the
  * number of vertices times the number of edges.
+ * 
+ * \example examples/simple/igraph_diameter.c
  */
 
 int igraph_diameter(const igraph_t *graph, igraph_integer_t *pres, 
@@ -156,7 +173,7 @@ int igraph_diameter(const igraph_t *graph, igraph_integer_t *pres,
       igraph_vector_ptr_init(&tmpptr, 1);
       IGRAPH_FINALLY(igraph_vector_ptr_destroy, &tmpptr);
       VECTOR(tmpptr)[0]=path;
-      IGRAPH_CHECK(igraph_get_shortest_paths(graph, &tmpptr, from, 
+      IGRAPH_CHECK(igraph_get_shortest_paths(graph, &tmpptr, 0, from, 
 					     igraph_vss_1(to), dirmode));
       igraph_vector_ptr_destroy(&tmpptr);
       IGRAPH_FINALLY_CLEAN(1);
@@ -182,7 +199,7 @@ int igraph_diameter(const igraph_t *graph, igraph_integer_t *pres,
  * \param directed Boolean, whether to consider directed
  *        paths. Ignored for undirected graphs.
  * \param unconn What to do if the graph is not connected. If
- *        \c TRUE the average of thr geodesics
+ *        \c TRUE the average of the geodesics
  *        within the components 
  *        will be returned, otherwise the number of vertices is
  *        used for the length of non-existing geodesics. (The rationale
@@ -194,6 +211,8 @@ int igraph_diameter(const igraph_t *graph, igraph_integer_t *pres,
  *
  * Time complexity: O(|V||E|), the
  * number of vertices times the number of edges.
+ * 
+ * \example examples/simple/igraph_average_path_length.c
  */
 
 int igraph_average_path_length(const igraph_t *graph, igraph_real_t *res,
@@ -267,7 +286,7 @@ int igraph_average_path_length(const igraph_t *graph, igraph_real_t *res,
 
 /**
  * \function igraph_path_length_hist
- * Create a histogram of all shortest path lenghts
+ * Create a histogram of all shortest path lengths.
  * 
  * This function calculates a histogram, by calculating the
  * shortest path length between each pair of vertices. For directed
@@ -379,303 +398,24 @@ int igraph_path_length_hist(const igraph_t *graph, igraph_vector_t *res,
 
 /**
  * \ingroup structural
- * \function igraph_minimum_spanning_tree_unweighted
- * \brief Calculates one minimum spanning tree of an unweighted graph.
- * 
- * </para><para>
- * If the graph has more minimum spanning trees (this is always the
- * case, except if it is a forest) this implementation returns only
- * the same one.
- * 
- * </para><para>
- * Directed graphs are considered as undirected for this computation.
- *
- * </para><para>
- * If the graph is not connected then its minimum spanning forest is
- * returned. This is the set of the minimum spanning trees of each
- * component.
- * \param graph The graph object.
- * \param mst The minimum spanning tree, another graph object. Do
- *        \em not initialize this object before passing it to
- *        this function, but be sure to call \ref igraph_destroy() on it if
- *        you don't need it any more.
- * \return Error code:
- *         \c IGRAPH_ENOMEM, not enough memory for
- *         temporary data. 
- *
- * Time complexity: O(|V|+|E|),
- * |V| is the 
- * number of vertices, |E| the number
- * of edges in the graph. 
- *
- * \sa \ref igraph_minimum_spanning_tree_prim() for weighted graphs.
- */
-
-int igraph_minimum_spanning_tree_unweighted(const igraph_t *graph, 
-					    igraph_t *mst) {
-
-  long int no_of_nodes=igraph_vcount(graph);
-  long int no_of_edges=igraph_ecount(graph);
-  char *already_added;
-  char *added_edges;
-  
-  igraph_dqueue_t q=IGRAPH_DQUEUE_NULL;
-  igraph_vector_t edges=IGRAPH_VECTOR_NULL;
-  igraph_vector_t tmp=IGRAPH_VECTOR_NULL;
-  long int i, j;
-
-  added_edges=igraph_Calloc(no_of_edges, char);
-  if (added_edges==0) {
-    IGRAPH_ERROR("unweighted spanning tree failed", IGRAPH_ENOMEM);
-  }
-  IGRAPH_FINALLY(igraph_free, added_edges);
-  IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
-  already_added=igraph_Calloc(no_of_nodes, char);
-  if (already_added==0) {
-    IGRAPH_ERROR("unweighted spanning tree failed", IGRAPH_ENOMEM);
-  }
-  IGRAPH_FINALLY(igraph_free, already_added);
-  IGRAPH_VECTOR_INIT_FINALLY(&tmp, 0);
-  IGRAPH_DQUEUE_INIT_FINALLY(&q, 100);
-  
-  for (i=0; i<no_of_nodes; i++) {
-    if (already_added[i]>0) { continue; }
-
-    IGRAPH_ALLOW_INTERRUPTION();
-
-    already_added[i]=1;
-    IGRAPH_CHECK(igraph_dqueue_push(&q, i));
-    while (! igraph_dqueue_empty(&q)) {
-      long int act_node=igraph_dqueue_pop(&q);
-      IGRAPH_CHECK(igraph_adjacent(graph, &tmp, act_node, IGRAPH_ALL));
-      for (j=0; j<igraph_vector_size(&tmp); j++) {
-	long int edge=VECTOR(tmp)[j];
-	if (added_edges[edge]==0) {
-	  igraph_integer_t from, to;
-	  igraph_edge(graph, edge, &from, &to);
-	  if (act_node==to) { to=from; }
-	  if (already_added[(long int) to]==0) {
-	    already_added[(long int) to]=1;
-	    added_edges[edge]=1;
-	    IGRAPH_CHECK(igraph_dqueue_push(&q, to));
-	  }
-	}
-      }
-    }
-  }
-  
-  igraph_dqueue_destroy(&q);
-  igraph_Free(already_added);
-  igraph_vector_destroy(&tmp);
-  IGRAPH_FINALLY_CLEAN(3);
-
-  /* summarize the edges to delete */
-  j=0;
-  for (i=0; i<no_of_edges; i++) {
-    if (added_edges[i]==0) {
-      j++;
-    }
-  }
-  IGRAPH_CHECK(igraph_vector_resize(&edges, j));
-  j=0;
-  for (i=0; i<no_of_edges; i++) {
-    if (added_edges[i]==0) {
-      VECTOR(edges)[j++]=i;
-    }
-  }
-  
-  IGRAPH_CHECK(igraph_copy(mst, graph));
-  IGRAPH_FINALLY(igraph_destroy, mst);
-  IGRAPH_CHECK(igraph_delete_edges(mst, igraph_ess_vector(&edges)));
-  
-  igraph_vector_destroy(&edges);
-  igraph_Free(added_edges);
-  IGRAPH_FINALLY_CLEAN(3);
-
-  return 0;
-}
-
-/**
- * \ingroup structural
- * \function igraph_minimum_spanning_tree_prim
- * \brief Calculates one minimum spanning tree of a weighted graph.
- *
- * </para><para>
- * This function uses Prim's method for carrying out the computation,
- * see Prim, R.C.: Shortest connection networks and some
- * generalizations, Bell System Technical
- * Journal, Vol. 36, 
- * 1957, 1389--1401.
- * 
- * </para><para>
- * If the graph has more than one minimum spanning tree, the current
- * implementation returns always the same one.
- *
- * </para><para>
- * Directed graphs are considered as undirected for this computation. 
- * 
- * </para><para>
- * If the graph is not connected then its minimum spanning forest is
- * returned. This is the set of the minimum spanning trees of each
- * component.
- * 
- * \param graph The graph object.
- * \param mst The result of the computation, a graph object containing
- *        the minimum spanning tree of the graph.
- *        Do \em not initialize this object before passing it to
- *        this function, but be sure to call \ref igraph_destroy() on it if
- *        you don't need it any more.
- * \param weights A vector containing the weights of the the edges.
- *        in the same order as the simple edge iterator visits them.
- * \return Error code:
- *         \c IGRAPH_ENOMEM, not enough memory.
- *         \c IGRAPH_EINVAL, length of weight vector does not
- *           match number of edges.
- *
- * Time complexity: O(|V|+|E|),
- * |V| is the number of vertices,
- * |E| the number of edges in the 
- * graph. 
- *
- * \sa \ref igraph_minimum_spanning_tree_unweighted() for unweighted graphs.
- */
-
-int igraph_minimum_spanning_tree_prim(const igraph_t *graph, igraph_t *mst,
-				      const igraph_vector_t *weights) {
-
-  long int no_of_nodes=igraph_vcount(graph);
-  long int no_of_edges=igraph_ecount(graph);
-  char *already_added;
-  char *added_edges;
-
-  igraph_d_indheap_t heap=IGRAPH_D_INDHEAP_NULL;
-  igraph_vector_t edges=IGRAPH_VECTOR_NULL;
-  igraph_integer_t mode=IGRAPH_ALL;
-  
-  igraph_vector_t adj;
-
-  long int i, j;
-
-  if (igraph_vector_size(weights) != igraph_ecount(graph)) {
-    IGRAPH_ERROR("Invalid weights length", IGRAPH_EINVAL);
-  }
-
-  added_edges=igraph_Calloc(no_of_edges, char);
-  if (added_edges==0) {
-    IGRAPH_ERROR("prim spanning tree failed", IGRAPH_ENOMEM);
-  }
-  IGRAPH_FINALLY(igraph_destroy, added_edges);
-  IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
-  already_added=igraph_Calloc(no_of_nodes, char);
-  if (already_added == 0) {
-    IGRAPH_ERROR("prim spanning tree failed", IGRAPH_ENOMEM);
-  }
-  IGRAPH_FINALLY(igraph_free, already_added);
-  IGRAPH_CHECK(igraph_d_indheap_init(&heap, 0));
-  IGRAPH_FINALLY(igraph_d_indheap_destroy, &heap);
-  IGRAPH_VECTOR_INIT_FINALLY(&adj, 0);
-
-  for (i=0; i<no_of_nodes; i++) {
-    if (already_added[i]>0) { continue; }
-    IGRAPH_ALLOW_INTERRUPTION();
-
-    already_added[i]=1;
-    /* add all edges of the first vertex */
-    igraph_adjacent(graph, &adj, i, mode);
-    for (j=0; j<igraph_vector_size(&adj); j++) {
-      long int edgeno=VECTOR(adj)[j];
-      igraph_integer_t edgefrom, edgeto;
-      long int neighbor;
-      igraph_edge(graph, edgeno, &edgefrom, &edgeto);
-      neighbor= edgefrom != i ? edgefrom : edgeto;
-      if (already_added[neighbor] == 0) {
-	IGRAPH_CHECK(igraph_d_indheap_push(&heap, -VECTOR(*weights)[edgeno], i,
-					   edgeno));
-      }
-    }
-
-    while(! igraph_d_indheap_empty(&heap)) {
-      /* Get minimal edge */
-      long int from, edge;
-      igraph_integer_t tmp, to;
-      igraph_d_indheap_max_index(&heap, &from, &edge);
-      igraph_edge(graph, edge, &tmp, &to);
-      
-      /* Erase it */
-      igraph_d_indheap_delete_max(&heap);
-
-      /* Is this edge already included? */
-      if (added_edges[edge]==0) {
-	if (from==to) { to=tmp; }
-	/* Does it point to a visited node? */      
-	if (already_added[(long int)to]==0) {
-	  already_added[(long int)to]=1;
-	  added_edges[edge]=1;
-	  /* add all outgoing edges */
-	  igraph_adjacent(graph, &adj, to, mode);
-	  for (j=0; j<igraph_vector_size(&adj); j++) {
-	    long int edgeno=VECTOR(adj)[j];
-	    igraph_integer_t edgefrom, edgeto;
-	    long int neighbor;
-	    igraph_edge(graph, edgeno, &edgefrom, &edgeto);
-	    neighbor= edgefrom != to ? edgefrom : edgeto;
-	    if (already_added[neighbor] == 0) {
-	      IGRAPH_CHECK(igraph_d_indheap_push(&heap, -VECTOR(*weights)[edgeno], to,
-						 edgeno));
-	    }
-	  }
-	} /* for */
-      } /* if !already_added */
-    } /* while in the same component */
-  } /* for all nodes */
-
-  igraph_d_indheap_destroy(&heap);
-  igraph_Free(already_added);
-  igraph_vector_destroy(&adj);
-  IGRAPH_FINALLY_CLEAN(3);
-
-  /* Ok, collect the edges to delete */
-  j=0;
-  for (i=0; i<no_of_edges; i++) {
-    if (added_edges[i]==0) {
-      j++;
-    }
-  }
-  IGRAPH_CHECK(igraph_vector_resize(&edges, j));
-  j=0;
-  for (i=0; i<no_of_edges; i++) {
-    if (added_edges[i]==0) {
-      VECTOR(edges)[j++]=i;
-    }
-  }
-  
-  IGRAPH_CHECK(igraph_copy(mst, graph));
-  IGRAPH_FINALLY(igraph_destroy, mst);
-  IGRAPH_CHECK(igraph_delete_edges(mst, igraph_ess_vector(&edges)));
-  
-  igraph_vector_destroy(&edges);
-  igraph_Free(added_edges);
-  IGRAPH_FINALLY_CLEAN(3);
-  
-  return 0;
-}
-
-/**
- * \ingroup structural
  * \function igraph_shortest_paths
  * \brief The length of the shortest paths between vertices.
  *
  * \param graph The graph object.
- * \param res The result of the calculation, a matrix. It has the same
+ * \param res The result of the calculation, a matrix. A pointer to an
+ *        initialized matrix, to be more precise. The matrix will be
+ *        resized if needed. It will have the same
  *        number of rows as the length of the \c from
  *        argument, and its number of columns is the number of
- *        vertices in the graph. One row of the matrix shows the
- *        distances from/to a given vertex to all the others in the
- *        graph, the order is fixed by the vertex ids. For the
- *        unreachable vertices IGRAPH_INFINITY is returned.
+ *        vertices in the \c to argument. One row of the matrix shows the
+ *        distances from/to a given vertex to the ones in \c to.
+ *        For the unreachable vertices IGRAPH_INFINITY is returned.
  * \param from Vector of the vertex ids for which the path length
  *        calculations are done.
- * \param mode The type of shortest paths to be use for the
+ * \param to Vector of the vertex ids to which the path length 
+ *        calculations are done. It is not allowed to have duplicated
+ *        vertex ids here.
+ * \param mode The type of shortest paths to be used for the
  *        calculation in directed graphs. Possible values: 
  *        \clist
  *        \cli IGRAPH_OUT 
@@ -708,17 +448,21 @@ int igraph_minimum_spanning_tree_prim(const igraph_t *graph, igraph_t *mst,
  */
 
 int igraph_shortest_paths(const igraph_t *graph, igraph_matrix_t *res, 
-			  const igraph_vs_t from, igraph_neimode_t mode) {
+			  const igraph_vs_t from, const igraph_vs_t to,
+			  igraph_neimode_t mode) {
 
   long int no_of_nodes=igraph_vcount(graph);
-  long int no_of_from;
+  long int no_of_from, no_of_to;
   long int *already_counted;
   igraph_adjlist_t adjlist;
   igraph_dqueue_t q=IGRAPH_DQUEUE_NULL;
   igraph_vector_t *neis;
+  igraph_bool_t all_to;
 
   long int i, j;
-  igraph_vit_t fromvit;
+  igraph_vit_t fromvit, tovit;
+  igraph_real_t my_infinity=IGRAPH_INFINITY;
+  igraph_vector_t index;
 
   if (mode != IGRAPH_OUT && mode != IGRAPH_IN && 
       mode != IGRAPH_ALL) {
@@ -739,13 +483,30 @@ int igraph_shortest_paths(const igraph_t *graph, igraph_matrix_t *res,
   IGRAPH_FINALLY(free, already_counted);
   IGRAPH_DQUEUE_INIT_FINALLY(&q, 100);
 
-  IGRAPH_CHECK(igraph_matrix_resize(res, no_of_from, no_of_nodes));
-  igraph_matrix_null(res);
+  if ( (all_to=igraph_vs_is_all(&to)) ) {
+    no_of_to=no_of_nodes;
+  } else {
+    IGRAPH_VECTOR_INIT_FINALLY(&index, no_of_nodes);
+    IGRAPH_CHECK(igraph_vit_create(graph, to, &tovit));
+    IGRAPH_FINALLY(igraph_vit_destroy, &tovit);
+    no_of_to=IGRAPH_VIT_SIZE(tovit);
+    for (i=0; !IGRAPH_VIT_END(tovit); IGRAPH_VIT_NEXT(tovit)) {
+      long int v=IGRAPH_VIT_GET(tovit);
+      if (VECTOR(index)[v]) {
+	IGRAPH_ERROR("Duplicate vertices in `to', this is not allowed", 
+		     IGRAPH_EINVAL);
+      }
+      VECTOR(index)[v] = ++i;
+    }
+  }
+
+  IGRAPH_CHECK(igraph_matrix_resize(res, no_of_from, no_of_to));
+  igraph_matrix_fill(res, my_infinity);
 
   for (IGRAPH_VIT_RESET(fromvit), i=0; 
        !IGRAPH_VIT_END(fromvit); 
        IGRAPH_VIT_NEXT(fromvit), i++) {
-    long int reached=1;
+    long int reached=0;
     IGRAPH_CHECK(igraph_dqueue_push(&q, IGRAPH_VIT_GET(fromvit)));
     IGRAPH_CHECK(igraph_dqueue_push(&q, 0));
     already_counted[ (long int) IGRAPH_VIT_GET(fromvit) ] = i+1;
@@ -755,31 +516,38 @@ int igraph_shortest_paths(const igraph_t *graph, igraph_matrix_t *res,
     while (!igraph_dqueue_empty(&q)) {
       long int act=igraph_dqueue_pop(&q);
       long int actdist=igraph_dqueue_pop(&q);
-      MATRIX(*res, i, act)=actdist;
+
+      if (all_to) {
+	MATRIX(*res, i, act)=actdist;
+      } else {
+	if (VECTOR(index)[act]) {
+	  MATRIX(*res, i, (long int)(VECTOR(index)[act]-1)) = actdist;
+	  reached++;
+	  if (reached==no_of_to) {
+	    igraph_dqueue_clear(&q);
+	    break;
+	  }
+	}
+      }
       
       neis = igraph_adjlist_get(&adjlist, act);
       for (j=0; j<igraph_vector_size(neis); j++) {
         long int neighbor=VECTOR(*neis)[j];
         if (already_counted[neighbor] == i+1) { continue; }
         already_counted[neighbor] = i+1;
-        reached++;
         IGRAPH_CHECK(igraph_dqueue_push(&q, neighbor));
         IGRAPH_CHECK(igraph_dqueue_push(&q, actdist+1));
       }
     }
-
-    /* Plus the unreachable nodes */
-    j=0;
-    while (reached < no_of_nodes) {
-      if (MATRIX(*res, i, j) == 0 && j != IGRAPH_VIT_GET(fromvit)) {
-        MATRIX(*res, i, j)=IGRAPH_INFINITY;
-        reached++;
-      }
-      j++;
-    }
   }
 
   /* Clean */
+  if (!all_to) {
+    igraph_vit_destroy(&tovit);
+    igraph_vector_destroy(&index);
+    IGRAPH_FINALLY_CLEAN(2);
+  }
+
   igraph_Free(already_counted);
   igraph_dqueue_destroy(&q);
   igraph_vit_destroy(&fromvit);
@@ -798,18 +566,30 @@ int igraph_shortest_paths(const igraph_t *graph, igraph_matrix_t *res,
  * If there is more than one geodesic between two vertices, this
  * function gives only one of them. 
  * \param graph The graph object.
- * \param res The result, this is a pointer vector, each element points 
- *        to a vector
+ * \param vertices The result, the ids of the vertices along the paths. 
+ *        This is a pointer vector, each element points to a vector
  *        object. These should be initialized before passing them to
  *        the function, which will properly clear and/or resize them
  *        and fill the ids of the vertices along the geodesics from/to
- *        the vertices.
+ *        the vertices. Supply a null pointer here if you don't need
+ *        these vectors. Normally, either this argument, or the \c
+ *        edges should be non-null, but no error or warning is given
+ *        if they are both null pointers.
+ * \param edges The result, the ids of the edges along the paths.
+ *        This is a pointer vector, each element points to a vector
+ *        object. These should be initialized before passing them to
+ *        the function, which will properly clear and/or resize them
+ *        and fill the ids of the vertices along the geodesics from/to
+ *        the vertices. Supply a null pointer here if you don't need
+ *        these vectors. Normally, either this argument, or the \c
+ *        vertices should be non-null, but no error or warning is given
+ *        if they are both null pointers.
  * \param from The id of the vertex from/to which the geodesics are
  *        calculated. 
  * \param to Vertex sequence with the ids of the vertices to/from which the 
  *        shortest paths will be calculated. A vertex might be given multiple
  *        times.
- * \param mode The type of shortest paths to be use for the
+ * \param mode The type of shortest paths to be used for the
  *        calculation in directed graphs. Possible values: 
  *        \clist
  *        \cli IGRAPH_OUT 
@@ -838,10 +618,14 @@ int igraph_shortest_paths(const igraph_t *graph, igraph_matrix_t *res,
  *
  * \sa \ref igraph_shortest_paths() if you only need the path length but
  * not the paths themselves.
+ * 
+ * \example examples/simple/igraph_get_shortest_paths.c
  */
  
 
-int igraph_get_shortest_paths(const igraph_t *graph, igraph_vector_ptr_t *res,
+int igraph_get_shortest_paths(const igraph_t *graph, 
+			      igraph_vector_ptr_t *vertices,
+			      igraph_vector_ptr_t *edges,
 			      igraph_integer_t from, const igraph_vs_t to, 
 			      igraph_neimode_t mode) {
 
@@ -871,15 +655,18 @@ int igraph_get_shortest_paths(const igraph_t *graph, igraph_vector_ptr_t *res,
   IGRAPH_CHECK(igraph_vit_create(graph, to, &vit));
   IGRAPH_FINALLY(igraph_vit_destroy, &vit);
 
-  if (IGRAPH_VIT_SIZE(vit) != igraph_vector_ptr_size(res)) {
-    IGRAPH_ERROR("Size of the `res' and the `to' should match", IGRAPH_EINVAL);
+  if (vertices && IGRAPH_VIT_SIZE(vit) != igraph_vector_ptr_size(vertices)) {
+    IGRAPH_ERROR("Size of the `vertices' and the `to' should match", IGRAPH_EINVAL);
+  }
+  if (edges && IGRAPH_VIT_SIZE(vit) != igraph_vector_ptr_size(edges)) {
+    IGRAPH_ERROR("Size of the `edges' and the `to' should match", IGRAPH_EINVAL);
   }
 
   father=igraph_Calloc(no_of_nodes, long int);
   if (father==0) {
     IGRAPH_ERROR("cannot get shortest paths", IGRAPH_ENOMEM);
   }
-  IGRAPH_FINALLY(free, father);	/* TODO: hack */
+  IGRAPH_FINALLY(igraph_free, father);
   IGRAPH_VECTOR_INIT_FINALLY(&tmp, 0);
   IGRAPH_DQUEUE_INIT_FINALLY(&q, 100);
 
@@ -895,21 +682,22 @@ int igraph_get_shortest_paths(const igraph_t *graph, igraph_vector_ptr_t *res,
 
   IGRAPH_CHECK(igraph_dqueue_push(&q, from+1));
   if (father[ (long int) from ] < 0) { reached++; }
-  father[ (long int)from ] = from+1;
+  father[ (long int)from ] = 1;
   
   while (!igraph_dqueue_empty(&q) && reached < to_reach) {
-    long int act=igraph_dqueue_pop(&q);
+    long int act=igraph_dqueue_pop(&q)-1;
     
-    IGRAPH_CHECK(igraph_neighbors(graph, &tmp, act-1, mode));
+    IGRAPH_CHECK(igraph_incident(graph, &tmp, act, mode));
     for (j=0; j<igraph_vector_size(&tmp); j++) {
-      long int neighbor=VECTOR(tmp)[j]+1;
-      if (father[neighbor-1] > 0) { 
+      long int edge=VECTOR(tmp)[j];
+      long int neighbor=IGRAPH_OTHER(graph, edge, act);
+      if (father[neighbor] > 0) { 
 	continue; 
-      } else if (father[neighbor-1] < 0) { 
+      } else if (father[neighbor] < 0) { 
 	reached++; 
       }
-      father[neighbor-1] = act;
-      IGRAPH_CHECK(igraph_dqueue_push(&q, neighbor));
+      father[neighbor] = edge+2;
+      IGRAPH_CHECK(igraph_dqueue_push(&q, neighbor+1));
     }
   }
 
@@ -917,29 +705,47 @@ int igraph_get_shortest_paths(const igraph_t *graph, igraph_vector_ptr_t *res,
     IGRAPH_WARNING("Couldn't reach some vertices");
   }
   
-  for (IGRAPH_VIT_RESET(vit), j=0; 
-       !IGRAPH_VIT_END(vit);
-       IGRAPH_VIT_NEXT(vit), j++) {
-    long int node=IGRAPH_VIT_GET(vit);
-    igraph_vector_t *vec=VECTOR(*res)[j];
-    igraph_vector_clear(vec);
-
-    IGRAPH_ALLOW_INTERRUPTION();
-
-    if (father[node]>0) {
-      long int act=node+1;
-      long int size=0;
-      while (father[act-1] != act) {
-	size++;
-	act=father[act-1];
+  if (vertices || edges) {
+    for (IGRAPH_VIT_RESET(vit), j=0; 
+	 !IGRAPH_VIT_END(vit);
+	 IGRAPH_VIT_NEXT(vit), j++) {
+      long int node=IGRAPH_VIT_GET(vit);
+      igraph_vector_t *vvec=0, *evec=0;
+      if (vertices) {
+	vvec=VECTOR(*vertices)[j];
+	igraph_vector_clear(vvec);
       }
-      size++;
-      IGRAPH_CHECK(igraph_vector_resize(vec, size));
-      VECTOR(*vec)[--size]=node;
-      act=node+1;
-      while (father[act-1] != act) {
-	VECTOR(*vec)[--size]=father[act-1]-1;
-	act=father[act-1];
+      if (edges) {
+	evec=VECTOR(*edges)[j];
+	igraph_vector_clear(evec);
+      }
+      
+      IGRAPH_ALLOW_INTERRUPTION();
+      
+      if (father[node]>0) {
+	long int act=node;
+	long int size=0;
+	long int edge;
+	while (father[act]>1) {
+	  size++;
+	  edge=father[act]-2;
+	  act=IGRAPH_OTHER(graph, edge, act);
+	}
+	if (vvec) {
+	  IGRAPH_CHECK(igraph_vector_resize(vvec, size+1));
+	  VECTOR(*vvec)[size]=node;
+	}
+	if (evec) {
+	  IGRAPH_CHECK(igraph_vector_resize(evec, size));
+	}
+	act=node;
+	while (father[act]>1) {
+	  size--;
+	  edge=father[act]-2;
+	  act=IGRAPH_OTHER(graph, edge, act);
+	  if (vvec) { VECTOR(*vvec)[size]=act; }
+	  if (evec) { VECTOR(*evec)[size]=edge; }
+	}
       }
     }
   }
@@ -952,6 +758,84 @@ int igraph_get_shortest_paths(const igraph_t *graph, igraph_vector_ptr_t *res,
   IGRAPH_FINALLY_CLEAN(4);
 
   return 0;
+}
+
+/** 
+ * \function igraph_get_shortest_path
+ * Shortest path from one vertex to another one.
+ * 
+ * Calculates and returns a single unweighted shortest path from a
+ * given vertex to another one. If there are more than one shortest
+ * paths between the two vertices, then an arbitrary one is returned.
+ * 
+ * </para><para>This function is a wrapper to \ref
+ * igraph_get_shortest_paths(), for the special case when only one
+ * target vertex is considered.
+ * \param graph The input graph, it can be directed or
+ *        undirected. Directed paths are considered in directed
+ *        graphs.
+ * \param vertices Pointer to an initialized vector or a null
+ *        pointer. If not a null pointer, then the vertex ids along
+ *        the path are stored here, including the source and target
+ *        vertices. 
+ * \param edges Pointer to an uninitialized vector or a null
+ *        pointer. If not a null pointer, then the edge ids along the
+ *        path are stored here.
+ * \param from The id of the source vertex.
+ * \param to The id of the target vertex.
+ * \param mode A constant specifying how edge directions are
+ *        considered in directed graphs. Valid modes are:
+ *        \c IGRAPH_OUT, follows edge directions;
+ *        \c IGRAPH_IN, follows the opposite directions; and
+ *        \c IGRAPH_ALL, ignores edge directions. This argument is
+ *        ignored for undirected graphs.
+ * \return Error code.
+ * 
+ * Time complexity: O(|V|+|E|), linear in the number of vertices and
+ * edges in the graph.
+ * 
+ * \sa \ref igraph_get_shortest_paths() for the version with more target
+ * vertices.
+ */
+
+int igraph_get_shortest_path(const igraph_t *graph, 
+			     igraph_vector_t *vertices,
+			     igraph_vector_t *edges, 
+			     igraph_integer_t from,
+			     igraph_integer_t to,
+			     igraph_neimode_t mode) {
+
+  igraph_vector_ptr_t vertices2, *vp=&vertices2;
+  igraph_vector_ptr_t edges2, *ep=&edges2;
+  
+  if (vertices) { 
+    IGRAPH_CHECK(igraph_vector_ptr_init(&vertices2, 1));
+    IGRAPH_FINALLY(igraph_vector_ptr_destroy, &vertices2);
+    VECTOR(vertices2)[0]=vertices;
+  } else {
+    vp=0;
+  }
+  if (edges) {
+    IGRAPH_CHECK(igraph_vector_ptr_init(&edges2, 1));
+    IGRAPH_FINALLY(igraph_vector_ptr_destroy, &edges2);
+    VECTOR(edges2)[0]=edges;
+  } else {
+    ep=0;
+  }
+
+  IGRAPH_CHECK(igraph_get_shortest_paths(graph, vp, ep, from, 
+					 igraph_vss_1(to),mode));
+
+  if (edges) {
+    igraph_vector_ptr_destroy(&edges2);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  if (vertices) {
+    igraph_vector_ptr_destroy(&vertices2);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  
+  return 0;  
 }
 
 void igraph_i_gasp_paths_destroy(igraph_vector_ptr_t *v) {
@@ -967,7 +851,7 @@ void igraph_i_gasp_paths_destroy(igraph_vector_ptr_t *v) {
 
 /**
  * \function igraph_get_all_shortest_paths
- * \brief Finds all shortest paths (geodesics) from a vertex to all other vertices 
+ * \brief Finds all shortest paths (geodesics) from a vertex to all other vertices.
  * 
  * \param graph The graph object.
  * \param res Pointer to an initialized pointer vector, the result
@@ -978,9 +862,15 @@ void igraph_i_gasp_paths_destroy(igraph_vector_ptr_t *v) {
  *   vertex 1, etc. No data is included for unreachable vertices.
  * \param nrgeo Pointer to an initialized igraph_vector_t object or
  *   NULL. If not NULL the number of shortest paths from \p from are
- * is stored here for every vertex in the graph.
+ *   stored here for every vertex in the graph. Note that the values
+ *   will be accurate only for those vertices that are in the target
+ *   vertex sequence (see \p to), since the search terminates as soon
+ *   as all the target vertices have been found.
  * \param from The id of the vertex from/to which the geodesics are
  *        calculated. 
+ * \param to Vertex sequence with the ids of the vertices to/from which the 
+ *        shortest paths will be calculated. A vertex might be given multiple
+ *        times.
  * \param mode The type of shortest paths to be use for the
  *        calculation in directed graphs. Possible values: 
  *        \clist
@@ -1023,6 +913,7 @@ int igraph_get_all_shortest_paths(const igraph_t *graph,
   igraph_vector_t ptrlist;
   igraph_vector_t ptrhead;
   long int n, j, i;
+  long int to_reach, reached=0, maxdist=-1;
 
   igraph_vit_t vit;
 
@@ -1036,17 +927,34 @@ int igraph_get_all_shortest_paths(const igraph_t *graph,
 
   IGRAPH_CHECK(igraph_vit_create(graph, to, &vit));
   IGRAPH_FINALLY(igraph_vit_destroy, &vit);
-  
+
+  /* paths will store the shortest paths during the search */
   IGRAPH_CHECK(igraph_vector_ptr_init(&paths, 0));
   IGRAPH_FINALLY(igraph_i_gasp_paths_destroy, &paths);
+  /* neis is a temporary vector holding the neighbors of the
+   * node being examined */
   IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  /* ptrlist stores indices into the paths vector, in the order
+   * of how they were found. ptrhead is a second-level index that
+   * will be used to find paths that terminate in a given vertex */
   IGRAPH_VECTOR_INIT_FINALLY(&ptrlist, 0);
+  /* ptrhead contains indices into ptrlist.
+   * ptrhead[i] = j means that element #j-1 in ptrlist contains
+   * the shortest path from the root to node i. ptrhead[i] = 0
+   * means that node i was not reached so far */
   IGRAPH_VECTOR_INIT_FINALLY(&ptrhead, no_of_nodes);
+  /* geodist[i] == 0 if i was not reached yet and it is not in the
+   * target vertex sequence, or -1 if i was not reached yet and it
+   * is in the target vertex sequence. Otherwise it is
+   * one larger than the length of the shortest path from the
+   * source */
   geodist=igraph_Calloc(no_of_nodes, long int);
   if (geodist==0) {
     IGRAPH_ERROR("Cannot calculate shortest paths", IGRAPH_ENOMEM);
   }
   IGRAPH_FINALLY(igraph_free, geodist);
+  /* dequeue to store the BFS queue -- odd elements are the vertex indices,
+   * even elements are the distances from the root */
   IGRAPH_CHECK(igraph_dqueue_init(&q, 100));
   IGRAPH_FINALLY(igraph_dqueue_destroy, &q);
 
@@ -1054,7 +962,19 @@ int igraph_get_all_shortest_paths(const igraph_t *graph,
     IGRAPH_CHECK(igraph_vector_resize(nrgeo, no_of_nodes));
     igraph_vector_null(nrgeo);
   }
-  
+
+  /* use geodist to count how many vertices we have to reach */
+  to_reach=IGRAPH_VIT_SIZE(vit);
+  for (IGRAPH_VIT_RESET(vit); !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit)) {
+    if (geodist[ (long int) IGRAPH_VIT_GET(vit) ] == 0) {
+      geodist[ (long int) IGRAPH_VIT_GET(vit) ] = -1;
+    } else {
+      to_reach--;		/* this node was given multiple times */
+    }
+  }
+
+  if (geodist[ (long int) from ] < 0) { reached++; }
+
   /* from -> from */
   vptr=igraph_Calloc(1, igraph_vector_t); /* TODO: dirty */
   IGRAPH_CHECK(igraph_vector_ptr_push_back(&paths, vptr));
@@ -1074,33 +994,67 @@ int igraph_get_all_shortest_paths(const igraph_t *graph,
     
     IGRAPH_ALLOW_INTERRUPTION();
 
+    if (reached >= to_reach) {
+	    /* all nodes were reached. Since we need all the shortest paths
+       * to all these nodes, we can stop the search only if the distance
+       * of the current node to the root is larger than the distance of
+       * any of the nodes we wanted to reach */
+      if (actdist > maxdist) {
+        /* safety check, maxdist should have been set when we reached the last node */
+        if (maxdist < 0) {
+          IGRAPH_ERROR("possible bug in igraph_get_all_shortest_paths, "
+                       "maxdist is negative", IGRAPH_EINVAL);
+        }
+        break;
+      }
+    }
+
     IGRAPH_CHECK(igraph_neighbors(graph, &neis, actnode, mode));
     n=igraph_vector_size(&neis);
     for (j=0; j<n; j++) {
       long int neighbor=VECTOR(neis)[j];
-      long int fatherptr=VECTOR(ptrhead)[actnode];
-      if (geodist[neighbor] != 0 && 
-	  geodist[neighbor]-1 < actdist+1) { continue; }
-      if (nrgeo) { VECTOR(*nrgeo)[neighbor] += VECTOR(*nrgeo)[actnode]; }
-      if (geodist[neighbor] == 0) {
-	IGRAPH_CHECK(igraph_dqueue_push(&q, neighbor));
-	IGRAPH_CHECK(igraph_dqueue_push(&q, actdist+1));
+      long int fatherptr;
+
+      if (geodist[neighbor] > 0 && 
+          geodist[neighbor]-1 < actdist+1) {
+        /* this node was reached via a shorter path before */
+        continue;
+      }
+
+      /* yay, found another shortest path to neighbor */
+
+      if (nrgeo) {
+        /* the number of geodesics leading to neighbor must be
+         * increased by the number of geodesics leading to actnode */
+        VECTOR(*nrgeo)[neighbor] += VECTOR(*nrgeo)[actnode];
+      }
+      if (geodist[neighbor] <= 0) {
+        /* this node was not reached yet, push it into the queue */
+        IGRAPH_CHECK(igraph_dqueue_push(&q, neighbor));
+        IGRAPH_CHECK(igraph_dqueue_push(&q, actdist+1));
+        if (geodist[neighbor] < 0) {
+          reached++;
+        }
+        if (reached == to_reach)
+          maxdist = actdist;
       }
       geodist[neighbor]=actdist+2;
 
       /* copy all existing paths to the parent */
+      fatherptr = VECTOR(ptrhead)[actnode];
       while (fatherptr != 0) {
-	vptr=igraph_Calloc(1, igraph_vector_t);
-	IGRAPH_CHECK(igraph_vector_ptr_push_back(&paths, vptr));
-	IGRAPH_CHECK(igraph_vector_copy(vptr, VECTOR(paths)[fatherptr-1]));
-	IGRAPH_CHECK(igraph_vector_reserve(vptr, actdist+2));
-	igraph_vector_push_back(vptr, neighbor);
+        /* allocate a new igraph_vector_t at the end of paths */
+        vptr=igraph_Calloc(1, igraph_vector_t);
+        IGRAPH_CHECK(igraph_vector_ptr_push_back(&paths, vptr));
+        IGRAPH_CHECK(igraph_vector_copy(vptr, VECTOR(paths)[fatherptr-1]));
+        IGRAPH_CHECK(igraph_vector_reserve(vptr, actdist+2));
+        IGRAPH_CHECK(igraph_vector_push_back(vptr, neighbor));
 
-	IGRAPH_CHECK(igraph_vector_push_back(&ptrlist, 
-					     VECTOR(ptrhead)[neighbor]));
-	VECTOR(ptrhead)[neighbor]=igraph_vector_size(&ptrlist);
-	
-	fatherptr=VECTOR(ptrlist)[fatherptr-1];
+        IGRAPH_CHECK(igraph_vector_push_back(&ptrlist, 
+                     VECTOR(ptrhead)[neighbor]));
+        VECTOR(ptrhead)[neighbor]=igraph_vector_size(&ptrlist);
+
+        fatherptr=VECTOR(ptrlist)[fatherptr-1];
       }
     }
   }
@@ -1108,19 +1062,20 @@ int igraph_get_all_shortest_paths(const igraph_t *graph,
   igraph_dqueue_destroy(&q);
   IGRAPH_FINALLY_CLEAN(1);
 
-  /* Copy to the result */
+  /* mark the nodes for which we need the result */
   memset(geodist, 0, sizeof(long int)*no_of_nodes);
   for (IGRAPH_VIT_RESET(vit); !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit)) {
     geodist[ (long int) IGRAPH_VIT_GET(vit) ] = 1;
   }
-  
+
+  /* count the number of paths in the result */
   n=0;
   for (i=0; i<no_of_nodes; i++) {
     long int fatherptr=VECTOR(ptrhead)[i];
     if (geodist[i] > 0) {
       while (fatherptr != 0) {
-	n++;
-	fatherptr=VECTOR(ptrlist)[fatherptr-1];
+        n++;
+        fatherptr=VECTOR(ptrlist)[fatherptr-1];
       }
     }
   }
@@ -1131,17 +1086,20 @@ int igraph_get_all_shortest_paths(const igraph_t *graph,
     long int fatherptr=VECTOR(ptrhead)[i];
 
     IGRAPH_ALLOW_INTERRUPTION();
-
+	
+    /* do we need the paths leading to vertex i? */
     if (geodist[i] > 0) {
+      /* yes, copy them to the result vector */
       while (fatherptr != 0) {
-	VECTOR(*res)[j++]=VECTOR(paths)[fatherptr-1];
-	fatherptr=VECTOR(ptrlist)[fatherptr-1];
+        VECTOR(*res)[j++]=VECTOR(paths)[fatherptr-1];
+        fatherptr=VECTOR(ptrlist)[fatherptr-1];
       }
     } else {
+      /* no, free them */
       while (fatherptr != 0) {
-	igraph_vector_destroy(VECTOR(paths)[fatherptr-1]);
-	igraph_Free(VECTOR(paths)[fatherptr-1]);
-	fatherptr=VECTOR(ptrlist)[fatherptr-1];
+        igraph_vector_destroy(VECTOR(paths)[fatherptr-1]);
+        igraph_Free(VECTOR(paths)[fatherptr-1]);
+        fatherptr=VECTOR(ptrlist)[fatherptr-1];
       }
     }
   }
@@ -1156,7 +1114,7 @@ int igraph_get_all_shortest_paths(const igraph_t *graph,
 
   return 0;
 }
-				  
+		  
 
 /** 
  * \ingroup structural
@@ -1469,7 +1427,7 @@ int igraph_pagerank_old(const igraph_t *graph, igraph_vector_t *res,
  * rewiring edges while preserving the original graph's degree distribution.
  * Please note that the rewiring is done "in place", so no new graph will
  * be allocated. If you would like to keep the original graph intact, use
- * \ref igraph_copy() before.
+ * \ref igraph_copy() beforehand.
  * 
  * \param graph The graph object to be rewired.
  * \param n Number of rewiring trials to perform.
@@ -1490,6 +1448,8 @@ int igraph_pagerank_old(const igraph_t *graph, igraph_vector_t *res,
  *         \endclist
  *
  * Time complexity: TODO.
+ * 
+ * \example examples/simple/igraph_rewire.c
  */
 
 int igraph_rewire(igraph_t *graph, igraph_integer_t n, igraph_rewiring_t mode) {
@@ -1587,40 +1547,15 @@ int igraph_rewire(igraph_t *graph, igraph_integer_t n, igraph_rewiring_t mode) {
   return 0;
 }
 
-/**
- * \ingroup structural
- * \function igraph_subgraph
- * \brief Creates a subgraph with the specified vertices.
- * 
- * </para><para>
- * This function collects the specified vertices and all edges between
- * them to a new graph.
- * As the vertex ids in a graph always start with zero, this function
- * very likely needs to reassign ids to the vertices.
- * \param graph The graph object.
- * \param res The subgraph, another graph object will be stored here,
- *        do \em not initialize this object before calling this
- *        function, and call \ref igraph_destroy() on it if you don't need
- *        it any more.
- * \param vids Vector with the vertex ids to put in the subgraph.
- * \return Error code:
- *         \c IGRAPH_ENOMEM, not enough memory for
- *         temporary data. 
- *         \c IGRAPH_EINVVID, invalid vertex id in
- *         \p vids. 
- * 
- * Time complexity: O(|V|+|E|),
- * |V| and
- * |E| are the number of vertices and
- * edges in the original graph.
- *
- * \sa \ref igraph_delete_vertices() to delete the specified set of
- * vertices from a graph, the opposite of this function.
- */
 
-int igraph_subgraph(const igraph_t *graph, igraph_t *res, 
-		    const igraph_vs_t vids) {
-  
+/**
+ * Subgraph creation, old version: it copies the graph and then deletes
+ * unneeded vertices.
+ */
+int igraph_i_subgraph_copy_and_delete(const igraph_t *graph, igraph_t *res,
+				      const igraph_vs_t vids, 
+				      igraph_vector_t *map,
+				      igraph_vector_t *invmap) {
   long int no_of_nodes=igraph_vcount(graph);
   igraph_vector_t delete=IGRAPH_VECTOR_NULL;
   char *remain;
@@ -1658,12 +1593,429 @@ int igraph_subgraph(const igraph_t *graph, igraph_t *res,
   res->attr=0;           /* Why is this needed? TODO */
   IGRAPH_CHECK(igraph_copy(res, graph));
   IGRAPH_FINALLY(igraph_destroy, res);
-  IGRAPH_CHECK(igraph_delete_vertices(res, igraph_vss_vector(&delete)));
+  IGRAPH_CHECK(igraph_delete_vertices_idx(res, igraph_vss_vector(&delete), 
+					  map, invmap));
   
   igraph_vector_destroy(&delete);
   igraph_vit_destroy(&vit);
   IGRAPH_FINALLY_CLEAN(3);
   return 0;
+}
+
+/**
+ * Subgraph creation, new version: creates the new graph instead of
+ * copying the old one.
+ */
+int igraph_i_subgraph_create_from_scratch(const igraph_t *graph, 
+					  igraph_t *res,
+					  const igraph_vs_t vids,
+					  igraph_vector_t *map,
+					  igraph_vector_t *invmap) {
+  igraph_bool_t directed = igraph_is_directed(graph);
+  long int no_of_nodes = igraph_vcount(graph);
+  long int no_of_new_nodes = 0;
+  char* seen_edges = 0;
+  long int i, j, n;
+  igraph_vector_t vids_old2new, vids_new2old;
+  igraph_vector_t eids_new2old;
+  igraph_vector_t nei_edges;
+  igraph_vector_t new_edges;
+  igraph_vit_t vit;
+  igraph_vector_t *my_vids_old2new=&vids_old2new, 
+    *my_vids_new2old=&vids_new2old;
+
+  /* The order of initialization is important here, they will be destroyed in the
+   * opposite order */
+  IGRAPH_VECTOR_INIT_FINALLY(&eids_new2old, 0);
+  if (invmap) {
+    my_vids_new2old=invmap;
+    igraph_vector_clear(my_vids_new2old);
+  } else {
+    IGRAPH_VECTOR_INIT_FINALLY(&vids_new2old, 0);
+  }
+  IGRAPH_VECTOR_INIT_FINALLY(&new_edges, 0);
+  IGRAPH_VECTOR_INIT_FINALLY(&nei_edges, 0);
+  if (map) {
+    my_vids_old2new=map;
+    IGRAPH_CHECK(igraph_vector_resize(map, no_of_nodes));
+    igraph_vector_null(map);
+  } else {
+    IGRAPH_VECTOR_INIT_FINALLY(&vids_old2new, no_of_nodes);
+  }
+
+  IGRAPH_CHECK(igraph_vit_create(graph, vids, &vit));
+  IGRAPH_FINALLY(igraph_vit_destroy, &vit);
+
+  /* Calculate the mapping from the old node IDs to the new ones. The other
+   * igraph_simplify implementation in igraph_i_simplify_copy_and_delete
+   * ensures that the order of vertex IDs is kept during remapping (i.e.
+   * if the old ID of vertex A is less than the old ID of vertex B, then
+   * the same will also be true for the new IDs). To ensure compatibility
+   * with the other implementation, we have to fetch the vertex IDs into
+   * a vector first and then sort it. We temporarily use new_edges for that.
+   */
+  IGRAPH_CHECK(igraph_vit_as_vector(&vit, &nei_edges));
+  igraph_vit_destroy(&vit);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  igraph_vector_sort(&nei_edges);
+  n = igraph_vector_size(&nei_edges);
+  for (i = 0; i < n; i++) {
+    long int vid = (long int) VECTOR(nei_edges)[i];
+    if (VECTOR(*my_vids_old2new)[vid] == 0) {
+      VECTOR(*my_vids_old2new)[vid] = ++no_of_new_nodes;
+    }
+  }
+
+  /* Allocate some memory for the seen_edges array that avoids processing edges
+   * twice for undirected graphs */
+  if (!directed) {
+    seen_edges = igraph_Calloc(igraph_ecount(graph), char);
+    if (seen_edges == 0)
+      IGRAPH_ERROR("cannot calculate subgraph", IGRAPH_ENOMEM);
+    IGRAPH_FINALLY(igraph_free, seen_edges);
+  }
+
+  /* Calculate the mapping from the new node IDs to the new ones
+   * and also create the new edge list */
+  IGRAPH_CHECK(igraph_vector_resize(my_vids_new2old, no_of_new_nodes));
+  for (i = 0; i < no_of_nodes; i++) {
+    long int new_vid = VECTOR(*my_vids_old2new)[i] - 1;
+    if (new_vid < 0)
+      continue;
+
+    VECTOR(*my_vids_new2old)[new_vid] = i;
+
+    IGRAPH_CHECK(igraph_incident(graph, &nei_edges, i, IGRAPH_OUT));
+    n = igraph_vector_size(&nei_edges);
+
+    if (directed) {
+      for (j = 0; j < n; j++) {
+        igraph_integer_t eid  = VECTOR(nei_edges)[j];
+        long int from, to;
+
+        from = VECTOR(*my_vids_old2new)[(long int)IGRAPH_FROM(graph, eid)];
+        if (!from) continue;
+        to = VECTOR(*my_vids_old2new)[(long int)IGRAPH_TO(graph, eid)];
+        if (!to) continue;
+
+        IGRAPH_CHECK(igraph_vector_push_back(&new_edges, from-1));
+        IGRAPH_CHECK(igraph_vector_push_back(&new_edges, to-1));
+        IGRAPH_CHECK(igraph_vector_push_back(&eids_new2old, eid));
+      }
+    } else {
+      for (j = 0; j < n; j++) {
+        igraph_integer_t eid  = VECTOR(nei_edges)[j];
+        long int from, to;
+
+        from = VECTOR(*my_vids_old2new)[(long int)IGRAPH_FROM(graph, eid)];
+        if (!from) continue;
+        to = VECTOR(*my_vids_old2new)[(long int)IGRAPH_TO(graph, eid)];
+        if (!to) continue;
+        if (seen_edges[(long int)eid])
+          continue;
+
+        seen_edges[(long int)eid] = 1;
+        IGRAPH_CHECK(igraph_vector_push_back(&new_edges, from-1));
+        IGRAPH_CHECK(igraph_vector_push_back(&new_edges, to-1));
+        IGRAPH_CHECK(igraph_vector_push_back(&eids_new2old, eid));
+      }
+    }
+  }
+
+  /* Get rid of some vectors that are not needed anymore */
+  if (!directed) {
+    igraph_free(seen_edges);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  if (!map) {
+    igraph_vector_destroy(&vids_old2new);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  igraph_vector_destroy(&nei_edges);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  /* Create the new graph */
+  IGRAPH_CHECK(igraph_create(res, &new_edges, no_of_new_nodes, directed));
+  IGRAPH_I_ATTRIBUTE_DESTROY(res);
+
+  /* Now we can also get rid of the new_edges vector */
+  igraph_vector_destroy(&new_edges);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  /* Make sure that the newly created graph is destroyed if something happens from
+   * now on */
+  IGRAPH_FINALLY(igraph_destroy, res);
+
+  /* Copy the graph attributes */
+  IGRAPH_CHECK(igraph_i_attribute_copy(res, graph,
+        /* ga = */ 1, /* va = */ 0, /* ea = */ 0));
+
+  /* Copy the vertex attributes */
+  IGRAPH_CHECK(igraph_i_attribute_permute_vertices(graph, res, 
+						   my_vids_new2old));
+
+  /* Copy the edge attributes */
+  IGRAPH_CHECK(igraph_i_attribute_permute_edges(graph, res, &eids_new2old));
+
+  if (!invmap) {
+    igraph_vector_destroy(my_vids_new2old);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  igraph_vector_destroy(&eids_new2old);
+  IGRAPH_FINALLY_CLEAN(2);   /* 1 + 1 since we don't need to destroy res */
+
+  return 0;
+}
+
+/**
+ * \ingroup structural
+ * \function igraph_subgraph
+ * \brief Creates a subgraph induced by the specified vertices.
+ * 
+ * </para><para>
+ * This function is an alias to \ref igraph_induced_subgraph(), it is
+ * left here to ensure API compatibility with igraph versions prior to 0.6.
+ *
+ * </para><para>
+ * This function collects the specified vertices and all edges between
+ * them to a new graph.
+ * As the vertex ids in a graph always start with zero, this function
+ * very likely needs to reassign ids to the vertices.
+ * \param graph The graph object.
+ * \param res The subgraph, another graph object will be stored here,
+ *        do \em not initialize this object before calling this
+ *        function, and call \ref igraph_destroy() on it if you don't need
+ *        it any more.
+ * \param vids A vertex selector describing which vertices to keep.
+ * \return Error code:
+ *         \c IGRAPH_ENOMEM, not enough memory for
+ *         temporary data. 
+ *         \c IGRAPH_EINVVID, invalid vertex id in
+ *         \p vids. 
+ * 
+ * Time complexity: O(|V|+|E|),
+ * |V| and
+ * |E| are the number of vertices and
+ * edges in the original graph.
+ *
+ * \sa \ref igraph_delete_vertices() to delete the specified set of
+ * vertices from a graph, the opposite of this function.
+ */
+
+int igraph_subgraph(const igraph_t *graph, igraph_t *res, 
+		    const igraph_vs_t vids) {
+	IGRAPH_WARNING("igraph_subgraph is deprecated from igraph 0.6, "
+			           "use igraph_induced_subgraph instead");
+  return igraph_induced_subgraph(graph, res, vids, IGRAPH_SUBGRAPH_AUTO);
+}
+
+/**
+ * \ingroup structural
+ * \function igraph_induced_subgraph
+ * \brief Creates a subgraph induced by the specified vertices.
+ * 
+ * </para><para>
+ * This function collects the specified vertices and all edges between
+ * them to a new graph.
+ * As the vertex ids in a graph always start with zero, this function
+ * very likely needs to reassign ids to the vertices.
+ * \param graph The graph object.
+ * \param res The subgraph, another graph object will be stored here,
+ *        do \em not initialize this object before calling this
+ *        function, and call \ref igraph_destroy() on it if you don't need
+ *        it any more.
+ * \param vids A vertex selector describing which vertices to keep.
+ * \param impl This parameter selects which implementation should we
+ *        use when constructing the new graph. Basically there are two
+ *        possibilities: \c IGRAPH_SUBGRAPH_COPY_AND_DELETE copies the
+ *        existing graph and deletes the vertices that are not needed
+ *        in the new graph, while \c IGRAPH_SUBGRAPH_CREATE_FROM_SCRATCH
+ *        constructs the new graph from scratch without copying the old
+ *        one. The latter is more efficient if you are extracting a
+ *        relatively small subpart of a very large graph, while the
+ *        former is better if you want to extract a subgraph whose size
+ *        is comparable to the size of the whole graph. There is a third
+ *        possibility: \c IGRAPH_SUBGRAPH_AUTO will select one of the
+ *        two methods automatically based on the ratio of the number
+ *        of vertices in the new and the old graph.
+ *
+ * \return Error code:
+ *         \c IGRAPH_ENOMEM, not enough memory for
+ *         temporary data. 
+ *         \c IGRAPH_EINVVID, invalid vertex id in
+ *         \p vids. 
+ * 
+ * Time complexity: O(|V|+|E|),
+ * |V| and
+ * |E| are the number of vertices and
+ * edges in the original graph.
+ *
+ * \sa \ref igraph_delete_vertices() to delete the specified set of
+ * vertices from a graph, the opposite of this function.
+ */
+int igraph_induced_subgraph(const igraph_t *graph, igraph_t *res, 
+		    const igraph_vs_t vids, igraph_subgraph_implementation_t impl) {
+  return igraph_induced_subgraph_map(graph, res, vids, impl, /* map= */ 0, 
+				     /* invmap= */ 0);
+}
+
+int igraph_induced_subgraph_map(const igraph_t *graph, igraph_t *res,
+				const igraph_vs_t vids, 
+				igraph_subgraph_implementation_t impl,
+				igraph_vector_t *map, 
+				igraph_vector_t *invmap) {
+
+  if (impl == IGRAPH_SUBGRAPH_AUTO) {
+    double ratio;
+
+    if (igraph_vs_is_all(&vids))
+      ratio = 1.0;
+    else {
+      igraph_integer_t num_vs;
+      IGRAPH_CHECK(igraph_vs_size(graph, &vids, &num_vs));
+      ratio = num_vs / ((double)igraph_vcount(graph));
+    }
+
+    if (ratio > 0.5)
+      impl = IGRAPH_SUBGRAPH_COPY_AND_DELETE;
+    else
+      impl = IGRAPH_SUBGRAPH_CREATE_FROM_SCRATCH;
+  }
+
+  switch (impl) {
+    case IGRAPH_SUBGRAPH_COPY_AND_DELETE:
+      return igraph_i_subgraph_copy_and_delete(graph, res, vids, map, invmap);
+
+    case IGRAPH_SUBGRAPH_CREATE_FROM_SCRATCH:
+      return igraph_i_subgraph_create_from_scratch(graph, res, vids, map, 
+						   invmap);
+
+    default:
+      IGRAPH_ERROR("unknown subgraph implementation type", IGRAPH_EINVAL);
+  }
+  return 0;
+}
+
+/**
+ * \ingroup structural
+ * \function igraph_subgraph_edges
+ * \brief Creates a subgraph with the specified edges and their endpoints.
+ * 
+ * </para><para>
+ * This function collects the specified edges and their endpoints to a new
+ * graph.
+ * As the vertex ids in a graph always start with zero, this function
+ * very likely needs to reassign ids to the vertices.
+ * \param graph The graph object.
+ * \param res The subgraph, another graph object will be stored here,
+ *        do \em not initialize this object before calling this
+ *        function, and call \ref igraph_destroy() on it if you don't need
+ *        it any more.
+ * \param eids An edge selector describing which edges to keep.
+ * \param delete_vertices Whether to delete the vertices not incident on any
+ *        of the specified edges as well. If \c FALSE, the number of vertices
+ *        in the result graph will always be equal to the number of vertices
+ *        in the input graph.
+ * \return Error code:
+ *         \c IGRAPH_ENOMEM, not enough memory for
+ *         temporary data. 
+ *         \c IGRAPH_EINVEID, invalid edge id in
+ *         \p eids. 
+ * 
+ * Time complexity: O(|V|+|E|),
+ * |V| and
+ * |E| are the number of vertices and
+ * edges in the original graph.
+ *
+ * \sa \ref igraph_delete_edges() to delete the specified set of
+ * edges from a graph, the opposite of this function.
+ */
+
+int igraph_subgraph_edges(const igraph_t *graph, igraph_t *res, 
+		    const igraph_es_t eids, igraph_bool_t delete_vertices) {
+  
+  long int no_of_nodes=igraph_vcount(graph);
+  long int no_of_edges=igraph_ecount(graph);
+  igraph_vector_t delete=IGRAPH_VECTOR_NULL;
+  char *vremain, *eremain;
+  long int i;
+  igraph_eit_t eit;
+  
+  IGRAPH_CHECK(igraph_eit_create(graph, eids, &eit));
+  IGRAPH_FINALLY(igraph_eit_destroy, &eit);
+
+  IGRAPH_VECTOR_INIT_FINALLY(&delete, 0);
+  vremain=igraph_Calloc(no_of_nodes, char);
+  if (vremain==0) {
+    IGRAPH_ERROR("subgraph_edges failed", IGRAPH_ENOMEM);
+  }
+  eremain=igraph_Calloc(no_of_edges, char);
+  if (eremain==0) {
+    IGRAPH_ERROR("subgraph_edges failed", IGRAPH_ENOMEM);
+  }
+  IGRAPH_FINALLY(free, vremain);	/* TODO: hack */
+  IGRAPH_FINALLY(free, eremain);	/* TODO: hack */
+  IGRAPH_CHECK(igraph_vector_reserve(&delete, no_of_edges-IGRAPH_EIT_SIZE(eit)));
+
+  /* Collect the vertex and edge IDs that will remain */
+  for (IGRAPH_EIT_RESET(eit); !IGRAPH_EIT_END(eit); IGRAPH_EIT_NEXT(eit)) {
+    igraph_integer_t from, to;
+    long int eid = (long int) IGRAPH_EIT_GET(eit);
+    IGRAPH_CHECK(igraph_edge(graph, eid, &from, &to));
+    eremain[eid] = vremain[(long int)from] = vremain[(long int)to] = 1;
+  }
+
+  /* Collect the edge IDs to be deleted */
+  for (i=0; i<no_of_edges; i++) {
+    IGRAPH_ALLOW_INTERRUPTION();
+    if (eremain[i] == 0) {
+      IGRAPH_CHECK(igraph_vector_push_back(&delete, i));
+    }
+  }
+
+  igraph_Free(eremain);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  /* Delete the unnecessary edges */
+  /* must set res->attr to 0 before calling igraph_copy */
+  res->attr=0;           /* Why is this needed? TODO */
+  IGRAPH_CHECK(igraph_copy(res, graph));
+  IGRAPH_FINALLY(igraph_destroy, res);
+  IGRAPH_CHECK(igraph_delete_edges(res, igraph_ess_vector(&delete)));
+
+  if (delete_vertices) {
+    /* Collect the vertex IDs to be deleted */
+    igraph_vector_clear(&delete);
+    for (i=0; i<no_of_nodes; i++) {
+      IGRAPH_ALLOW_INTERRUPTION();
+      if (vremain[i] == 0) {
+        IGRAPH_CHECK(igraph_vector_push_back(&delete, i));
+      }
+    }
+  }
+
+  igraph_Free(vremain);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  /* Delete the unnecessary vertices */
+  if (delete_vertices) {
+    IGRAPH_CHECK(igraph_delete_vertices(res, igraph_vss_vector(&delete)));
+  }
+
+  igraph_vector_destroy(&delete);
+  igraph_eit_destroy(&eit);
+  IGRAPH_FINALLY_CLEAN(3);
+  return 0;
+}
+
+void igraph_i_simplify_free(igraph_vector_ptr_t *p) {
+  long int i, n=igraph_vector_ptr_size(p);
+  for (i=0; i<n; i++) {
+    igraph_vector_t *v=VECTOR(*p)[i];
+    if (v) { igraph_vector_destroy(v); }
+  }
+  igraph_vector_ptr_destroy(p);
 }
 
 /**
@@ -1674,111 +2026,174 @@ int igraph_subgraph(const igraph_t *graph, igraph_t *res,
  * \param graph The graph object.
  * \param multiple Logical, if true, multiple edges will be removed. 
  * \param loops Logical, if true, loops (self edges) will be removed.
+ * \param edge_comb What to do with the edge attributes. See the igraph 
+ *        manual section about attributes for details.
  * \return Error code:
  *    \c IGRAPH_ENOMEM if we are out of memory.
  *
  * Time complexity: O(|V|+|E|).
+ * 
+ * \example examples/simple/igraph_simplify.c
  */
 
-int igraph_simplify(igraph_t *graph, igraph_bool_t multiple, igraph_bool_t loops) {
+int igraph_simplify(igraph_t *graph, igraph_bool_t multiple, 
+		    igraph_bool_t loops, 
+		    const igraph_attribute_combination_t *edge_comb) {
 
   igraph_vector_t edges=IGRAPH_VECTOR_NULL;
-  igraph_vector_t neis=IGRAPH_VECTOR_NULL;
   long int no_of_nodes=igraph_vcount(graph);
-  long int i, j;
+  long int no_of_edges=igraph_ecount(graph);
+  long int edge;
+  igraph_bool_t attr=edge_comb && igraph_has_attribute_table();
+  long int from, to, pfrom=-1, pto=-2;
+  igraph_t res;
   igraph_es_t es;
-  igraph_bool_t directed=igraph_is_directed(graph);
+  igraph_eit_t eit;
+  igraph_vector_t mergeinto;
+  long int actedge;
 
-  IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
-  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  if (!multiple && !loops)
+    /* nothing to do */
+    return IGRAPH_SUCCESS;
 
-  if (directed) { 
-    for (i=0; i<no_of_nodes; i++) {
-      IGRAPH_CHECK(igraph_neighbors(graph, &neis, i, IGRAPH_OUT));
-      
-      IGRAPH_ALLOW_INTERRUPTION();
-      
-      if (loops) {
-	for (j=0; j<igraph_vector_size(&neis); j++) {
-	  if (VECTOR(neis)[j]==i) {
-	    IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
-	    IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
-	  }
-	}
-      } /* if loops */
-      
-      if (multiple) {
-	for (j=1; j<igraph_vector_size(&neis); j++) {
-	  if (VECTOR(neis)[j]==VECTOR(neis)[j-1] && 
-	      (!loops || VECTOR(neis)[j] != i) ) {
-	    IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
-	    IGRAPH_CHECK(igraph_vector_push_back(&edges, VECTOR(neis)[j]));
-	  }
-	}
-      }
+  if (!multiple) {
+    /* removing loop edges only, this is simple. No need to combine anything
+     * and the whole process can be done in-place */
+    IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
+    IGRAPH_CHECK(igraph_es_all(&es, IGRAPH_EDGEORDER_ID));
+    IGRAPH_FINALLY(igraph_es_destroy, &es);
+    IGRAPH_CHECK(igraph_eit_create(graph, es, &eit));
+    IGRAPH_FINALLY(igraph_eit_destroy, &eit);
+
+    while (!IGRAPH_EIT_END(eit)) {
+      edge=IGRAPH_EIT_GET(eit);
+      from=IGRAPH_FROM(graph, edge);
+      to=IGRAPH_TO(graph, edge);
+      if (from == to)
+        IGRAPH_CHECK(igraph_vector_push_back(&edges, edge));
+      IGRAPH_EIT_NEXT(eit);
     }
-  } else { 			/* not directed */
-    for (i=0; i<no_of_nodes; i++) {
-      int flip=0;
-      IGRAPH_CHECK(igraph_neighbors(graph, &neis, i, IGRAPH_OUT));
-      
-      IGRAPH_ALLOW_INTERRUPTION();
-      
-      if (loops) {
-	for (j=0; j<igraph_vector_size(&neis); j++) {
-	  if (VECTOR(neis)[j]==i) {
-	    flip=1-flip;
-	    if (flip==0) {
-	      IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
-	      IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
-	    }
-	  }
-	}
-      } /* if loops */
-      
-      if (multiple) {
-	for (j=1; j<igraph_vector_size(&neis); j++) {
-	  if (VECTOR(neis)[j] > i && VECTOR(neis)[j]==VECTOR(neis)[j-1]) {
-	    IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
-	    IGRAPH_CHECK(igraph_vector_push_back(&edges, VECTOR(neis)[j]));
-	  }
-	  if (VECTOR(neis)[j]==i && VECTOR(neis)[j-1]==i && !loops) {
-	    flip=1-flip;
-	    if (flip==0) {
-	      IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
-	      IGRAPH_CHECK(igraph_vector_push_back(&edges, i));
-	    }
-	  }
-	}
-      }
+
+    igraph_eit_destroy(&eit);
+    igraph_es_destroy(&es);
+    IGRAPH_FINALLY_CLEAN(2);
+
+    if (igraph_vector_size(&edges) > 0) {
+      IGRAPH_CHECK(igraph_delete_edges(graph, igraph_ess_vector(&edges)));
     }
+
+    igraph_vector_destroy(&edges);
+    IGRAPH_FINALLY_CLEAN(1);
+
+    return IGRAPH_SUCCESS;
   }
-    
-  igraph_vector_destroy(&neis);
-  IGRAPH_FINALLY_CLEAN(1);
-  IGRAPH_CHECK(igraph_es_multipairs(&es, &edges, IGRAPH_DIRECTED));
+
+  if (attr) {    
+    IGRAPH_VECTOR_INIT_FINALLY(&mergeinto, no_of_edges);
+  }
+  IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
+  IGRAPH_CHECK(igraph_vector_reserve(&edges, no_of_edges*2));
+
+  IGRAPH_CHECK(igraph_es_all(&es, IGRAPH_EDGEORDER_FROM));
   IGRAPH_FINALLY(igraph_es_destroy, &es);
-  IGRAPH_CHECK(igraph_delete_edges(graph, es));
+  IGRAPH_CHECK(igraph_eit_create(graph, es, &eit));
+  IGRAPH_FINALLY(igraph_eit_destroy, &eit);
+
+  for (actedge=-1; !IGRAPH_EIT_END(eit); IGRAPH_EIT_NEXT(eit)) {
+    edge=IGRAPH_EIT_GET(eit);
+    from=IGRAPH_FROM(graph, edge);
+    to=IGRAPH_TO(graph, edge);
+    
+    if (loops && from==to) {
+      /* Loop edge to be removed */
+      if (attr) { VECTOR(mergeinto)[edge] = -1; }
+    } else if (multiple && from==pfrom && to==pto) {
+      /* Multiple edge to be contracted */
+      if (attr) {
+	VECTOR(mergeinto)[edge]=actedge;
+      }
+    } else {
+      /* Edge to be kept */
+      igraph_vector_push_back(&edges, from);
+      igraph_vector_push_back(&edges, to);
+      if (attr) { 
+	actedge++;
+	VECTOR(mergeinto)[edge]=actedge;
+      }
+    }
+    pfrom=from; pto=to;
+  }
+
+  igraph_eit_destroy(&eit);
   igraph_es_destroy(&es);
-  IGRAPH_FINALLY_CLEAN(1);
+  IGRAPH_FINALLY_CLEAN(2);
+  
+  IGRAPH_CHECK(igraph_create(&res, &edges, no_of_nodes, 
+			     igraph_is_directed(graph)));
+
   igraph_vector_destroy(&edges);
   IGRAPH_FINALLY_CLEAN(1);
+  
+  IGRAPH_FINALLY(igraph_destroy, &res);
+
+  IGRAPH_I_ATTRIBUTE_DESTROY(&res);
+  IGRAPH_I_ATTRIBUTE_COPY(&res, graph, /*graph=*/ 1, 
+			  /*vertex=*/ 1, /*edge=*/ 0);
+
+  if (attr) {
+    igraph_fixed_vectorlist_t vl;
+    IGRAPH_CHECK(igraph_fixed_vectorlist_convert(&vl, &mergeinto, 
+						 actedge+1));
+    IGRAPH_FINALLY(igraph_fixed_vectorlist_destroy, &vl);
+
+    IGRAPH_CHECK(igraph_i_attribute_combine_edges(graph, &res, &vl.v, 
+						  edge_comb));
+    
+    igraph_fixed_vectorlist_destroy(&vl);
+    igraph_vector_destroy(&mergeinto);
+    IGRAPH_FINALLY_CLEAN(2);
+  }
+  
+  IGRAPH_FINALLY_CLEAN(1);
+  igraph_destroy(graph);
+  *graph=res;
 
   return 0;
 }
 
 /**
  * \function igraph_transitivity_avglocal_undirected
- * \brief Average local transitivity (clustering coefficient)
+ * \brief Average local transitivity (clustering coefficient).
  * 
  * The transitivity measures the probability that two neighbors of a
- * vertex are connected. In case of the average local transitivity
- * this probability if calculated for each vertex and then the average
- * is taken for those vertices which have at least two neighbors. If
- * there are no such vertices then \c NaN is returned. 
+ * vertex are connected. In case of the average local transitivity,
+ * this probability is calculated for each vertex and then the average
+ * is taken. Vertices with less than two neighbors require special treatment,
+ * they will either be left out from the calculation or they will be considered
+ * as having zero transitivity, depending on the \c mode argument.
+ *
+ * </para><para>
+ * Note that this measure is different from the global transitivity measure
+ * (see \ref igraph_transitivity_undirected() ) as it simply takes the
+ * average local transitivity across the whole network. See the following
+ * reference for more details:
+ *
+ * </para><para>
+ * D. J. Watts and S. Strogatz: Collective dynamics of small-world networks.
+ * Nature 393(6684):440-442 (1998).
+ *
+ * </para><para>
+ * Clustering coefficient is an alternative name for transitivity.
+ *
  * \param graph The input graph, directed graphs are considered as 
  *    undirected ones.
  * \param res Pointer to a real variable, the result will be stored here.
+ * \param mode Defines how to treat vertices with degree less than two.
+ *    \c IGRAPH_TRANSITIVITY_NAN leaves them out from averaging,
+ *    \c IGRAPH_TRANSITIVITY_ZERO includes them with zero transitivity.
+ *    The result will be \c NaN if the mode is \c IGRAPH_TRANSITIVITY_NAN
+ *    and there are no vertices with more than one neighbor.
+ *    
  * \return Error code.
  * 
  * \sa \ref igraph_transitivity_undirected(), \ref
@@ -1789,7 +2204,8 @@ int igraph_simplify(igraph_t *graph, igraph_bool_t multiple, igraph_bool_t loops
  */
 
 int igraph_transitivity_avglocal_undirected(const igraph_t *graph,
-					    igraph_real_t *res) {
+					    igraph_real_t *res,
+					    igraph_transitivity_mode_t mode) {
 
   long int no_of_nodes=igraph_vcount(graph);
   igraph_real_t sum=0.0;
@@ -1869,6 +2285,8 @@ int igraph_transitivity_avglocal_undirected(const igraph_t *graph,
     if (triples != 0) {
       sum += VECTOR(triangles)[node] / triples;
       count++;
+    } else if (mode == IGRAPH_TRANSITIVITY_ZERO) {
+      count++;
     }
   }
   
@@ -1885,7 +2303,8 @@ int igraph_transitivity_avglocal_undirected(const igraph_t *graph,
   
 int igraph_transitivity_local_undirected1(const igraph_t *graph, 
 					  igraph_vector_t *res,
-					  const igraph_vs_t vids) {
+					  const igraph_vs_t vids,
+					  igraph_transitivity_mode_t mode) {
   
   long int no_of_nodes=igraph_vcount(graph);
   igraph_vit_t vit;
@@ -1936,7 +2355,11 @@ int igraph_transitivity_local_undirected1(const igraph_t *graph,
 	}
       }
     }
-    VECTOR(*res)[i] = triangles/triples;
+
+    if (mode == IGRAPH_TRANSITIVITY_ZERO && triples == 0)
+      VECTOR(*res)[i] = 0.0;
+    else
+      VECTOR(*res)[i] = triangles/triples;
 /*     fprintf(stderr, "%f %f\n", triangles, triples); */
   }
 
@@ -1949,7 +2372,8 @@ int igraph_transitivity_local_undirected1(const igraph_t *graph,
 
 int igraph_transitivity_local_undirected2(const igraph_t *graph, 
 					  igraph_vector_t *res,
-					  const igraph_vs_t vids) {
+					  const igraph_vs_t vids,
+					  igraph_transitivity_mode_t mode) {
   
   long int no_of_nodes=igraph_vcount(graph);
   igraph_vit_t vit;
@@ -2076,7 +2500,10 @@ int igraph_transitivity_local_undirected2(const igraph_t *graph,
     igraph_vector_t *neis=igraph_lazy_adjlist_get(&adjlist, node);
     long int deg=igraph_vector_size(neis);
     igraph_real_t triples=(double) deg * (deg-1) / 2;
-    VECTOR(*res)[i] = VECTOR(triangles)[idx] / triples;
+    if (mode == IGRAPH_TRANSITIVITY_ZERO && triples == 0)
+      VECTOR(*res)[i] = 0.0;
+    else
+      VECTOR(*res)[i] = VECTOR(triangles)[idx] / triples;
 /*     fprintf(stderr, "%f %f\n", VECTOR(triangles)[idx], triples); */
   }
   
@@ -2153,7 +2580,8 @@ int igraph_transitivity_local_undirected2(const igraph_t *graph,
 
 int igraph_transitivity_local_undirected4(const igraph_t *graph,
 					  igraph_vector_t *res,
-					  const igraph_vs_t vids) {
+					  const igraph_vs_t vids,
+					  igraph_transitivity_mode_t mode) {
 
   long int no_of_nodes=igraph_vcount(graph);
   long int node, i, j, nn;
@@ -2231,8 +2659,11 @@ int igraph_transitivity_local_undirected4(const igraph_t *graph,
 	}
       }
     }
-    
-    VECTOR(*res)[node] /= triples;
+
+    if (mode == IGRAPH_TRANSITIVITY_ZERO && triples == 0)
+      VECTOR(*res)[node] = 0.0;
+    else
+      VECTOR(*res)[node] /= triples;
   }
   
   igraph_free(neis);
@@ -2246,17 +2677,34 @@ int igraph_transitivity_local_undirected4(const igraph_t *graph,
 
 /**
  * \function igraph_transitivity_local_undirected
- * \brief Calculates the local transitivity (clustering coefficient) of a graph
+ * \brief Calculates the local transitivity (clustering coefficient) of a graph.
  * 
  * The transitivity measures the probability that two neighbors of a
  * vertex are connected. In case of the local transitivity, this
  * probability is calculated separately for each vertex.
+ *
+ * </para><para>
+ * Note that this measure is different from the global transitivity measure
+ * (see \ref igraph_transitivity_undirected() ) as it calculates a transitivity
+ * value for each vertex individually. See the following reference for more
+ * details:
+ *
+ * </para><para>
+ * D. J. Watts and S. Strogatz: Collective dynamics of small-world networks.
+ * Nature 393(6684):440-442 (1998).
+ *
+ * </para><para>
+ * Clustering coefficient is an alternative name for transitivity.
+ *
  * \param graph The input graph, it can be directed but direction of
  *   the edges will be ignored.
  * \param res Pointer to an initialized vector, the result will be
  *   stored here. It will be resized as needed.
  * \param vids Vertex set, the vertices for which the local
  *   transitivity will be calculated.
+ * \param mode Defines how to treat vertices with degree less than two.
+ *    \c IGRAPH_TRANSITIVITY_NAN returns \c NaN for these vertices,
+ *    \c IGRAPH_TRANSITIVITY_ZERO returns zero.
  * \return Error code.
  * 
  * \sa \ref igraph_transitivity_undirected(), \ref
@@ -2268,9 +2716,10 @@ int igraph_transitivity_local_undirected4(const igraph_t *graph,
 
 int igraph_transitivity_local_undirected(const igraph_t *graph,
 					 igraph_vector_t *res,
-					 const igraph_vs_t vids) {
+					 const igraph_vs_t vids,
+					 igraph_transitivity_mode_t mode) {
   if (igraph_vs_is_all((igraph_vs_t*)&vids)) {
-    return igraph_transitivity_local_undirected4(graph, res, vids);
+    return igraph_transitivity_local_undirected4(graph, res, vids, mode);
   } else {
     igraph_vit_t vit;
     long int size;
@@ -2280,9 +2729,9 @@ int igraph_transitivity_local_undirected(const igraph_t *graph,
     igraph_vit_destroy(&vit);
 	IGRAPH_FINALLY_CLEAN(1);
     if (size < 100) {
-      return igraph_transitivity_local_undirected1(graph, res, vids);
+      return igraph_transitivity_local_undirected1(graph, res, vids, mode);
     } else {
-      return igraph_transitivity_local_undirected2(graph, res, vids);
+      return igraph_transitivity_local_undirected2(graph, res, vids, mode);
     }
   }
   
@@ -2296,12 +2745,27 @@ int igraph_transitivity_local_undirected(const igraph_t *graph,
  * 
  * </para><para>
  * The transitivity measures the probability that two neighbors of a
- * vertex are connected. More precisely this is the ratio of the
+ * vertex are connected. More precisely, this is the ratio of the
  * triangles and connected triples in the graph, the result is a
- * single real number or NaN (0/0) if there are no connected triples
- * in the graph.  Directed graphs are considered as undirected ones.
+ * single real number. Directed graphs are considered as undirected ones.
+ *
+ * </para><para>
+ * Note that this measure is different from the local transitivity measure
+ * (see \ref igraph_transitivity_local_undirected() ) as it calculates a single
+ * value for the whole graph. See the following reference for more details:
+ *
+ * </para><para>
+ * S. Wasserman and K. Faust: Social Network Analysis: Methods and
+ * Applications. Cambridge: Cambridge University Press, 1994.
+ *
+ * </para><para>
+ * Clustering coefficient is an alternative name for transitivity.
+ *
  * \param graph The graph object.  
  * \param res Pointer to a real variable, the result will be stored here.
+ * \param mode Defines how to treat graphs with no connected triples.
+ *   \c IGRAPH_TRANSITIVITY_NAN returns \c NaN in this case,
+ *   \c IGRAPH_TRANSITIVITY_ZERO returns zero.
  * \return Error code:
  *         \c IGRAPH_ENOMEM: not enough memory for
  *         temporary data. 
@@ -2311,11 +2775,14 @@ int igraph_transitivity_local_undirected(const igraph_t *graph,
  *
  * Time complexity: O(|V|*d^2), |V| is the number of vertices in 
  * the graph, d is the average node degree. 
+ * 
+ * \example examples/simple/igraph_transitivity.c
  */
 
 
 int igraph_transitivity_undirected(const igraph_t *graph,
-				   igraph_real_t *res) {
+				   igraph_real_t *res,
+				   igraph_transitivity_mode_t mode) {
 
   long int no_of_nodes=igraph_vcount(graph);
   igraph_real_t triples=0, triangles=0;
@@ -2388,8 +2855,267 @@ int igraph_transitivity_undirected(const igraph_t *graph,
   igraph_vector_destroy(&rank);
   igraph_vector_destroy(&order);
   IGRAPH_FINALLY_CLEAN(4);
+
+  if (triples == 0 && mode == IGRAPH_TRANSITIVITY_ZERO)
+    *res = 0;
+  else
+    *res = triangles / triples * 2.0;
   
-  *res = triangles / triples * 2.0;
+  return 0;
+}
+
+int igraph_transitivity_barrat1(const igraph_t *graph,
+				igraph_vector_t *res,
+				const igraph_vs_t vids,
+				const igraph_vector_t *weights,
+				igraph_transitivity_mode_t mode) {
+  
+  long int no_of_nodes=igraph_vcount(graph);
+  long int no_of_edges=igraph_ecount(graph);
+  igraph_vit_t vit;
+  long int nodes_to_calc;
+  igraph_vector_t *adj1, *adj2;
+  igraph_vector_long_t neis;
+  igraph_vector_t actw;
+  igraph_lazy_inclist_t incident;
+  long int i;
+  igraph_vector_t strength;
+  
+  if (!weights) {
+    IGRAPH_WARNING("No weights given for Barrat's transitivity, unweighted version is used");
+    return igraph_transitivity_local_undirected(graph, res, vids, mode);
+  }
+  
+  if (igraph_vector_size(weights) != no_of_edges) {
+    IGRAPH_ERROR("Invalid edge weight vector length", IGRAPH_EINVAL);
+  }
+  
+  IGRAPH_CHECK(igraph_vit_create(graph, vids, &vit));
+  IGRAPH_FINALLY(igraph_vit_destroy, &vit);
+  nodes_to_calc=IGRAPH_VIT_SIZE(vit);
+  
+  IGRAPH_CHECK(igraph_vector_long_init(&neis, no_of_nodes));
+  IGRAPH_FINALLY(igraph_vector_long_destroy, &neis);
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&actw, no_of_nodes);
+
+  IGRAPH_VECTOR_INIT_FINALLY(&strength, 0);  
+  IGRAPH_CHECK(igraph_strength(graph, &strength, igraph_vss_all(), IGRAPH_ALL,
+			       IGRAPH_LOOPS, weights));  
+  
+  igraph_lazy_inclist_init(graph, &incident, IGRAPH_ALL);
+  IGRAPH_FINALLY(igraph_lazy_inclist_destroy, &incident);  
+
+  IGRAPH_CHECK(igraph_vector_resize(res, nodes_to_calc));
+  
+  for (i=0; !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit), i++) {
+    long int node=IGRAPH_VIT_GET(vit);
+    long int adjlen1, adjlen2, j, k;
+    igraph_real_t triples, triangles;
+    
+    IGRAPH_ALLOW_INTERRUPTION();
+    
+    adj1=igraph_lazy_inclist_get(&incident, node);
+    adjlen1=igraph_vector_size(adj1);
+    /* Mark the neighbors of the node */
+    for (j=0; j<adjlen1; j++) {
+      long int edge=VECTOR(*adj1)[j];
+      long int nei=IGRAPH_OTHER(graph, edge, node);
+      VECTOR(neis)[nei] = i+1;
+      VECTOR(actw)[nei] = VECTOR(*weights)[edge];
+    }
+    triples = VECTOR(strength)[node] * (adjlen1-1);
+    triangles = 0.0;
+    
+    for (j=0; j<adjlen1; j++) {
+      long int edge1=VECTOR(*adj1)[j];
+      igraph_real_t weight1=VECTOR(*weights)[edge1];
+      long int v=IGRAPH_OTHER(graph, edge1, node);
+      adj2=igraph_lazy_inclist_get(&incident, v);
+      adjlen2=igraph_vector_size(adj2);
+      for (k=0; k<adjlen2; k++) {
+	long int edge2=VECTOR(*adj2)[k];
+	long int v2=IGRAPH_OTHER(graph, edge2, v);
+	if (VECTOR(neis)[v2] == i+1) {
+	  triangles += (VECTOR(actw)[v2] + weight1) / 2.0;
+	}
+      }
+    }
+    if (mode == IGRAPH_TRANSITIVITY_ZERO && triples == 0)
+      VECTOR(*res)[i] = 0.0;
+    else
+      VECTOR(*res)[i] = triangles/triples;
+  }
+
+  igraph_lazy_inclist_destroy(&incident);
+  igraph_vector_destroy(&strength);
+  igraph_vector_destroy(&actw);
+  igraph_vector_long_destroy(&neis);
+  igraph_vit_destroy(&vit);
+  IGRAPH_FINALLY_CLEAN(5);
+  
+  return 0;    
+}
+
+int igraph_transitivity_barrat4(const igraph_t *graph,
+				igraph_vector_t *res,
+				const igraph_vs_t vids,
+				const igraph_vector_t *weights,
+				igraph_transitivity_mode_t mode) {
+
+  long int no_of_nodes=igraph_vcount(graph);
+  long int no_of_edges=igraph_ecount(graph);
+  igraph_vector_t order, degree, rank;
+  long int maxdegree;
+  igraph_inclist_t incident;
+  igraph_vector_long_t neis;
+  igraph_vector_t *adj1, *adj2;
+  igraph_vector_t actw;
+  long int i, nn;
+  
+  if (!weights) { 
+    IGRAPH_WARNING("No weights given for Barrat's transitivity, unweighted version is used");
+    return igraph_transitivity_local_undirected(graph, res, vids, mode);
+  }
+  
+  if (igraph_vector_size(weights) != no_of_edges) {
+    IGRAPH_ERROR("Invalid edge weight vector length", IGRAPH_EINVAL);
+  }
+
+  IGRAPH_VECTOR_INIT_FINALLY(&order, no_of_nodes);
+  IGRAPH_VECTOR_INIT_FINALLY(&degree, no_of_nodes);
+  
+  IGRAPH_CHECK(igraph_degree(graph, &degree, igraph_vss_all(), IGRAPH_ALL,
+			     IGRAPH_LOOPS));
+  maxdegree=igraph_vector_max(&degree)+1;
+  IGRAPH_CHECK(igraph_vector_order1(&degree, &order, maxdegree));
+
+  IGRAPH_CHECK(igraph_strength(graph, &degree, igraph_vss_all(), IGRAPH_ALL,
+			       IGRAPH_LOOPS, weights));
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&rank, no_of_nodes);
+  for (i=0; i<no_of_nodes; i++) {
+    VECTOR(rank)[ (long int)VECTOR(order)[i] ] = no_of_nodes-i-1;
+  }
+  
+  IGRAPH_CHECK(igraph_inclist_init(graph, &incident, IGRAPH_ALL));
+  IGRAPH_FINALLY(igraph_inclist_destroy, &incident);
+  
+  IGRAPH_CHECK(igraph_vector_long_init(&neis, no_of_nodes));
+  IGRAPH_FINALLY(igraph_vector_long_destroy, &neis);
+
+  IGRAPH_VECTOR_INIT_FINALLY(&actw, no_of_nodes);
+
+  IGRAPH_CHECK(igraph_vector_resize(res, no_of_nodes));
+  igraph_vector_null(res);
+  
+  for (nn=no_of_nodes-1; nn>=0; nn--) {
+    long int adjlen1, adjlen2, i;
+    igraph_real_t triples;
+    long int node=VECTOR(order)[nn];
+    
+    IGRAPH_ALLOW_INTERRUPTION();
+    
+    adj1=igraph_inclist_get(&incident, node);
+    adjlen1=igraph_vector_size(adj1);
+    triples = VECTOR(degree)[node] * (adjlen1-1) / 2.0;
+    /* Mark the neighbors of the node */
+    for (i=0; i<adjlen1; i++) {
+      long int edge=VECTOR(*adj1)[i];
+      long int nei=IGRAPH_OTHER(graph, edge, node);
+      VECTOR(neis)[nei] = node+1;
+      VECTOR(actw)[nei] = VECTOR(*weights)[edge];
+    }
+    
+    for (i=0; i<adjlen1; i++) {
+      long int edge1=VECTOR(*adj1)[i];
+      igraph_real_t weight1=VECTOR(*weights)[edge1];
+      long int nei=IGRAPH_OTHER(graph, edge1, node);
+      long int j;
+      if (VECTOR(rank)[nei] > VECTOR(rank)[node]) {
+	adj2=igraph_inclist_get(&incident, nei);
+	adjlen2=igraph_vector_size(adj2);
+	for (j=0; j<adjlen2; j++) {
+	  long int edge2=VECTOR(*adj2)[j];
+	  igraph_real_t weight2=VECTOR(*weights)[edge2];
+	  long int nei2=IGRAPH_OTHER(graph, edge2, nei);
+	  if (VECTOR(rank)[nei2] < VECTOR(rank)[nei]) {
+	    continue;
+	  }
+	  if (VECTOR(neis)[nei2] == node+1) {
+	    VECTOR(*res)[nei2] += (VECTOR(actw)[nei2] + weight2) / 2.0;
+	    VECTOR(*res)[nei] += (weight1 + weight2) / 2.0;
+	    VECTOR(*res)[node] += (VECTOR(actw)[nei2] + weight1) / 2.0;
+	  }
+	}
+      }
+    }
+
+    if (mode == IGRAPH_TRANSITIVITY_ZERO && triples == 0)
+      VECTOR(*res)[node] = 0.0;
+    else
+      VECTOR(*res)[node] /= triples;
+  }
+
+  igraph_vector_destroy(&actw);
+  igraph_vector_long_destroy(&neis);
+  igraph_inclist_destroy(&incident);
+  igraph_vector_destroy(&rank);
+  igraph_vector_destroy(&degree);
+  igraph_vector_destroy(&order);
+  IGRAPH_FINALLY_CLEAN(6);
+
+  return 0;
+}
+
+/**
+ * \function igraph_transitivity_barrat
+ * Weighted transitivity, as defined by A. Barrat.
+ *
+ * This is a local transitivity, i.e. a vertex-level index. For a
+ * given vertex \c i, from all triangles in which it participates we
+ * consider the weight of the edges incident on \c i. The transitivity
+ * is the sum of these weights divided by twice the strength of the
+ * vertex (see \ref igraph_strength()) and the degree of the vertex
+ * minus one. See   Alain Barrat, Marc Barthelemy, Romualdo
+ * Pastor-Satorras, Alessandro Vespignani: The architecture of complex
+ * weighted networks, Proc. Natl. Acad. Sci. USA 101, 3747 (2004) at 
+ * http://arxiv.org/abs/cond-mat/0311416 for the exact formula.
+ * 
+ * \param graph The input graph, edge directions are ignored for
+ *   directed graphs. Note that the function does NOT work for
+ *   non-simple graphs.
+ * \param res Pointer to an initialized vector, the result will be
+ *   stored here. It will be resized as needed.
+ * \param vids The vertices for which the calculation is performed.
+ * \param weights Edge weights. If this is a null pointer, then a
+ *   warning is given and \ref igraph_transitivity_local_undirected()
+ *   is called.
+ * \param mode Defines how to treat vertices with zero strength.
+ *   \c IGRAPH_TRANSITIVITY_NAN says that the transitivity of these
+ *   vertices is \c NaN, \c IGRAPH_TRANSITIVITY_ZERO says it is zero.
+ *
+ * \return Error code.
+ *
+ * Time complexity: O(|V|*d^2), |V| is the number of vertices in 
+ * the graph, d is the average node degree. 
+ * 
+ * \sa \ref igraph_transitivity_undirected(), \ref
+ * igraph_transitivity_local_undirected() and \ref
+ * igraph_transitivity_avglocal_undirected() for other kinds of
+ * (non-weighted) transitivity.
+ */
+
+int igraph_transitivity_barrat(const igraph_t *graph,
+			       igraph_vector_t *res,
+			       const igraph_vs_t vids,
+			       const igraph_vector_t *weights,
+				   igraph_transitivity_mode_t mode) {
+  if (igraph_vs_is_all((igraph_vs_t*)&vids)) {
+    return igraph_transitivity_barrat4(graph, res, vids, weights, mode);
+  } else {
+    return igraph_transitivity_barrat1(graph, res, vids, weights, mode);
+  }
   
   return 0;
 }
@@ -2400,16 +3126,33 @@ int igraph_transitivity_undirected(const igraph_t *graph,
  * \brief Calculates the reciprocity of a directed graph.
  * 
  * </para><para>
- * A vertex pair (A, B) is said to be reciprocal if there are edges
- * between them in both directions. The reciprocity of a directed graph
- * is the proportion of all possible (A, B) pairs which are reciprocal,
- * provided there is at least one edge between A and B. The reciprocity
- * of an empty graph is undefined (results in an error code). Undirected
- * graphs always have a reciprocity of 1.0 unless they are empty.
+ * The measure of reciprocity defines the proportion of mutual
+ * connections, in a directed graph. It is most commonly defined as
+ * the probability that the opposite counterpart of a directed edge is
+ * also included in the graph. In adjacency matrix notation: 
+ * <code>sum(i, j, (A.*A')ij) / sum(i, j, Aij)</code>, where
+ * <code>A.*A'</code> is the element-wise product of matrix
+ * <code>A</code> and its transpose. This measure is
+ * calculated if the \p mode argument is \c
+ * IGRAPH_RECIPROCITY_DEFAULT.
  * 
+ * </para><para>
+ * Prior to igraph version 0.6, another measure was implemented,
+ * defined as the probability of mutual connection between a vertex
+ * pair if we know that there is a (possibly non-mutual) connection
+ * between them. In other words, (unordered) vertex pairs are
+ * classified into three groups: (1) disconnected, (2)
+ * non-reciprocally connected, (3) reciprocally connected. 
+ * The result is the size of group (3), divided by the sum of group
+ * sizes (2)+(3). This measure is calculated if \p mode is \c
+ * IGRAPH_RECIPROCITY_RATIO.
+ *
  * \param graph The graph object.
  * \param res Pointer to an \c igraph_real_t which will contain the result.
  * \param ignore_loops Whether to ignore loop edges.
+ * \param mode Type of reciprocity to calculate, possible values are 
+ *    \c IGRAPH_RECIPROCITY_DEFAULT and \c IGRAPH_RECIPROCITY_RATIO,
+ *    please see their description above.
  * \return Error code:
  *         \c IGRAPH_EINVAL: graph has no edges
  *         \c IGRAPH_ENOMEM: not enough memory for
@@ -2417,15 +3160,24 @@ int igraph_transitivity_undirected(const igraph_t *graph,
  * 
  * Time complexity: O(|V|+|E|), |V| is the number of vertices, 
  * |E| is the number of edges.
+ * 
+ * \example examples/simple/igraph_reciprocity.c
  */
 
 int igraph_reciprocity(const igraph_t *graph, igraph_real_t *res, 
-		       igraph_bool_t ignore_loops) {
-  igraph_integer_t nonrec=0, rec=0;
+		       igraph_bool_t ignore_loops, 
+		       igraph_reciprocity_t mode) {
+
+  igraph_integer_t nonrec=0, rec=0, loops=0;
   igraph_vector_t inneis, outneis;
   long int i;
   long int no_of_nodes=igraph_vcount(graph);
-  
+
+  if (mode != IGRAPH_RECIPROCITY_DEFAULT && 
+      mode != IGRAPH_RECIPROCITY_RATIO) { 
+    IGRAPH_ERROR("Invalid reciprocity type", IGRAPH_EINVAL);
+  }
+
   /* THIS IS AN EXIT HERE !!!!!!!!!!!!!! */
   if (!igraph_is_directed(graph)) {
     *res=1.0;
@@ -2450,10 +3202,15 @@ int igraph_reciprocity(const igraph_t *graph, igraph_real_t *res,
 	nonrec += 1;
 	op++;
       } else { 
+
 	/* loop edge? */
-	if (!ignore_loops || VECTOR(inneis)[ip] != i) {
+	if (VECTOR(inneis)[ip]==i) {
+	  loops += 1;
+	  if (!ignore_loops) { rec += 1; }
+	} else { 
 	  rec += 1;
 	}
+
 	ip++;
 	op++;
       }
@@ -2462,7 +3219,15 @@ int igraph_reciprocity(const igraph_t *graph, igraph_real_t *res,
       (igraph_vector_size(&outneis)-op);
   }
 
-  *res= rec/(rec+nonrec);
+  if (mode==IGRAPH_RECIPROCITY_DEFAULT) {
+    if (ignore_loops) {
+      *res= rec/((igraph_real_t)igraph_ecount(graph)-loops);
+    } else {
+      *res= rec/((igraph_real_t)igraph_ecount(graph));
+    }
+  } else if (mode==IGRAPH_RECIPROCITY_RATIO) {
+    *res= rec/((igraph_real_t)rec+nonrec);
+  }
   
   igraph_vector_destroy(&inneis);
   igraph_vector_destroy(&outneis);
@@ -2472,7 +3237,7 @@ int igraph_reciprocity(const igraph_t *graph, igraph_real_t *res,
 
 /**
  * \function igraph_constraint
- * \brief Burt's constraint scores
+ * \brief Burt's constraint scores.
  * 
  * </para><para>
  * This function calculates Burt's constraint scores for the given
@@ -2487,7 +3252,7 @@ int igraph_reciprocity(const igraph_t *graph, igraph_real_t *res,
  * C[i] = sum( sum( (p[i,q] p[q,j])^2, q in V[i], q != i,j ), j in
  * V[], j != i)
  * </para></blockquote>
- * for a graph of order (ie. number od vertices) N, where proportional
+ * for a graph of order (ie. number of vertices) N, where proportional
  * tie strengths are defined as 
  * <blockquote><para>
  * p[i,j]=(a[i,j]+a[j,i]) / sum(a[i,k]+a[k,i], k in V[i], k != i),
@@ -2569,8 +3334,8 @@ int igraph_constraint(const igraph_t *graph, igraph_vector_t *res,
     i=IGRAPH_VIT_GET(vit);
     
     /* get neighbors of i */
-    IGRAPH_CHECK(igraph_adjacent(graph, &ineis_in, i, IGRAPH_IN));
-    IGRAPH_CHECK(igraph_adjacent(graph, &ineis_out, i, IGRAPH_OUT));
+    IGRAPH_CHECK(igraph_incident(graph, &ineis_in, i, IGRAPH_IN));
+    IGRAPH_CHECK(igraph_incident(graph, &ineis_out, i, IGRAPH_OUT));
 
     /* NaN for isolates */
     if (igraph_vector_size(&ineis_in) == 0 &&
@@ -2594,7 +3359,7 @@ int igraph_constraint(const igraph_t *graph, igraph_vector_t *res,
       VECTOR(contrib)[j]=0.0;
     }
 
-    /* add the direct contibutions, in-neighbors and out-neighbors */
+    /* add the direct contributions, in-neighbors and out-neighbors */
     for (b=0; b<igraph_vector_size(&ineis_in); b++) {
       edge=VECTOR(ineis_in)[b];
       igraph_edge(graph, edge, &from, &to);
@@ -2633,8 +3398,8 @@ int igraph_constraint(const igraph_t *graph, igraph_vector_t *res,
       if (to==i) { to=from; }
       j=to;
       if (i == j) { continue; }
-      IGRAPH_CHECK(igraph_adjacent(graph, &jneis_in, j, IGRAPH_IN));
-      IGRAPH_CHECK(igraph_adjacent(graph, &jneis_out, j, IGRAPH_OUT));
+      IGRAPH_CHECK(igraph_incident(graph, &jneis_in, j, IGRAPH_IN));
+      IGRAPH_CHECK(igraph_incident(graph, &jneis_out, j, IGRAPH_OUT));
       for (c=0; c<igraph_vector_size(&jneis_in); c++) {
 	edge2=VECTOR(jneis_in)[c];
 	igraph_edge(graph, edge2, &from2, &to2);
@@ -2677,8 +3442,8 @@ int igraph_constraint(const igraph_t *graph, igraph_vector_t *res,
 	if (to==i) { to=from; }
 	j=to;
 	if (i == j) { continue; }
-	IGRAPH_CHECK(igraph_adjacent(graph, &jneis_in, j, IGRAPH_IN));
-	IGRAPH_CHECK(igraph_adjacent(graph, &jneis_out, j, IGRAPH_OUT));
+	IGRAPH_CHECK(igraph_incident(graph, &jneis_in, j, IGRAPH_IN));
+	IGRAPH_CHECK(igraph_incident(graph, &jneis_out, j, IGRAPH_OUT));
 	for (c=0; c<igraph_vector_size(&jneis_in); c++) {
 	  edge2=VECTOR(jneis_in)[c];
 	  igraph_edge(graph, edge2, &from2, &to2);
@@ -2759,6 +3524,8 @@ int igraph_constraint(const igraph_t *graph, igraph_vector_t *res,
  * \param graph The input graph.
  * \param res Pointer to an integer (\c igraph_integer_t), the result
  *        will be stored here.
+ * \param vids Vector giving the vertex IDs for which the maximum degree will
+ *        be calculated.
  * \param mode Defines the type of the degree.
  *        \c IGRAPH_OUT, out-degree,
  *        \c IGRAPH_IN, in-degree,
@@ -2811,8 +3578,8 @@ int igraph_maxdegree(const igraph_t *graph, igraph_integer_t *res,
  * \param loops Logical constant, whether to include loops in the
  *   calculation. If this constant is TRUE then
  *   loop edges are thought to be possible in the graph (this does not
- *   neccessary means that the graph really contains any loops). If
- *   this FALSE then the result is only correct if the graph does not
+ *   necessarily mean that the graph really contains any loops). If
+ *   this is FALSE then the result is only correct if the graph does not
  *   contain loops.
  * \return Error code.
  *
@@ -2823,20 +3590,20 @@ int igraph_density(const igraph_t *graph, igraph_real_t *res,
 		   igraph_bool_t loops) {
 
   igraph_integer_t no_of_nodes=igraph_vcount(graph);
-  igraph_integer_t no_of_edges=igraph_ecount(graph);
+  igraph_real_t no_of_edges=igraph_ecount(graph);
   igraph_bool_t directed=igraph_is_directed(graph);
   
   if (!loops) {
     if (directed) {
-      *res = no_of_edges / (no_of_nodes*(no_of_nodes-1));
+      *res = no_of_edges / no_of_nodes / (no_of_nodes-1);
     } else {
-      *res = no_of_edges / (no_of_nodes*(no_of_nodes-1)/2);
+      *res = no_of_edges / no_of_nodes * 2.0 / (no_of_nodes-1);
     }
   } else {
     if (directed) {
-      *res = no_of_edges / (no_of_nodes*no_of_nodes);
+      *res = no_of_edges / no_of_nodes / no_of_nodes;
     } else {
-      *res = no_of_edges / (no_of_nodes*no_of_nodes/2);
+      *res = no_of_edges / no_of_nodes * 2.0 / no_of_nodes;
     }
   }
   
@@ -2845,7 +3612,7 @@ int igraph_density(const igraph_t *graph, igraph_real_t *res,
 
 /**
  * \function igraph_neighborhood_size
- * \brief Calculates the size of the neighborhood of a given vertex
+ * \brief Calculates the size of the neighborhood of a given vertex.
  * 
  * The neighborhood of a given order of a vertex includes all vertices
  * which are closer to the vertex than the order. Ie. order 0 is
@@ -2958,7 +3725,7 @@ int igraph_neighborhood_size(const igraph_t *graph, igraph_vector_t *res,
 
 /** 
  * \function igraph_neighborhood
- * Calculate the neighborhood of vertices
+ * Calculate the neighborhood of vertices.
  * 
  * The neighborhood of a given order of a vertex includes all vertices
  * which are closer to the vertex than the order. Ie. order 0 is
@@ -3085,7 +3852,7 @@ int igraph_neighborhood(const igraph_t *graph, igraph_vector_ptr_t *res,
 
 /**
  * \function igraph_neighborhood_graphs
- * Create graphs from the neighborhood(s) of some vertex/vertices
+ * Create graphs from the neighborhood(s) of some vertex/vertices.
  * 
  * The neighborhood of a given order of a vertex includes all vertices
  * which are closer to the vertex than the order. Ie. order 0 is
@@ -3199,7 +3966,9 @@ int igraph_neighborhood_graphs(const igraph_t *graph, igraph_vector_ptr_t *res,
     }
     IGRAPH_FINALLY(igraph_free, newg);
     if (igraph_vector_size(&tmp) < no_of_nodes) {
-      IGRAPH_CHECK(igraph_subgraph(graph, newg, igraph_vss_vector(&tmp)));
+      IGRAPH_CHECK(igraph_induced_subgraph(graph, newg, 
+					   igraph_vss_vector(&tmp), 
+					   IGRAPH_SUBGRAPH_AUTO));
     } else {
       IGRAPH_CHECK(igraph_copy(newg, graph));
     }
@@ -3219,7 +3988,7 @@ int igraph_neighborhood_graphs(const igraph_t *graph, igraph_vector_ptr_t *res,
 
 /**
  * \function igraph_topological_sorting
- * Calculate a possible topological sorting of the graph
+ * \brief Calculate a possible topological sorting of the graph.
  *
  * </para><para>
  * A topological sorting of a directed acyclic graph is a linear ordering
@@ -3242,6 +4011,12 @@ int igraph_neighborhood_graphs(const igraph_t *graph, igraph_vector_ptr_t *res,
  * 
  * Time complexity: O(|V|+|E|), where |V| and |E| are the number of
  * vertices and edges in the original input graph.
+ *
+ * \sa \ref igraph_is_dag() if you are only interested in whether a given
+ *     graph is a DAG or not, or \ref igraph_feedback_arc_set() to find a
+ *     set of edges whose removal makes the graph a DAG.
+ * 
+ * \example examples/simple/igraph_topological_sorting.c
  */
 int igraph_topological_sorting(const igraph_t* graph, igraph_vector_t *res,
 			       igraph_neimode_t mode) {
@@ -3304,8 +4079,83 @@ int igraph_topological_sorting(const igraph_t* graph, igraph_vector_t *res,
 }
 
 /**
+ * \function igraph_is_dag
+ * Checks whether a graph is a directed acyclic graph (DAG) or not.
+ *
+ * </para><para>
+ * A directed acyclic graph (DAG) is a directed graph with no cycles.
+ *
+ * \param graph The input graph.
+ * \param res Pointer to a boolean constant, the result
+ *     is stored here.
+ * \return Error code.
+ * 
+ * Time complexity: O(|V|+|E|), where |V| and |E| are the number of
+ * vertices and edges in the original input graph.
+ *
+ * \sa \ref igraph_topological_sorting() to get a possible topological
+ *     sorting of a DAG.
+ */
+int igraph_is_dag(const igraph_t* graph, igraph_bool_t *res) {
+  long int no_of_nodes=igraph_vcount(graph);
+  igraph_vector_t degrees, neis;
+  igraph_dqueue_t sources;
+  long int node, i, j, nei, vertices_left;
+
+  if (!igraph_is_directed(graph)) {
+    *res = 0;
+    return IGRAPH_SUCCESS;
+  }
+
+  IGRAPH_VECTOR_INIT_FINALLY(&degrees, no_of_nodes);
+  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  IGRAPH_CHECK(igraph_dqueue_init(&sources, 0));
+  IGRAPH_FINALLY(igraph_dqueue_destroy, &sources);
+  IGRAPH_CHECK(igraph_degree(graph, &degrees, igraph_vss_all(), IGRAPH_OUT, 1));
+
+  vertices_left = no_of_nodes;
+
+  /* Do we have nodes with no incoming edges? */
+  for (i=0; i<no_of_nodes; i++) {
+    if (VECTOR(degrees)[i] == 0)
+      IGRAPH_CHECK(igraph_dqueue_push(&sources, i));
+  }
+
+  /* Take all nodes with no incoming edges and remove them */
+  while (!igraph_dqueue_empty(&sources)) {
+    node=(long)igraph_dqueue_pop(&sources);
+    /* Exclude the node from further source searches */
+    VECTOR(degrees)[node]=-1;
+    vertices_left--;
+    /* Get the neighbors and decrease their degrees by one */
+    IGRAPH_CHECK(igraph_neighbors(graph, &neis, node, IGRAPH_IN));
+    j=igraph_vector_size(&neis);
+    for (i=0; i<j; i++) {
+      nei = (long)VECTOR(neis)[i];
+      if (nei == node)
+        continue;
+      VECTOR(degrees)[nei]--;
+      if (VECTOR(degrees)[nei] == 0)
+        IGRAPH_CHECK(igraph_dqueue_push(&sources, nei));
+    }
+  }
+
+  *res = (vertices_left == 0);
+  if (vertices_left < 0) {
+    IGRAPH_WARNING("vertices_left < 0 in igraph_is_dag, possible bug");
+  }
+
+  igraph_vector_destroy(&degrees);
+  igraph_vector_destroy(&neis);
+  igraph_dqueue_destroy(&sources);
+  IGRAPH_FINALLY_CLEAN(3);
+
+  return IGRAPH_SUCCESS;
+}
+
+/**
  * \function igraph_is_simple
- * \brief Decides whether the input graph is a simple graph
+ * \brief Decides whether the input graph is a simple graph.
  * 
  * </para><para>
  * A graph is a simple graph if it does not contain loop edges and 
@@ -3317,8 +4167,9 @@ int igraph_topological_sorting(const igraph_t* graph, igraph_vector_t *res,
  * \return Error code.
  * 
  * \sa \ref igraph_is_loop() and \ref igraph_is_multiple() to
- * find the loops and multiple edges and \ref igraph_simplify() to
- * get rid of them.
+ * find the loops and multiple edges, \ref igraph_simplify() to
+ * get rid of them, or \ref igraph_has_multiple() to decide whether
+ * there is at least one multiple edge.
  * 
  * Time complexity: O(|V|+|E|). 
  */
@@ -3332,16 +4183,18 @@ int igraph_is_simple(const igraph_t *graph, igraph_bool_t *res) {
   } else {
     igraph_vector_t neis;
     long int i, j, n;
-    igraph_bool_t found=0;
+    igraph_bool_t found = 0;
     IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);    
-    for (i=0; !found && i<vc; i++) {
+    for (i=0; i < vc; i++) {
       igraph_neighbors(graph, &neis, i, IGRAPH_OUT);
       n=igraph_vector_size(&neis);
-      for (j=0; j<n; j++) {
-	if (VECTOR(neis)[j]==i) { found=1; break; }
-	if (j>0 && VECTOR(neis)[j-1]==VECTOR(neis)[j]) {
-	  found=1; break;
-	}
+      for (j=0; j < n; j++) {
+        if (VECTOR(neis)[j]==i) {
+          found=1; break;
+        }
+        if (j>0 && VECTOR(neis)[j-1]==VECTOR(neis)[j]) {
+          found=1; break;
+        }
       }
     }
     *res=!found;
@@ -3354,7 +4207,7 @@ int igraph_is_simple(const igraph_t *graph, igraph_bool_t *res) {
 
 /**
  * \function igraph_is_loop
- * \brief Find the loop edges in a graph
+ * \brief Find the loop edges in a graph.
  * 
  * </para><para>
  * A loop edge is an edge from a vertex to itself.
@@ -3367,6 +4220,8 @@ int igraph_is_simple(const igraph_t *graph, igraph_bool_t *res) {
  * \sa \ref igraph_simplify() to get rid of loop edges.
  *
  * Time complexity: O(e), the number of edges to check.
+ * 
+ * \example examples/simple/igraph_is_loop.c
  */
 
 int igraph_is_loop(const igraph_t *graph, igraph_vector_bool_t *res, 
@@ -3389,8 +4244,62 @@ int igraph_is_loop(const igraph_t *graph, igraph_vector_bool_t *res,
 }
 
 /**
+ * \function igraph_has_multiple
+ * \brief Check whether the graph has at least one multiple edge.
+ * 
+ * </para><para>
+ * An edge is a multiple edge if there is another 
+ * edge with the same head and tail vertices in the graph.
+ * 
+ * \param graph The input graph.
+ * \param res Pointer to a boolean variable, the result will be stored here.
+ * \return Error code.
+ * 
+ * \sa \ref igraph_count_multiple(), \ref igraph_is_multiple() and \ref igraph_simplify().
+ * 
+ * Time complexity: O(e*d), e is the number of edges to check and d is the 
+ * average degree (out-degree in directed graphs) of the vertices at the 
+ * tail of the edges.
+ * 
+ * \example examples/simple/igraph_has_multiple.c
+ */
+
+int igraph_has_multiple(const igraph_t *graph, igraph_bool_t *res) {
+  long int vc=igraph_vcount(graph);
+  long int ec=igraph_ecount(graph);
+  igraph_bool_t directed=igraph_is_directed(graph);
+
+  if (vc==0 || ec==0) {
+    *res=0;
+  } else {
+    igraph_vector_t neis;
+    long int i, j, n;
+    igraph_bool_t found=0;
+    IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);    
+    for (i=0; i < vc; i++) {
+      IGRAPH_CHECK(igraph_neighbors(graph, &neis, i, IGRAPH_OUT));
+      n = igraph_vector_size(&neis);
+      for (j=1; j < n; j++) {
+	      if (VECTOR(neis)[j-1] == VECTOR(neis)[j]) {
+          /* If the graph is undirected, loop edges appear twice in the neighbor
+           * list, so check the next item as well */
+          if (directed || (j < n-1 && VECTOR(neis)[j] == VECTOR(neis)[j+1])) {
+            found=1; break;
+          }
+        }
+      }
+    }
+    *res=found;
+    igraph_vector_destroy(&neis);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  
+  return 0;
+}
+
+/**
  * \function igraph_is_multiple
- * \brief Find the multiple edges in a graph
+ * \brief Find the multiple edges in a graph.
  * 
  * </para><para>
  * An edge is a multiple edge if there is another 
@@ -3398,7 +4307,7 @@ int igraph_is_loop(const igraph_t *graph, igraph_vector_bool_t *res,
  * 
  * </para><para>
  * Note that this function returns true only for the second or more 
- * appereances of the multiple edges.
+ * appearances of the multiple edges.
  * \param graph The input graph.
  * \param res Pointer to a boolean vector, the result will be stored 
  *        here. It will be resized as needed.
@@ -3406,23 +4315,25 @@ int igraph_is_loop(const igraph_t *graph, igraph_vector_bool_t *res,
  *        to check all edges.
  * \return Error code.
  * 
- * \sa \ref igraph_count_multiple() and \ref igraph_simplify().
+ * \sa \ref igraph_count_multiple(), \ref igraph_has_multiple() and \ref igraph_simplify().
  * 
  * Time complexity: O(e*d), e is the number of edges to check and d is the 
  * average degree (out-degree in directed graphs) of the vertices at the 
  * tail of the edges.
+ * 
+ * \example examples/simple/igraph_is_multiple.c
  */
 
 int igraph_is_multiple(const igraph_t *graph, igraph_vector_bool_t *res, 
 		       igraph_es_t es) {
   igraph_eit_t eit;
   long int i;
-  igraph_lazy_adjedgelist_t adjlist;
+  igraph_lazy_inclist_t inclist;
   
   IGRAPH_CHECK(igraph_eit_create(graph, es, &eit));
   IGRAPH_FINALLY(igraph_eit_destroy, &eit);
-  IGRAPH_CHECK(igraph_lazy_adjedgelist_init(graph, &adjlist, IGRAPH_OUT));
-  IGRAPH_FINALLY(igraph_lazy_adjedgelist_destroy, &adjlist);
+  IGRAPH_CHECK(igraph_lazy_inclist_init(graph, &inclist, IGRAPH_OUT));
+  IGRAPH_FINALLY(igraph_lazy_inclist_destroy, &inclist);
   
   IGRAPH_CHECK(igraph_vector_bool_resize(res, IGRAPH_EIT_SIZE(eit)));
   
@@ -3430,7 +4341,7 @@ int igraph_is_multiple(const igraph_t *graph, igraph_vector_bool_t *res,
     long int e=IGRAPH_EIT_GET(eit);
     long int from=IGRAPH_FROM(graph, e);
     long int to=IGRAPH_TO(graph, e);
-    igraph_vector_t *neis=igraph_lazy_adjedgelist_get(&adjlist, from);
+    igraph_vector_t *neis=igraph_lazy_inclist_get(&inclist, from);
     long int j, n=igraph_vector_size(neis);
     VECTOR(*res)[i]=0;
     for (j=0; j<n; j++) {
@@ -3442,7 +4353,7 @@ int igraph_is_multiple(const igraph_t *graph, igraph_vector_bool_t *res,
     }
   }
   
-  igraph_lazy_adjedgelist_destroy(&adjlist);
+  igraph_lazy_inclist_destroy(&inclist);
   igraph_eit_destroy(&eit);
   IGRAPH_FINALLY_CLEAN(2);
   return 0;
@@ -3450,7 +4361,7 @@ int igraph_is_multiple(const igraph_t *graph, igraph_vector_bool_t *res,
 
 /**
  * \function igraph_count_multiple
- * \brief Count the number of appearance of the edges in a graph
+ * \brief Count the number of appearances of the edges in a graph.
  * 
  * </para><para>
  * If the graph has no multiple edges then the result vector will be 
@@ -3477,12 +4388,12 @@ int igraph_is_multiple(const igraph_t *graph, igraph_vector_bool_t *res,
 int igraph_count_multiple(const igraph_t *graph, igraph_vector_t *res, igraph_es_t es) {
   igraph_eit_t eit;
   long int i;
-  igraph_lazy_adjedgelist_t adjlist;
+  igraph_lazy_inclist_t inclist;
   
   IGRAPH_CHECK(igraph_eit_create(graph, es, &eit));
   IGRAPH_FINALLY(igraph_eit_destroy, &eit);
-  IGRAPH_CHECK(igraph_lazy_adjedgelist_init(graph, &adjlist, IGRAPH_OUT));
-  IGRAPH_FINALLY(igraph_lazy_adjedgelist_destroy, &adjlist);
+  IGRAPH_CHECK(igraph_lazy_inclist_init(graph, &inclist, IGRAPH_OUT));
+  IGRAPH_FINALLY(igraph_lazy_inclist_destroy, &inclist);
   
   IGRAPH_CHECK(igraph_vector_resize(res, IGRAPH_EIT_SIZE(eit)));
   
@@ -3490,7 +4401,7 @@ int igraph_count_multiple(const igraph_t *graph, igraph_vector_t *res, igraph_es
     long int e=IGRAPH_EIT_GET(eit);
     long int from=IGRAPH_FROM(graph, e);
     long int to=IGRAPH_TO(graph, e);
-    igraph_vector_t *neis=igraph_lazy_adjedgelist_get(&adjlist, from);
+    igraph_vector_t *neis=igraph_lazy_inclist_get(&inclist, from);
     long int j, n=igraph_vector_size(neis);
     VECTOR(*res)[i] = 0;
     for (j=0; j<n; j++) {
@@ -3502,7 +4413,7 @@ int igraph_count_multiple(const igraph_t *graph, igraph_vector_t *res, igraph_es
     if (to == from) VECTOR(*res)[i] /= 2;
   }
   
-  igraph_lazy_adjedgelist_destroy(&adjlist);
+  igraph_lazy_inclist_destroy(&inclist);
   igraph_eit_destroy(&eit);
   IGRAPH_FINALLY_CLEAN(2);
   return 0;
@@ -3536,6 +4447,8 @@ int igraph_count_multiple(const igraph_t *graph, igraph_vector_t *res, igraph_es
  * is the number of edges in the general case. If the graph has no
  * circles at all then the function needs O(|V|+|E|) time to realize
  * this and then it stops.
+ * 
+ * \example examples/simple/igraph_girth.c
  */
 
 int igraph_girth(const igraph_t *graph, igraph_integer_t *girth, 
@@ -3675,7 +4588,7 @@ int igraph_girth(const igraph_t *graph, igraph_integer_t *girth,
   return 0;
 }
 
-/* Note to self: tried using adjacency lists instead of igraph_adjacent queries,
+/* Note to self: tried using adjacency lists instead of igraph_incident queries,
  * with minimal performance improvements on a graph with 70K vertices and 360K
  * edges. (1.09s instead of 1.10s). I think it's not worth the fuss. */
 int igraph_i_linegraph_undirected(const igraph_t *graph, igraph_t *linegraph) {
@@ -3696,7 +4609,7 @@ int igraph_i_linegraph_undirected(const igraph_t *graph, igraph_t *linegraph) {
     IGRAPH_ALLOW_INTERRUPTION();
 
     if (from != prev) {
-      IGRAPH_CHECK(igraph_adjacent(graph, &adjedges, from, IGRAPH_ALL));
+      IGRAPH_CHECK(igraph_incident(graph, &adjedges, from, IGRAPH_ALL));
     }
     n=igraph_vector_size(&adjedges);
     for (j=0; j<n; j++) {
@@ -3707,7 +4620,7 @@ int igraph_i_linegraph_undirected(const igraph_t *graph, igraph_t *linegraph) {
       }
     }
     
-    IGRAPH_CHECK(igraph_adjacent(graph, &adjedges2, to, IGRAPH_ALL));
+    IGRAPH_CHECK(igraph_incident(graph, &adjedges2, to, IGRAPH_ALL));
     n=igraph_vector_size(&adjedges2);
     for (j=0; j<n; j++) {
       long int e=VECTOR(adjedges2)[j];
@@ -3747,7 +4660,7 @@ int igraph_i_linegraph_directed(const igraph_t *graph, igraph_t *linegraph) {
     IGRAPH_ALLOW_INTERRUPTION();
     
     if (from != prev) {
-      IGRAPH_CHECK(igraph_adjacent(graph, &adjedges, from, IGRAPH_IN));
+      IGRAPH_CHECK(igraph_incident(graph, &adjedges, from, IGRAPH_IN));
     }
     n=igraph_vector_size(&adjedges);
     for (j=0; j<n; j++) {
@@ -3770,7 +4683,7 @@ int igraph_i_linegraph_directed(const igraph_t *graph, igraph_t *linegraph) {
 
 /**
  * \function igraph_linegraph
- * \brief Create the line graph of a graph
+ * \brief Create the line graph of a graph.
  *
  * The line graph L(G) of a G undirected graph is defined as follows. 
  * L(G) has one vertex for each edge in G and two vertices in L(G) are connected 
@@ -3782,6 +4695,10 @@ int igraph_i_linegraph_directed(const igraph_t *graph, igraph_t *linegraph) {
  * by a directed edge if the target of the first vertex's corresponding edge
  * is the same as the source of the second vertex's corresponding edge.
  * 
+ * </para><para>
+ * Edge \em i  in the original graph will correspond to vertex \em i
+ * in the line graph.
+ *
  * </para><para>
  * The first version of this function was contributed by Vincent Matossian, 
  * thanks.
@@ -3804,14 +4721,14 @@ int igraph_linegraph(const igraph_t *graph, igraph_t *linegraph) {
 
 /**
  * \function igraph_add_edge
- * \brief Adds a single edge to a graph
+ * \brief Adds a single edge to a graph.
  * 
  * </para><para>
  * For directed graphs the edge points from \p from to \p to.
  * 
  * </para><para>
  * Note that if you want to add many edges to a big graph, then it is
- * unefficient to add them one by one, it is better to collect them into
+ * inefficient to add them one by one, it is better to collect them into
  * a vector and add all of them via a single \ref igraph_add_edges() call.
  * \param igraph The graph.
  * \param from The id of the first vertex of the edge.
@@ -3842,6 +4759,9 @@ int igraph_add_edge(igraph_t *graph, igraph_integer_t from, igraph_integer_t to)
   return ret;
 }
 
+/*
+ * \example examples/simple/graph_convergence_degree.c
+ */
 
 int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
   igraph_vector_t *ins, igraph_vector_t *outs) {
@@ -3851,7 +4771,7 @@ int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
   long int *geodist;
   igraph_vector_t *eids, *ins_p, *outs_p, ins_v, outs_v;
   igraph_dqueue_t q;
-  igraph_adjedgelist_t adjlist;
+  igraph_inclist_t inclist;
   igraph_bool_t directed = igraph_is_directed(graph);
 
   if (result != 0) IGRAPH_CHECK(igraph_vector_resize(result, no_of_edges));
@@ -3887,8 +4807,8 @@ int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
   for (k=0; k<(directed?2:1); k++) {
     igraph_neimode_t neimode = (k==0)?IGRAPH_OUT:IGRAPH_IN;
     igraph_real_t *vec;
-    IGRAPH_CHECK(igraph_adjedgelist_init(graph, &adjlist, neimode));
-    IGRAPH_FINALLY(igraph_adjedgelist_destroy, &adjlist);
+    IGRAPH_CHECK(igraph_inclist_init(graph, &inclist, neimode));
+    IGRAPH_FINALLY(igraph_inclist_destroy, &inclist);
     vec = (k==0)?VECTOR(*ins_p):VECTOR(*outs_p);
     for (i=0; i<no_of_nodes; i++) {
       igraph_dqueue_clear(&q);
@@ -3900,7 +4820,7 @@ int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
         long int actnode=igraph_dqueue_pop(&q);
         long int actdist=igraph_dqueue_pop(&q);
         IGRAPH_ALLOW_INTERRUPTION();
-        eids=igraph_adjedgelist_get(&adjlist, actnode);
+        eids=igraph_inclist_get(&inclist, actnode);
         n=igraph_vector_size(eids);
         for (j=0; j<n; j++) {
           long int neighbor = IGRAPH_OTHER(graph, VECTOR(*eids)[j], actnode);
@@ -3934,7 +4854,7 @@ int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
       }
     }
 
-    igraph_adjedgelist_destroy(&adjlist);
+    igraph_inclist_destroy(&inclist);
     IGRAPH_FINALLY_CLEAN(1);
   }
 
@@ -3966,7 +4886,7 @@ int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
 
 /**
  * \function igraph_shortest_paths_dijkstra
- * Weighted shortest paths from some sources
+ * Weighted shortest paths from some sources.
  * 
  * This function is Dijkstra's algorithm to find the weighted 
  * shortest paths to all vertices from a single source. (It is run 
@@ -3974,10 +4894,15 @@ int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
  * efficient implementation.
  * 
  * \param graph The input graph, can be directed.
- * \param res The result, a matrix. Each row contains the distances
- *    from a single source, in the order of vertex ids.
- *    Unreachable vertices has distance \c IGRAPH_INFINITY.
+ * \param res The result, a matrix. A pointer to an initialized matrix
+ *    should be passed here. The matrix will be resized as needed. 
+ *    Each row contains the distances from a single source, to the
+ *    vertices given in the \c to argument. 
+ *    Unreachable vertices has distance
+ *    \c IGRAPH_INFINITY. 
  * \param from The source vertices.
+ * \param to The target vertices. It is not allowed to include a
+ *    vertex twice or more.
  * \param weights The edge weights. They must be all non-negative for
  *    Dijkstra's algorithm to work. An error code is returned if there
  *    is a negative edge weight in the weight vector. If this is a null
@@ -3996,20 +4921,23 @@ int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
  * version or \ref igraph_shortest_paths_bellman_ford() for a weighted
  * variant that works in the presence of negative edge weights (but no
  * negative loops).
+ * 
+ * \example examples/simple/dijkstra.c
  */
 
 int igraph_shortest_paths_dijkstra(const igraph_t *graph,
 				   igraph_matrix_t *res,
 				   const igraph_vs_t from,
+				   const igraph_vs_t to,
 				   const igraph_vector_t *weights, 
 				   igraph_neimode_t mode) {
 
   /* Implementation details. This is the basic Dijkstra algorithm, 
      with a binary heap. The heap is indexed, i.e. it stores not only
-     the distances, but also which vertex they belong to. The other
-     mapping, i.e. getting the distance for a vertex is not in the
-     heap (that would by the double-indexed heap), but in the result
-     matrix.
+     the distances, but also which vertex they belong to.
+
+     From now on we use a 2-way heap, so the distances can be queried
+     directly from the heap.
 
      Dirty tricks:
      - the opposite of the distance is stored in the heap, as it is a
@@ -4022,14 +4950,17 @@ int igraph_shortest_paths_dijkstra(const igraph_t *graph,
   
   long int no_of_nodes=igraph_vcount(graph);
   long int no_of_edges=igraph_ecount(graph);
-  igraph_indheap_t Q;
-  igraph_vit_t fromvit;
-  long int no_of_from;
-  igraph_lazy_adjedgelist_t adjlist;
+  igraph_2wheap_t Q;
+  igraph_vit_t fromvit, tovit;
+  long int no_of_from, no_of_to;
+  igraph_lazy_inclist_t inclist;
   long int i,j;
-    
+  igraph_real_t my_infinity=IGRAPH_INFINITY;
+  igraph_bool_t all_to;
+  igraph_vector_t index;
+
   if (!weights) {
-    return igraph_shortest_paths(graph, res, from, mode);
+    return igraph_shortest_paths(graph, res, from, to, mode);
   }
   
   if (igraph_vector_size(weights) != no_of_edges) {
@@ -4043,66 +4974,92 @@ int igraph_shortest_paths_dijkstra(const igraph_t *graph,
   IGRAPH_FINALLY(igraph_vit_destroy, &fromvit);
   no_of_from=IGRAPH_VIT_SIZE(fromvit);
   
-  IGRAPH_CHECK(igraph_indheap_init(&Q, no_of_nodes));
-  IGRAPH_FINALLY(igraph_indheap_destroy, &Q);
-  IGRAPH_CHECK(igraph_lazy_adjedgelist_init(graph, &adjlist, mode));
-  IGRAPH_FINALLY(igraph_lazy_adjedgelist_destroy, &adjlist);
+  IGRAPH_CHECK(igraph_2wheap_init(&Q, no_of_nodes));
+  IGRAPH_FINALLY(igraph_2wheap_destroy, &Q);
+  IGRAPH_CHECK(igraph_lazy_inclist_init(graph, &inclist, mode));
+  IGRAPH_FINALLY(igraph_lazy_inclist_destroy, &inclist);
 
-  IGRAPH_CHECK(igraph_matrix_resize(res, no_of_from, no_of_nodes));
-  igraph_matrix_null(res);
+  if ( (all_to=igraph_vs_is_all(&to)) ) {
+    no_of_to=no_of_nodes;
+  } else {
+    IGRAPH_VECTOR_INIT_FINALLY(&index, no_of_nodes);
+    IGRAPH_CHECK(igraph_vit_create(graph, to, &tovit));
+    IGRAPH_FINALLY(igraph_vit_destroy, &tovit);
+    no_of_to=IGRAPH_VIT_SIZE(tovit);
+    for (i=0; !IGRAPH_VIT_END(tovit); IGRAPH_VIT_NEXT(tovit)) {
+      long int v=IGRAPH_VIT_GET(tovit);
+      if (VECTOR(index)[v]) {
+	IGRAPH_ERROR("Duplicate vertices in `to', this is not allowed", 
+		     IGRAPH_EINVAL);
+      }
+      VECTOR(index)[v] = ++i;
+    }
+  }
+
+  IGRAPH_CHECK(igraph_matrix_resize(res, no_of_from, no_of_to));
+  igraph_matrix_fill(res, my_infinity);
 
   for (IGRAPH_VIT_RESET(fromvit), i=0; 
        !IGRAPH_VIT_END(fromvit);
        IGRAPH_VIT_NEXT(fromvit), i++) {
-
-    long int source=IGRAPH_VIT_GET(fromvit);
-    MATRIX(*res, i, source) = 1.0;	/* zero distance */
-    igraph_indheap_push_with_index(&Q, source, 0);
     
-    while (!igraph_indheap_empty(&Q)) {
-      long int minnei=igraph_indheap_max_index(&Q);
-      igraph_real_t mindist=-igraph_indheap_delete_max(&Q);
+    long int reached=0;
+    long int source=IGRAPH_VIT_GET(fromvit);
+    igraph_2wheap_clear(&Q);
+    igraph_2wheap_push_with_index(&Q, source, -1.0);
+    
+    while (!igraph_2wheap_empty(&Q)) {
+      long int minnei=igraph_2wheap_max_index(&Q);
+      igraph_real_t mindist=-igraph_2wheap_deactivate_max(&Q);
       igraph_vector_t *neis;
       long int nlen;
 
+      if (all_to) {
+	MATRIX(*res, i, minnei)=mindist-1.0;
+      } else {
+	if (VECTOR(index)[minnei]) {
+	  MATRIX(*res, i, (long int)(VECTOR(index)[minnei]-1)) = mindist-1.0;
+	  reached++;
+	  if (reached==no_of_to) {
+	    igraph_2wheap_clear(&Q);
+	    break;
+	  }
+	}
+      }
+
       /* Now check all neighbors of 'minnei' for a shorter path */
-      neis=igraph_lazy_adjedgelist_get(&adjlist, minnei);
+      neis=igraph_lazy_inclist_get(&inclist, minnei);
       nlen=igraph_vector_size(neis);
       for (j=0; j<nlen; j++) {
 	long int edge=VECTOR(*neis)[j];
 	long int to=IGRAPH_OTHER(graph, edge, minnei);
 	igraph_real_t altdist=mindist + VECTOR(*weights)[edge];
-	igraph_real_t curdist=MATRIX(*res, i, to);
-	if (curdist==0) {
+	igraph_bool_t active=igraph_2wheap_has_active(&Q, to);
+	igraph_bool_t has=igraph_2wheap_has_elem(&Q, to);
+	igraph_real_t curdist= active ? -igraph_2wheap_get(&Q, to) : 0.0;
+	if (!has) {
 	  /* This is the first non-infinite distance */
-	  MATRIX(*res, i, to) = altdist+1.0;
-	  IGRAPH_CHECK(igraph_indheap_push_with_index(&Q, to, -altdist));
-	} else if (altdist < curdist-1) {
+	  IGRAPH_CHECK(igraph_2wheap_push_with_index(&Q, to, -altdist));
+	} else if (altdist < curdist) {
 	  /* This is a shorter path */
-	  MATRIX(*res, i, to) = altdist+1.0;
-	  IGRAPH_CHECK(igraph_indheap_modify(&Q, to, -altdist));
+	  IGRAPH_CHECK(igraph_2wheap_modify(&Q, to, -altdist));
 	}
       }
       
-    } /* !igraph_indheap_empty(&Q) */
+    } /* !igraph_2wheap_empty(&Q) */
 
   } /* !IGRAPH_VIT_END(fromvit) */
+
+  if (!all_to) {
+    igraph_vit_destroy(&tovit);
+    igraph_vector_destroy(&index);
+    IGRAPH_FINALLY_CLEAN(2);
+  }  
   
-  igraph_lazy_adjedgelist_destroy(&adjlist);
-  igraph_indheap_destroy(&Q);
+  igraph_lazy_inclist_destroy(&inclist);
+  igraph_2wheap_destroy(&Q);
   igraph_vit_destroy(&fromvit);
   IGRAPH_FINALLY_CLEAN(3);
-  
-  /* Rewrite the result matrix */
-  for (i=0; i<no_of_from; i++) {
-    for (j=0; j<no_of_nodes; j++) {
-      if (MATRIX(*res, i, j) == 0) {
-	MATRIX(*res, i, j) = IGRAPH_INFINITY;
-      } else {
-	MATRIX(*res, i, j) -= 1.0;
-      }
-    }
-  }
   
   return 0;
 }
@@ -4116,12 +5073,24 @@ int igraph_shortest_paths_dijkstra(const igraph_t *graph,
  * If there is more than one path with the smallest weight between two vertices, this
  * function gives only one of them. 
  * \param graph The graph object.
- * \param res The result, this is a pointer vector, each element points 
- *        to a vector
+ * \param vertices The result, the ids of the vertices along the paths. 
+ *        This is a pointer vector, each element points to a vector
  *        object. These should be initialized before passing them to
  *        the function, which will properly clear and/or resize them
  *        and fill the ids of the vertices along the geodesics from/to
- *        the vertices.
+ *        the vertices. Supply a null pointer here if you don't need
+ *        these vectors. Normally, either this argument, or the \c
+ *        edges should be non-null, but no error or warning is given
+ *        if they are both null pointers.
+ * \param edges The result, the ids of the edges along the paths.
+ *        This is a pointer vector, each element points to a vector
+ *        object. These should be initialized before passing them to
+ *        the function, which will properly clear and/or resize them
+ *        and fill the ids of the vertices along the geodesics from/to
+ *        the vertices. Supply a null pointer here if you don't need
+ *        these vectors. Normally, either this argument, or the \c
+ *        vertices should be non-null, but no error or warning is given
+ *        if they are both null pointers.
  * \param from The id of the vertex from/to which the geodesics are
  *        calculated. 
  * \param to Vertex sequence with the ids of the vertices to/from which the 
@@ -4157,9 +5126,12 @@ int igraph_shortest_paths_dijkstra(const igraph_t *graph,
  * \sa \ref igraph_shortest_paths_dijkstra() if you only need the path length but
  * not the paths themselves, \ref igraph_get_shortest_paths() if all edge
  * weights are equal. 
+ * 
+ * \example examples/simple/igraph_get_shortest_paths_dijkstra.c
  */
 int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
-                                       igraph_vector_ptr_t *res,
+                                       igraph_vector_ptr_t *vertices,
+				       igraph_vector_ptr_t *edges,
 				       igraph_integer_t from,
 				       igraph_vs_t to,
 				       const igraph_vector_t *weights,
@@ -4186,15 +5158,15 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
   long int no_of_nodes=igraph_vcount(graph);
   long int no_of_edges=igraph_ecount(graph);
   igraph_vit_t vit;
-  igraph_indheap_t Q;
-  igraph_lazy_adjedgelist_t adjlist;
+  igraph_2wheap_t Q;
+  igraph_lazy_inclist_t inclist;
   igraph_vector_t dists;
   long int *parents;
   igraph_bool_t *is_target;
   long int i,to_reach;
-    
+
   if (!weights) {
-    return igraph_get_shortest_paths(graph, res, from, to, mode);
+    return igraph_get_shortest_paths(graph, vertices, edges, from, to, mode);
   }
   
   if (igraph_vector_size(weights) != no_of_edges) {
@@ -4207,14 +5179,17 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
   IGRAPH_CHECK(igraph_vit_create(graph, to, &vit));
   IGRAPH_FINALLY(igraph_vit_destroy, &vit);
 
-  if (IGRAPH_VIT_SIZE(vit) != igraph_vector_ptr_size(res)) {
-    IGRAPH_ERROR("Size of `res' and `to' should match", IGRAPH_EINVAL);
+  if (vertices && IGRAPH_VIT_SIZE(vit) != igraph_vector_ptr_size(vertices)) {
+    IGRAPH_ERROR("Size of `vertices' and `to' should match", IGRAPH_EINVAL);
+  }
+  if (edges && IGRAPH_VIT_SIZE(vit) != igraph_vector_ptr_size(edges)) {
+    IGRAPH_ERROR("Size of `edges' and `to' should match", IGRAPH_EINVAL);
   }
 
-  IGRAPH_CHECK(igraph_indheap_init(&Q, no_of_nodes));
-  IGRAPH_FINALLY(igraph_indheap_destroy, &Q);
-  IGRAPH_CHECK(igraph_lazy_adjedgelist_init(graph, &adjlist, mode));
-  IGRAPH_FINALLY(igraph_lazy_adjedgelist_destroy, &adjlist);
+  IGRAPH_CHECK(igraph_2wheap_init(&Q, no_of_nodes));
+  IGRAPH_FINALLY(igraph_2wheap_destroy, &Q);
+  IGRAPH_CHECK(igraph_lazy_inclist_init(graph, &inclist, mode));
+  IGRAPH_FINALLY(igraph_lazy_inclist_destroy, &inclist);
 
   IGRAPH_VECTOR_INIT_FINALLY(&dists, no_of_nodes);
 
@@ -4236,12 +5211,12 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
   }
 
   VECTOR(dists)[(long int)from] = 1.0;	/* zero distance */
-  parents[(long int)from] = from+1;
-  igraph_indheap_push_with_index(&Q, from, 0);
+  parents[(long int)from] = 0;
+  igraph_2wheap_push_with_index(&Q, from, 0);
     
-  while (!igraph_indheap_empty(&Q) && to_reach > 0) {
-    long int nlen, minnei=igraph_indheap_max_index(&Q);
-    igraph_real_t mindist=-igraph_indheap_delete_max(&Q);
+  while (!igraph_2wheap_empty(&Q) && to_reach > 0) {
+    long int nlen, minnei=igraph_2wheap_max_index(&Q);
+    igraph_real_t mindist=-igraph_2wheap_delete_max(&Q);
     igraph_vector_t *neis;
 
     IGRAPH_ALLOW_INTERRUPTION();
@@ -4252,7 +5227,7 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
 	}
 
     /* Now check all neighbors of 'minnei' for a shorter path */
-    neis=igraph_lazy_adjedgelist_get(&adjlist, minnei);
+    neis=igraph_lazy_inclist_get(&inclist, minnei);
     nlen=igraph_vector_size(neis);
     for (i=0; i<nlen; i++) {
       long int edge=VECTOR(*neis)[i];
@@ -4262,47 +5237,65 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
       if (curdist==0) {
         /* This is the first non-infinite distance */
         VECTOR(dists)[to] = altdist+1.0;
-        parents[to] = minnei+1;
-        IGRAPH_CHECK(igraph_indheap_push_with_index(&Q, to, -altdist));
+        parents[to] = edge+1;
+        IGRAPH_CHECK(igraph_2wheap_push_with_index(&Q, to, -altdist));
       } else if (altdist < curdist-1) {
-	    /* This is a shorter path */
+	      /* This is a shorter path */
         VECTOR(dists)[to] = altdist+1.0;
-        parents[to] = minnei+1;
-        IGRAPH_CHECK(igraph_indheap_modify(&Q, to, -altdist));
+        parents[to] = edge+1;
+        IGRAPH_CHECK(igraph_2wheap_modify(&Q, to, -altdist));
       }
     }
-  } /* !igraph_indheap_empty(&Q) */
+  } /* !igraph_2wheap_empty(&Q) */
 
   if (to_reach > 0) IGRAPH_WARNING("Couldn't reach some vertices");
 
-  /* Reconstruct the shortest paths based on vertex IDs */
-  for (IGRAPH_VIT_RESET(vit), i=0; !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit), i++) {
-    long int node=IGRAPH_VIT_GET(vit);
-    igraph_vector_t *vec=VECTOR(*res)[i];
-    igraph_vector_clear(vec);
-
-    IGRAPH_ALLOW_INTERRUPTION();
-
-    if (parents[node]>0) {
-      long int size=0;
-	  long int act=node;
-      while (parents[act] != act+1) {
-        size++;
-        act=parents[act]-1;
+  /* Reconstruct the shortest paths based on vertex and/or edge IDs */
+  if (vertices || edges) {
+    for (IGRAPH_VIT_RESET(vit), i=0; !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit), i++) {
+      long int node=IGRAPH_VIT_GET(vit);
+      igraph_vector_t *vvec=0, *evec=0;
+      if (vertices) {
+	vvec=VECTOR(*vertices)[i];
+	igraph_vector_clear(vvec);
       }
-      size++;
-      IGRAPH_CHECK(igraph_vector_resize(vec, size));
-      VECTOR(*vec)[--size]=node;
-      act=node;
-      while (parents[act] != act+1) {
-        VECTOR(*vec)[--size]=parents[act]-1;
-        act=parents[act]-1;
+      if (edges) {
+	evec=VECTOR(*edges)[i];
+	igraph_vector_clear(evec);
+      }
+      
+      IGRAPH_ALLOW_INTERRUPTION();
+      
+      if (parents[node]>0) {
+	long int size=0;
+	long int act=node;
+	long int edge;
+	while (parents[act]) {
+	  size++;
+	  edge=parents[act]-1;
+	  act=IGRAPH_OTHER(graph, edge, act);
+	}
+	if (vvec) { 
+	  IGRAPH_CHECK(igraph_vector_resize(vvec, size+1)); 
+	  VECTOR(*vvec)[size]=node;
+	}
+	if (evec) {
+	  IGRAPH_CHECK(igraph_vector_resize(evec, size));
+	}
+	act=node;
+	while (parents[act]) {
+	  edge=parents[act]-1;
+	  act=IGRAPH_OTHER(graph, edge, act);
+	  size--;
+	  if (vvec) { VECTOR(*vvec)[size]=act; }
+	  if (evec) { VECTOR(*evec)[size]=edge; }
+	}
       }
     }
   }
   
-  igraph_lazy_adjedgelist_destroy(&adjlist);
-  igraph_indheap_destroy(&Q);
+  igraph_lazy_inclist_destroy(&inclist);
+  igraph_2wheap_destroy(&Q);
   igraph_vector_destroy(&dists);
   igraph_Free(is_target);
   igraph_Free(parents);
@@ -4312,9 +5305,509 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
   return 0;
 }
 
+/** 
+ * \function igraph_get_shortest_path_dijkstra
+ * Weighted shortest path from one vertex to another one.
+ * 
+ * Calculates a single (positively) weighted shortest path from
+ * a single vertex to another one, using Dijkstra's algorithm. 
+ * 
+ * </para><para>This function is a special case (and a wrapper) to
+ * \ref igraph_get_shortest_paths_dijkstra(). 
+ * 
+ * \param graph The input graph, it can be directed or undirected.
+ * \param vertices Pointer to an initialized vector or a null
+ *        pointer. If not a null pointer, then the vertex ids along
+ *        the path are stored here, including the source and target
+ *        vertices. 
+ * \param edges Pointer to an uninitialized vector or a null
+ *        pointer. If not a null pointer, then the edge ids along the
+ *        path are stored here.
+ * \param from The id of the source vertex.
+ * \param to The id of the target vertex.
+ * \param weights Vector of edge weights, in the order of edge
+ *        ids. They must be non-negative, otherwise the algorithm does
+ *        not work.
+ * \param mode A constant specifying how edge directions are
+ *        considered in directed graphs. \c IGRAPH_OUT follows edge
+ *        directions, \c IGRAPH_IN follows the opposite directions,
+ *        and \c IGRAPH_ALL ignores edge directions. This argument is
+ *        ignored for undirected graphs.
+ * \return Error code.
+ * 
+ * Time complexity: O(|E|log|E|+|V|), |V| is the number of vertices,
+ * |E| is the number of edges in the graph.
+ * 
+ * \sa \ref igraph_get_shortest_paths_dijkstra() for the version with
+ * more target vertices.
+ */
+
+int igraph_get_shortest_path_dijkstra(const igraph_t *graph,
+				      igraph_vector_t *vertices,
+				      igraph_vector_t *edges,
+				      igraph_integer_t from,
+				      igraph_integer_t to,
+				      const igraph_vector_t *weights,
+				      igraph_neimode_t mode) {
+
+  igraph_vector_ptr_t vertices2, *vp=&vertices2;
+  igraph_vector_ptr_t edges2, *ep=&edges2;
+
+  if (vertices) {
+    IGRAPH_CHECK(igraph_vector_ptr_init(&vertices2, 1));
+    IGRAPH_FINALLY(igraph_vector_ptr_destroy, &vertices2);
+    VECTOR(vertices2)[0]=vertices;
+  } else {
+    vp=0;
+  }
+  if (edges) {
+    IGRAPH_CHECK(igraph_vector_ptr_init(&edges2, 1));
+    IGRAPH_FINALLY(igraph_vector_ptr_destroy, &edges2);
+    VECTOR(edges2)[0]=edges;
+  } else {
+    ep=0;
+  }
+  
+  IGRAPH_CHECK(igraph_get_shortest_paths_dijkstra(graph, vp, ep, 
+						  from, igraph_vss_1(to),
+						  weights, mode));
+
+  if (edges) { 
+    igraph_vector_ptr_destroy(&edges2);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  if (vertices) {
+    igraph_vector_ptr_destroy(&vertices2);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  
+  return 0;
+}
+
+/* Compares two paths based on their last elements. Required by
+ * igraph_get_all_shortest_paths_dijkstra to put the final result
+ * in order. Assumes that both paths are pointers to igraph_vector_t
+ * objects and that they are not empty
+ */
+int igraph_i_vector_tail_cmp(const void* path1, const void* path2) {
+  return igraph_vector_tail(*(igraph_vector_t**)path1) -
+         igraph_vector_tail(*(igraph_vector_t**)path2);
+}
+
+/**
+ * \ingroup structural
+ * \function igraph_get_all_shortest_paths_dijkstra
+ * \brief Finds all shortest paths (geodesics) from a vertex to all other vertices.
+ * 
+ * \param graph The graph object.
+ * \param res Pointer to an initialized pointer vector, the result
+ *   will be stored here in igraph_vector_t objects. Each vector
+ *   object contains the vertices along a shortest path from \p from
+ *   to another vertex. The vectors are ordered according to their
+ *   target vertex: first the shortest paths to vertex 0, then to
+ *   vertex 1, etc. No data is included for unreachable vertices.
+ * \param nrgeo Pointer to an initialized igraph_vector_t object or
+ *   NULL. If not NULL the number of shortest paths from \p from are
+ *   stored here for every vertex in the graph. Note that the values
+ *   will be accurate only for those vertices that are in the target
+ *   vertex sequence (see \p to), since the search terminates as soon
+ *   as all the target vertices have been found.
+ * \param from The id of the vertex from/to which the geodesics are
+ *        calculated. 
+ * \param to Vertex sequence with the ids of the vertices to/from which the 
+ *        shortest paths will be calculated. A vertex might be given multiple
+ *        times.
+ * \param weights a vector holding the edge weights. All weights must be
+ *        positive.
+ * \param mode The type of shortest paths to be use for the
+ *        calculation in directed graphs. Possible values: 
+ *        \clist
+ *        \cli IGRAPH_OUT 
+ *          the outgoing paths are calculated. 
+ *        \cli IGRAPH_IN 
+ *          the incoming paths are calculated. 
+ *        \cli IGRAPH_ALL 
+ *          the directed graph is considered as an
+ *          undirected one for the computation.
+ *        \endclist
+ * \return Error code:
+ *        \clist
+ *        \cli IGRAPH_ENOMEM 
+ *           not enough memory for temporary data.
+ *        \cli IGRAPH_EINVVID
+ *           \p from is invalid vertex id, or the length of \p to is 
+ *           not the same as the length of \p res.
+ *        \cli IGRAPH_EINVMODE 
+ *           invalid mode argument.
+ *        \endclist
+ * 
+ * Time complexity: O(|E|log|E|+|V|), where |V| is the number of
+ * vertices and |E| is the number of edges
+ * 
+ * \sa \ref igraph_shortest_paths_dijkstra() if you only need the path
+ * length but not the paths themselves, \ref igraph_get_all_shortest_paths()
+ * if all edge weights are equal. 
+ * 
+ * \example examples/simple/igraph_get_all_shortest_paths_dijkstra.c
+ */
+int igraph_get_all_shortest_paths_dijkstra(const igraph_t *graph,
+               igraph_vector_ptr_t *res, 
+               igraph_vector_t *nrgeo,
+               igraph_integer_t from, igraph_vs_t to,
+               const igraph_vector_t *weights,
+               igraph_neimode_t mode) {
+  /* Implementation details: see igraph_get_shortest_paths_dijkstra,
+     it's basically the same.
+  */
+  
+  long int no_of_nodes=igraph_vcount(graph);
+  long int no_of_edges=igraph_ecount(graph);
+  igraph_vit_t vit;
+  igraph_2wheap_t Q;
+  igraph_lazy_inclist_t inclist;
+  igraph_vector_t dists, order;
+  igraph_vector_ptr_t parents;
+  unsigned char *is_target;
+  long int i, n, to_reach;
+
+  if (!weights) {
+    return igraph_get_all_shortest_paths(graph, res, nrgeo, from, to, mode);
+  }
+
+  if (res == 0 && nrgeo == 0)
+    return IGRAPH_SUCCESS;
+
+  if (igraph_vector_size(weights) != no_of_edges) {
+    IGRAPH_ERROR("Weight vector length does not match", IGRAPH_EINVAL);
+  }
+  if (igraph_vector_min(weights) < 0) {
+    IGRAPH_ERROR("Weight vector must be non-negative", IGRAPH_EINVAL);
+  }
+
+  /* parents stores a vector for each vertex, listing the parent vertices
+   * of each vertex in the traversal */
+  IGRAPH_CHECK(igraph_vector_ptr_init(&parents, no_of_nodes));
+  IGRAPH_FINALLY(igraph_vector_ptr_destroy_all, &parents);
+  igraph_vector_ptr_set_item_destructor(&parents, (igraph_finally_func_t*)igraph_vector_destroy);
+  for (i = 0; i < no_of_nodes; i++) {
+    igraph_vector_t* parent_vec;
+    parent_vec = igraph_Calloc(1, igraph_vector_t);
+    if (parent_vec == 0)
+      IGRAPH_ERROR("cannot run igraph_get_all_shortest_paths", IGRAPH_ENOMEM);
+    IGRAPH_CHECK(igraph_vector_init(parent_vec, 0));
+    VECTOR(parents)[i] = parent_vec; 
+  }
+
+  /* distance of each vertex from the root */
+  IGRAPH_VECTOR_INIT_FINALLY(&dists, no_of_nodes);
+
+  /* order lists the order of vertices in which they were found during
+   * the traversal */
+  IGRAPH_VECTOR_INIT_FINALLY(&order, 0);
+
+  /* boolean array to mark whether a given vertex is a target or not */
+  is_target = igraph_Calloc(no_of_nodes, unsigned char);
+  if (is_target == 0) IGRAPH_ERROR("Can't calculate shortest paths", IGRAPH_ENOMEM);
+  IGRAPH_FINALLY(igraph_free, is_target);
+
+  /* two-way heap storing vertices and distances */
+  IGRAPH_CHECK(igraph_2wheap_init(&Q, no_of_nodes));
+  IGRAPH_FINALLY(igraph_2wheap_destroy, &Q);
+
+  /* lazy adjacency edge list to query neighbours efficiently */
+  IGRAPH_CHECK(igraph_lazy_inclist_init(graph, &inclist, mode));
+  IGRAPH_FINALLY(igraph_lazy_inclist_destroy, &inclist);
+
+  /* Mark the vertices we need to reach */
+  IGRAPH_CHECK(igraph_vit_create(graph, to, &vit));
+  IGRAPH_FINALLY(igraph_vit_destroy, &vit);
+  to_reach=IGRAPH_VIT_SIZE(vit);
+  for (IGRAPH_VIT_RESET(vit); !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit)) {
+    if (!is_target[ (long int) IGRAPH_VIT_GET(vit) ]) {
+      is_target[ (long int) IGRAPH_VIT_GET(vit) ] = 1;
+    } else {
+      to_reach--;		/* this node was given multiple times */
+    }
+  }
+  igraph_vit_destroy(&vit);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  VECTOR(dists)[(long int)from] = 1.0;	/* zero distance */
+  igraph_2wheap_push_with_index(&Q, from, 0);
+    
+  while (!igraph_2wheap_empty(&Q) && to_reach > 0) {
+    long int nlen, minnei=igraph_2wheap_max_index(&Q);
+    igraph_real_t mindist=-igraph_2wheap_delete_max(&Q);
+    igraph_vector_t *neis;
+
+    IGRAPH_ALLOW_INTERRUPTION();
+
+    /*
+    printf("Reached vertex %ld, is_target[%ld] = %d, %ld to go\n",
+        minnei, minnei, (int)is_target[minnei], to_reach - is_target[minnei]);
+    */
+
+    if (is_target[minnei]) {
+      is_target[minnei] = 0;
+      to_reach--;
+    }
+
+    /* Mark that we have reached this vertex */
+    IGRAPH_CHECK(igraph_vector_push_back(&order, minnei));
+
+    /* Now check all neighbors of 'minnei' for a shorter path */
+    neis=igraph_lazy_inclist_get(&inclist, minnei);
+    nlen=igraph_vector_size(neis);
+    for (i=0; i<nlen; i++) {
+      long int edge=VECTOR(*neis)[i];
+      long int to=IGRAPH_OTHER(graph, edge, minnei);
+      igraph_real_t altdist=mindist + VECTOR(*weights)[edge];
+      igraph_real_t curdist=VECTOR(dists)[to];
+      igraph_vector_t *parent_vec;
+
+      if (curdist==0) {
+        /* This is the first non-infinite distance */
+        VECTOR(dists)[to] = altdist+1.0;
+        parent_vec = (igraph_vector_t*)VECTOR(parents)[to];
+        IGRAPH_CHECK(igraph_vector_push_back(parent_vec, minnei));
+        IGRAPH_CHECK(igraph_2wheap_push_with_index(&Q, to, -altdist));
+      } else if (altdist == curdist-1) {
+	      /* This is an alternative path with exactly the same length */
+        parent_vec = (igraph_vector_t*)VECTOR(parents)[to];
+        IGRAPH_CHECK(igraph_vector_push_back(parent_vec, minnei));
+      } else if (altdist < curdist-1) {
+	      /* This is a shorter path */
+        VECTOR(dists)[to] = altdist+1.0;
+        parent_vec = (igraph_vector_t*)VECTOR(parents)[to];
+        igraph_vector_clear(parent_vec);
+        IGRAPH_CHECK(igraph_vector_push_back(parent_vec, minnei));
+        IGRAPH_CHECK(igraph_2wheap_modify(&Q, to, -altdist));
+      }
+    }
+  } /* !igraph_2wheap_empty(&Q) */
+
+  if (to_reach > 0)
+    IGRAPH_WARNING("Couldn't reach some vertices");
+
+  /* we don't need these anymore */
+  igraph_lazy_inclist_destroy(&inclist);
+  igraph_2wheap_destroy(&Q);
+  IGRAPH_FINALLY_CLEAN(2);
+
+  /*
+  printf("Parent vertices:\n");
+  for (i = 0; i < no_of_nodes; i++) {
+    printf("[%ld]: ", (long int)i);
+    igraph_vector_print(VECTOR(parents)[i]);
+  }
+  */
+
+  if (nrgeo) {
+    IGRAPH_CHECK(igraph_vector_resize(nrgeo, no_of_nodes));
+    igraph_vector_null(nrgeo);
+
+    /* Theoretically, we could calculate nrgeo in parallel with the traversal.
+     * However, that way we would have to check whether nrgeo is null or not
+     * every time we want to update some element in nrgeo. Since we need the
+     * order vector anyway for building the final result, we could just as well
+     * build nrgeo here.
+     */
+    VECTOR(*nrgeo)[(long int)from] = 1;
+    n = igraph_vector_size(&order);
+    for (i = 1; i < n; i++) {
+      long int node, j, k;
+      igraph_vector_t *parent_vec;
+
+      node = (long int)VECTOR(order)[i];
+      /* now, take the parent vertices */
+      parent_vec = (igraph_vector_t*)VECTOR(parents)[node];
+      k = igraph_vector_size(parent_vec);
+      for (j = 0; j < k; j++) {
+        VECTOR(*nrgeo)[node] += VECTOR(*nrgeo)[(long int)VECTOR(*parent_vec)[j]];
+      }
+    }
+  }
+
+  if (res) {
+    igraph_vector_t *path, *paths_index, *parent_vec;
+    igraph_stack_t stack;
+    long int j, node;
+
+    /* a shortest path from the starting vertex to vertex i can be
+     * obtained by calculating the shortest paths from the "parents"
+     * of vertex i in the traversal. Knowing which of the vertices
+     * are "targets" (see is_target), we can collect for which other
+     * vertices do we need to calculate the shortest paths. We reuse
+     * is_target for that; is_target = 0 means that we don't need the
+     * vertex, is_target = 1 means that the vertex is a target (hence
+     * we need it), is_target = 2 means that the vertex is not a target
+     * but it stands between a shortest path between the root and one
+     * of the targets 
+     */
+    if (igraph_vs_is_all(&to)) {
+      memset(is_target, 1, sizeof(unsigned char)*no_of_nodes);
+    } else {
+      memset(is_target, 0, sizeof(unsigned char)*no_of_nodes);
+
+      IGRAPH_CHECK(igraph_stack_init(&stack, 0));
+      IGRAPH_FINALLY(igraph_stack_destroy, &stack);
+
+      /* Add the target vertices to the queue */
+      IGRAPH_CHECK(igraph_vit_create(graph, to, &vit));
+      IGRAPH_FINALLY(igraph_vit_destroy, &vit);
+      for (IGRAPH_VIT_RESET(vit); !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit)) {
+        i = (long int) IGRAPH_VIT_GET(vit);
+        if (!is_target[i]) {
+          is_target[i] = 1;
+          IGRAPH_CHECK(igraph_stack_push(&stack, i));
+        }
+      }
+      igraph_vit_destroy(&vit);
+      IGRAPH_FINALLY_CLEAN(1);
+
+      while (!igraph_stack_empty(&stack)) {
+        /* For each parent of node i, get its parents */
+        parent_vec = (igraph_vector_t*)VECTOR(parents)[
+          (long int)igraph_stack_pop(&stack)
+        ];
+        i = igraph_vector_size(parent_vec);
+
+        for (j = 0; j < i; j++) {
+          /* For each parent, check if it's already in the stack.
+           * If not, push it and mark it in is_target */
+          n = (long int) VECTOR(*parent_vec)[j];
+          if (!is_target[n]) {
+            is_target[n] = 2;
+            IGRAPH_CHECK(igraph_stack_push(&stack, n));
+          }
+        }
+      }
+      igraph_stack_destroy(&stack);
+      IGRAPH_FINALLY_CLEAN(1);
+    }
+
+    /* now, reconstruct the shortest paths from the parent list in the
+     * order we've found the nodes during the traversal.
+     * dists is being re-used as a vector where element i tells the
+     * index in res where the shortest paths leading to vertex i
+     * start, plus one (so that zero means that there are no paths
+     * for a given vertex).
+     */
+    paths_index = &dists;
+    n = igraph_vector_size(&order);
+    igraph_vector_null(paths_index);
+
+    /* clear the paths vector */
+    igraph_vector_ptr_clear(res);
+    igraph_vector_ptr_set_item_destructor(res,
+        (igraph_finally_func_t*)igraph_vector_destroy);
+
+    /* by definition, the shortest path leading to the starting vertex
+     * consists of the vertex itself only */
+    path = igraph_Calloc(1, igraph_vector_t);
+    if (path == 0)
+      IGRAPH_ERROR("cannot run igraph_get_all_shortest_paths_dijkstra",
+          IGRAPH_ENOMEM);
+    IGRAPH_FINALLY(igraph_free, path);
+    IGRAPH_CHECK(igraph_vector_init(path, 1));
+    IGRAPH_CHECK(igraph_vector_ptr_push_back(res, path));
+    IGRAPH_FINALLY_CLEAN(1);  /* ownership of path passed to res */
+    VECTOR(*path)[0] = from;
+    VECTOR(*paths_index)[(long int)from] = 1;
+
+    for (i = 1; i < n; i++) {
+      long int m, path_count;
+      igraph_vector_t *parent_path;
+
+      node = VECTOR(order)[i];
+
+      /* if we don't need the shortest paths for this node (because
+       * it is not standing in a shortest path between the source
+       * node and any of the target nodes), skip it */
+      if (!is_target[node])
+        continue;
+
+      IGRAPH_ALLOW_INTERRUPTION();
+
+      /* we are calculating the shortest paths of node now. */
+      /* first, we update the paths_index */
+      path_count = igraph_vector_ptr_size(res);
+      VECTOR(*paths_index)[node] = path_count+1;
+      /* res_end = (igraph_vector_t*)&(VECTOR(*res)[path_count]); */
+
+      /* now, take the parent vertices */
+      parent_vec = (igraph_vector_t*)VECTOR(parents)[node];
+      m = igraph_vector_size(parent_vec);
+      /*
+      printf("Calculating shortest paths to vertex %ld\n", node);
+      printf("Parents are: ");
+      igraph_vector_print(parent_vec);
+      */
+
+      for (j = 0; j < m; j++) {
+        /* for each parent, copy the shortest paths leading to that parent
+         * and add the current vertex in the end */
+        long int parent_node = VECTOR(*parent_vec)[j];
+        long int parent_path_idx = VECTOR(*paths_index)[parent_node] - 1;
+        /*
+        printf("  Considering parent: %ld\n", parent_node);
+        printf("  Paths to parent start at index %ld in res\n", parent_path_idx);
+        */
+        assert(parent_path_idx >= 0);
+        for (; parent_path_idx < path_count; parent_path_idx++) {
+          parent_path = (igraph_vector_t*)VECTOR(*res)[parent_path_idx];
+          if (igraph_vector_tail(parent_path) != parent_node)
+            break;
+
+          path = igraph_Calloc(1, igraph_vector_t);
+          if (path == 0)
+            IGRAPH_ERROR("cannot run igraph_get_all_shortest_paths_dijkstra",
+                IGRAPH_ENOMEM);
+          IGRAPH_FINALLY(igraph_free, path);
+          IGRAPH_CHECK(igraph_vector_copy(path, parent_path));
+          IGRAPH_CHECK(igraph_vector_ptr_push_back(res, path));
+          IGRAPH_FINALLY_CLEAN(1);  /* ownership of path passed to res */
+          IGRAPH_CHECK(igraph_vector_push_back(path, node));
+        }
+      }
+    }
+
+    /* remove the destructor from the path vector */
+    igraph_vector_ptr_set_item_destructor(res, 0);
+
+    /* free those paths from the result vector which we won't need */
+    n = igraph_vector_ptr_size(res);
+    j = 0;
+    for (i = 0; i < n; i++) {
+      path = (igraph_vector_t*)VECTOR(*res)[i];
+      if (is_target[(long int)igraph_vector_tail(path)] == 1) {
+        /* we need this path, keep it */
+        VECTOR(*res)[j] = path;
+        j++;
+      } else {
+        /* we don't need this path, free it */
+        igraph_vector_destroy(path); free(path);
+      }
+    }
+    IGRAPH_CHECK(igraph_vector_ptr_resize(res, j));
+
+    /* sort the paths by the target vertices */
+    igraph_vector_ptr_sort(res, igraph_i_vector_tail_cmp);
+  }
+
+  /* free the allocated memory */
+  igraph_vector_destroy(&order);
+  igraph_Free(is_target);
+  igraph_vector_destroy(&dists);
+  igraph_vector_ptr_destroy_all(&parents);
+  IGRAPH_FINALLY_CLEAN(4);
+
+  return 0;
+}
+
 /**
  * \function igraph_shortest_paths_bellman_ford
- * Weighted shortest paths from some sources allowing negative weights
+ * Weighted shortest paths from some sources allowing negative weights.
  * 
  * This function is the Bellman-Ford algorithm to find the weighted 
  * shortest paths to all vertices from a single source. (It is run 
@@ -4322,9 +5815,11 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
  * weights, you are better off with \ref igraph_shortest_paths_dijkstra() .
  * 
  * \param graph The input graph, can be directed.
- * \param res The result, a matrix. Each row contains the distances
- *    from a single source, in the order of vertex ids.
- *    Unreachable vertices has distance \c IGRAPH_INFINITY.
+ * \param res The result, a matrix. A pointer to an initialized matrix
+ *    should be passed here, the matrix will be resized if needed. 
+ *    Each row contains the distances from a single source, to all
+ *    vertices in the graph, in the order of vertex ids. For unreachable
+ *    vertices the matrix contains \c IGRAPH_INFINITY. 
  * \param from The source vertices.
  * \param weights The edge weights. There mustn't be any closed loop in
  *    the graph that has a negative total weight (since this would allow
@@ -4343,22 +5838,28 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
  * \sa \ref igraph_shortest_paths() for a faster unweighted version
  * or \ref igraph_shortest_paths_dijkstra() if you do not have negative
  * edge weights.
+ * 
+ * \example examples/simple/bellman_ford.c
  */
 
 int igraph_shortest_paths_bellman_ford(const igraph_t *graph,
 				       igraph_matrix_t *res,
 				       const igraph_vs_t from,
+				       const igraph_vs_t to,
 				       const igraph_vector_t *weights, 
 				       igraph_neimode_t mode) {
   long int no_of_nodes=igraph_vcount(graph);
   long int no_of_edges=igraph_ecount(graph);
-  igraph_lazy_adjedgelist_t adjlist;
+  igraph_lazy_inclist_t inclist;
   long int i,j,k;
-  long int no_of_from;
+  long int no_of_from, no_of_to;
   igraph_dqueue_t Q; 
   igraph_vector_t clean_vertices;
   igraph_vector_t num_queued;
-  igraph_vit_t fromvit;
+  igraph_vit_t fromvit, tovit;
+  igraph_real_t my_infinity=IGRAPH_INFINITY;
+  igraph_bool_t all_to;
+  igraph_vector_t dist;
 
   /*
      - speedup: a vertex is marked clean if its distance from the source
@@ -4369,7 +5870,7 @@ int igraph_shortest_paths_bellman_ford(const igraph_t *graph,
        n times.
   */
   if (!weights) {
-    return igraph_shortest_paths(graph, res, from, mode);
+    return igraph_shortest_paths(graph, res, from, to, mode);
   }
   
   if (igraph_vector_size(weights) != no_of_edges) {
@@ -4383,18 +5884,27 @@ int igraph_shortest_paths_bellman_ford(const igraph_t *graph,
   IGRAPH_DQUEUE_INIT_FINALLY(&Q, no_of_nodes);
   IGRAPH_VECTOR_INIT_FINALLY(&clean_vertices, no_of_nodes);
   IGRAPH_VECTOR_INIT_FINALLY(&num_queued, no_of_nodes);
-  IGRAPH_CHECK(igraph_lazy_adjedgelist_init(graph, &adjlist, mode));
-  IGRAPH_FINALLY(igraph_lazy_adjedgelist_destroy, &adjlist);
+  IGRAPH_CHECK(igraph_lazy_inclist_init(graph, &inclist, mode));
+  IGRAPH_FINALLY(igraph_lazy_inclist_destroy, &inclist);
 
-  IGRAPH_CHECK(igraph_matrix_resize(res, no_of_from, no_of_nodes));
-  igraph_matrix_fill(res, IGRAPH_INFINITY);
+  if ( (all_to=igraph_vs_is_all(&to)) ) {
+    no_of_to=no_of_nodes;
+  } else {
+    IGRAPH_CHECK(igraph_vit_create(graph, to, &tovit));
+    IGRAPH_FINALLY(igraph_vit_destroy, &tovit);
+    no_of_to=IGRAPH_VIT_SIZE(tovit);
+  }
+
+  IGRAPH_VECTOR_INIT_FINALLY(&dist, no_of_nodes);
+  IGRAPH_CHECK(igraph_matrix_resize(res, no_of_from, no_of_to));
 
   for (IGRAPH_VIT_RESET(fromvit), i=0; 
        !IGRAPH_VIT_END(fromvit);
        IGRAPH_VIT_NEXT(fromvit), i++) {
     long int source=IGRAPH_VIT_GET(fromvit);
 
-    MATRIX(*res, i, source) = 0;
+    igraph_vector_fill(&dist, my_infinity);
+    VECTOR(dist)[source] = 0;
     igraph_vector_null(&clean_vertices);
     igraph_vector_null(&num_queued);
 
@@ -4413,17 +5923,17 @@ int igraph_shortest_paths_bellman_ford(const igraph_t *graph,
 
       /* If we cannot get to j in finite time yet, there is no need to relax
        * its edges */
-      if (!IGRAPH_FINITE(MATRIX(*res, i, j))) continue;
+      if (!IGRAPH_FINITE(VECTOR(dist)[j])) continue;
 
-      neis = igraph_lazy_adjedgelist_get(&adjlist, j);
+      neis = igraph_lazy_inclist_get(&inclist, j);
       nlen = igraph_vector_size(neis);
 
       for (k=0; k<nlen; k++) {
         long int nei = VECTOR(*neis)[k];
         long int target = IGRAPH_OTHER(graph, nei, j);
-        if (MATRIX(*res, i, target) > MATRIX(*res, i, j) + VECTOR(*weights)[nei]) {
+        if (VECTOR(dist)[target] > VECTOR(dist)[j] + VECTOR(*weights)[nei]) {
           /* relax the edge */
-          MATRIX(*res, i, target) = MATRIX(*res, i, j) + VECTOR(*weights)[nei];
+          VECTOR(dist)[target] = VECTOR(dist)[j] + VECTOR(*weights)[nei];
           if (VECTOR(clean_vertices)[target]) {
             VECTOR(clean_vertices)[target] = 0;
             IGRAPH_CHECK(igraph_dqueue_push(&Q, target));
@@ -4431,22 +5941,33 @@ int igraph_shortest_paths_bellman_ford(const igraph_t *graph,
         }
       }
     }
+
+    /* Copy it to the result */
+    if (all_to) {
+      igraph_matrix_set_row(res, &dist, i);
+    } else {
+      for (IGRAPH_VIT_RESET(tovit), j=0; !IGRAPH_VIT_END(tovit); 
+           IGRAPH_VIT_NEXT(tovit), j++) {
+        long int v=IGRAPH_VIT_GET(tovit);
+        MATRIX(*res, i, j) = VECTOR(dist)[v];
+      }
+    }
   }
 
+  igraph_vector_destroy(&dist);
   igraph_vit_destroy(&fromvit);
   igraph_dqueue_destroy(&Q);
   igraph_vector_destroy(&clean_vertices);
   igraph_vector_destroy(&num_queued);
-  igraph_lazy_adjedgelist_destroy(&adjlist);
-  IGRAPH_FINALLY_CLEAN(5);
+  igraph_lazy_inclist_destroy(&inclist);
+  IGRAPH_FINALLY_CLEAN(6);
 
   return 0;
 }
 
-
 /**
  * \function igraph_shortest_paths_johnson
- * Calculate shortest paths from some sources using Johnson's algorithm
+ * Calculate shortest paths from some sources using Johnson's algorithm.
  * 
  * See Wikipedia at http://en.wikipedia.org/wiki/Johnson's_algorithm
  * for Johnson's algorithm. This algorithm works even if the graph
@@ -4462,8 +5983,11 @@ int igraph_shortest_paths_bellman_ford(const igraph_t *graph,
  * 
  * \param graph The input graph, typically it is directed.
  * \param res Pointer to an initialized matrix, the result will be
- *   stored here, one line for each source vertex.
+ *   stored here, one line for each source vertex, one column for each
+ *   target vertex.
  * \param from The source vertices.
+ * \param to The target vertices. It is not allowed to include a
+ *   vertex twice or more.
  * \param weights Optional edge weights. If it is a null-pointer, then
  *   the unweighted breadth-first search based \ref
  *   igraph_shortest_paths() will be called.
@@ -4481,6 +6005,7 @@ int igraph_shortest_paths_bellman_ford(const igraph_t *graph,
 int igraph_shortest_paths_johnson(const igraph_t *graph,
 				  igraph_matrix_t *res,
 				  const igraph_vs_t from,
+				  const igraph_vs_t to,
 				  const igraph_vector_t *weights) {
 
   long int no_of_nodes=igraph_vcount(graph);
@@ -4494,7 +6019,7 @@ int igraph_shortest_paths_johnson(const igraph_t *graph,
 
   /* If no weights, then we can just run the unweighted version */
   if (!weights) {
-    return igraph_shortest_paths(graph, res, from, IGRAPH_OUT);
+    return igraph_shortest_paths(graph, res, from, to, IGRAPH_OUT);
   }
   
   if (igraph_vector_size(weights) != no_of_edges) {
@@ -4503,7 +6028,8 @@ int igraph_shortest_paths_johnson(const igraph_t *graph,
   
   /* If no negative weights, then we can run Dijkstra's algorithm */
   if (igraph_vector_min(weights) >= 0) {
-    return igraph_shortest_paths_dijkstra(graph, res, from, weights, IGRAPH_OUT);
+    return igraph_shortest_paths_dijkstra(graph, res, from, to,
+					  weights, IGRAPH_OUT);
   }
   
   if (!igraph_is_directed(graph)) {
@@ -4544,10 +6070,11 @@ int igraph_shortest_paths_johnson(const igraph_t *graph,
      new vertex.  */
   
   IGRAPH_CHECK(igraph_shortest_paths_bellman_ford(&newgraph,
-						   &bfres,
-						   igraph_vss_1(no_of_nodes),
-						   &newweights,
-						   IGRAPH_OUT));
+						  &bfres,
+						  igraph_vss_1(no_of_nodes),
+						  igraph_vss_all(),
+						  &newweights,
+						  IGRAPH_OUT));
 
   igraph_destroy(&newgraph);
   IGRAPH_FINALLY_CLEAN(1);
@@ -4564,7 +6091,8 @@ int igraph_shortest_paths_johnson(const igraph_t *graph,
   }
   
   /* Run Dijkstra's algorithm on the new weights */
-  IGRAPH_CHECK(igraph_shortest_paths_dijkstra(graph, res, from, &newweights,
+  IGRAPH_CHECK(igraph_shortest_paths_dijkstra(graph, res, from, 
+					      to, &newweights,
 					      IGRAPH_OUT));
   
   igraph_vector_destroy(&newweights);
@@ -4579,10 +6107,24 @@ int igraph_shortest_paths_johnson(const igraph_t *graph,
 
   for (i=0; i<nr; i++, IGRAPH_VIT_NEXT(fromvit)) {
     long int v1=IGRAPH_VIT_GET(fromvit);
-    long int v2;
-    for (v2=0; v2<nc; v2++) {
-      igraph_real_t sub=MATRIX(bfres, 0, v1) - MATRIX(bfres, 0, v2);
-      MATRIX(*res, i, v2) -= sub;
+    if (igraph_vs_is_all(&to)) {
+      long int v2;
+      for (v2=0; v2<nc; v2++) {
+	igraph_real_t sub=MATRIX(bfres, 0, v1) - MATRIX(bfres, 0, v2);
+	MATRIX(*res, i, v2) -= sub;
+      }
+    } else {
+      long int j;
+      igraph_vit_t tovit;
+      IGRAPH_CHECK(igraph_vit_create(graph, to, &tovit));
+      IGRAPH_FINALLY(igraph_vit_destroy, &tovit);
+      for (j=0, IGRAPH_VIT_RESET(tovit); j<nc; j++, IGRAPH_VIT_NEXT(tovit)) {
+	long int v2=IGRAPH_VIT_GET(tovit);
+	igraph_real_t sub=MATRIX(bfres, 0, v1) - MATRIX(bfres, 0, v2);
+	MATRIX(*res, i, v2) -= sub;
+      }
+      igraph_vit_destroy(&tovit);
+      IGRAPH_FINALLY_CLEAN(1);
     }
   }
 
@@ -4594,8 +6136,137 @@ int igraph_shortest_paths_johnson(const igraph_t *graph,
 }
 
 /**
+ * \function igraph_unfold_tree
+ * Unfolding a graph into a tree, by possibly multiplicating its vertices.
+ *
+ * A graph is converted into a tree (or forest, if it is unconnected),
+ * by performing a breadth-first search on it, and replicating
+ * vertices that were found a second, third, etc. time. 
+ * \param graph The input graph, it can be either directed or
+ *   undirected.
+ * \param tree Pointer to an uninitialized graph object, the result is
+ *   stored here.
+ * \param mode For directed graphs; whether to follow paths along edge
+ *    directions (\c IGRAPH_OUT), or the opposite (\c IGRAPH_IN), or
+ *    ignore edge directions completely (\c IGRAPH_ALL). It is ignored 
+ *    for undirected graphs.
+ * \param roots A numeric vector giving the root vertex, or vertices
+ *   (if the graph is not connected), to start from.
+ * \param vertex_index Pointer to an initialized vector, or a null
+ *   pointer. If not a null pointer, then a mapping from the vertices
+ *   in the new graph to the ones in the original is created here.
+ * \return Error code.
+ * 
+ * Time complexity: O(n+m), linear in the number vertices and edges.
+ * 
+ */
+
+int igraph_unfold_tree(const igraph_t *graph, igraph_t *tree,
+		       igraph_neimode_t mode, const igraph_vector_t *roots,
+		       igraph_vector_t *vertex_index) {
+
+  long int no_of_nodes=igraph_vcount(graph);
+  long int no_of_edges=igraph_ecount(graph);
+  
+  igraph_vector_t edges;
+  igraph_vector_bool_t seen_vertices;
+  igraph_vector_bool_t seen_edges;
+
+  igraph_dqueue_t Q;
+  igraph_vector_t neis;
+  
+  long int r, v_ptr=no_of_nodes;
+
+  /* TODO: handle not-connected graphs, multiple root vertices */
+
+  IGRAPH_VECTOR_INIT_FINALLY(&edges, no_of_edges * 2);
+  IGRAPH_DQUEUE_INIT_FINALLY(&Q, 100);
+  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
+  IGRAPH_CHECK(igraph_vector_bool_init(&seen_vertices, no_of_nodes));
+  IGRAPH_FINALLY(igraph_vector_bool_destroy, &seen_vertices);
+  IGRAPH_CHECK(igraph_vector_bool_init(&seen_edges, no_of_edges));
+  IGRAPH_FINALLY(igraph_vector_bool_destroy, &seen_edges);
+  
+  if (vertex_index) { 
+    long int i;
+    IGRAPH_CHECK(igraph_vector_resize(vertex_index, 
+				      no_of_nodes > no_of_edges+1 ? 
+				      no_of_nodes : no_of_edges+1));
+    for (i=0; i<no_of_nodes; i++) {
+      VECTOR(*vertex_index)[i] = i;
+    }
+  }
+
+  for (r=0; r<igraph_vector_size(roots); r++) {
+
+    long int root=VECTOR(*roots)[r];
+    VECTOR(seen_vertices)[root] = 1;
+    igraph_dqueue_push(&Q, root);
+  
+    while (!igraph_dqueue_empty(&Q)) {
+      long int actnode=igraph_dqueue_pop(&Q);
+      long int i, n;
+      
+      IGRAPH_CHECK(igraph_incident(graph, &neis, actnode, mode));
+      n=igraph_vector_size(&neis);
+      for (i=0; i<n; i++) {
+
+	long int edge=VECTOR(neis)[i];
+	long int from=IGRAPH_FROM(graph, edge);
+	long int to=IGRAPH_TO(graph, edge);
+	long int nei=IGRAPH_OTHER(graph, edge, actnode);
+
+	if (! VECTOR(seen_edges)[edge]) { 
+	  
+	  VECTOR(seen_edges)[edge] = 1;
+	  
+	  if (! VECTOR(seen_vertices)[nei]) {
+	    
+	    VECTOR(edges)[ edge*2 ] = from;
+	    VECTOR(edges)[ edge*2+1 ] = to;
+	    
+	    VECTOR(seen_vertices)[nei] = 1;
+	    IGRAPH_CHECK(igraph_dqueue_push(&Q, nei));
+	    
+	  } else {
+	    
+	    if (vertex_index) { 
+	      VECTOR(*vertex_index)[v_ptr] = nei;
+	    }
+	    
+	    if (from==nei) {
+	      VECTOR(edges)[ edge*2 ] = v_ptr++;
+	      VECTOR(edges)[ edge*2+1 ] = to;
+	    } else {
+	      VECTOR(edges)[ edge*2 ] = from;
+	      VECTOR(edges)[ edge*2+1 ] = v_ptr++;
+	    }
+	  }
+	}
+
+      }	/* for i<n */
+      
+    } /* ! igraph_dqueue_empty(&Q) */
+
+  } /* r < igraph_vector_size(roots) */
+
+  igraph_vector_bool_destroy(&seen_edges);
+  igraph_vector_bool_destroy(&seen_vertices);
+  igraph_vector_destroy(&neis);
+  igraph_dqueue_destroy(&Q);
+  IGRAPH_FINALLY_CLEAN(4);
+
+  IGRAPH_CHECK(igraph_create(tree, &edges, no_of_edges+1, 
+			     igraph_is_directed(graph)));
+  igraph_vector_destroy(&edges);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  return 0;
+}
+
+/**
  * \function igraph_is_mutual
- * Check whether the edges of a directed graph are mutual
+ * Check whether the edges of a directed graph are mutual.
  * 
  * An (A,B) edge is mutual if the graph contains the (B,A) edge, too.
  * </para>
@@ -4767,7 +6438,7 @@ int igraph_i_avg_nearest_neighbor_degree_weighted(const igraph_t *graph,
 
 /**
  * \function igraph_avg_nearest_neighbor_degree
- * Average nearest neighbor degree
+ * Average nearest neighbor degree.
  *
  * Calculates the average degree of the neighbors for each vertex, and
  * optionally, the same quantity in the function of vertex degree.
@@ -4778,7 +6449,7 @@ int igraph_i_avg_nearest_neighbor_degree_weighted(const igraph_t *graph,
  * 
  * \param graph The input graph, it can be directed but the
  *   directedness of the edges is ignored.
- * \param vids The vertices for which the calculation is permformed. 
+ * \param vids The vertices for which the calculation is performed. 
  * \param knn Pointer to an initialized vector, the result will be
  *   stored here. It will be resized as needed. Supply a NULL pointer
  *   here, if you only want to calculate \c knnk.
@@ -4795,6 +6466,8 @@ int igraph_i_avg_nearest_neighbor_degree_weighted(const igraph_t *graph,
  * 
  * Time complexity: O(|V|+|E|), linear in the number of vertices and
  * edges.
+ * 
+ * \example examples/simple/igraph_knn.c
  */
 
 int igraph_avg_nearest_neighbor_degree(const igraph_t *graph,
@@ -4812,6 +6485,13 @@ int igraph_avg_nearest_neighbor_degree(const igraph_t *graph,
   long int maxdeg;
   igraph_vector_t deghist;
   igraph_real_t mynan=IGRAPH_NAN;
+  igraph_bool_t simple;
+
+  IGRAPH_CHECK(igraph_is_simple(graph, &simple));
+  if (!simple) {
+    IGRAPH_ERROR("Average nearest neighbor degree Works only with "
+		 "simple graphs", IGRAPH_EINVAL);
+  }
 
   if (weights) { 
     return igraph_i_avg_nearest_neighbor_degree_weighted(graph, vids, knn, knnk,
@@ -4890,10 +6570,10 @@ int igraph_avg_nearest_neighbor_degree(const igraph_t *graph,
 
 /**
  * \function igraph_strength
- * Strength of the vertices, weighted vertex degree in other words
+ * Strength of the vertices, weighted vertex degree in other words.
  * 
- * In an weighted network the strength of a vertex is the sum of the
- * weights of all adjacent edges. In a non-weighted networks this is
+ * In a weighted network the strength of a vertex is the sum of the
+ * weights of all incident edges. In a non-weighted network this is
  * exactly the vertex degree.
  * \param graph The input graph.
  * \param res Pointer to an initialized vector, the result is stored
@@ -4923,10 +6603,8 @@ int igraph_strength(const igraph_t *graph, igraph_vector_t *res,
   igraph_vector_t neis;
   long int i;
 
-  if (!weights) {
-    IGRAPH_WARNING("No edge weights for strength calculation, normal degree");
+  if (!weights)
     return igraph_degree(graph, res, vids, mode, loops);
-  }
   
   if (igraph_vector_size(weights) != igraph_ecount(graph)) {
     IGRAPH_ERROR("Invalid weight vector length", IGRAPH_EINVAL);
@@ -4945,7 +6623,7 @@ int igraph_strength(const igraph_t *graph, igraph_vector_t *res,
     for (i=0; !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit), i++) {
       long int vid=IGRAPH_VIT_GET(vit);
       long int j, n;
-      IGRAPH_CHECK(igraph_adjacent(graph, &neis, vid, mode));
+      IGRAPH_CHECK(igraph_incident(graph, &neis, vid, mode));
       n=igraph_vector_size(&neis);
       for (j=0; j<n; j++) {
 	long int edge=VECTOR(neis)[j];
@@ -4956,7 +6634,7 @@ int igraph_strength(const igraph_t *graph, igraph_vector_t *res,
     for (i=0; !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit), i++) {
       long int vid=IGRAPH_VIT_GET(vit);
       long int j, n;
-      IGRAPH_CHECK(igraph_adjacent(graph, &neis, vid, mode));
+      IGRAPH_CHECK(igraph_incident(graph, &neis, vid, mode));
       n=igraph_vector_size(&neis);
       for (j=0; j<n; j++) {
 	long int edge=VECTOR(neis)[j];
@@ -4977,136 +6655,8 @@ int igraph_strength(const igraph_t *graph, igraph_vector_t *res,
 }
 
 /**
- * \function igraph_unfold_tree
- * Unfolding a graph into a tree, by possibly multiplicating its vertices
- *
- * A graph is converted into a tree (or forest, if it is unconnected),
- * by performing a breadth-first search on it, and replicating
- * vertices that were found a second, third, etc. time. 
- * \param graph The input graph, it can be either directed or
- *   undirected.
- * \param tree Pointer to an uninitialized graph object, the result is
- *   stored here.
- * \param mode For directed graphs; whether to follow paths along edge
- *    directions (\c IGRAPH_OUT), or the opposite (\c IGRAPH_IN), or
- *    ignore edge directions completely (\c IGRAPH_ALL). It is ignored 
- *    for undirected graphs.
- * \param roots A numeric vector giving the root vertex, or vertices
- *   (if the graph is not connected), to start from.
- * \param vertex_index Pointer to an initialized vector, or a null
- *   pointer. If not a null pointer, then a mapping from the vertices
- *   in the new graph to the ones in the original is created here.
- * \return Error code.
- * 
- * Time complexity: O(n+m), linear in the number vertices and edges.
- * 
- */
-
-int igraph_unfold_tree(const igraph_t *graph, igraph_t *tree,
-		       igraph_neimode_t mode, const igraph_vector_t *roots,
-		       igraph_vector_t *vertex_index) {
-
-  long int no_of_nodes=igraph_vcount(graph);
-  long int no_of_edges=igraph_ecount(graph);
-  
-  igraph_vector_t edges;
-  igraph_vector_bool_t seen_vertices;
-  igraph_vector_bool_t seen_edges;
-
-  igraph_dqueue_t Q;
-  igraph_vector_t neis;
-  
-  long int r, v_ptr=no_of_nodes;
-
-  /* TODO: handle not-connected graphs, multiple root vertices */
-
-  IGRAPH_VECTOR_INIT_FINALLY(&edges, no_of_edges * 2);
-  IGRAPH_DQUEUE_INIT_FINALLY(&Q, 100);
-  IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
-  IGRAPH_CHECK(igraph_vector_bool_init(&seen_vertices, no_of_nodes));
-  IGRAPH_FINALLY(igraph_vector_bool_destroy, &seen_vertices);
-  IGRAPH_CHECK(igraph_vector_bool_init(&seen_edges, no_of_edges));
-  IGRAPH_FINALLY(igraph_vector_bool_destroy, &seen_edges);
-  
-  if (vertex_index) { 
-    long int i;
-    IGRAPH_CHECK(igraph_vector_resize(vertex_index, 
-				      no_of_nodes > no_of_edges+1 ? 
-				      no_of_nodes : no_of_edges+1));
-    for (i=0; i<no_of_nodes; i++) {
-      VECTOR(*vertex_index)[i] = i;
-    }
-  }
-
-  for (r=0; r<igraph_vector_size(roots); r++) {
-
-    long int root=VECTOR(*roots)[r];
-    VECTOR(seen_vertices)[root] = 1;
-    igraph_dqueue_push(&Q, root);
-  
-    while (!igraph_dqueue_empty(&Q)) {
-      long int actnode=igraph_dqueue_pop(&Q);
-      long int i, n;
-      
-      IGRAPH_CHECK(igraph_adjacent(graph, &neis, actnode, mode));
-      n=igraph_vector_size(&neis);
-      for (i=0; i<n; i++) {
-
-	long int edge=VECTOR(neis)[i];
-	long int from=IGRAPH_FROM(graph, edge);
-	long int to=IGRAPH_TO(graph, edge);
-	long int nei=IGRAPH_OTHER(graph, edge, actnode);
-
-	if (! VECTOR(seen_edges)[edge]) { 
-	  
-	  VECTOR(seen_edges)[edge] = 1;
-	  
-	  if (! VECTOR(seen_vertices)[nei]) {
-	    
-	    VECTOR(edges)[ edge*2 ] = from;
-	    VECTOR(edges)[ edge*2+1 ] = to;
-	    
-	    VECTOR(seen_vertices)[nei] = 1;
-	    IGRAPH_CHECK(igraph_dqueue_push(&Q, nei));
-	    
-	  } else {
-	    
-	    if (vertex_index) { 
-	      VECTOR(*vertex_index)[v_ptr] = nei;
-	    }
-	    
-	    if (from==nei) {
-	      VECTOR(edges)[ edge*2 ] = v_ptr++;
-	      VECTOR(edges)[ edge*2+1 ] = to;
-	    } else {
-	      VECTOR(edges)[ edge*2 ] = from;
-	      VECTOR(edges)[ edge*2+1 ] = v_ptr++;
-	    }
-	  }
-	}
-
-      }	/* for i<n */
-      
-    } /* ! igraph_dqueue_empty(&Q) */
-
-  } /* r < igraph_vector_size(roots) */
-
-  igraph_vector_bool_destroy(&seen_vertices);
-  igraph_vector_destroy(&neis);
-  igraph_dqueue_destroy(&Q);
-  IGRAPH_FINALLY_CLEAN(3);
-
-  IGRAPH_CHECK(igraph_create(tree, &edges, no_of_edges+1, 
-			     igraph_is_directed(graph)));
-  igraph_vector_destroy(&edges);
-  IGRAPH_FINALLY_CLEAN(1);
-  
-  return 0;
-}
-
-/**
  * \function igraph_diameter_dijkstra
- * Weighted diameter using Dijkstra's algorithm, non-negative weights only
+ * Weighted diameter using Dijkstra's algorithm, non-negative weights only.
  * 
  * The diameter of a graph is its longest geodesic. I.e. the
  * (weighted) shortest path is calculated for all pairs of vertices
@@ -5147,17 +6697,20 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
 
   igraph_vector_t dist;
   igraph_indheap_t Q;
-  igraph_adjedgelist_t adjlist;
+  igraph_inclist_t inclist;
   igraph_vector_long_t already_added;
   long int source;
   igraph_integer_t dirmode = directed ? IGRAPH_OUT : IGRAPH_ALL;
 
-  long int from=0, to=0;
+  long int from=-1, to=-1;
   igraph_real_t res=0;
   long int nodes_reached=0;
   
   if (!weights) {
-    return igraph_diameter(graph, pres, pfrom, pto, path, directed, unconn);
+    igraph_integer_t diameter;
+    IGRAPH_CHECK(igraph_diameter(graph, &diameter, pfrom, pto, path, directed, unconn));
+    *pres = diameter;
+    return IGRAPH_SUCCESS;
   }
 
   if (weights && igraph_vector_size(weights) != no_of_edges) {
@@ -5173,8 +6726,8 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
   IGRAPH_VECTOR_INIT_FINALLY(&dist, no_of_nodes);
   IGRAPH_CHECK(igraph_indheap_init(&Q, no_of_nodes));
   IGRAPH_FINALLY(igraph_indheap_destroy, &Q);
-  IGRAPH_CHECK(igraph_adjedgelist_init(graph, &adjlist, dirmode));
-  IGRAPH_FINALLY(igraph_adjedgelist_destroy, &adjlist);
+  IGRAPH_CHECK(igraph_inclist_init(graph, &inclist, dirmode));
+  IGRAPH_FINALLY(igraph_inclist_destroy, &inclist);
   
   for (source=0; source < no_of_nodes; source++) {
 
@@ -5184,6 +6737,7 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
     igraph_indheap_push_with_index(&Q, source, -0);
     VECTOR(already_added)[source] = source+1;
     VECTOR(dist)[source] = 1.0;
+    nodes_reached = 0.0;
 
     while (!igraph_indheap_empty(&Q)) {
       long int minnei=igraph_indheap_max_index(&Q);
@@ -5196,7 +6750,7 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
       }
       nodes_reached++;
 
-      neis=igraph_adjedgelist_get(&adjlist, minnei);
+      neis=igraph_inclist_get(&inclist, minnei);
       nlen=igraph_vector_size(neis);
       for (j=0; j<nlen; j++) {
 	long int edge=VECTOR(*neis)[j];
@@ -5228,7 +6782,7 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
     
   } /* source < no_of_nodes */
   
-  igraph_adjedgelist_destroy(&adjlist);
+  igraph_inclist_destroy(&inclist);
   igraph_indheap_destroy(&Q);
   igraph_vector_destroy(&dist);
   igraph_vector_long_destroy(&already_added);
@@ -5253,7 +6807,10 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
       igraph_vector_ptr_init(&tmpptr, 1);
       IGRAPH_FINALLY(igraph_vector_ptr_destroy, &tmpptr);
       VECTOR(tmpptr)[0]=path;
-      IGRAPH_CHECK(igraph_get_shortest_paths_dijkstra(graph, &tmpptr, from,
+      IGRAPH_CHECK(igraph_get_shortest_paths_dijkstra(graph, 
+						      /*vertices=*/ &tmpptr, 
+						      /*edges=*/ 0, 
+						      from,
 						      igraph_vss_1(to), 
 						      weights, dirmode));
       igraph_vector_ptr_destroy(&tmpptr);
@@ -5261,5 +6818,369 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
     }
   }
         
+  return 0;
+}
+
+/**
+ * \function igraph_sort_vertex_ids_by_degree
+ * \brief Calculate a list of vertex ids sorted by degree of the corresponding vertex.
+ * 
+ * The list of vertex ids is returned in a vector that is sorted
+ * in ascending or descending order of vertex degree.
+ *
+ * \param graph The input graph.
+ * \param outvids Pointer to an initialized vector that will be
+ *        resized and will contain the ordered vertex ids.
+ * \param vids Input vertex selector of vertex ids to include in
+ *        calculation.
+ * \param mode Defines the type of the degree.
+ *        \c IGRAPH_OUT, out-degree,
+ *        \c IGRAPH_IN, in-degree,
+ *        \c IGRAPH_ALL, total degree (sum of the
+ *        in- and out-degree). 
+ *        This parameter is ignored for undirected graphs. 
+ * \param loops Boolean, gives whether the self-loops should be
+ *        counted.
+ * \param order Specifies whether the ordering should be ascending
+ *        (\c IGRAPH_ASCENDING) or descending (\c IGRAPH_DESCENDING).
+ * \param only_indices If true, then return a sorted list of indices
+ *        into a vector corresponding to \c vids, rather than a list
+ *        of vertex ids. This parameter is ignored if \c vids is set
+ *        to all vertices via igraph_vs_all() or igraph_vss_all(),
+ *        because in this case the indices and vertex ids are the
+ *        same.
+ * \return Error code:
+ *         \c IGRAPH_EINVVID: invalid vertex id.
+ *         \c IGRAPH_EINVMODE: invalid mode argument.
+ *
+ */
+
+int igraph_sort_vertex_ids_by_degree(const igraph_t *graph, 
+				     igraph_vector_t *outvids, 
+				     igraph_vs_t vids,
+				     igraph_neimode_t mode, 
+				     igraph_bool_t loops,
+             igraph_order_t order,
+				     igraph_bool_t only_indices) {
+  long int i;
+  igraph_vector_t degrees, vs_vec;
+  IGRAPH_VECTOR_INIT_FINALLY(&degrees, 0);
+  IGRAPH_CHECK(igraph_degree(graph, &degrees, vids, mode, loops));
+  IGRAPH_CHECK(igraph_vector_qsort_ind(&degrees, outvids,
+        order == IGRAPH_DESCENDING));
+  if (only_indices || igraph_vs_is_all(&vids) ) {
+    igraph_vector_destroy(&degrees);
+    IGRAPH_FINALLY_CLEAN(1);
+  } else {
+    IGRAPH_VECTOR_INIT_FINALLY(&vs_vec, 0);
+    IGRAPH_CHECK(igraph_vs_as_vector(graph, vids, &vs_vec));
+    for(i=0; i<igraph_vector_size(outvids); i++) {
+      VECTOR(*outvids)[i] = VECTOR(vs_vec)[(long int)VECTOR(*outvids)[i]];
+    }
+    igraph_vector_destroy(&vs_vec);
+    igraph_vector_destroy(&degrees);
+    IGRAPH_FINALLY_CLEAN(2);    
+  }
+  return 0;
+}
+
+/**
+ * \function igraph_contract_vertices
+ * Replace multiple vertices with a single one.
+ * 
+ * This function creates a new graph, by merging several 
+ * vertices into one. The vertices in the new graph correspond
+ * to sets of vertices in the input graph.
+ * \param graph The input graph, it can be directed or 
+ *        undirected.
+ * \param mapping A vector giving the mapping. For each 
+ *        vertex in the original graph, it should contain 
+ *        its id in the new graph.
+ * \param vertex_comb What to do with the vertex attributes. 
+ *        See the igraph manual section about attributes for 
+ *        details.
+ * \return Error code.
+ * 
+ * Time complexity: O(|V|+|E|), linear in the number 
+ * or vertices plus edges.
+ */
+
+int igraph_contract_vertices(igraph_t *graph,
+			     const igraph_vector_t *mapping,
+			     const igraph_attribute_combination_t 
+			     *vertex_comb) {
+  igraph_vector_t edges;
+  long int no_of_nodes=igraph_vcount(graph);
+  long int no_of_edges=igraph_ecount(graph);
+  igraph_bool_t vattr=vertex_comb && igraph_has_attribute_table();
+  igraph_t res;
+  long int e, last=-1;
+  long int no_new_vertices;
+
+  if (igraph_vector_size(mapping) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid mapping vector length", 
+		 IGRAPH_EINVAL);
+  }
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&edges, 0);
+  IGRAPH_CHECK(igraph_vector_reserve(&edges, no_of_edges*2));
+
+  if (no_of_nodes > 0)
+    last = igraph_vector_max(mapping);
+
+  for (e=0; e<no_of_edges; e++) {
+    long int from = IGRAPH_FROM(graph, e);
+    long int to = IGRAPH_TO(graph, e);
+
+    long int nfrom = VECTOR(*mapping)[from];
+    long int nto = VECTOR(*mapping)[to];
+    
+    igraph_vector_push_back(&edges, nfrom);
+    igraph_vector_push_back(&edges, nto);
+    
+    if (nfrom > last) { last = nfrom; }
+    if (nto   > last) { last = nto;   }
+  }
+ 
+  no_new_vertices = last+1;
+
+  IGRAPH_CHECK(igraph_create(&res, &edges, no_new_vertices,
+			     igraph_is_directed(graph)));
+  
+  igraph_vector_destroy(&edges);
+  IGRAPH_FINALLY_CLEAN(1);
+  
+  IGRAPH_FINALLY(igraph_destroy, &res);
+  
+  IGRAPH_I_ATTRIBUTE_DESTROY(&res);
+  IGRAPH_I_ATTRIBUTE_COPY(&res, graph, /*graph=*/ 1,
+			  /*vertex=*/ 0, /*edge=*/ 1);
+  
+  if (vattr) {
+    long int i;
+    igraph_vector_ptr_t merges;
+    igraph_vector_t sizes;
+    igraph_vector_t *vecs;
+    
+    vecs=igraph_Calloc(no_new_vertices, igraph_vector_t);
+    if (!vecs) {
+      IGRAPH_ERROR("Cannot combine attributes while contracting"
+		   " vertices", IGRAPH_ENOMEM);
+    }
+    IGRAPH_FINALLY(igraph_free, vecs);
+    IGRAPH_CHECK(igraph_vector_ptr_init(&merges, no_new_vertices));
+    IGRAPH_FINALLY(igraph_i_simplify_free, &merges);
+    IGRAPH_VECTOR_INIT_FINALLY(&sizes, no_new_vertices);
+    
+    for (i=0; i<no_of_nodes; i++) {
+      long int to=VECTOR(*mapping)[i];
+      VECTOR(sizes)[to] += 1;
+    }
+    for (i=0; i<no_new_vertices; i++) {
+      igraph_vector_t *v=&vecs[i];
+      IGRAPH_CHECK(igraph_vector_init(v, VECTOR(sizes)[i]));
+      igraph_vector_clear(v);
+      VECTOR(merges)[i]=v;
+    }
+    for (i=0; i<no_of_nodes; i++) {
+      long int to=VECTOR(*mapping)[i];
+      igraph_vector_t *v=&vecs[to];
+      igraph_vector_push_back(v, i);
+    }
+    
+    IGRAPH_CHECK(igraph_i_attribute_combine_vertices(graph, &res, 
+						     &merges,
+						     vertex_comb));
+    
+    igraph_vector_destroy(&sizes);
+    igraph_i_simplify_free(&merges);
+    igraph_free(vecs);
+    IGRAPH_FINALLY_CLEAN(3);
+  }
+  
+  IGRAPH_FINALLY_CLEAN(1);
+  igraph_destroy(graph);
+  *graph=res;
+  
+  return 0;
+}
+
+/* Create the transitive closure of a tree graph. 
+   This is fairly simple, we just collect all ancestors of a vertex
+   using a depth-first search.     
+ */
+
+int igraph_transitive_closure_dag(const igraph_t *graph,
+				  igraph_t *closure) {
+  
+  long int no_of_nodes=igraph_vcount(graph);
+  igraph_vector_t deg;
+  igraph_vector_t new_edges;
+  igraph_vector_t ancestors;
+  long int root;
+  igraph_vector_t neighbors;
+  igraph_stack_t path;
+  igraph_vector_bool_t done;
+
+  if (!igraph_is_directed(graph)) {
+    IGRAPH_ERROR("Tree transitive closure of a directed graph", 
+		 IGRAPH_EINVAL);
+  }
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&new_edges, 0);
+  IGRAPH_VECTOR_INIT_FINALLY(&deg, no_of_nodes);
+  IGRAPH_VECTOR_INIT_FINALLY(&ancestors, 0);
+  IGRAPH_VECTOR_INIT_FINALLY(&neighbors, 0);
+  IGRAPH_CHECK(igraph_stack_init(&path, 0));
+  IGRAPH_FINALLY(igraph_stack_destroy, &path);
+  IGRAPH_CHECK(igraph_vector_bool_init(&done, no_of_nodes));
+  IGRAPH_FINALLY(igraph_vector_bool_destroy, &done);
+
+  IGRAPH_CHECK(igraph_degree(graph, &deg, igraph_vss_all(), 
+			     IGRAPH_OUT, IGRAPH_LOOPS));
+
+#define STAR (-1)
+  
+  for (root=0; root<no_of_nodes; root++) {
+    if (VECTOR(deg)[root] != 0) { continue; }
+    IGRAPH_CHECK(igraph_stack_push(&path, root));
+
+    while (!igraph_stack_empty(&path)) {
+      long int node=igraph_stack_top(&path);
+      if (node == STAR) {
+	/* Leaving a node */
+	long int j, n;
+	igraph_stack_pop(&path);
+	node=igraph_stack_pop(&path);
+	if (!VECTOR(done)[node]) {
+	  igraph_vector_pop_back(&ancestors);
+	  VECTOR(done)[node]=1;
+	}
+	n=igraph_vector_size(&ancestors);
+	for (j=0; j<n; j++) {
+	  IGRAPH_CHECK(igraph_vector_push_back(&new_edges, node));
+	  IGRAPH_CHECK(igraph_vector_push_back(&new_edges, 
+					       VECTOR(ancestors)[j]));
+	}
+      } else {
+	/* Getting into a node */
+	long int n, j;
+	if (!VECTOR(done)[node]) {
+	  IGRAPH_CHECK(igraph_vector_push_back(&ancestors, node));
+	}
+	IGRAPH_CHECK(igraph_neighbors(graph, &neighbors, node, IGRAPH_IN));
+	n=igraph_vector_size(&neighbors);
+	IGRAPH_CHECK(igraph_stack_push(&path, STAR));
+	for (j=0; j<n; j++) {
+	  long int nei=VECTOR(neighbors)[j];
+	  IGRAPH_CHECK(igraph_stack_push(&path, nei));
+	}
+      }
+    }
+  }
+
+#undef STAR
+
+  igraph_vector_bool_destroy(&done);
+  igraph_stack_destroy(&path);
+  igraph_vector_destroy(&neighbors);
+  igraph_vector_destroy(&ancestors);
+  igraph_vector_destroy(&deg);
+  IGRAPH_FINALLY_CLEAN(5);
+
+  IGRAPH_CHECK(igraph_create(closure, &new_edges, no_of_nodes, 
+			     IGRAPH_DIRECTED));
+
+  igraph_vector_destroy(&new_edges);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  return 0;
+}
+
+/**
+ * \function igraph_diversity
+ * Structural diversity index of the vertices
+ * 
+ * This measure was defined in Nathan Eagle, Michael Macy and Rob
+ * Claxton: Network Diversity and Economic Development, Science 328,
+ * 1029--1031, 2010. 
+ * 
+ * </para><para>
+ * It is simply the (normalized) Shannon entropy of the
+ * incident edges' weights. D(i)=H(i)/log(k[i]), and 
+ * H(i) = -sum(p[i,j] log(p[i,j]), j=1..k[i]), 
+ * where p[i,j]=w[i,j]/sum(w[i,l], l=1..k[i]),  k[i] is the (total)
+ * degree of vertex i, and w[i,j] is the weight of the edge(s) between
+ * vertex i and j. 
+ * \param The input graph, edge directions are ignored.
+ * \param weights The edge weights, in the order of the edge ids, must
+ *    have appropriate length.
+ * \param res An initialized vector, the results are stored here.
+ * \param vids Vector with the vertex ids for which to calculate the
+ *    measure.
+ * \return Error code.
+ * 
+ * Time complexity: O(|V|+|E|), linear.
+ * 
+ */
+
+int igraph_diversity(igraph_t *graph, const igraph_vector_t *weights,
+		     igraph_vector_t *res, const igraph_vs_t vids) {
+
+  int no_of_nodes=igraph_vcount(graph);
+  int no_of_edges=igraph_ecount(graph);
+  igraph_vector_t incident;
+  igraph_vit_t vit;
+  igraph_real_t s, ent, w;
+  int i, j, k;
+
+  if (!weights) { 
+    IGRAPH_ERROR("Edge weights must be given", IGRAPH_EINVAL);
+  }
+
+  if (igraph_vector_size(weights) != no_of_edges) {
+    IGRAPH_ERROR("Invalid edge weight vector length", IGRAPH_EINVAL);
+  }
+  
+  IGRAPH_VECTOR_INIT_FINALLY(&incident, 10);
+
+  if (igraph_vs_is_all(&vids)) {
+    IGRAPH_CHECK(igraph_vector_resize(res, no_of_nodes));
+    for (i=0; i<no_of_nodes; i++) {
+      s = ent = 0.0;
+      IGRAPH_CHECK(igraph_incident(graph, &incident, i, /*mode=*/ IGRAPH_ALL));
+      for (j=0, k=igraph_vector_size(&incident); j<k; j++) {
+        w = VECTOR(*weights)[(long int)VECTOR(incident)[j]];
+        s += w;
+        ent += (w * log(w));
+      }
+      VECTOR(*res)[i] = (log(s) - ent / s) / log(k);
+    }
+  } else {
+    IGRAPH_CHECK(igraph_vector_resize(res, 0));
+    IGRAPH_CHECK(igraph_vit_create(graph, vids, &vit));
+    IGRAPH_FINALLY(igraph_vit_destroy, &vit);
+
+    for (IGRAPH_VIT_RESET(vit), i=0; 
+         !IGRAPH_VIT_END(vit); 
+         IGRAPH_VIT_NEXT(vit), i++) {
+      long int v=IGRAPH_VIT_GET(vit);
+      s = ent = 0.0;
+      IGRAPH_CHECK(igraph_incident(graph, &incident, v, /*mode=*/ IGRAPH_ALL));
+      for (j=0, k=igraph_vector_size(&incident); j<k; j++) {
+        w = VECTOR(*weights)[(long int)VECTOR(incident)[j]];
+        s += w;
+        ent += (w * log(w));
+      }
+      IGRAPH_CHECK(igraph_vector_push_back(res, (log(s) - ent / s) / log(k)));
+    }
+
+    igraph_vit_destroy(&vit);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  
+  igraph_vector_destroy(&incident);
+  IGRAPH_FINALLY_CLEAN(1);
+  
   return 0;
 }

@@ -1,5 +1,6 @@
 \name{layout}
 \alias{layout}
+\alias{layout.auto}
 \alias{layout.random}
 \alias{layout.circle}
 \alias{layout.sphere}
@@ -18,20 +19,18 @@
 \description{Some simple and not so simple functions determining the
   placement of the vertices for drawing a graph.}
 \usage{
+layout.auto(graph, dim=2, \dots)
 layout.random(graph, params, dim=2)
 layout.circle(graph, params)
 layout.sphere(graph, params)
-layout.fruchterman.reingold(graph, \dots, dim=2,
-      verbose=igraph.par("verbose"), params)
-layout.kamada.kawai(graph, \dots, dim=2,
-      verbose=igraph.par("verbose"), params)
+layout.fruchterman.reingold(graph, \dots, dim=2, params)
+layout.kamada.kawai(graph, \dots, dim=2, params)
 layout.spring(graph, \dots, params)
 layout.reingold.tilford(graph, \dots, params)
-layout.fruchterman.reingold.grid(graph, \dots,
-      verbose=igraph.par("verbose"), params)
+layout.fruchterman.reingold.grid(graph, \dots, params)
 layout.lgl(graph, \dots, params)
-layout.graphopt(graph, ..., verbose = igraph.par("verbose"), params = list())
-layout.mds(graph, d=shortest.paths(graph), ...)
+layout.graphopt(graph, ..., params=list())
+layout.mds(graph, dist=NULL, dim=2, options=igraph.arpack.default)
 layout.svd(graph, d=shortest.paths(graph), ...)
 layout.norm(layout, xmin = NULL, xmax = NULL, ymin = NULL, ymax = NULL,
       zmin = NULL, zmax = NULL)
@@ -41,12 +40,22 @@ layout.norm(layout, xmin = NULL, xmax = NULL, ymin = NULL, ymax = NULL,
   \item{params}{The list of function dependent parameters.}
   \item{dim}{Numeric constant, either 2 or 3. Some functions are able
     to generate 2d and 3d layouts as well, supply this argument to
-    change the default behavior.}
+    change the default behavior.
+
+    \code{layout.mds} supports dimensions up to the number of nodes
+    minus one, but only if the graph is connected; for undirected
+    graphs, the only possible values is 2. This is because
+    \code{layout.merge} only works in 2D.}
   \item{\dots}{Function dependent parameters, this is an alternative
-    notation to the \code{params} argument.}
-  \item{verbose}{Logial constant, whether to show a progress bar while
-    calculating the layout.}
-  \item{d}{The matrix used for multidimansional scaling. By default it
+    notation to the \code{params} argument. For \code{layout.auto} these
+    extra parameters are simply passed to the real layout function, if
+    one is called.}
+  \item{dist}{The distance matrix for the multidimensional scaling.
+    If \code{NULL} (the default), then the unweighted shortest path
+    matrix is used.}
+  \item{options}{A named list, to override some ARPACK options. See
+    \code{\link{arpack}} for details.}
+  \item{d}{The matrix used for singulat value decomposition. By default it
     is the distance matrix of the graph.}
   \item{layout}{A matrix with two or three columns, the layout to
     normalize.}
@@ -64,6 +73,26 @@ layout.norm(layout, xmin = NULL, xmax = NULL, ymin = NULL, ymax = NULL,
   These functions calculate the coordinates of the vertices for a graph
   usually based on some optimality criterion.
 
+  \code{layout.auto} tries to choose an appropriate layout function for
+  the supplied graph, and uses that to generate the layout. The current
+  implementations works like this:
+  \enumerate{
+    \item If the graph has a graph attribute called \sQuote{layout},
+    then this is used. If this attribute is an R function, then it is
+    called, with the graph and any other extra arguments.
+    \item Otherwise, if the graph has vertex attributes called
+    \sQuote{x} and \sQuote{y}, then these are used as coordinates. If
+    the graph has an additional \sQuote{z} vertex attribute, that is
+    also used.
+    \item Otherwise, if the graph is connected and has less than 100
+    vertices, the Kamada-Kawai layout is used, by calling
+    \code{layout.kamada.kawai}.
+    \item Otherwise, if the graph has less than 1000 vertices, then the
+    Fruchterman-Reingold layout is used, by calling
+    \code{layout.fruchterman.reingold}.
+    \item Otherwise the DrL layout is used, \code{layout.drl} is called.
+  }
+  
   \code{layout.random} simply places the vertices randomly on a
   square. It has no parameters.
 
@@ -77,7 +106,7 @@ layout.norm(layout, xmin = NULL, xmax = NULL, ymin = NULL, ymax = NULL,
   \code{layout.fruchterman.reingold} uses a force-based algorithm
   proposed by Fruchterman and Reingold, see references. Parameters and
   their default values:
-  \itemize{
+  \describe{
     \item{niter}{Numeric, the number of iterations to perform (500).}
     \item{coolexp}{Numeric, the cooling exponent for the simulated
       annealing (3).}
@@ -87,12 +116,31 @@ layout.norm(layout, xmin = NULL, xmax = NULL, ymin = NULL, ymax = NULL,
     \item{weights}{A vector giving edge weights or \code{NULL}. If not
       \code{NULL} then the attraction along the edges will be multiplied
       by the given edge weights (\code{NULL}).}
+    \item{minx}{If not \code{NULL}, then it must be a numeric vector
+      that gives lower boundaries for the \sQuote{x} coordinates of the
+      vertices. The length of the vector must match the number of
+      vertices in the graph.}
+    \item{maxx}{Similar to \code{minx}, but gives the upper boundaries.}
+    \item{miny}{Similar to \code{minx}, but gives the lower boundaries
+      of the \sQuote{y} coordinates.}
+    \item{maxy}{Similar to \code{minx}, but gives the upper boundaries
+      of the \sQuote{y} coordinates.}    
+    \item{minz}{Similar to \code{minx}, but gives the lower boundaries
+      of the \sQuote{z} coordinates, if the \code{dim} argument is
+      3. Otherwise it is ignored.}
+    \item{maxz}{Similar to \code{minx}, but gives the upper boundaries
+      of the \sQuote{z} coordinates, if the \code{dim} argument is
+      3. Otherwise it is ignored.}
+    \item{start}{If given, then it should be a matrix with two columns
+      and one line for each vertex. This matrix will be used as starting
+      positions for the algorithm. If not given, then a random starting
+      matrix is used.}
   }
   This function was ported from the SNA package.
 
   \code{layout.kamada.kawai} is another force based algorithm. 
   Parameters and default values:
-  \itemize{
+  \describe{
     \item{niter}{Number of iterations to perform (1000).}
     \item{sigma}{Sets the base standard deviation of position change
       proposals (vcount(graph)/4).}
@@ -100,6 +148,25 @@ layout.norm(layout, xmin = NULL, xmax = NULL, ymin = NULL, ymax = NULL,
     \item{coolexp}{The cooling exponent (0.99).}
     \item{kkconst}{Sets the Kamada-Kawai vertex attraction
       constant (vcount(graph)**2).}
+    \item{minx}{If not \code{NULL}, then it must be a numeric vector
+      that gives lower boundaries for the \sQuote{x} coordinates of the
+      vertices. The length of the vector must match the number of
+      vertices in the graph.}
+    \item{maxx}{Similar to \code{minx}, but gives the upper boundaries.}
+    \item{miny}{Similar to \code{minx}, but gives the lower boundaries
+      of the \sQuote{y} coordinates.}
+    \item{maxy}{Similar to \code{minx}, but gives the upper boundaries
+      of the \sQuote{y} coordinates.}    
+    \item{minz}{Similar to \code{minx}, but gives the lower boundaries
+      of the \sQuote{z} coordinates, if the \code{dim} argument is
+      3. Otherwise it is ignored.}
+    \item{maxz}{Similar to \code{minx}, but gives the upper boundaries
+      of the \sQuote{z} coordinates, if the \code{dim} argument is
+      3. Otherwise it is ignored.}
+    \item{start}{If given, then it should be a matrix with two columns
+      and one line for each vertex. This matrix will be used as starting
+      positions for the algorithm. If not given, then a random starting
+      matrix is used.}
   }
   This function performs very well for connected graphs, but it gives
   poor results for unconnected ones.
@@ -107,7 +174,7 @@ layout.norm(layout, xmin = NULL, xmax = NULL, ymin = NULL, ymax = NULL,
 
   \code{layout.spring} is a spring embedder algorithm.
   Parameters and default values:
-  \itemize{
+  \describe{
     \item{mass}{The vertex mass (in \sQuote{quasi-kilograms}). (Defaults to 0.1.)}
     \item{equil}{The equilibrium spring extension (in
       \sQuote{quasi-meters}). (Defaults to 1.)}
@@ -124,17 +191,20 @@ layout.norm(layout, xmin = NULL, xmax = NULL, ymin = NULL, ymax = NULL,
 
   \code{layout.reingold.tilford} generates a tree-like layout, so it is
   mainly for trees. Parameters and default values:
-  \itemize{
-    \item{root}{The id of the root vertex, defaults to 0.}
+  \describe{
+    \item{root}{The id of the root vertex, defaults to 1.}
     \item{circular}{Logical scalar, whether to plot the tree in a
       circular fashion, defaults to \code{FALSE}.}
+    \item{flip.y}{Logical scalar, whether to flip the \sQuote{y}
+      coordinates. The default is flipping because that puts the root
+      vertex on the top.}
   }
   
   \code{layout.fruchterman.reingold.grid} is similar to
   \code{layout.fruchterman.reingold} but repelling force is calculated
   only between vertices that are closer to each other than a limit, so
   it is faster. Patameters and default values:
-  \itemize{
+  \describe{
     \item{niter}{Numeric, the number of iterations to perform (500).}
     \item{maxdelta}{Maximum change for one vertex in one iteration. (The
       number of vertices in the graph.)}
@@ -148,13 +218,17 @@ layout.norm(layout, xmin = NULL, xmax = NULL, ymin = NULL, ymax = NULL,
       the repulsion forces between vertices only vertices in the same or
       neighboring grid cells are taken into account (the fourth root of
       the number of \code{area}.}
+    \item{start}{If given, then it should be a matrix with two columns
+      and one line for each vertex. This matrix will be used as starting
+      positions for the algorithm. If not given, then a random starting
+      matrix is used.}
   }
   
   \code{layout.lgl} is for large connected graphs, it is similar to the
   layout generator of the Large Graph Layout software
   (\url{http://bioinformatics.icmb.utexas.edu/lgl}). Parameters and
   default values:
-  \itemize{
+  \describe{
     \item{maxiter}{The maximum number of iterations to perform (150).}
     \item{maxdelta}{The maximum change for a vertex during an iteration
       (the number of vertices).}
@@ -187,7 +261,7 @@ layout.norm(layout, xmin = NULL, xmax = NULL, ymin = NULL, ymax = NULL,
   graphopt.
 
   Parameters and default values:
-  \itemize{
+  \describe{
     \item{niter}{Integer scalar, the number of iterations to perform.
       Should be a couple of hundred in general. If you have a large graph 
       then you might want to only do a few iterations and then check the 
@@ -212,8 +286,7 @@ layout.norm(layout, xmin = NULL, xmax = NULL, ymin = NULL, ymax = NULL,
   
   \code{layout.mds} uses metric multidimensional scaling for generating
   the coordinates. This function does not have the usual \code{params}
-  argument. It can just take a single argument, the distance matrix used
-  for multidimensional scaling. This function generates the layout
+  argument. This function generates the layout
   separately for each graph component and then merges them via
   \code{\link{layout.merge}}. \code{layout.mds} is an \emph{experimental}
   function currently.
@@ -244,11 +317,27 @@ layout.norm(layout, xmin = NULL, xmax = NULL, ymin = NULL, ymax = NULL,
   Reingold, E and Tilford, J (1981). Tidier drawing of trees.
   \emph{IEEE Trans. on Softw. Eng.}, SE-7(2):223--228.
 }
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{\code{\link{layout.drl}}, \code{\link{plot.igraph}}, \code{\link{tkplot}}}
 \examples{
 g <- graph.ring(10)
 layout.random(g)
 layout.kamada.kawai(g)
+
+# Fixing ego
+g <- ba.game(20, m=2)
+minC <- rep(-Inf, vcount(g))
+maxC <- rep(Inf, vcount(g))
+minC[1] <- maxC[1] <- 0
+co <- layout.fruchterman.reingold(g, minx=minC, maxx=maxC,
+                                  miny=minC, maxy=maxC)
+co[1,]
+\dontrun{plot(g, layout=co, vertex.size=30, edge.arrow.size=0.2,
+     vertex.label=c("ego", rep("", vcount(g)-1)), rescale=FALSE,
+     xlim=range(co[,1]), ylim=range(co[,2]), vertex.label.dist=1,
+     vertex.label.color="red")
+axis(1)
+axis(2)
+}
 }
 \keyword{graphs}

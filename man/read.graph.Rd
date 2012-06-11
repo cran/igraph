@@ -4,13 +4,15 @@
 \alias{Pajek}
 \alias{GraphML}
 \alias{GML}
+\alias{DL}
+\alias{UCINET}
 \title{Reading foreign file formats}
 \description{The \code{read.graph} function is able to read graphs in
   various representations from a file, or from a http
   connection. Currently some simple formats are supported.}
 \usage{
 read.graph(file, format = c("edgelist", "pajek", "ncol", "lgl",
-        "graphml", "dimacs", "graphdb", "gml"), \dots)
+        "graphml", "dimacs", "graphdb", "gml", "dl"), \dots)
 }
 \arguments{
   \item{file}{The connection to read from. This can be a local file, or
@@ -26,24 +28,24 @@ read.graph(file, format = c("edgelist", "pajek", "ncol", "lgl",
 }
 \details{
   The \code{read.graph} function may have additional arguments depending
-  on the file format (the \code{format} argument).
-  \itemize{
-    \item{edgelist}{
-      
+  on the file format (the \code{format} argument). See the details
+  separately for each file format, below.
+}
+\section{Edge list format}{
       This format is a simple text file with numeric vertex ids defining
       the edges. There is no need to have newline characters between the
       edges, a simple space will also do.
       
       Additional arguments:
-      \itemize{
+      \describe{
 	\item{n}{The number of vertices in the graph. If it is smaller
 	  than or equal to the largest integer in the file, then it is
 	  ignored; so it is safe to set it to zero (the default).}
 	\item{directed}{Logical scalar, whether to create a directed
 	  graph. The default value is \code{TRUE}.}
       }
-    }
-    \item{pajek}{
+}
+\section{Pajek format}{
       Pajek it a popular network analysis program for Windows. (See the
       Pajek homepage at
       \url{http://vlado.fmf.uni-lj.si/pub/networks/pajek/}.)
@@ -53,19 +55,19 @@ read.graph(file, format = c("edgelist", "pajek", "ncol", "lgl",
 
       \code{igraph} implements only a subset of the Pajek format:
       \itemize{
-	\item{}{Only .net files are supported, Pajek project files (which
+	\item Only .net files are supported, Pajek project files (which
 	  can contain many graph and also other type of data) are
 	  not. Poject files might be supported in a forthcoming igraph
-	  release if they turned out to be needed.}
-	\item{}{Time events networks are not supported.}
-	\item{}{Hypergraphs (graphs with non-binary edges) are not
-	  supported as igraph cannot handle them.}
-	\item{}{Graphs containing both directed and undirected edges are
-	  not supported as igraph cannot represent them.}
-	\item{}{Bipartite (also called affiliation) networks are not
+	  release if they turned out to be needed.
+	\item Time events networks are not supported.
+	\item Hypergraphs (graphs with non-binary edges) are not
+	  supported as igraph cannot handle them.
+	\item Graphs containing both directed and undirected edges are
+	  not supported as igraph cannot represent them.
+	\item Bipartite (also called affiliation) networks are not
 	  supported. The surrent igraph version imports the network
-	  structure correctly but vertex type information is omitted.}
-	\item{}{Graph with multiple edge sets are not supported.}
+	  structure correctly but vertex type information is omitted.
+	\item Graph with multiple edge sets are not supported.
       }
 
       Vertex and edge attributes defined in the Pajek file will be also
@@ -81,17 +83,8 @@ read.graph(file, format = c("edgelist", "pajek", "ncol", "lgl",
 	vertexsize  \tab The size of the vertex when plotted (\code{size} in Pajek). \cr
 	shape 	    \tab The shape of the vertex when plotted. \cr
 	color 	    \tab Vertex color (\code{ic} in Pajek) if given with symbolic name \cr
-	color-red, \tab \cr
-	color-green, \tab \cr
-	color-blue \tab	Vertex color (\code{ic} in Pajek) if given in RGB notation \cr
 	framecolor  \tab Border color (\code{bc} in Pajek) if given with symbolic name \cr
-	framecolor-red, \tab \cr
-	framecolor-green, \tab \cr
-	framecolor-blue \tab Border color (\code{bc} in Pajek) if given in RGB notation \cr
 	labelcolor  \tab Label color (\code{lc} in Pajek) if given with symbolic name \cr
-	labelcolor-red, \tab \cr
-	labelcolor-green, \tab \cr
-	labelcolor-blue \tab Label color (\code{lc} in Pajek) if given in RGB notation \cr
 	xfact, yfact \tab The \code{x_fact} and \code{y_fact} Pajek attributes. \cr
 	labeldist \tab The distance of the label from the vertex. (\code{lr} in Pajek.) \cr
 	labeldegree, \tab \cr
@@ -137,20 +130,20 @@ read.graph(file, format = c("edgelist", "pajek", "ncol", "lgl",
       }
       
       There are no additional arguments for this format.
-    }
-    \item{graphml}{
+}
+\section{GraphML file format}{
       GraphML is an XML-based file format (an XML application in the XML
       terminology) to describe graphs. It is a modern format, and can
       store graphs with an extensible set of vertex and edge attributes,
       and generalized graphs which igraph cannot handle. Thus igraph
       supports only a subset of the GraphML language: 
       \itemize{
-	\item{}{Hypergraphs are not supported.}
-	\item{}{Nested graphs are not supported.}
-	\item{}{Mixed graphs, ie. graphs with both directed and
+	\item Hypergraphs are not supported.
+	\item Nested graphs are not supported.
+	\item Mixed graphs, ie. graphs with both directed and
 	  undirected edges are not supported. read.graph() sets the
 	  graph directed if this is the default in the GraphML file,
-	  even if all the edges are in fact undirected.}
+	  even if all the edges are in fact undirected.
       }
 
       See the GraphML homepage at
@@ -158,13 +151,13 @@ read.graph(file, format = c("edgelist", "pajek", "ncol", "lgl",
       the GraphML format.       
       
       Additional arguments:
-      \itemize{
+      \describe{
 	\item{index}{If the GraphML file contains more than one graphs,
 	  this argument can be used to select the graph to read. By
 	  default the first graph is read (index 0).}
       }
-    }
-    \item{GML}{
+}
+\section{GML file format}{
       GML is a simple textual format, see
       \url{http://www.infosun.fim.uni-passau.de/Graphlet/GML/} for details.
  
@@ -172,35 +165,52 @@ read.graph(file, format = c("edgelist", "pajek", "ncol", "lgl",
       we implement only a subset of this format, some attributes might be
       ignored. Here is a list of all the differences:
       \itemize{
-	\item{}{Only \code{node} and \code{edge} attributes are 
+	\item Only \code{node} and \code{edge} attributes are 
 	  used, and only if they have a simple type: integer, real or
 	  string. So if an attribute is an array or a record, then it is 
 	  ignored. This is also true if only some values of the
-	  attribute are complex.}
-	\item{}{Top level attributes except for \code{Version} and the
-	  first \code{graph} attribute are completely ignored.}
-	\item{}{Graph attributes except for \code{node} and
-	  \code{edge} are completely ignored.}
-	\item{}{ There is no maximum line length.}
-	\item{}{ There is no maximum keyword length.}
-	\item{}{ Character entities in strings are not interpreted.}
-	\item{}{ We allow \code{inf} (infinity) and \code{nan}
+	  attribute are complex.
+	\item Top level attributes except for \code{Version} and the
+	  first \code{graph} attribute are completely ignored.
+	\item Graph attributes except for \code{node} and
+	  \code{edge} are completely ignored.
+	\item There is no maximum line length.
+	\item There is no maximum keyword length.
+	\item Character entities in strings are not interpreted.
+	\item We allow \code{inf} (infinity) and \code{nan}
 	  (not a number) as a real number. This is case insensitive, so
-	  \code{nan}, \code{NaN} and \code{NAN} are equal.}
+	  \code{nan}, \code{NaN} and \code{NAN} are equal.
       }
       
       Please contact us if you cannot live with these
       limitations of the GML parser.
 
       There are not additional argument for this format.
-    }
-    \item{ncol}{
+}
+\section{DL file format}{
+      The DL format is a simple textual file format used by the UCINET
+      software. See
+      \url{http://www.analytictech.com/networks/dataentry.htm} for
+      examples. All formats mentioned here is supported by igraph.
+
+      Note the specification does not mention whether the
+      format is case sensitive or not. For igraph DL files are case
+      sensitive, i.e. \sQuote{Larry} and \sQuote{larry} are not the
+      same.
+      
+      Additional arguments:
+      \describe{
+	\item{directed}{Logical scalar, whether to create a directed
+	  graph. The default is to make the graph directed.}
+      }
+}
+\section{NCOL format}{
       This format is used by the Large Graph Layout program
       (\url{http://bioinformatics.icmb.utexas.edu/lgl}), and it is
       simply a symbolic weighted edge list. It is a simple text file
       with one edge per line. An edge is defined by two symbolic vertex
       names separated by whitespace. (The symbolic vertex names
-      themselves cannot contain whitespace. They might followed by an
+      themselves cannot contain whitespace.) They might followed by an
       optional number, this will be the weight of the edge; the number
       can be negative and can be in scientific notation. If there is no
       weight specified to an edge it is assumed to be zero. 
@@ -210,50 +220,57 @@ read.graph(file, format = c("edgelist", "pajek", "ncol", "lgl",
       checked here, as igraph is happy with these.
 
       Additional arguments:
-      \itemize{
+      \describe{
 	\item{names}{Logical constant, whether to add the symbolic names
 	  as vertex attributes to the graph. If TRUE the name of the
 	  vertex attribute will be \sQuote{name}.}
-	\item{weights}{Logical constant, whether to add the weights of
-	  the edges as edge attribute \sQuote{weight}.
+	\item{weights}{Character scalar, specifies whether edge weights
+	  should be added to the graph. Possible values are and their
+	  meaning are: \sQuote{no}, edge weights will not be added;
+	  \sQuote{yes}, edge weights will be added, if they are not
+	  present in the file, then all edges get zero weight;
+	  \sQuote{auto}, edge weights will added if they are present in
+	  the file, otherwise not. The default is \sQuote{auto}.
 	}
 	\item{directed}{Logical constant, whether to create a directed
 	  graph. The default is undirected.} 
       }
-    }
-    \item{lgl}{The \code{lgl} format is used by the Large Graph Layout
+}
+\section{LGL file format}{
+      The \code{lgl} format is used by the Large Graph Layout
       visualization software
       (\url{http://bioinformatics.icmb.utexas.edu/lgl}), it can describe
       undirected optionally weighted graphs. From the LGL manual:
-      
-      The second format is the LGL file format (.lgl file
+      \dQuote{The second format is the LGL file format (.lgl file
       suffix). This is yet another graph file format that tries to be
       as stingy as possible with space, yet keeping the edge file in a
       human readable (not binary) format. The format itself is like
-      the following:
-      \preformatted{
-	# vertex1name 
+      the following: \preformatted{	 # vertex1name 
 	vertex2name [optionalWeight]
 	vertex3name [optionalWeight]
-      }
-      Here, the first vertex of an edge is preceded with a pound sign
-      \sQuote{#}.  Then each vertex that shares an edge with that vertex is
-      listed one per line on subsequent lines.
+      } Here, the first vertex of an edge is preceded with a pound sign
+      '\#'.  Then each vertex that shares an edge with that vertex is
+      listed one per line on subsequent lines.}
       
       LGL cannot handle loop and multiple edges or directed graphs, but
       in igraph it is not an error to have multiple and loop edges.
       
       Additional arguments:
-      \itemize{
+      \describe{
 	\item{names}{Logical constant, whether to add the symbolic names
 	  as vertex attributes to the graph. If TRUE the name of the
 	  vertex attribute will be \sQuote{name}.}
-	\item{weights}{Logical constant, whether to add the weights of
-	  the edges as edge attribute \sQuote{weight}.
+	\item{weights}{Character scalar, specifies whether edge weights
+	  should be added to the graph. Possible values are and their
+	  meaning are: \sQuote{no}, edge weights will not be added;
+	  \sQuote{yes}, edge weights will be added, if they are not
+	  present in the file, then all edges get zero weight;
+	  \sQuote{auto}, edge weights will added if they are present in
+	  the file, otherwise not. The default is \sQuote{auto}.
 	}
       }      
-    }
-    \item{dimacs}{
+}
+\section{DIMACS file format}{
       The DIMACS file format, more specifically the 
       version for network flow problems, see the files at
       \url{ftp://dimacs.rutgers.edu/pub/netflow/general-info/}
@@ -280,13 +297,14 @@ read.graph(file, format = c("edgelist", "pajek", "ncol", "lgl",
       are assigned to the \code{capacity} edge attribute.
 
       Additional arguments:
-      \itemize{
+      \describe{
 	\item{directed}{Logical scalar, whether to create a directed
 	  graph. By default a directed graph is created.
 	}
       }
-    }
-    \item{graphdb}{This is a binary format, used in the graph database
+}
+\section{GraphDB format}{
+      This is a binary format, used in the graph database
       for isomorphism testing (\url{http://amalfi.dis.unina.it/graph/})
       From the graph database homepage
       (\url{http://amalfi.dis.unina.it/graph/db/doc/graphdbat-2.html}):
@@ -307,16 +325,14 @@ read.graph(file, format = c("edgelist", "pajek", "ncol", "lgl",
       Only unlabelled graphs are implemented.
 
       Additional attributes:
-      \itemize{
+      \describe{
 	\item{directed}{Logical scalar. Whether to create a directed
 	  graph.}
       }
-    }
-  }
 }
 \value{A graph object.}
 % \references{}
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{ \code{\link{write.graph}} }
 % \examples{}
 \keyword{graphs}

@@ -39,7 +39,7 @@ graph.knn(graph, vids=V(graph), weights=NULL)
   Vespignani: The architecture of complex weighted networks,
   Proc. Natl. Acad. Sci. USA 101, 3747 (2004)
 }
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \examples{
 # Some trivial ones
 g <- graph.ring(10)
@@ -48,7 +48,7 @@ g2 <- graph.star(10)
 graph.knn(g2)
 
 # A scale-free one, try to plot 'knnk'
-g3 <- simplify(ba.game(1000, m=5))
+g3 <- ba.game(1000, m=5)
 graph.knn(g3)
 
 # A random graph

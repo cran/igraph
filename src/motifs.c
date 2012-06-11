@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2006  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2006-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,12 +21,31 @@
 
 */
 
-#include "igraph.h"
-#include "memory.h"
-#include "random.h"
+#include "igraph_motifs.h"
+#include "igraph_memory.h"
+#include "igraph_random.h"
+#include "igraph_adjlist.h"
+#include "igraph_interrupt_internal.h"
+#include "igraph_interface.h"
+#include "igraph_nongraph.h"
+#include "igraph_structural.h"
+#include "igraph_stack.h"
 #include "config.h"
 
 #include <string.h>
+
+extern unsigned int igraph_i_isoclass_3[];
+extern unsigned int igraph_i_isoclass_4[];
+extern unsigned int igraph_i_isoclass_3u[];
+extern unsigned int igraph_i_isoclass_4u[];
+extern unsigned int igraph_i_isoclass2_3[];
+extern unsigned int igraph_i_isoclass2_4[];
+extern unsigned int igraph_i_isoclass2_3u[];
+extern unsigned int igraph_i_isoclass2_4u[];
+extern unsigned int igraph_i_isoclass_3_idx[];
+extern unsigned int igraph_i_isoclass_4_idx[];
+extern unsigned int igraph_i_isoclass_3u_idx[];
+extern unsigned int igraph_i_isoclass_4u_idx[];
 
 /**
  * Callback function for igraph_motifs_randesu that counts the motifs by
@@ -92,6 +111,8 @@ igraph_bool_t igraph_i_motifs_randesu_update_hist(const igraph_t *graph,
  * for every motif found.
  * 
  * Time complexity: TODO.
+ * 
+ * \example examples/simple/igraph_motifs_randesu.c
  */
 int igraph_motifs_randesu(const igraph_t *graph, igraph_vector_t *hist, 
 			  int size, const igraph_vector_t *cut_prob) {
@@ -486,7 +507,7 @@ int igraph_motifs_randesu_estimate(const igraph_t *graph, igraph_integer_t *est,
     s=igraph_vector_size(&neis);
     for (i=0; i<s; i++) {
       long int nei=VECTOR(neis)[i];
-      if (!added[nei]) {
+      if (!added[nei] && nei > father) {
 	IGRAPH_CHECK(igraph_vector_push_back(&adjverts, nei));
 	IGRAPH_CHECK(igraph_vector_push_back(&adjverts, father));
       }
@@ -526,7 +547,7 @@ int igraph_motifs_randesu_estimate(const igraph_t *graph, igraph_integer_t *est,
 	  s=igraph_vector_size(&neis);
 	  for (i=0; i<s; i++) {
 	    long int nei2=VECTOR(neis)[i];
-	    if (!added[nei2]) {
+	    if (!added[nei2] && nei2 > father) {
 	      IGRAPH_CHECK(igraph_vector_push_back(&adjverts, nei2));
 	    IGRAPH_CHECK(igraph_vector_push_back(&adjverts, nei));
 	    }
@@ -574,7 +595,6 @@ int igraph_motifs_randesu_estimate(const igraph_t *graph, igraph_integer_t *est,
   RNG_END();
 
   (*est) *= ((double)no_of_nodes/sample_size);
-  (*est) /= size;
 
   if (parsample==0) {
     igraph_vector_destroy(sample);
@@ -666,7 +686,7 @@ int igraph_motifs_randesu_no(const igraph_t *graph, igraph_integer_t *no,
     s=igraph_vector_size(&neis);
     for (i=0; i<s; i++) {
       long int nei=VECTOR(neis)[i];
-      if (!added[nei]) {
+      if (!added[nei] && nei > father) {
 	IGRAPH_CHECK(igraph_vector_push_back(&adjverts, nei));
 	IGRAPH_CHECK(igraph_vector_push_back(&adjverts, father));
       }
@@ -706,7 +726,7 @@ int igraph_motifs_randesu_no(const igraph_t *graph, igraph_integer_t *no,
 	  s=igraph_vector_size(&neis);
 	  for (i=0; i<s; i++) {
 	    long int nei2=VECTOR(neis)[i];
-	    if (!added[nei2]) {
+	    if (!added[nei2] && nei2 > father) {
 	      IGRAPH_CHECK(igraph_vector_push_back(&adjverts, nei2));
 	      IGRAPH_CHECK(igraph_vector_push_back(&adjverts, nei));
 	    }
@@ -752,8 +772,6 @@ int igraph_motifs_randesu_no(const igraph_t *graph, igraph_integer_t *no,
   } /* for father */
 
   RNG_END();
-
-  *no /= size;
 
   igraph_Free(added);
   igraph_vector_destroy(&vids);
@@ -806,7 +824,8 @@ int igraph_dyad_census(const igraph_t *graph, igraph_integer_t *mut,
     IGRAPH_WARNING("Dyad census called on undirected graph");
   }
 
-  IGRAPH_CHECK(igraph_reciprocity(graph, &rec, 1));
+  IGRAPH_CHECK(igraph_reciprocity(graph, &rec, /*loops=*/1, 
+				  IGRAPH_RECIPROCITY_RATIO));
   *mut = rec*ec/(rec+1);
   *asym = ec-2*(*mut);
   *null = vc*(vc-1)/2-(*mut)-(*asym);

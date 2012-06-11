@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2003, 2004, 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2003-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,8 +21,15 @@
 
 */
 
-#include "igraph.h"
-#include "memory.h"
+#include "igraph_components.h"
+#include "igraph_memory.h"
+#include "igraph_interface.h"
+#include "igraph_adjlist.h"
+#include "igraph_interrupt_internal.h"
+#include "igraph_structural.h"
+#include "igraph_dqueue.h"
+#include "igraph_stack.h"
+#include "igraph_vector.h"
 #include "config.h"
 #include <string.h>
 #include <limits.h>
@@ -212,7 +219,7 @@ int igraph_clusters_strong(const igraph_t *graph, igraph_vector_t *membership,
   }  /* for */
 
   /* OK, we've the 'out' values for the nodes, let's use them in
-     descreasing order with the help of a heap */
+     decreasing order with the help of a heap */
 
   igraph_vector_null(&next_nei);                            /* mark already
 							added vertices */
@@ -267,7 +274,7 @@ int igraph_is_connected_weak(const igraph_t *graph, igraph_bool_t *res);
  * \function igraph_is_connected
  * \brief Decides whether the graph is (weakly or strongly) connected.
  * 
- * A graph with zero vertices is connected by definition.
+ * A graph with zero vertices (i.e. the null graph) is connected by definition.
  *
  * \param graph The graph object to analyze.
  * \param res Pointer to a logical variable, the result will be stored
@@ -276,7 +283,7 @@ int igraph_is_connected_weak(const igraph_t *graph, igraph_bool_t *res);
  *        weak or strong connectedness. Possible values: 
  *        \c IGRAPH_WEAK,
  *        \c IGRAPH_STRONG. This argument is 
- *        igrored for undirected graphs.
+ *        ignored for undirected graphs.
  * \return Error code:
  *        \c IGRAPH_EINVAL: invalid mode argument.
  *
@@ -284,7 +291,6 @@ int igraph_is_connected_weak(const igraph_t *graph, igraph_bool_t *res);
  * number of vertices 
  * plus the number of edges in the graph.
  */
-
 
 int igraph_is_connected(const igraph_t *graph, igraph_bool_t *res, 
 			igraph_connectedness_t mode) {
@@ -307,6 +313,25 @@ int igraph_is_connected(const igraph_t *graph, igraph_bool_t *res,
   return 0;
 }
 
+/**
+ * \ingroup structural
+ * \function igraph_is_connected_weak
+ * \brief Query whether the graph is weakly connected.
+ *
+ * A graph with zero vertices (i.e. the null graph) is weakly connected by
+ * definition. A directed graph is weakly connected if its undirected version
+ * is connected. In the case of undirected graphs, weakly connected and
+ * connected are equivalent.
+ *
+ * \param graph The graph object to analyze.
+ * \param res Pointer to a logical variable; the result will be stored here.
+ * \return Error code:
+ *        \c IGRAPH_ENOMEM: unable to allocate requested memory.
+ *
+ * Time complexity: O(|V|+|E|), the number of vertices plus the number of
+ * edges in the graph.
+ */
+
 int igraph_is_connected_weak(const igraph_t *graph, igraph_bool_t *res) {
 
   long int no_of_nodes=igraph_vcount(graph);
@@ -318,7 +343,7 @@ int igraph_is_connected_weak(const igraph_t *graph, igraph_bool_t *res) {
 
   if (no_of_nodes == 0) {
     *res = 1;
-	return IGRAPH_SUCCESS;
+    return IGRAPH_SUCCESS;
   }
 
   already_added=igraph_Calloc(no_of_nodes, char);
@@ -361,7 +386,7 @@ int igraph_is_connected_weak(const igraph_t *graph, igraph_bool_t *res) {
 
 /** 
  * \function igraph_decompose_destroy
- * \brief Free the memory allocated by \ref igraph_decompose()
+ * \brief Free the memory allocated by \ref igraph_decompose().
  * 
  * \param complist The list of graph components, as returned by 
  *        \ref igraph_decompose().
@@ -404,7 +429,7 @@ void igraph_decompose_destroy(igraph_vector_ptr_t *complist) {
  *    the number of components.
  * \param minelements The minimum number of vertices a component
  *    should contain in order to place it in the \p components
- *    vector. Eg. supply 2 here to ignore isolate vertices.
+ *    vector. Eg. supply 2 here to ignore isolated vertices.
  * \return Error code, \c IGRAPH_ENOMEM if there is not enough memory
  *   to perform the operation.
  *
@@ -412,6 +437,8 @@ void igraph_decompose_destroy(igraph_vector_ptr_t *complist) {
  * 
  * Time complexity: O(|V|+|E|), the number of vertices plus the number
  * of edges. 
+ * 
+ * \example examples/simple/igraph_decompose.c
  */
 
 int igraph_decompose(const igraph_t *graph, igraph_vector_ptr_t *components, 
@@ -440,6 +467,9 @@ int igraph_decompose(const igraph_t *graph, igraph_vector_ptr_t *components,
     maxcompno=LONG_MAX;
   }
 
+  igraph_vector_ptr_clear(components);
+  IGRAPH_FINALLY(igraph_decompose_destroy, components);
+
   already_added=igraph_Calloc(no_of_nodes, char);
   if (already_added==0) {
     IGRAPH_ERROR("Cannot decompose graph", IGRAPH_ENOMEM);
@@ -447,10 +477,9 @@ int igraph_decompose(const igraph_t *graph, igraph_vector_ptr_t *components,
   IGRAPH_FINALLY(igraph_free, already_added);
 
   IGRAPH_CHECK(igraph_dqueue_init(&q, 100));
+  IGRAPH_FINALLY(igraph_dqueue_destroy, &q);
   IGRAPH_VECTOR_INIT_FINALLY(&verts, 0);
   IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);
-  igraph_vector_ptr_clear(components);
-  IGRAPH_FINALLY(igraph_decompose_destroy, components);
   
   for(actstart=0; resco<maxcompno && actstart < no_of_nodes; actstart++) {
     
@@ -482,20 +511,19 @@ int igraph_decompose(const igraph_t *graph, igraph_vector_ptr_t *components,
       IGRAPH_ERROR("Cannot decompose graph", IGRAPH_ENOMEM);
     }
     IGRAPH_CHECK(igraph_vector_ptr_push_back(components, newg));
-    IGRAPH_FINALLY(igraph_destroy, newg);
-    IGRAPH_CHECK(igraph_subgraph(graph, newg, 
-				 igraph_vss_vector(&verts)));
-    IGRAPH_FINALLY_CLEAN(1);
+    IGRAPH_CHECK(igraph_induced_subgraph(graph, newg, 
+					 igraph_vss_vector(&verts), 
+					 IGRAPH_SUBGRAPH_AUTO));
     resco++;
     
   } /* for actstart++ */
 
+  igraph_vector_destroy(&neis);
+  igraph_vector_destroy(&verts);
   igraph_dqueue_destroy(&q);
   igraph_free(already_added);
-  igraph_vector_destroy(&verts);
-  igraph_vector_destroy(&neis);
+  IGRAPH_FINALLY_CLEAN(5);	/* + components */
   
-  IGRAPH_FINALLY_CLEAN(4);
   return 0;
 }
 
@@ -519,7 +547,19 @@ int igraph_articulation_points(const igraph_t *graph,
 			       igraph_vector_t *res) {
 
   igraph_integer_t no;
-  return igraph_biconnected_components(graph, &no, 0, res);
+  return igraph_biconnected_components(graph, &no, 0, 0, 0, res);
+}
+
+void igraph_i_free_vectorlist(igraph_vector_ptr_t *list) {
+  long int i, n=igraph_vector_ptr_size(list);
+  for (i=0; i<n; i++) {
+    igraph_vector_t *v=VECTOR(*list)[i];
+    if (v) { 
+      igraph_vector_destroy(v);
+      igraph_Free(v);
+    }
+  }
+  igraph_vector_ptr_destroy(list);
 }
 
 /**
@@ -527,7 +567,7 @@ int igraph_articulation_points(const igraph_t *graph,
  * Calculate biconnected components
  * 
  * A graph is biconnected if the removal of any single vertex (and
- * its adjacent edges) does not disconnect it.
+ * its incident edges) does not disconnect it.
  * 
  * </para><para>
  * A biconnected component of a graph is a maximal biconnected
@@ -536,9 +576,9 @@ int igraph_articulation_points(const igraph_t *graph,
  * one biconnected component. Note that this is not true for
  * vertices: the same vertex can be part of many biconnected
  * components.
- * \param graph The input graph
+ * \param graph The input graph.
  * \param no The number of biconnected components will be stored here.
- * \param components If not a NULL points, then the found components
+ * \param tree_edges If not a NULL pointer, then the found components
  *     are stored here, in a list of vectors. Every vector in the list
  *     is a biconnected component, represented by its edges. More precisely, 
  *     a spanning tree of the biconnected component is returned.
@@ -547,19 +587,34 @@ int igraph_articulation_points(const igraph_t *graph,
  *     and then <code>free()</code> on it, plus you need to call 
  *     \ref igraph_vector_ptr_destroy() on the list to regain all 
  *     allocated memory.
+ * \param component_edges If not a NULL pointer, then the edges of the
+ *     biconnected components are stored here, in the same form as for
+ *     \c tree_edges.
+ * \param components If not a NULL pointer, then the vertices of the
+ *     biconnected components are stored here, in the same format as
+ *     for the previous two arguments.
  * \param articulation_points If not a NULL pointer, then the 
  *     articulation points of the graph are stored in this vector.
  *     A vertex is an articulation point if its removal increases the 
  *     number of (weakly) connected components in the graph.
  * \return Error code.
  * 
- * Time complexity: O(|V|+|E|), linear in the number of vertices and edges.
+ * Time complexity: O(|V|+|E|), linear in the number of vertices and
+ * edges, but only if you do not calculate \c components and
+ * \c component_edges. If you calculate \c components, then it is
+ * quadratic in the number of vertices. If you calculate \c
+ * component_edges as well, then it is cubic in the number of
+ * vertices.
  * 
  * \sa \ref igraph_articulation_points(), \ref igraph_clusters().
+ * 
+ * \example examples/simple/igraph_biconnected_components.c
  */
 
 int igraph_biconnected_components(const igraph_t *graph,
 				  igraph_integer_t *no,
+				  igraph_vector_ptr_t *tree_edges,
+				  igraph_vector_ptr_t *component_edges,
 				  igraph_vector_ptr_t *components,
 				  igraph_vector_t *articulation_points) {
 
@@ -570,8 +625,11 @@ int igraph_biconnected_components(const igraph_t *graph,
   igraph_vector_t *adjedges;
   igraph_stack_t path;
   igraph_vector_t edgestack;
-  igraph_adjedgelist_t adjedgelist;
+  igraph_inclist_t inclist;
   long int i, counter, rootdfs=0;  
+  igraph_vector_long_t vertex_added;
+  long int comps=0;
+  igraph_vector_ptr_t *mycomponents=components, vcomponents;
 
   IGRAPH_CHECK(igraph_vector_long_init(&nextptr, no_of_nodes));
   IGRAPH_FINALLY(igraph_vector_long_destroy, &nextptr);
@@ -587,17 +645,31 @@ int igraph_biconnected_components(const igraph_t *graph,
   IGRAPH_VECTOR_INIT_FINALLY(&edgestack, 0);
   IGRAPH_CHECK(igraph_vector_reserve(&edgestack, 100));
 
-  IGRAPH_CHECK(igraph_adjedgelist_init(graph, &adjedgelist, IGRAPH_ALL));
-  IGRAPH_FINALLY(igraph_adjedgelist_destroy, &adjedgelist);
+  IGRAPH_CHECK(igraph_inclist_init(graph, &inclist, IGRAPH_ALL));
+  IGRAPH_FINALLY(igraph_inclist_destroy, &inclist);
+
+  IGRAPH_CHECK(igraph_vector_long_init(&vertex_added, no_of_nodes));
+  IGRAPH_FINALLY(igraph_vector_long_destroy, &vertex_added);
 
   if (no) {
     *no=0;
   }
+  if (tree_edges) {
+    igraph_vector_ptr_clear(tree_edges);
+  }
   if (components) {
     igraph_vector_ptr_clear(components);
   }
+  if (component_edges) {
+    igraph_vector_ptr_clear(component_edges);
+  }
   if (articulation_points) {
     igraph_vector_clear(articulation_points);
+  }
+  if (component_edges && !components) {
+    mycomponents=&vcomponents;
+    IGRAPH_CHECK(igraph_vector_ptr_init(mycomponents, 0));
+    IGRAPH_FINALLY(igraph_i_free_vectorlist, mycomponents);
   }
 
   for (i=0; i<no_of_nodes; i++) {
@@ -615,7 +687,7 @@ int igraph_biconnected_components(const igraph_t *graph,
       long int act=igraph_stack_top(&path);
       long int actnext=VECTOR(nextptr)[act];
       
-      adjedges=igraph_adjedgelist_get(&adjedgelist, act);
+      adjedges=igraph_inclist_get(&inclist, act);
       n=igraph_vector_size(adjedges);
       if (actnext < n) {
 	/* Step down (maybe) */
@@ -650,18 +722,81 @@ int igraph_biconnected_components(const igraph_t *graph,
 	      VECTOR(found)[prev] = 1;
 	    }
 	    if (no) { *no += 1; }
-	    if (components) {
-	      igraph_vector_t *v=igraph_Calloc(1, igraph_vector_t);
-	      IGRAPH_CHECK(igraph_vector_init(v, 0));
+
+	    /*------------------------------------*/
+	    /* Record the biconnected component just found */
+	    if (tree_edges || mycomponents) {
+	      igraph_vector_t *v = 0, *v2 = 0;
+	      comps++;
+	      if (tree_edges) { 
+		v=igraph_Calloc(1, igraph_vector_t);
+		if (!v) { IGRAPH_ERROR("Out of memory", IGRAPH_ENOMEM); }
+		IGRAPH_CHECK(igraph_vector_init(v, 0));
+		IGRAPH_FINALLY(igraph_vector_destroy, v);
+	      }
+	      if (mycomponents) {
+		v2=igraph_Calloc(1, igraph_vector_t);
+		if (!v2) { IGRAPH_ERROR("Out of memory", IGRAPH_ENOMEM); }
+		IGRAPH_CHECK(igraph_vector_init(v2, 0));
+		IGRAPH_FINALLY(igraph_vector_destroy, v2);
+	      }
+	      
 	      while (!igraph_vector_empty(&edgestack)) {
 		long int e=igraph_vector_pop_back(&edgestack);
-		IGRAPH_CHECK(igraph_vector_push_back(v, e));
-		if (IGRAPH_FROM(graph,e)==prev || IGRAPH_TO(graph,e)==prev) {
+		long int from=IGRAPH_FROM(graph,e);
+		long int to=IGRAPH_TO(graph,e);
+		if (tree_edges) { 
+		  IGRAPH_CHECK(igraph_vector_push_back(v, e));
+		}
+		if (mycomponents) {
+		  if (VECTOR(vertex_added)[from] != comps) { 
+		    VECTOR(vertex_added)[from] = comps;
+		    IGRAPH_CHECK(igraph_vector_push_back(v2, from));
+		  }
+		  if (VECTOR(vertex_added)[to] != comps) {
+		    VECTOR(vertex_added)[to] = comps;
+		    IGRAPH_CHECK(igraph_vector_push_back(v2, to));
+		  }
+		}
+		if (from==prev || to==prev) {
 		  break;
 		}
 	      }
-	      IGRAPH_CHECK(igraph_vector_ptr_push_back(components, v));
-	    }
+	      
+	      if (mycomponents) {
+		IGRAPH_CHECK(igraph_vector_ptr_push_back(mycomponents, v2));
+		IGRAPH_FINALLY_CLEAN(1);
+	      }
+	      if (tree_edges) { 
+		IGRAPH_CHECK(igraph_vector_ptr_push_back(tree_edges, v));
+		IGRAPH_FINALLY_CLEAN(1);
+	      }
+	      if (component_edges) {
+		igraph_vector_t *nodes=VECTOR(*mycomponents)[comps-1];
+		igraph_vector_t *v=igraph_Calloc(1, igraph_vector_t);
+		long int i, no_vert=igraph_vector_size(nodes);
+		if (!v) { IGRAPH_ERROR("Out of memory", IGRAPH_ENOMEM); }
+		IGRAPH_CHECK(igraph_vector_init(v, 0));
+		IGRAPH_FINALLY(igraph_vector_destroy, v);
+		for (i=0; i<no_vert; i++) {
+		  long int vert=VECTOR(*nodes)[i];
+		  igraph_vector_t *edges=igraph_inclist_get(&inclist, 
+								vert);
+		  long int j, n=igraph_vector_size(edges);
+		  for (j=0; j<n; j++) {
+		    long int e=VECTOR(*edges)[j];
+		    long int nei=IGRAPH_OTHER(graph, e, vert);
+		    if (VECTOR(vertex_added)[nei] == comps && nei<vert) {
+		      IGRAPH_CHECK(igraph_vector_push_back(v, e));
+		    }
+		  }
+		}
+		IGRAPH_CHECK(igraph_vector_ptr_push_back(component_edges, v));
+		IGRAPH_FINALLY_CLEAN(1);
+	      }
+	    } /* record component if requested */
+	    /*------------------------------------*/
+
 	  }
 	} /* !igraph_stack_empty(&path) */
       }
@@ -674,14 +809,20 @@ int igraph_biconnected_components(const igraph_t *graph,
 
   } /* i < no_of_nodes */
 
-  igraph_adjedgelist_destroy(&adjedgelist);
+  if (mycomponents != components) {
+    igraph_i_free_vectorlist(mycomponents);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+
+  igraph_vector_long_destroy(&vertex_added);
+  igraph_inclist_destroy(&inclist);
   igraph_vector_destroy(&edgestack);
   igraph_stack_destroy(&path);
   igraph_vector_bool_destroy(&found);
   igraph_vector_long_destroy(&low);
   igraph_vector_long_destroy(&num);
   igraph_vector_long_destroy(&nextptr);
-  IGRAPH_FINALLY_CLEAN(7);
+  IGRAPH_FINALLY_CLEAN(8);
 
   return 0;
 }

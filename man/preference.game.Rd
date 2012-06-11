@@ -4,11 +4,11 @@
 \title{Trait-based random generation}
 \description{Generation of random graphs based on different vertex types.}
 \usage{
-preference.game(nodes, types, type.dist=rep(1, types),
-    pref.matrix=matrix(1, types, types), directed=FALSE, loops=FALSE) 
+preference.game(nodes, types, type.dist=rep(1, types), fixed.sizes=FALSE,
+    pref.matrix=matrix(1, types, types), directed=FALSE, loops=FALSE)
 asymmetric.preference.game(nodes, types,
     type.dist.matrix=matrix(1,types,types),
-    pref.matrix = matrix(1, types, types), loops=FALSE) 
+    pref.matrix = matrix(1, types, types), loops=FALSE)
 }
 \arguments{
   \item{nodes}{The number of vertices in the graphs.}
@@ -16,6 +16,10 @@ asymmetric.preference.game(nodes, types,
   \item{type.dist}{The distribution of the vertex types, a numeric
     vector of length \sQuote{types} containing non-negative numbers. The
     vector will be normed to obtain probabilities.}
+  \item{fixed.sizes}{Fix the number of vertices with a given
+    vertex type label. The \code{type.dist} argument gives the group
+    sizes (i.e. number of vertices with the different labels) in this
+    case.}
   \item{type.dist.matrix}{The joint distribution of the in- and
     out-vertex types.}
   \item{pref.matrix}{A square matrix giving the preferences of the
@@ -41,8 +45,8 @@ asymmetric.preference.game(nodes, types,
 }
 \value{An igraph graph.}
 %\references{}
-\author{Tamas Nepusz \email{ntamas@rmki.kfki.hu} and Gabor Csardi
-  \email{csardi@rmki.kfki.hu} for the R interface} 
+\author{Tamas Nepusz \email{ntamas@gmail.com} and Gabor Csardi
+  \email{csardi.gabor@gmail.com} for the R interface} 
 \examples{
 pf <- matrix( c(1, 0, 0, 1), nr=2)
 g <- preference.game(20, 2, pref.matrix=pf)

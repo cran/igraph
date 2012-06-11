@@ -7,7 +7,8 @@
 \description{The degree of a vertex is its most basic structural
   property, the number of its adjacent edges.}
 \usage{
-degree(graph, v=V(graph), mode = c("all", "out", "in", "total"), loops = TRUE) 
+degree(graph, v=V(graph), mode = c("all", "out", "in", "total"),
+       loops = TRUE, normalized = FALSE) 
 degree.distribution(graph, cumulative = FALSE, \dots) 
 }
 \arguments{
@@ -15,8 +16,12 @@ degree.distribution(graph, cumulative = FALSE, \dots)
   \item{v}{The ids of vertices of which the degree will be calculated.}
   \item{mode}{Character string, \dQuote{out} for out-degree, \dQuote{in} for
     in-degree or \dQuote{total} for the sum of the two. For undirected
-    graphs this argument is ignored.}
+    graphs this argument is ignored. \dQuote{all} is a synonym of
+    \dQuote{total}.}
   \item{loops}{Logical; whether the loop edges are also counted.}
+  \item{normalized}{Logical scalar, whether to normalize the degree.
+    If \code{TRUE} then the result is divided by \eqn{n-1}, where
+    \eqn{n} is the number of vertices in the graph.}
   \item{cumulative}{Logical; whether the cumulative degree distribution
     is to be calculated.}
   \item{\dots}{Additional arguments to pass to \code{degree},
@@ -34,7 +39,7 @@ degree.distribution(graph, cumulative = FALSE, \dots)
   etc. 
 }
 % \references{}
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 % \seealso{}
 \examples{
 g <- graph.ring(10)

@@ -1,8 +1,9 @@
 /* -*- mode: C -*-  */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* 
    IGraph R package.
-   Copyright (C) 2003, 2004, 2005, 2006  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2003-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,9 +22,24 @@
 
 */
 
-#include "igraph.h"
-#include "random.h"
-#include "memory.h"
+#include "igraph_layout.h"
+#include "igraph_random.h"
+#include "igraph_memory.h"
+#include "igraph_iterators.h"
+#include "igraph_interface.h"
+#include "igraph_adjlist.h"
+#include "igraph_progress.h"
+#include "igraph_interrupt_internal.h"
+#include "igraph_paths.h"
+#include "igraph_structural.h"
+#include "igraph_visitor.h"
+#include "igraph_topology.h"
+#include "igraph_components.h"
+#include "igraph_types_internal.h"
+#include "igraph_dqueue.h"
+#include "igraph_arpack.h"
+#include "igraph_blas.h"
+#include "igraph_centrality.h"
 #include "config.h"
 #include <math.h>
 #include "igraph_math.h"
@@ -51,8 +67,8 @@ int igraph_i_layout_sphere_3d(igraph_matrix_t *coords, igraph_real_t *x, igraph_
  * \brief Places the vertices uniform randomly on a plane.
  * 
  * \param graph Pointer to an initialized graph object.
- * \param res Pointer to an initialized graph object. This will
- *        contain the result and will be resized in needed.
+ * \param res Pointer to an initialized matrix object. This will
+ *        contain the result and will be resized as needed.
  * \return Error code. The current implementation always returns with
  * success. 
  * 
@@ -120,8 +136,8 @@ int igraph_layout_random_3d(const igraph_t *graph, igraph_matrix_t *res) {
  * \brief Places the vertices uniformly on a circle, in the order of vertex ids.
  * 
  * \param graph Pointer to an initialized graph object.
- * \param res Pointer to an initialized graph object. This will
- *        contain the result and will be resized in needed.
+ * \param res Pointer to an initialized matrix object. This will
+ *        contain the result and will be resized as needed.
  * \return Error code.
  * 
  * Time complexity: O(|V|), the
@@ -149,7 +165,8 @@ int igraph_layout_circle(const igraph_t *graph, igraph_matrix_t *res) {
  * Generate a star-like layout
  * 
  * \param graph The input graph.
- * \param res Pointer to an initialized matrix, the layout is stored here.
+ * \param res Pointer to an initialized matrix object. This will
+ *        contain the result and will be resized as needed.
  * \param center The id of the vertex to put in the center.
  * \param order A numeric vector giving the order of the vertices 
  *      (including the center vertex!). If a null pointer, then the
@@ -206,8 +223,8 @@ int igraph_layout_star(const igraph_t *graph, igraph_matrix_t *res,
  * 5--11.  
  * 
  * \param graph Pointer to an initialized graph object.
- * \param res Pointer to an initialized matrix object, the will be
- * stored here. It will be resized.
+ * \param res Pointer to an initialized matrix object. This will
+ *        contain the result and will be resized as needed.
  * \return Error code. The current implementation always returns with
  * success. 
  * 
@@ -255,6 +272,93 @@ int igraph_layout_sphere(const igraph_t *graph, igraph_matrix_t *res) {
 
 /**
  * \ingroup layout
+ * \function igraph_layout_grid
+ * \brief Places the vertices on a regular grid on the plane.
+ *
+ * \param graph Pointer to an initialized graph object.
+ * \param res Pointer to an initialized matrix object. This will
+ *        contain the result and will be resized as needed.
+ * \param width The number of vertices in a single row of the grid.
+ *        When zero or negative, the width of the grid will be the
+ *        square root of the number of vertices, rounded up if needed.
+ * \return Error code. The current implementation always returns with
+ *         success. 
+ * 
+ * Time complexity: O(|V|), the number of vertices. 
+ */
+int igraph_layout_grid(const igraph_t *graph, igraph_matrix_t *res, long int width) {
+  long int i, no_of_nodes=igraph_vcount(graph);
+  igraph_real_t x, y;
+
+  IGRAPH_CHECK(igraph_matrix_resize(res, no_of_nodes, 2));  
+
+  if (width <= 0) {
+    width = ceil(sqrt(no_of_nodes));
+  }
+
+  x = y = 0;
+  for (i = 0; i < no_of_nodes; i++) {
+    MATRIX(*res, i, 0) = x++;
+    MATRIX(*res, i, 1) = y;
+    if (x == width) {
+      x = 0; y++;
+    }
+  }
+  
+  return 0;
+}
+
+/**
+ * \ingroup layout
+ * \function igraph_layout_grid_3d
+ * \brief Places the vertices on a regular grid in the 3D space.
+ *
+ * \param graph Pointer to an initialized graph object.
+ * \param res Pointer to an initialized matrix object. This will
+ *        contain the result and will be resized as needed.
+ * \param width  The number of vertices in a single row of the grid. When
+ *               zero or negative, the width is determined automatically.
+ * \param height The number of vertices in a single column of the grid. When
+ *               zero or negative, the height is determined automatically.
+ *
+ * \return Error code. The current implementation always returns with
+ *         success. 
+ * 
+ * Time complexity: O(|V|), the number of vertices. 
+ */
+int igraph_layout_grid_3d(const igraph_t *graph, igraph_matrix_t *res,
+    long int width, long int height) {
+  long int i, no_of_nodes=igraph_vcount(graph);
+  igraph_real_t x, y, z;
+
+  IGRAPH_CHECK(igraph_matrix_resize(res, no_of_nodes, 3));  
+
+  if (width <= 0 && height <= 0) {
+    width = height = ceil(pow(no_of_nodes, 1.0 / 3));
+  } else if (width <= 0) {
+    width = ceil(sqrt(no_of_nodes / (double)height));
+  } else if (height <= 0) {
+    height = ceil(sqrt(no_of_nodes / (double)width));
+  }
+
+  x = y = z = 0;
+  for (i = 0; i < no_of_nodes; i++) {
+    MATRIX(*res, i, 0) = x++;
+    MATRIX(*res, i, 1) = y;
+    MATRIX(*res, i, 2) = z;
+    if (x == width) {
+      x = 0; y++;
+      if (y == height) {
+        y = 0; z++;
+      }
+    }
+  }
+  
+  return 0;
+}
+
+/**
+ * \ingroup layout
  * \function igraph_layout_fruchterman_reingold
  * \brief Places the vertices on a plane according to the Fruchterman-Reingold algorithm.
  *
@@ -266,7 +370,7 @@ int igraph_layout_sphere(const igraph_t *graph, igraph_matrix_t *res) {
  * This function was ported from the SNA R package.
  * \param graph Pointer to an initialized graph object.
  * \param res Pointer to an initialized matrix object. This will
- *        contain the result and will be resized in needed.
+ *        contain the result and will be resized as needed.
  * \param niter The number of iterations to do. A reasonable
  *        default value is 500.
  * \param maxdelta The maximum distance to move a vertex in an
@@ -286,6 +390,16 @@ int igraph_layout_sphere(const igraph_t *graph, igraph_matrix_t *res) {
  * \param weight Pointer to a vector containing edge weights, 
  *        the attraction along the edges will be multiplied by these. 
  *        It will be ignored if it is a null-pointer.
+ * \param minx Pointer to a vector, or a \c NULL pointer. If not a 
+ *        \c NULL pointer then the vector gives the minimum
+ *        \quote x \endquote coordinate for every vertex.
+ * \param maxx Same as \p minx, but the maximum \quote x \endquote 
+ *        coordinates.
+ * \param miny Pointer to a vector, or a \c NULL pointer. If not a 
+ *        \c NULL pointer then the vector gives the minimum
+ *        \quote y \endquote coordinate for every vertex.
+ * \param maxy Same as \p miny, but the maximum \quote y \endquote 
+ *        coordinates.
  * \return Error code.
  * 
  * Time complexity: O(|V|^2) in each
@@ -297,7 +411,11 @@ int igraph_layout_fruchterman_reingold(const igraph_t *graph, igraph_matrix_t *r
 				       igraph_integer_t niter, igraph_real_t maxdelta,
 				       igraph_real_t area, igraph_real_t coolexp, 
 				       igraph_real_t repulserad, igraph_bool_t use_seed,
-				       const igraph_vector_t *weight) {
+				       const igraph_vector_t *weight, 
+				       const igraph_vector_t *minx,
+				       const igraph_vector_t *maxx,
+				       const igraph_vector_t *miny,
+				       const igraph_vector_t *maxy) {
   igraph_real_t frk,t,ded,xd,yd;
   igraph_real_t rf,af;
   long int i,j,k;
@@ -309,6 +427,25 @@ int igraph_layout_fruchterman_reingold(const igraph_t *graph, igraph_matrix_t *r
   
   if (weight && igraph_vector_size(weight) != igraph_ecount(graph)) {
     IGRAPH_ERROR("Invalid weight vector length", IGRAPH_EINVAL);
+  }
+
+  if (minx && igraph_vector_size(minx) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid minx vector length", IGRAPH_EINVAL);
+  }
+  if (maxx && igraph_vector_size(maxx) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid maxx vector length", IGRAPH_EINVAL);
+  }
+  if (minx && maxx && !igraph_vector_all_le(minx, maxx)) {
+    IGRAPH_ERROR("minx must not be greater than maxx", IGRAPH_EINVAL);
+  }
+  if (miny && igraph_vector_size(miny) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid miny vector length", IGRAPH_EINVAL);
+  }
+  if (maxy && igraph_vector_size(maxy) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid maxy vector length", IGRAPH_EINVAL);
+  }
+  if (miny && maxy && !igraph_vector_all_le(miny, maxy)) {
+    IGRAPH_ERROR("miny must not be greater than maxy", IGRAPH_EINVAL);
   }
   
   IGRAPH_CHECK(igraph_matrix_resize(res, no_of_nodes, 2));
@@ -340,10 +477,17 @@ int igraph_layout_fruchterman_reingold(const igraph_t *graph, igraph_matrix_t *r
         xd=MATRIX(*res, j, 0)-MATRIX(*res, k, 0);
         yd=MATRIX(*res, j, 1)-MATRIX(*res, k, 1);
         ded=sqrt(xd*xd+yd*yd);  /* Get dyadic euclidean distance */
-        xd/=ded;                /* Rescale differences to length 1 */
-        yd/=ded;
-        /* Calculate repulsive "force" */
-        rf=frk*frk*(1.0/ded-ded*ded/repulserad);
+        if (ded != 0) {
+          xd/=ded;                      /*Rescale differences to length 1*/
+          yd/=ded;
+          /*Calculate repulsive "force"*/
+          rf=frk*frk*(1.0/ded-ded*ded/repulserad);
+	      } else {
+          /* ded is exactly zero. Use some small random displacement. */
+          xd=RNG_NORMAL(0,0.1);
+          yd=RNG_NORMAL(0,0.1);
+          rf=RNG_NORMAL(0,0.1);
+        }
         MATRIX(dxdy, j, 0)+=xd*rf; /* Add to the position change vector */
         MATRIX(dxdy, k, 0)-=xd*rf;
         MATRIX(dxdy, j, 1)+=yd*rf;
@@ -362,10 +506,14 @@ int igraph_layout_fruchterman_reingold(const igraph_t *graph, igraph_matrix_t *r
       yd=MATRIX(*res, j, 1)-MATRIX(*res, k, 1);
       ded=sqrt(xd*xd+yd*yd);  /* Get dyadic euclidean distance */
       if (ded != 0) {
-	xd/=ded;                /* Rescale differences to length 1 */
-	yd/=ded;
+        xd/=ded;                /* Rescale differences to length 1 */
+        yd/=ded;
+        af=ded*ded/frk*w;
+      } else {
+        xd=RNG_NORMAL(0,0.1);
+        yd=RNG_NORMAL(0,0.1);
+        af=RNG_NORMAL(0,0.1);
       }
-      af=ded*ded/frk*w;
       MATRIX(dxdy, j, 0)-=xd*af; /* Add to the position change vector */
       MATRIX(dxdy, k, 0)+=xd*af;
       MATRIX(dxdy, j, 1)-=yd*af;
@@ -384,6 +532,16 @@ int igraph_layout_fruchterman_reingold(const igraph_t *graph, igraph_matrix_t *r
       }
       MATRIX(*res, j, 0)+=MATRIX(dxdy, j, 0); /* Update positions */
       MATRIX(*res, j, 1)+=MATRIX(dxdy, j, 1);
+      if (minx && MATRIX(*res, j, 0) < VECTOR(*minx)[j]) {
+        MATRIX(*res, j, 0) = VECTOR(*minx)[j];
+      } else if (maxx && MATRIX(*res, j, 0) > VECTOR(*maxx)[j]) {
+        MATRIX(*res, j, 0) = VECTOR(*maxx)[j];
+      }
+      if (miny && MATRIX(*res, j, 1) < VECTOR(*miny)[j]) {
+        MATRIX(*res, j, 1) = VECTOR(*miny)[j];
+      } else if (maxy && MATRIX(*res, j, 1) > VECTOR(*maxy)[j]) {
+        MATRIX(*res, j, 1) = VECTOR(*maxy)[j];
+      }
     }
   }
 
@@ -408,7 +566,7 @@ int igraph_layout_fruchterman_reingold(const igraph_t *graph, igraph_matrix_t *r
  * This function was ported from the SNA R package.
  * \param graph Pointer to an initialized graph object.
  * \param res Pointer to an initialized matrix object. This will
- *        contain the result and will be resized in needed.
+ *        contain the result and will be resized as needed.
  * \param niter The number of iterations to do. A reasonable
  *        default value is 500.
  * \param maxdelta The maximum distance to move a vertex in an
@@ -428,6 +586,21 @@ int igraph_layout_fruchterman_reingold(const igraph_t *graph, igraph_matrix_t *r
  * \param weight Pointer to a vector containing edge weights, 
  *        the attraction along the edges will be multiplied by these. 
  *        It will be ignored if it is a null-pointer.
+ * \param minx Pointer to a vector, or a \c NULL pointer. If not a 
+ *        \c NULL pointer then the vector gives the minimum
+ *        \quote x \endquote coordinate for every vertex.
+ * \param maxx Same as \p minx, but the maximum \quote x \endquote 
+ *        coordinates.
+ * \param miny Pointer to a vector, or a \c NULL pointer. If not a 
+ *        \c NULL pointer then the vector gives the minimum
+ *        \quote y \endquote coordinate for every vertex.
+ * \param maxy Same as \p miny, but the maximum \quote y \endquote 
+ *        coordinates.
+ * \param minz Pointer to a vector, or a \c NULL pointer. If not a 
+ *        \c NULL pointer then the vector gives the minimum
+ *        \quote z \endquote coordinate for every vertex.
+ * \param maxz Same as \p minz, but the maximum \quote z \endquote 
+ *        coordinates.
  * \return Error code.
  *
  * Added in version 0.2.</para><para>
@@ -444,7 +617,13 @@ int igraph_layout_fruchterman_reingold_3d(const igraph_t *graph,
 					  igraph_real_t volume, igraph_real_t coolexp,
 					  igraph_real_t repulserad,
 					  igraph_bool_t use_seed,
-					  const igraph_vector_t *weight) {
+					  const igraph_vector_t *weight, 
+					  const igraph_vector_t *minx,
+					  const igraph_vector_t *maxx,
+					  const igraph_vector_t *miny,
+					  const igraph_vector_t *maxy,
+					  const igraph_vector_t *minz,
+					  const igraph_vector_t *maxz) {
   
   igraph_real_t frk, t, ded, xd, yd, zd;
   igraph_matrix_t dxdydz;
@@ -457,6 +636,34 @@ int igraph_layout_fruchterman_reingold_3d(const igraph_t *graph,
 
   if (weight && igraph_vector_size(weight) != igraph_ecount(graph)) {
     IGRAPH_ERROR("Invalid weight vector length", IGRAPH_EINVAL);
+  }
+
+  if (minx && igraph_vector_size(minx) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid minx vector length", IGRAPH_EINVAL);
+  }
+  if (maxx && igraph_vector_size(maxx) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid maxx vector length", IGRAPH_EINVAL);
+  }
+  if (minx && maxx && !igraph_vector_all_le(minx, maxx)) {
+    IGRAPH_ERROR("minx must not be greater than maxx", IGRAPH_EINVAL);
+  }
+  if (miny && igraph_vector_size(miny) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid miny vector length", IGRAPH_EINVAL);
+  }
+  if (maxy && igraph_vector_size(maxy) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid maxy vector length", IGRAPH_EINVAL);
+  }
+  if (miny && maxy && !igraph_vector_all_le(miny, maxy)) {
+    IGRAPH_ERROR("miny must not be greater than maxy", IGRAPH_EINVAL);
+  }
+  if (minz && igraph_vector_size(minz) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid minz vector length", IGRAPH_EINVAL);
+  }
+  if (maxz && igraph_vector_size(maxz) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid maxz vector length", IGRAPH_EINVAL);
+  }
+  if (minz && maxz && !igraph_vector_all_le(minz, maxz)) {
+    IGRAPH_ERROR("minz must not be greater than maxz", IGRAPH_EINVAL);
   }
   
   IGRAPH_CHECK(igraph_matrix_init(&dxdydz, no_of_nodes, 3));
@@ -492,12 +699,18 @@ int igraph_layout_fruchterman_reingold_3d(const igraph_t *graph,
         zd=MATRIX(*res, j, 2)-MATRIX(*res, k, 2);
         ded=sqrt(xd*xd+yd*yd+zd*zd);  /*Get dyadic euclidean distance*/
         if (ded != 0) {
-	  xd/=ded;                      /*Rescale differences to length 1*/
-	  yd/=ded;
-	  zd/=ded;
-	}
-        /*Calculate repulsive "force"*/
-        rf=frk*frk*(1.0/ded-ded*ded/repulserad);
+          xd/=ded;                      /*Rescale differences to length 1*/
+          yd/=ded;
+          zd/=ded;
+          /*Calculate repulsive "force"*/
+          rf=frk*frk*(1.0/ded-ded*ded/repulserad);
+	      } else {
+          /* ded is exactly zero. Use some small random displacement. */
+          xd=RNG_NORMAL(0,0.1);
+          yd=RNG_NORMAL(0,0.1);
+          zd=RNG_NORMAL(0,0.1);
+          rf=RNG_NORMAL(0,0.1);
+        }
         MATRIX(dxdydz, j, 0)+=xd*rf;     /*Add to the position change vector*/
         MATRIX(dxdydz, k, 0)-=xd*rf;
         MATRIX(dxdydz, j, 1)+=yd*rf;
@@ -548,6 +761,21 @@ int igraph_layout_fruchterman_reingold_3d(const igraph_t *graph,
       MATRIX(*res, j, 0)+=MATRIX(dxdydz, j, 0);          /*Update positions*/
       MATRIX(*res, j, 1)+=MATRIX(dxdydz, j, 1);
       MATRIX(*res, j, 2)+=MATRIX(dxdydz, j, 2);
+      if (minx && MATRIX(*res, j, 0) < VECTOR(*minx)[j]) {
+        MATRIX(*res, j, 0) = VECTOR(*minx)[j];
+      } else if (maxx && MATRIX(*res, j, 0) > VECTOR(*maxx)[j]) {
+        MATRIX(*res, j, 0) = VECTOR(*maxx)[j];
+      }
+      if (miny && MATRIX(*res, j, 1) < VECTOR(*miny)[j]) {
+        MATRIX(*res, j, 1) = VECTOR(*miny)[j];
+      } else if (maxy && MATRIX(*res, j, 1) > VECTOR(*maxy)[j]) {
+        MATRIX(*res, j, 1) = VECTOR(*maxy)[j];
+      }
+      if (minz && MATRIX(*res, j, 2) < VECTOR(*minz)[j]) {
+        MATRIX(*res, j, 2) = VECTOR(*minz)[j];
+      } else if (maxz && MATRIX(*res, j, 2) > VECTOR(*maxz)[j]) {
+        MATRIX(*res, j, 2) = VECTOR(*maxz)[j];
+      }
     }
   }
 
@@ -571,7 +799,8 @@ int igraph_layout_fruchterman_reingold_3d(const igraph_t *graph,
  * This function was ported from the SNA R package.
  * \param graph A graph object.
  * \param res Pointer to an initialized matrix object. This will
- *        contain the result and will be resized if needed.
+ *        contain the result (x-positions in column zero and
+ *        y-positions in column one) and will be resized if needed.
  * \param niter The number of iterations to perform. A reasonable
  *        default value is 1000.  
  * \param sigma Sets the base standard deviation of position
@@ -579,12 +808,23 @@ int igraph_layout_fruchterman_reingold_3d(const igraph_t *graph,
  *        number of vertices / 4.
  * \param initemp Sets the initial temperature for the annealing.
  *        A reasonable default value is 10.
- * \param coolexp The cooling exponent of the annealing.
+ * \param coolexp The cooling exponent of the annealing.  
  *        A reasonable default value is 0.99.
  * \param kkconst The Kamada-Kawai vertex attraction constant.
- * \param use_seed Boolean, whether to use the values cupplied in the \p res 
- *     argument as the initial configuration. If zero then a random initial 
- *     configuration is used.
+ *        Typical value: (number of vertices)^2
+ * \param use_seed Boolean, whether to use the values supplied in the
+ *        \p res argument as the initial configuration. If zero then a
+ *        random initial configuration is used.
+ * \param minx Pointer to a vector, or a \c NULL pointer. If not a 
+ *        \c NULL pointer then the vector gives the minimum
+ *        \quote x \endquote coordinate for every vertex.
+ * \param maxx Same as \p minx, but the maximum \quote x \endquote 
+ *        coordinates.
+ * \param miny Pointer to a vector, or a \c NULL pointer. If not a 
+ *        \c NULL pointer then the vector gives the minimum
+ *        \quote y \endquote coordinate for every vertex.
+ * \param maxy Same as \p miny, but the maximum \quote y \endquote 
+ *        coordinates.
  * \return Error code.
  * 
  * Time complexity: O(|V|^2) for each
@@ -595,15 +835,49 @@ int igraph_layout_fruchterman_reingold_3d(const igraph_t *graph,
 int igraph_layout_kamada_kawai(const igraph_t *graph, igraph_matrix_t *res,
 			       igraph_integer_t niter, igraph_real_t sigma, 
 			       igraph_real_t initemp, igraph_real_t coolexp,
-			       igraph_real_t kkconst, igraph_bool_t use_seed) {
+			       igraph_real_t kkconst, igraph_bool_t use_seed,
+			       const igraph_vector_t *minx,
+			       const igraph_vector_t *maxx,
+			       const igraph_vector_t *miny,
+			       const igraph_vector_t *maxy) {
 
-  igraph_real_t temp, candx, candy;
+  igraph_real_t temp, candx, candy, dx, dy;
   igraph_real_t dpot, odis, ndis, osqd, nsqd;
-  long int n,i,j,k;
+  long int n=igraph_vcount(graph);
+  int i,j,k;
   igraph_matrix_t elen;
 
-  /* Define various things */
-  n=igraph_vcount(graph);
+  if (minx && igraph_vector_size(minx) != n) {
+    IGRAPH_ERROR("Invalid minx vector length", IGRAPH_EINVAL);
+  }
+  if (maxx && igraph_vector_size(maxx) != n) {
+    IGRAPH_ERROR("Invalid maxx vector length", IGRAPH_EINVAL);
+  }
+  if (minx && maxx && !igraph_vector_all_le(minx, maxx)) {
+    IGRAPH_ERROR("minx must not be greater than maxx", IGRAPH_EINVAL);
+  }
+  if (miny && igraph_vector_size(miny) != n) {
+    IGRAPH_ERROR("Invalid miny vector length", IGRAPH_EINVAL);
+  }
+  if (maxy && igraph_vector_size(maxy) != n) {
+    IGRAPH_ERROR("Invalid maxy vector length", IGRAPH_EINVAL);
+  }
+  if (miny && maxy && !igraph_vector_all_le(miny, maxy)) {
+    IGRAPH_ERROR("miny must not be greater than maxy", IGRAPH_EINVAL);
+  }
+
+#define CHECK_BOUNDS(x) do {						\
+    if (minx && MATRIX(*res, (x), 0) < VECTOR(*minx)[(x)]) {		\
+      MATRIX(*res, (x), 0) = VECTOR(*minx)[(x)];			\
+    } else if (maxx && MATRIX(*res, (x), 0) > VECTOR(*maxx)[(x)]) {	\
+      MATRIX(*res, (x), 0) = VECTOR(*maxx)[(x)];			\
+    }									\
+    if (miny && MATRIX(*res, (x), 1) < VECTOR(*miny)[(x)]) {		\
+      MATRIX(*res, (x), 1) = VECTOR(*miny)[(x)];			\
+    } else if (maxy && MATRIX(*res, (x), 1) > VECTOR(*maxy)[(x)]) {	\
+      MATRIX(*res, (x), 1) = VECTOR(*maxy)[(x)];			\
+    }									\
+  } while (0)    
 
   /* Calculate elen, initial x & y */
 
@@ -611,20 +885,40 @@ int igraph_layout_kamada_kawai(const igraph_t *graph, igraph_matrix_t *res,
 
   IGRAPH_CHECK(igraph_matrix_resize(res, n, 2));
   IGRAPH_MATRIX_INIT_FINALLY(&elen, n, n);
-  IGRAPH_CHECK(igraph_shortest_paths(graph, &elen, igraph_vss_all(), 
-				     IGRAPH_ALL));
+  IGRAPH_CHECK(igraph_shortest_paths(graph, &elen, igraph_vss_all(),
+				     igraph_vss_all(), IGRAPH_ALL));
+
+  /* Scan the distance matrix and introduce an upper limit.
+   * This helps with disconnected graphs. */
+  temp = 0.0;
+  for (i=0; i<n; i++) {
+    for (j=i+1; j<n; j++) {
+      if (!igraph_finite(MATRIX(elen, i, j)))
+        continue;
+      if (MATRIX(elen, i, j) > temp)
+        temp = MATRIX(elen, i, j);
+    }
+  }
+  for (i=0; i<n; i++) {
+    for (j=0; j<n; j++) {
+      if (MATRIX(elen, i, j) > temp)
+        MATRIX(elen, i, j) = temp;
+    }
+  }
+
+  /* Initialize the layout if needed */
   if (!use_seed) {
     for (i=0; i<n; i++) {
-      MATRIX(elen, i, i) = sqrt(n);
       MATRIX(*res, i, 0) = RNG_NORMAL(0, n/4.0);
       MATRIX(*res, i, 1) = RNG_NORMAL(0, n/4.0);
+      CHECK_BOUNDS(i);
     }
   }
   
   /*Perform the annealing loop*/
   temp=initemp;
   for(i=0;i<niter;i++){
-    /* Report progress in approx. every 100th step */
+    /* Report progress in approx. every 10th step */
     if (i%10 == 0)
       IGRAPH_PROGRESS("Kamada-Kawai layout: ",
 		      100.0*i/niter, NULL);
@@ -636,22 +930,25 @@ int igraph_layout_kamada_kawai(const igraph_t *graph, igraph_matrix_t *res,
       candy=RNG_NORMAL(MATRIX(*res, j, 1),sigma*temp/initemp);
       /*Calculate the potential difference for the new position*/
       dpot=0.0;
-      for(k=0;k<n;k++)  /*Potential differences for pairwise effects*/
+      for(k=0;k<n;k++) {
+        /*Potential differences for pairwise effects*/
         if(j!=k){
-          odis=sqrt((MATRIX(*res, j, 0)-MATRIX(*res, k, 0))*
-		    (MATRIX(*res, j, 0)-MATRIX(*res, k, 0))+
-		    (MATRIX(*res, j, 1)-MATRIX(*res, k, 1))*
-		    (MATRIX(*res, j, 1)-MATRIX(*res, k, 1)));
-          ndis=sqrt((candx-MATRIX(*res, k, 0))*(candx-MATRIX(*res, k, 0))+
-		    (candy-MATRIX(*res, k, 1))*(candy-MATRIX(*res, k, 1)));
-          osqd=(odis-MATRIX(elen, j, k))*(odis-MATRIX(elen, j, k));
-          nsqd=(ndis-MATRIX(elen, j, k))*(ndis-MATRIX(elen, j, k));
-          dpot+=kkconst*(osqd-nsqd)/(MATRIX(elen, j, k)*MATRIX(elen, j, k));
+          dx = MATRIX(*res, j, 0) - MATRIX(*res, k, 0);
+          dy = MATRIX(*res, j, 1) - MATRIX(*res, k, 1);
+          odis = sqrt(dx*dx + dy*dy);
+          dx = candx - MATRIX(*res, k, 0);
+          dy = candy - MATRIX(*res, k, 1);
+          ndis = sqrt(dx*dx + dy*dy);
+          osqd = (odis-MATRIX(elen, j, k))*(odis-MATRIX(elen, j, k));
+          nsqd = (ndis-MATRIX(elen, j, k))*(ndis-MATRIX(elen, j, k));
+          dpot += kkconst*(osqd-nsqd)/(MATRIX(elen, j, k)*MATRIX(elen, j, k));
         }
+      }
       /*Make a keep/reject decision*/
       if(log(RNG_UNIF(0.0,1.0))<dpot/temp){
         MATRIX(*res, j, 0)=candx;
         MATRIX(*res, j, 1)=candy;
+	CHECK_BOUNDS(j);
       }
     }
     /*Cool the system*/
@@ -663,6 +960,8 @@ int igraph_layout_kamada_kawai(const igraph_t *graph, igraph_matrix_t *res,
   RNG_END();
   igraph_matrix_destroy(&elen);
   IGRAPH_FINALLY_CLEAN(1);
+
+#undef CHECK_BOUNDS
 
   return 0;
 }
@@ -692,6 +991,8 @@ int igraph_layout_kamada_kawai(const igraph_t *graph, igraph_matrix_t *res,
  * \param use_seed Boolean, whether to use the values cupplied in the \p res 
  *     argument as the initial configuration. If zero then a random initial 
  *     configuration is used.
+ * \param fixz Logical, whether to fix the third coordinate of the input 
+ *     matrix.
  * \return Error code.
  * 
  * Added in version 0.2.</para><para>
@@ -704,26 +1005,99 @@ int igraph_layout_kamada_kawai(const igraph_t *graph, igraph_matrix_t *res,
 int igraph_layout_kamada_kawai_3d(const igraph_t *graph, igraph_matrix_t *res,
 				  igraph_integer_t niter, igraph_real_t sigma, 
 				  igraph_real_t initemp, igraph_real_t coolexp, 
-				  igraph_real_t kkconst, igraph_bool_t use_seed) {
+				  igraph_real_t kkconst, igraph_bool_t use_seed,
+				  igraph_bool_t fixz,
+				  const igraph_vector_t *minx,
+				  const igraph_vector_t *maxx,
+				  const igraph_vector_t *miny,
+				  const igraph_vector_t *maxy,
+				  const igraph_vector_t *minz,
+				  const igraph_vector_t *maxz) {
+
   igraph_real_t temp, candx, candy, candz;
   igraph_real_t dpot, odis, ndis, osqd, nsqd;
   long int i,j,k;
   long int no_of_nodes=igraph_vcount(graph);
   igraph_matrix_t elen;
+
+  if (minx && igraph_vector_size(minx) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid minx vector length", IGRAPH_EINVAL);
+  }
+  if (maxx && igraph_vector_size(maxx) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid maxx vector length", IGRAPH_EINVAL);
+  }
+  if (minx && maxx && !igraph_vector_all_le(minx, maxx)) {
+    IGRAPH_ERROR("minx must not be greater than maxx", IGRAPH_EINVAL);
+  }
+  if (miny && igraph_vector_size(miny) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid miny vector length", IGRAPH_EINVAL);
+  }
+  if (maxy && igraph_vector_size(maxy) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid maxy vector length", IGRAPH_EINVAL);
+  }
+  if (miny && maxy && !igraph_vector_all_le(miny, maxy)) {
+    IGRAPH_ERROR("miny must not be greater than maxy", IGRAPH_EINVAL);
+  }
+  if (minz && igraph_vector_size(minz) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid minz vector length", IGRAPH_EINVAL);
+  }
+  if (maxz && igraph_vector_size(maxz) != no_of_nodes) {
+    IGRAPH_ERROR("Invalid maxz vector length", IGRAPH_EINVAL);
+  }
+  if (minz && maxz && !igraph_vector_all_le(minz, maxz)) {
+    IGRAPH_ERROR("minz must not be greater than maxz", IGRAPH_EINVAL);
+  }
+
+#define CHECK_BOUNDS(x) do {						\
+    if (minx && MATRIX(*res, (x), 0) < VECTOR(*minx)[(x)]) {		\
+      MATRIX(*res, (x), 0) = VECTOR(*minx)[(x)];			\
+    } else if (maxx && MATRIX(*res, (x), 0) > VECTOR(*maxx)[(x)]) {	\
+      MATRIX(*res, (x), 0) = VECTOR(*maxx)[(x)];			\
+    }									\
+    if (miny && MATRIX(*res, (x), 1) < VECTOR(*miny)[(x)]) {		\
+      MATRIX(*res, (x), 1) = VECTOR(*miny)[(x)];			\
+    } else if (maxy && MATRIX(*res, (x), 1) > VECTOR(*maxy)[(x)]) {	\
+      MATRIX(*res, (x), 1) = VECTOR(*maxy)[(x)];			\
+    }									\
+    if (minz && MATRIX(*res, (x), 2) < VECTOR(*minz)[(x)]) {		\
+      MATRIX(*res, (x), 2) = VECTOR(*minz)[(x)];			\
+    } else if (maxz && MATRIX(*res, (x), 2) > VECTOR(*maxz)[(x)]) {	\
+      MATRIX(*res, (x), 2) = VECTOR(*maxz)[(x)];			\
+    }									\
+  } while (0)    
   
   RNG_BEGIN();
   
   IGRAPH_CHECK(igraph_matrix_resize(res, no_of_nodes, 3));
   IGRAPH_MATRIX_INIT_FINALLY(&elen,  no_of_nodes, no_of_nodes);
   IGRAPH_CHECK(igraph_shortest_paths(graph, &elen, igraph_vss_all(), 
+				     igraph_vss_all(),
 				     IGRAPH_ALL));
   
+  /* Scan the distance matrix and introduce an upper limit.
+   * This helps with disconnected graphs. */
+  temp = 0.0;
+  for (i=0; i<no_of_nodes; i++) {
+    for (j=i+1; j<no_of_nodes; j++) {
+      if (!igraph_finite(MATRIX(elen, i, j)))
+        continue;
+      if (MATRIX(elen, i, j) > temp)
+        temp = MATRIX(elen, i, j);
+    }
+  }
+  for (i=0; i<no_of_nodes; i++) {
+    for (j=0; j<no_of_nodes; j++) {
+      if (MATRIX(elen, i, j) > temp)
+        MATRIX(elen, i, j) = temp;
+    }
+  }
+
   if (!use_seed) {
     for (i=0; i<no_of_nodes; i++) {
-      MATRIX(elen, i, i) = sqrt(no_of_nodes);
       MATRIX(*res, i, 0) = RNG_NORMAL(0, no_of_nodes/4.0);
       MATRIX(*res, i, 1) = RNG_NORMAL(0, no_of_nodes/4.0);
       MATRIX(*res, i, 2) = RNG_NORMAL(0, no_of_nodes/4.0);
+      CHECK_BOUNDS(i);
     }
   }
 
@@ -761,7 +1135,8 @@ int igraph_layout_kamada_kawai_3d(const igraph_t *graph, igraph_matrix_t *res,
       if(log(RNG_UNIF(0.0,1.0))<dpot/temp){
         MATRIX(*res, j, 0)=candx;
         MATRIX(*res, j, 1)=candy;
-        MATRIX(*res, j, 2)=candz;
+        if (!fixz) { MATRIX(*res, j, 2)=candz; }
+	CHECK_BOUNDS(j);
       }
     }
     /*Cool the system*/
@@ -773,6 +1148,8 @@ int igraph_layout_kamada_kawai_3d(const igraph_t *graph, igraph_matrix_t *res,
   RNG_END();
   igraph_matrix_destroy(&elen);
   IGRAPH_FINALLY_CLEAN(1);
+
+#undef CHECK_BOUNDS
 
   return 0;
 }
@@ -801,7 +1178,7 @@ void igraph_i_norm2d(igraph_real_t *x, igraph_real_t *y) {
  * algorithm and program
  * (http://bioinformatics.icmb.utexas.edu/lgl/). But unlike LGL, this
  * version uses a Fruchterman-Reingold style simulated annealing
- * algorithm for placing the vertices. The speedup is achived by
+ * algorithm for placing the vertices. The speedup is achieved by
  * placing the vertices on a grid and calculating the repulsion only
  * for vertices which are closer to each other than a limit. 
  * 
@@ -819,7 +1196,7 @@ void igraph_i_norm2d(igraph_real_t *x, igraph_real_t *y) {
  * \param coolexp The cooling exponent. A reasonable default value is
  *   1.5.
  * \param repulserad Determines the radius at which vertex-vertex 
- *   repulsion cancels out attraction of adjacenct vertices. A
+ *   repulsion cancels out attraction of adjacent vertices. A
  *   reasonable default value is \p area times the number of vertices.
  * \param cellsize The size of the grid cells, one side of the
  *   square. A reasonable default value is the fourth root of
@@ -879,7 +1256,7 @@ int igraph_layout_lgl(const igraph_t *graph, igraph_matrix_t *res,
   IGRAPH_VECTOR_INIT_FINALLY(&vids, 0);
   IGRAPH_VECTOR_INIT_FINALLY(&layers, 0);
   IGRAPH_VECTOR_INIT_FINALLY(&parents, 0);
-  IGRAPH_CHECK(igraph_bfs(&mst, root, IGRAPH_ALL, &vids, &layers, &parents));
+  IGRAPH_CHECK(igraph_i_bfs(&mst, root, IGRAPH_ALL, &vids, &layers, &parents));
   no_of_layers=igraph_vector_size(&layers)-1;
   
   /* We don't need the mst any more */
@@ -976,7 +1353,7 @@ int igraph_layout_lgl(const igraph_t *graph, igraph_matrix_t *res,
       long int vid=VECTOR(vids)[j];
       long int k;
       IGRAPH_ALLOW_INTERRUPTION();
-      IGRAPH_CHECK(igraph_adjacent(graph, &eids, vid, IGRAPH_ALL));
+      IGRAPH_CHECK(igraph_incident(graph, &eids, vid, IGRAPH_ALL));
       for (k=0;k<igraph_vector_size(&eids);k++) {
 	long int eid=VECTOR(eids)[k];
 	igraph_integer_t from, to;
@@ -1117,6 +1494,9 @@ int igraph_layout_lgl(const igraph_t *graph, igraph_matrix_t *res,
  * \param use_seed Logical, if true, the coordinates passed in \p res
  *   (should have the appropriate size) will be used for the first
  *   iteration.
+ * \param weight Pointer to a vector containing edge weights, 
+ *        the attraction along the edges will be multiplied by these. 
+ *        It will be ignored if it is a null-pointer.
  * \return Error code.
  *
  * Added in version 0.2.</para><para>
@@ -1126,12 +1506,13 @@ int igraph_layout_lgl(const igraph_t *graph, igraph_matrix_t *res,
  */
 
 int igraph_layout_grid_fruchterman_reingold(const igraph_t *graph, 
-					    igraph_matrix_t *res,
-					    igraph_integer_t niter, igraph_real_t maxdelta, 
-					    igraph_real_t area, igraph_real_t coolexp,
-					    igraph_real_t repulserad, 
-					    igraph_real_t cellsize,
-					    igraph_bool_t use_seed) {
+               igraph_matrix_t *res,
+               igraph_integer_t niter, igraph_real_t maxdelta, 
+               igraph_real_t area, igraph_real_t coolexp,
+               igraph_real_t repulserad, 
+               igraph_real_t cellsize,
+               igraph_bool_t use_seed,
+               const igraph_vector_t *weight) {
 
   long int no_of_nodes=igraph_vcount(graph);
   long int no_of_edges=igraph_ecount(graph);
@@ -1142,6 +1523,10 @@ int igraph_layout_grid_fruchterman_reingold(const igraph_t *graph,
   igraph_2dgrid_iterator_t vidit;  
 
   igraph_real_t frk=sqrt(area/no_of_nodes);
+
+  if (weight && igraph_vector_size(weight) != igraph_ecount(graph)) {
+    IGRAPH_ERROR("Invalid weight vector length", IGRAPH_EINVAL);
+  }
 
   IGRAPH_CHECK(igraph_matrix_resize(res, no_of_nodes, 2));
   IGRAPH_VECTOR_INIT_FINALLY(&forcex, no_of_nodes);
@@ -1182,12 +1567,13 @@ int igraph_layout_grid_fruchterman_reingold(const igraph_t *graph,
     for (j=0; j<no_of_edges; j++) {
       igraph_integer_t from, to;
       igraph_real_t xd, yd, dist, force;
+      igraph_real_t w = weight ? VECTOR(*weight)[j] : 1.0;
       igraph_edge(graph, j, &from, &to);
       xd=MATRIX(*res, (long int)from, 0)-MATRIX(*res, (long int)to, 0);
       yd=MATRIX(*res, (long int)from, 1)-MATRIX(*res, (long int)to, 1);
       dist=sqrt(xd*xd+yd*yd);
       if (dist != 0) { xd/=dist; yd/=dist; }
-      force=dist*dist/frk;
+      force=dist*dist/frk*w;
       VECTOR(forcex)[(long int)from] -= xd*force;
       VECTOR(forcex)[(long int)to]   += xd*force;
       VECTOR(forcey)[(long int)from] -= yd*force;
@@ -1262,57 +1648,20 @@ int igraph_i_layout_reingold_tilford_calc_coords(struct igraph_i_reingold_tilfor
                                                  igraph_matrix_t *res, long int node,
 												 long int vcount, igraph_real_t xpos);
 
-/**
- * \function igraph_layout_reingold_tilford
- * \brief Reingold-Tilford layout for tree graphs
- * 
- * </para><para>
- * Arranges the nodes in a tree where the given node is used as the root.
- * The tree is directed downwards and the parents are centered above its
- * children. For the exact algorithm, see:
- * 
- * </para><para>
- * Reingold, E and Tilford, J: Tidier drawing of trees.
- * IEEE Trans. Softw. Eng., SE-7(2):223--228, 1981
- *
- * </para><para>
- * If the given graph is not a tree, a breadth-first search is executed
- * first to obtain a possible spanning tree.
- * 
- * \param graph The graph object. 
- * \param res The result, the coordinates in a matrix. The parameter
- *   should point to an initialized matrix object and will be resized.
- * \param root The index of the root vertex.
- * \return Error code.
- *
- * Added in version 0.2.
- * 
- * </para><para>
- * TODO: decompose and merge for not fully connected graphs
- * TODO: possible speedup could be achieved if we use a table for storing
- * the children of each node in the tree. (Now the implementation uses a
- * single array containing the parent of each node and a node's children
- * are determined by looking for other nodes that have this node as parent)
- * 
- * \sa \ref igraph_layout_reingold_tilford_circular().
- */
-int igraph_layout_reingold_tilford(const igraph_t *graph, 
-				   igraph_matrix_t *res, long int root) {
+int igraph_i_layout_reingold_tilford(const igraph_t *graph, 
+				     igraph_matrix_t *res, igraph_neimode_t mode, 
+				     long int root) {
   long int no_of_nodes=igraph_vcount(graph);
   long int i, n, j;
   igraph_dqueue_t q=IGRAPH_DQUEUE_NULL;
   igraph_adjlist_t allneis;
   igraph_vector_t *neis;
   struct igraph_i_reingold_tilford_vertex *vdata;
-  
-  if (root<0 || root>=no_of_nodes) {
-    IGRAPH_ERROR("invalid vertex id", IGRAPH_EINVVID);
-  }
-  
+    
   IGRAPH_CHECK(igraph_matrix_resize(res, no_of_nodes, 2));
   IGRAPH_DQUEUE_INIT_FINALLY(&q, 100);
   
-  IGRAPH_CHECK(igraph_adjlist_init(graph, &allneis, IGRAPH_ALL));
+  IGRAPH_CHECK(igraph_adjlist_init(graph, &allneis, mode));
   IGRAPH_FINALLY(igraph_adjlist_destroy, &allneis);
   
   vdata=igraph_Calloc(no_of_nodes, struct igraph_i_reingold_tilford_vertex);
@@ -1508,6 +1857,272 @@ int igraph_i_layout_reingold_tilford_postorder(struct igraph_i_reingold_tilford_
   return 0;
 }
 
+/**
+ * \function igraph_layout_reingold_tilford
+ * \brief Reingold-Tilford layout for tree graphs
+ * 
+ * </para><para>
+ * Arranges the nodes in a tree where the given node is used as the root.
+ * The tree is directed downwards and the parents are centered above its
+ * children. For the exact algorithm, see:
+ * 
+ * </para><para>
+ * Reingold, E and Tilford, J: Tidier drawing of trees.
+ * IEEE Trans. Softw. Eng., SE-7(2):223--228, 1981
+ *
+ * </para><para>
+ * If the given graph is not a tree, a breadth-first search is executed
+ * first to obtain a possible spanning tree.
+ * 
+ * \param graph The graph object. 
+ * \param res The result, the coordinates in a matrix. The parameter
+ *   should point to an initialized matrix object and will be resized.
+ * \param mode Specifies which edges to consider when building the tree.
+ *   If it is \c IGRAPH_OUT then only the outgoing, if it is \c IGRAPH_IN
+ *   then only the incoming edges of a parent are considered. If it is 
+ *   \c IGRAPH_ALL then all edges are used (this was the behavior in 
+ *   igraph 0.5 and before). This parameter also influences how the root 
+ *   vertices are calculated, if they are not given. See the \p roots parameter.
+ * \param roots The index of the root vertex or root vertices. 
+ *   If this is a non-empty vector then the supplied vertex ids are used 
+ *   as the roots of the trees (or a single tree if the graph is connected).
+ *   If it is a null pointer of a pointer to an empty vector, then the root
+ *   vertices are automatically calculated based on topological sorting,
+ *   performed with the opposite mode than the \p mode argument.
+ *   After the vertices have been sorted, one is selected from each component.
+ * \param rootlevel This argument can be useful when drawing forests which are 
+ *   not trees (i.e. they are unconnected and have tree components). It specifies 
+ *   the level of the root vertices for every tree in the forest. It is only
+ *   considered if not a null pointer and the \p roots argument is also given 
+ *   (and it is not a null pointer of an empty vector).
+ * \return Error code.
+ *
+ * Added in version 0.2.
+ * 
+ * \sa \ref igraph_layout_reingold_tilford_circular().
+ * 
+ * \example examples/simple/igraph_layout_reingold_tilford.c
+ */
+
+int igraph_layout_reingold_tilford(const igraph_t *graph,
+				   igraph_matrix_t *res, 
+				   igraph_neimode_t mode,
+				   const igraph_vector_t *roots,
+				   const igraph_vector_t *rootlevel) {
+
+  long int no_of_nodes_orig=igraph_vcount(graph);
+  long int no_of_nodes=no_of_nodes_orig;
+  long int real_root;
+  igraph_t extended;
+  const igraph_t *pextended=graph;
+  igraph_vector_t newedges;
+  igraph_vector_t myroots;
+  const igraph_vector_t *proots=roots;
+  igraph_neimode_t mode2;
+  
+  /* TODO: possible speedup could be achieved if we use a table for storing
+   * the children of each node in the tree. (Now the implementation uses a
+   * single array containing the parent of each node and a node's children
+   * are determined by looking for other nodes that have this node as parent)
+   */
+
+  if (!igraph_is_directed(graph)) {
+    mode=IGRAPH_ALL;
+  }
+  if (mode==IGRAPH_IN) {
+    mode2=IGRAPH_OUT;
+  } else if (mode==IGRAPH_OUT) {
+    mode2=IGRAPH_IN;
+  } else {
+    mode2=mode;
+  }
+
+  if ( (!roots || igraph_vector_size(roots)==0) && 
+       rootlevel && igraph_vector_size(rootlevel) != 0 ) {
+    IGRAPH_WARNING("Reingold-Tilford layout: 'rootlevel' ignored");
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* If root vertices are not given, then do a topological sort and take 
+     the last element from every component for directed graphs, or select the
+     vertex with the maximum degree from each component for undirected graphs */
+
+  if (!roots || igraph_vector_size(roots)==0) {
+    
+    igraph_vector_t order, membership;
+    igraph_integer_t no_comps;
+    long int i, noseen=0;
+
+    IGRAPH_VECTOR_INIT_FINALLY(&myroots, 0);
+    IGRAPH_VECTOR_INIT_FINALLY(&order, no_of_nodes);
+
+    if (igraph_is_directed(graph) && mode != IGRAPH_ALL) {
+      IGRAPH_CHECK(igraph_topological_sorting(graph, &order, mode2));
+    } else {
+      IGRAPH_CHECK(igraph_sort_vertex_ids_by_degree(graph, &order,
+            igraph_vss_all(), IGRAPH_ALL, 0, IGRAPH_ASCENDING, 0));
+    }
+    
+    IGRAPH_VECTOR_INIT_FINALLY(&membership, no_of_nodes);
+    IGRAPH_CHECK(igraph_clusters(graph, &membership, /*csize=*/ 0, 
+				 &no_comps, IGRAPH_WEAK));
+    
+    IGRAPH_CHECK(igraph_vector_resize(&myroots, no_comps));
+    igraph_vector_null(&myroots);
+    proots=&myroots;
+    for (i=no_of_nodes-1; noseen < no_comps && i>=0; i--) {
+      long int v=VECTOR(order)[i];
+      long int mem=VECTOR(membership)[v];
+      if (VECTOR(myroots)[mem]==0) {
+        noseen += 1;
+        VECTOR(myroots)[mem]=v+1;
+      }
+    }
+
+    for (i=0; i<no_comps; i++) {
+      VECTOR(myroots)[i] -= 1;
+    }
+
+    igraph_vector_destroy(&membership);
+    igraph_vector_destroy(&order);
+    IGRAPH_FINALLY_CLEAN(2);
+
+  } else if (rootlevel && igraph_vector_size(rootlevel) > 0 &&
+	     igraph_vector_size(roots) > 1) {
+
+  /* ----------------------------------------------------------------------- */
+  /* Many roots were given to us, check 'rootlevel' */
+
+    long int plus_levels=0;
+    long int i;
+    
+    if (igraph_vector_size(roots) != igraph_vector_size(rootlevel)) {
+      IGRAPH_ERROR("Reingold-Tilford: 'roots' and 'rootlevel' lengths differ",
+		   IGRAPH_EINVAL);
+    }
+
+    /* check if there is one which is not zero */
+    for (i=0; i<igraph_vector_size(roots); i++) {
+      plus_levels += VECTOR(*rootlevel)[i];
+    }
+
+    /* make copy of graph, add vertices/edges */
+    if (plus_levels != 0) {
+      igraph_vector_t newedges;
+      long int edgeptr=0;
+
+      pextended=&extended;
+      IGRAPH_CHECK(igraph_copy(&extended, graph));
+      IGRAPH_FINALLY(igraph_destroy, &extended);
+      IGRAPH_CHECK(igraph_add_vertices(&extended, plus_levels, 0));
+
+      IGRAPH_VECTOR_INIT_FINALLY(&newedges, plus_levels*2);
+
+      for (i=0; i<igraph_vector_size(roots); i++) {
+	long int rl=VECTOR(*rootlevel)[i];
+	long int rn=VECTOR(*roots)[i];
+	long int j;
+
+	if (rl==0) { continue; }
+
+	VECTOR(newedges)[edgeptr++] = no_of_nodes;
+	VECTOR(newedges)[edgeptr++] = rn;
+	
+	for (j=0; j<rl-1; j++) {
+	  VECTOR(newedges)[edgeptr++] = no_of_nodes+1;
+	  VECTOR(newedges)[edgeptr++] = no_of_nodes;
+	  no_of_nodes++;
+	}
+
+	VECTOR(*roots)[i]=no_of_nodes++;
+      }
+      
+      /* Opposite direction if mode=="in" */
+      if (mode==IGRAPH_IN) {
+	for (i=0; i<igraph_vector_size(&newedges); i+=2) {
+	  igraph_real_t tmp=VECTOR(newedges)[i];
+	  VECTOR(newedges)[i] = VECTOR(newedges)[i+1];
+	  VECTOR(newedges)[i+1] = tmp;
+	}
+      }
+
+      IGRAPH_CHECK(igraph_add_edges(&extended, &newedges, 0));
+      igraph_vector_destroy(&newedges);
+      IGRAPH_FINALLY_CLEAN(1);
+    }
+  }
+  
+  /* ----------------------------------------------------------------------- */
+  /* Ok, we have the root vertices now. 
+     Possibly we need to add some edges to make the graph connected. */
+
+  if (igraph_vector_size(proots)==1) {
+    real_root=VECTOR(*proots)[0];
+    if (real_root<0 || real_root>=no_of_nodes) {
+      IGRAPH_ERROR("invalid vertex id", IGRAPH_EINVVID);
+    }
+  } else {
+    long int no_of_newedges=igraph_vector_size(proots);
+    long int i;
+    real_root=no_of_nodes;
+    
+    /* Make copy if needed */
+    if (pextended == graph) {
+      pextended=&extended;
+      IGRAPH_CHECK(igraph_copy(&extended, graph));
+      IGRAPH_FINALLY(igraph_destroy, &extended);
+    }
+
+    IGRAPH_VECTOR_INIT_FINALLY(&newedges, no_of_newedges*2);
+    IGRAPH_CHECK(igraph_add_vertices(&extended, 1, 0));
+    for (i=0; i<no_of_newedges; i++) {
+      VECTOR(newedges)[2*i] = no_of_nodes;
+      VECTOR(newedges)[2*i+1] = VECTOR(*proots)[i];
+    }
+    IGRAPH_CHECK(igraph_add_edges(&extended, &newedges, 0));
+    
+    no_of_nodes++;
+    igraph_vector_destroy(&newedges);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* Layout */
+
+  IGRAPH_CHECK(igraph_i_layout_reingold_tilford(pextended, res, mode, real_root));
+  
+  /* Remove the new vertices from the layout */
+  if (no_of_nodes != no_of_nodes_orig) {
+    if (no_of_nodes-1 == no_of_nodes_orig) {
+      IGRAPH_CHECK(igraph_matrix_remove_row(res, no_of_nodes_orig));
+    } else {
+      igraph_matrix_t tmp;
+      long int i;
+      IGRAPH_MATRIX_INIT_FINALLY(&tmp, no_of_nodes_orig, 2);
+      for (i=0; i<no_of_nodes_orig; i++) {
+	MATRIX(tmp, i, 0) = MATRIX(*res, i, 0);
+	MATRIX(tmp, i, 1) = MATRIX(*res, i, 1);
+      }
+      IGRAPH_CHECK(igraph_matrix_update(res, &tmp));
+      igraph_matrix_destroy(&tmp);
+      IGRAPH_FINALLY_CLEAN(1);
+    }
+  }
+  
+  if (pextended != graph) {
+    igraph_destroy(&extended);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  
+  /* Remove the roots vector if it was created by us */
+  if (proots != roots) {
+    igraph_vector_destroy(&myroots);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  
+  return 0;
+}
+
 /** 
  * \function igraph_layout_reingold_tilford_circular
  * \brief Circular Reingold-Tilford layout for trees
@@ -1519,21 +2134,44 @@ int igraph_i_layout_reingold_tilford_postorder(struct igraph_i_reingold_tilford_
  * \param graph The graph object.
  * \param res The result, the coordinates in a matrix. The parameter
  *   should point to an initialized matrix object and will be resized.
- * \param root The index of the root vertex.
+ * \param mode Specifies which edges to consider when building the tree.
+ *   If it is \c IGRAPH_OUT then only the outgoing, if it is \c IGRAPH_IN
+ *   then only the incoming edges of a parent are considered. If it is 
+ *   \c IGRAPH_ALL then all edges are used (this was the behavior in 
+ *   igraph 0.5 and before). This parameter also influences how the root 
+ *   vertices are calculated, if they are not given. See the \p roots parameter.
+ * \param roots The index of the root vertex or root vertices. 
+ *   If this is a non-empty vector then the supplied vertex ids are used 
+ *   as the roots of the trees (or a single tree if the graph is connected).
+ *   If it is a null pointer of a pointer to an empty vector, then the root
+ *   vertices are automatically calculated based on topological sorting,
+ *   performed with the opposite mode than the \p mode argument.
+ *   After the vertices have been sorted, one is selected from each component.
+ * \param rootlevel This argument can be useful when drawing forests which are 
+ *   not trees (i.e. they are unconnected and have tree components). It specifies 
+ *   the level of the root vertices for every tree in the forest. It is only
+ *   considered if not a null pointer and the \p roots argument is also given 
+ *   (and it is not a null pointer of an empty vector). Note that if you supply
+ *   a null pointer here and the graph has multiple components, all of the root
+ *   vertices will be mapped to the origin of the coordinate system, which does
+ *   not really make sense.
  * \return Error code.
  *
  * \sa \ref igraph_layout_reingold_tilford().
  */
 
 int igraph_layout_reingold_tilford_circular(const igraph_t *graph,
-					    igraph_matrix_t *res, long int root) {
+					    igraph_matrix_t *res,
+					    igraph_neimode_t mode,
+					    const igraph_vector_t *roots,
+					    const igraph_vector_t *rootlevel) {
   
   long int no_of_nodes=igraph_vcount(graph);
   long int i;
   igraph_real_t ratio=2*M_PI*(no_of_nodes-1.0)/no_of_nodes;
   igraph_real_t minx, maxx;
 
-  IGRAPH_CHECK(igraph_layout_reingold_tilford(graph, res, root));
+  IGRAPH_CHECK(igraph_layout_reingold_tilford(graph, res, mode, roots, rootlevel));
 
   if (no_of_nodes == 0) return 0;
 
@@ -1571,7 +2209,7 @@ int igraph_i_determine_electric_axal_forces(const igraph_matrix_t *pos,
 					    long int this_node) {
   
   // We know what the directed force is.  We now need to translate it
-  // into the appropriate x and y componenets.
+  // into the appropriate x and y components.
   // First, assume: 
   //                 other_node
   //                    /|
@@ -1773,7 +2411,7 @@ int igraph_i_move_nodes(igraph_matrix_t *pos,
  * This is a port of the graphopt layout algorithm by Michael Schmuhl.
  * graphopt version 0.4.1 was rewritten in C and the support for 
  * layers was removed (might be added later) and a code was a bit 
- * reorganized to avoid some unneccessary steps is the node charge (see below) 
+ * reorganized to avoid some unnecessary steps is the node charge (see below) 
  * is zero.
  * 
  * </para><para>
@@ -1820,7 +2458,7 @@ int igraph_i_move_nodes(igraph_matrix_t *pos,
 int igraph_layout_graphopt(const igraph_t *graph, igraph_matrix_t *res, 
 			   igraph_integer_t niter,
 			   igraph_real_t node_charge, igraph_real_t node_mass,
-			   igraph_integer_t spring_length,
+			   igraph_real_t spring_length,
 			   igraph_real_t spring_constant, 
 			   igraph_real_t max_sa_movement,
 			   igraph_bool_t use_seed) {
@@ -1876,7 +2514,7 @@ int igraph_layout_graphopt(const igraph_t *graph, igraph_matrix_t *res,
 	  // will only happen in extremely rare circumstances, and when
 	  // it does, springs will probably pull them apart anyway.
 	  // also, if we are more than 50 away, the electric force 
-	  // will be negligable.  
+	  // will be negligible.  
 	  // ***** may not always be desirable ****
 	  if ((distance != 0.0) && (distance < 500.0)) {
 	    //	  if (distance != 0.0) {
@@ -1971,6 +2609,12 @@ int igraph_layout_merge_dla(igraph_vector_ptr_t *thegraphs,
   for (i=0; i<igraph_vector_ptr_size(coords); i++) {
     igraph_matrix_t *mat=VECTOR(*coords)[i];
     long int size=igraph_matrix_nrow(mat);
+
+    if (igraph_matrix_ncol(mat) != 2) {
+      IGRAPH_ERROR("igraph_layout_merge_dla works for 2D layouts only",
+                   IGRAPH_EINVAL);
+    }
+
     IGRAPH_ALLOW_INTERRUPTION();
     allnodes += size;
     VECTOR(sizes)[i]=size;
@@ -2166,3 +2810,259 @@ int igraph_i_layout_merge_dla(igraph_i_layout_mergegrid_t *grid,
 /*   fprintf(stderr, "%li ", steps); */
   return 0;
 }
+
+
+int igraph_i_layout_mds_step(igraph_real_t *to, const igraph_real_t *from,
+    int n, void *extra) {
+  igraph_matrix_t* matrix = (igraph_matrix_t*)extra;
+  igraph_blas_dgemv_array(0, 1, matrix, from, 0, to);
+  return 0;
+}
+
+/* MDS layout for a connected graph, with no error checking on the
+ * input parameters. The distance matrix will be modified in-place. */
+int igraph_i_layout_mds_single(const igraph_t* graph, igraph_matrix_t *res,
+                               igraph_matrix_t *dist, long int dim,
+                               igraph_arpack_options_t *options) {
+  long int no_of_nodes=igraph_vcount(graph);
+  long int nev = dim;
+  igraph_matrix_t vectors;
+  igraph_vector_t values, row_means;
+  igraph_real_t grand_mean;
+  long int i, j;
+
+  /* Handle the trivial cases */
+  if (no_of_nodes == 1) {
+    IGRAPH_CHECK(igraph_matrix_resize(res, 1, dim));
+    igraph_matrix_fill(res, 0);
+    return IGRAPH_SUCCESS;
+  }
+  if (no_of_nodes == 2) {
+    IGRAPH_CHECK(igraph_matrix_resize(res, 2, dim));
+    igraph_matrix_fill(res, 0);
+    for (j = 0; j < dim; j++)
+      MATRIX(*res, 1, dim) = 1;
+    return IGRAPH_SUCCESS;
+  }
+
+  /* Initialize some stuff */
+  IGRAPH_VECTOR_INIT_FINALLY(&values, no_of_nodes);
+  IGRAPH_CHECK(igraph_matrix_init(&vectors, no_of_nodes, dim));
+  IGRAPH_FINALLY(igraph_matrix_destroy, &vectors);
+
+  /* Take the square of the distance matrix */
+  for (i = 0; i < no_of_nodes; i++) {
+    for (j = 0; j < no_of_nodes; j++) {
+      MATRIX(*dist, i, j) *= MATRIX(*dist, i, j);
+    }
+  }
+
+  /* Double centering of the distance matrix */
+  IGRAPH_VECTOR_INIT_FINALLY(&row_means, no_of_nodes);
+  igraph_vector_fill(&values, 1.0 / no_of_nodes);
+  igraph_blas_dgemv(0, 1, dist, &values, 0, &row_means);
+  grand_mean = igraph_vector_sum(&row_means) / no_of_nodes;
+  igraph_matrix_add_constant(dist, grand_mean);
+  for (i = 0; i < no_of_nodes; i++) {
+    for (j = 0; j < no_of_nodes; j++) {
+      MATRIX(*dist, i, j) -= VECTOR(row_means)[i] + VECTOR(row_means)[j];
+      MATRIX(*dist, i, j) *= -0.5;
+    }
+  }
+  igraph_vector_destroy(&row_means);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  /* Calculate the top `dim` eigenvectors */
+  options->mode = 1;
+  options->ishift = 1;
+  options->n = no_of_nodes;
+  options->nev = nev;
+  options->ncv = 0;        /* 0 means "automatic" in igraph_arpack_rssolve */
+  options->which[0] = 'L'; options->which[1] = 'A';
+  options->start = 0;
+
+  IGRAPH_CHECK(igraph_arpack_rssolve(igraph_i_layout_mds_step,
+        dist, options, 0, &values, &vectors));
+
+  /* Calculate and normalize the final coordinates */
+  for (j = 0; j < nev; j++) {
+    VECTOR(values)[j] = sqrt(abs((double)VECTOR(values)[j]));
+  }
+  IGRAPH_CHECK(igraph_matrix_resize(res, no_of_nodes, dim));
+  igraph_matrix_fill(res, 0);
+  for (i = 0; i < no_of_nodes; i++) {
+    for (j = 0; j < nev; j++) {
+      MATRIX(*res, i, j) = VECTOR(values)[j] * MATRIX(vectors, i, j);
+    }
+  }
+
+  igraph_matrix_destroy(&vectors);
+  igraph_vector_destroy(&values);
+  IGRAPH_FINALLY_CLEAN(2);
+
+  return IGRAPH_SUCCESS;
+}
+
+/**
+ * \function igraph_layout_mds
+ * \brief Place the vertices on a plane using multidimensional scaling.
+ * 
+ * </para><para>
+ * This layout requires a distance matrix, where the intersection of
+ * row i and column j specifies the desired distance between vertex i
+ * and vertex j. The algorithm will try to place the vertices in a
+ * space having a given number of dimensions in a way that approximates
+ * the distance relations prescribed in the distance matrix. igraph
+ * uses the classical multidimensional scaling by Torgerson; for more
+ * details, see Cox &amp; Cox: Multidimensional Scaling (1994), Chapman
+ * and Hall, London.
+ *
+ * </para><para>
+ * If the input graph is disconnected, igraph will decompose it
+ * first into its subgraphs, lay out the subgraphs one by one
+ * using the appropriate submatrices of the distance matrix, and
+ * then merge the layouts using \ref igraph_layout_merge_dla.
+ * Since \ref igraph_layout_merge_dla works for 2D layouts only,
+ * you cannot run the MDS layout on disconnected graphs for
+ * more than two dimensions.
+ *
+ * \param graph A graph object.
+ * \param res Pointer to an initialized matrix object. This will
+ *        contain the result and will be resized if needed.
+ * \param dist The distance matrix. It must be symmetric and this
+ *        function does not check whether the matrix is indeed
+ *        symmetric. Results are unspecified if you pass a non-symmetric
+ *        matrix here. You can set this parameter to null; in this
+ *        case, the shortest path lengths between vertices will be
+ *        used as distances.
+ * \param dim The number of dimensions in the embedding space. For
+ *        2D layouts, supply 2 here.
+ * \param options Options to ARPACK for eigenvector calculations. See
+ *        \ref igraph_arpack_options_t.
+ * \return Error code.
+ * 
+ * Added in version 0.6.
+ * 
+ * </para><para>
+ * Time complexity: usually around O(|V|^2 dim).
+ */
+
+int igraph_layout_mds(const igraph_t* graph, igraph_matrix_t *res,
+                      const igraph_matrix_t *dist, long int dim,
+                      igraph_arpack_options_t *options) {
+  long int i, no_of_nodes=igraph_vcount(graph);
+  igraph_matrix_t m;
+  igraph_bool_t conn;
+
+  /* Check the distance matrix */
+  if (dist && (igraph_matrix_nrow(dist) != no_of_nodes ||
+      igraph_matrix_ncol(dist) != no_of_nodes)) {
+    IGRAPH_ERROR("invalid distance matrix size", IGRAPH_EINVAL);
+  }
+
+  /* Check the number of dimensions */
+  if (dim <= 1) {
+    IGRAPH_ERROR("dim must be positive", IGRAPH_EINVAL);
+  }
+  if (dim > no_of_nodes) {
+    IGRAPH_ERROR("dim must be less than the number of nodes", IGRAPH_EINVAL);
+  }
+
+  /* Copy or obtain the distance matrix */
+  if (dist == 0) {
+    IGRAPH_CHECK(igraph_matrix_init(&m, no_of_nodes, no_of_nodes));
+    IGRAPH_FINALLY(igraph_matrix_destroy, &m);
+    IGRAPH_CHECK(igraph_shortest_paths(graph, &m,
+          igraph_vss_all(), igraph_vss_all(), IGRAPH_ALL));
+  } else {
+    IGRAPH_CHECK(igraph_matrix_copy(&m, dist));
+    IGRAPH_FINALLY(igraph_matrix_destroy, &m);
+    /* Make sure that the diagonal contains zeroes only */
+    for (i = 0; i < no_of_nodes; i++)
+      MATRIX(m, i, i) = 0.0;
+  }
+
+  /* Check whether the graph is connected */
+  IGRAPH_CHECK(igraph_is_connected(graph, &conn, IGRAPH_WEAK));
+  if (conn) {
+    /* Yes, it is, just do the MDS */
+    IGRAPH_CHECK(igraph_i_layout_mds_single(graph, res, &m, dim, options));
+  } else {
+    /* The graph is not connected, lay out the components one by one */
+    igraph_vector_ptr_t layouts;
+    igraph_vector_t comp, vertex_order;
+    igraph_t subgraph;
+    igraph_matrix_t *layout;
+    igraph_matrix_t dist_submatrix;
+    igraph_bool_t *seen_vertices;
+    long int j, n, processed_vertex_count = 0;
+
+    IGRAPH_VECTOR_INIT_FINALLY(&comp, 0);
+    IGRAPH_VECTOR_INIT_FINALLY(&vertex_order, no_of_nodes);
+
+    IGRAPH_CHECK(igraph_vector_ptr_init(&layouts, 0));
+    IGRAPH_FINALLY(igraph_vector_ptr_destroy_all, &layouts);
+    igraph_vector_ptr_set_item_destructor(&layouts, (igraph_finally_func_t*)igraph_matrix_destroy);
+
+    IGRAPH_CHECK(igraph_matrix_init(&dist_submatrix, 0, 0));
+    IGRAPH_FINALLY(igraph_matrix_destroy, &dist_submatrix);
+
+    seen_vertices = igraph_Calloc(no_of_nodes, igraph_bool_t);
+    if (seen_vertices == 0)
+      IGRAPH_ERROR("cannot calculate MDS layout", IGRAPH_ENOMEM);
+    IGRAPH_FINALLY(igraph_free, seen_vertices);
+
+    for (i = 0; i < no_of_nodes; i++) {
+      if (seen_vertices[i])
+        continue;
+
+      /* This is a vertex whose component we did not lay out so far */
+      IGRAPH_CHECK(igraph_subcomponent(graph, &comp, i, IGRAPH_ALL));
+      /* Take the subgraph */
+      IGRAPH_CHECK(igraph_induced_subgraph(graph, &subgraph, igraph_vss_vector(&comp),
+                                           IGRAPH_SUBGRAPH_AUTO));
+      IGRAPH_FINALLY(igraph_destroy, &subgraph);
+      /* Calculate the submatrix of the distances */
+      IGRAPH_CHECK(igraph_matrix_select_rows_cols(&m, &dist_submatrix,
+            &comp, &comp));
+      /* Allocate a new matrix for storing the layout */
+      layout = igraph_Calloc(1, igraph_matrix_t);
+      if (layout == 0)
+        IGRAPH_ERROR("cannot calculate MDS layout", IGRAPH_ENOMEM);
+      IGRAPH_FINALLY(igraph_free, layout);
+      IGRAPH_CHECK(igraph_matrix_init(layout, 0, 0));
+      IGRAPH_FINALLY(igraph_matrix_destroy, layout);
+      /* Lay out the subgraph */
+      IGRAPH_CHECK(igraph_i_layout_mds_single(&subgraph, layout, &dist_submatrix, dim, options));
+      /* Store the layout */
+      IGRAPH_CHECK(igraph_vector_ptr_push_back(&layouts, layout));
+      IGRAPH_FINALLY_CLEAN(2);  /* ownership of layout taken by layouts */
+      /* Free the newly created subgraph */
+      igraph_destroy(&subgraph);
+      IGRAPH_FINALLY_CLEAN(1);
+      /* Mark all the vertices in the component as visited */
+      n = igraph_vector_size(&comp);
+      for (j = 0; j < n; j++) {
+        seen_vertices[(long int)VECTOR(comp)[j]] = 1;
+        VECTOR(vertex_order)[(long int)VECTOR(comp)[j]] = processed_vertex_count++;
+      }
+    }
+    /* Merge the layouts - reusing dist_submatrix here */
+    IGRAPH_CHECK(igraph_layout_merge_dla(0, &layouts, &dist_submatrix));
+    /* Reordering the rows of res to match the original graph */
+    IGRAPH_CHECK(igraph_matrix_select_rows(&dist_submatrix, res, &vertex_order));
+
+    igraph_free(seen_vertices);
+    igraph_matrix_destroy(&dist_submatrix);
+    igraph_vector_ptr_destroy_all(&layouts);
+    igraph_vector_destroy(&vertex_order);
+    igraph_vector_destroy(&comp);
+    IGRAPH_FINALLY_CLEAN(5);
+  }
+
+  igraph_matrix_destroy(&m);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  return IGRAPH_SUCCESS;
+}
+

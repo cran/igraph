@@ -1,9 +1,9 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2006  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
-   
+   Copyright (C) 2006-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -21,22 +21,29 @@
 
 */
 
-#include "igraph.h"
-#include "memory.h"
+#include "igraph_topology.h"
+#include "igraph_memory.h"
+#include "igraph_adjlist.h"
+#include "igraph_interface.h"
+#include "igraph_interrupt_internal.h"
+#include "igraph_constructors.h"
+#include "igraph_conversion.h"
+#include "igraph_stack.h"
+#include "igraph_attributes.h"
 #include "config.h"
 
-unsigned int igraph_i_isoclass_3[] = {  0, 1, 1, 3, 1, 5, 6, 7,
-                                         1, 6,10,11, 3, 7,11,15,
-                                         1, 6, 5, 7,10,21,21,23,
-                                         6,25,21,27,11,27,30,31,
-                                         1,10, 6,11, 6,21,25,27,
-                                         5,21,21,30, 7,23,27,31,
-                                         3,11, 7,15,11,30,27,31,
-                                         7,27,23,31,15,31,31,63 };
+const unsigned int igraph_i_isoclass_3[] = {  0, 1, 1, 3, 1, 5, 6, 7,
+					      1, 6,10,11, 3, 7,11,15,
+					      1, 6, 5, 7,10,21,21,23,
+					      6,25,21,27,11,27,30,31,
+					      1,10, 6,11, 6,21,25,27,
+					      5,21,21,30, 7,23,27,31,
+					      3,11, 7,15,11,30,27,31,
+					      7,27,23,31,15,31,31,63 };
 
-unsigned int igraph_i_isoclass_3_idx[] = { 0, 4, 16, 1, 0, 32, 2, 8, 0 };
+const unsigned int igraph_i_isoclass_3_idx[] = { 0, 4, 16, 1, 0, 32, 2, 8, 0 };
 
-unsigned int igraph_i_isoclass_4[] = { 
+const unsigned int igraph_i_isoclass_4[] = { 
      0,   1,   1,   3,   1,   3,   3,   7,   1,   9,  10,  11,  10,
     11,  14,  15,   1,  10,  18,  19,  20,  21,  22,  23,   3,  11,
     19,  27,  21,  29,  30,  31,   1,  10,  20,  21,  18,  19,  22,
@@ -354,38 +361,38 @@ unsigned int igraph_i_isoclass_4[] = {
    767,1919, 767,1919,1791,2047, 511,1023,1023,2047,1023,2047,2047,
   4095 };
 
-unsigned int igraph_i_isoclass_4_idx[] = {
+const unsigned int igraph_i_isoclass_4_idx[] = {
   0, 8, 64, 512, 1, 0, 128, 1024, 2, 16, 0, 2048, 4, 32, 256, 0 };
 
-unsigned int igraph_i_isoclass_3u[] = { 0,1,1,3,1,3,3,7 };
+const unsigned int igraph_i_isoclass_3u[] = { 0,1,1,3,1,3,3,7 };
 
-unsigned int igraph_i_isoclass_3u_idx[] = { 0,1,2,1,0,4,2,4,0 };
+const unsigned int igraph_i_isoclass_3u_idx[] = { 0,1,2,1,0,4,2,4,0 };
 
-unsigned int igraph_i_isoclass_4u[] = {
+const unsigned int igraph_i_isoclass_4u[] = {
   0, 1, 1, 3, 1, 3, 3, 7, 1, 3, 3,11,12,13,13,15, 1, 3,12,13, 3,11,13,15, 3, 7,
  13,15,13,15,30,31, 1,12, 3,13, 3,13,11,15, 3,13, 7,15,13,30,15,31, 3,13,13,30,
   7,15,15,31,11,15,15,31,15,31,31,63 };
 
-unsigned int igraph_i_isoclass_4u_idx[] = {
+const unsigned int igraph_i_isoclass_4u_idx[] = {
   0, 1, 2, 8, 1, 0, 4, 16, 2, 4, 0, 32, 8, 16, 32, 0 };
 
-unsigned int igraph_i_isoclass2_3[] = {
+const unsigned int igraph_i_isoclass2_3[] = {
  0, 1, 1, 2, 1, 3, 4, 5, 1, 4, 6, 7, 2, 5, 7, 8, 1, 4, 3, 5, 6, 9, 9,10, 4,11,
  9,12, 7,12,13,14, 1, 6, 4, 7, 4, 9,11,12, 3, 9, 9,13, 5,10,12,14, 2, 7, 5, 8,
  7,13,12,14, 5,12,10,14, 8,14,14,15
 };
 
-unsigned int igraph_i_isoclass2_3u[] = {
+const unsigned int igraph_i_isoclass2_3u[] = {
   0,1,1,2,1,2,2,3 
 };
 
-unsigned int igraph_i_isoclass2_4u[] = { 
+const unsigned int igraph_i_isoclass2_4u[] = { 
  0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 4, 5, 6, 6, 7, 1, 2, 5, 6, 2, 4, 6, 7, 2, 3,
  6, 7, 6, 7, 8, 9, 1, 5, 2, 6, 2, 6, 4, 7, 2, 6, 3, 7, 6, 8, 7, 9, 2, 6, 6, 8,
  3, 7, 7, 9, 4, 7, 7, 9, 7, 9, 9,10
 };
 
-unsigned int igraph_i_isoclass2_4[] = {
+const unsigned int igraph_i_isoclass2_4[] = {
   0,  1,  1,  2,  1,  2,  2,  3,  1,  4,  5,  6,  5,  6,  7,  8,  1,  5,  9, 10,
  11, 12, 13, 14,  2,  6, 10, 15, 12, 16, 17, 18,  1,  5, 11, 12,  9, 10, 13, 14,
   2,  6, 12, 16, 10, 15, 17, 18,  2,  7, 13, 17, 13, 17, 19, 20,  3,  8, 14, 18,
@@ -593,10 +600,10 @@ unsigned int igraph_i_isoclass2_4[] = {
  75,195,167,212,167,212,205,216, 91,198,198,216,198,216,216,217
 };
 
-unsigned int igraph_i_isographs_3[] =  { 0, 1, 3, 5, 6, 7, 10, 11, 15, 21, 
-					 23, 25, 27, 30, 31, 63 };
-unsigned int igraph_i_isographs_3u[] = { 0, 1, 3, 7 };
-unsigned int igraph_i_isographs_4[] = {
+const unsigned int igraph_i_isographs_3[] =  { 0, 1, 3, 5, 6, 7, 10, 11, 15, 21, 
+					       23, 25, 27, 30, 31, 63 };
+const unsigned int igraph_i_isographs_3u[] = { 0, 1, 3, 7 };
+const unsigned int igraph_i_isographs_4[] = {
    0,    1,    3,    7,    9,   10,   11,   14,   15,   18,   19,   20,   21, 
   22,   23,   27,   29,   30,   31,   54,   55,   63,   73,   75,   76,   77, 
   79,   81,   83,   84,   85,   86,   87,   90,   91,   92,   93,   94,   95, 
@@ -614,14 +621,14 @@ unsigned int igraph_i_isographs_4[] = {
  887,  891,  892,  893,  894,  895,  947,  949,  951,  955,  957,  958,  959, 
 1019, 1020, 1021, 1023, 1755, 1757, 1758, 1759, 1782, 1783, 1791, 1883, 1887, 
 1907, 1911, 1917, 1918, 1919, 2029, 2031, 2039, 2047, 4095};
-unsigned int igraph_i_isographs_4u[] = { 0, 1, 3, 7, 11, 12, 13, 
+const unsigned int igraph_i_isographs_4u[] = { 0, 1, 3, 7, 11, 12, 13, 
 					15, 30, 31, 63};
 
-unsigned int igraph_i_classedges_3[] = { 1,2, 0,2, 2,1, 0,1, 2,0, 1,0 };
-unsigned int igraph_i_classedges_3u[] = { 1,2, 0,2, 0,1 };
-unsigned int igraph_i_classedges_4[] = { 2,3, 1,3, 0,3, 3,2, 1,2, 0,2,
-					 3,1, 2,1, 0,1, 3,0, 2,0, 1,0 };
-unsigned int igraph_i_classedges_4u[] = { 2,3, 1,3, 0,3, 1,2, 0,2, 0,1 };
+const unsigned int igraph_i_classedges_3[] = { 1,2, 0,2, 2,1, 0,1, 2,0, 1,0 };
+const unsigned int igraph_i_classedges_3u[] = { 1,2, 0,2, 0,1 };
+const unsigned int igraph_i_classedges_4[] = { 2,3, 1,3, 0,3, 3,2, 1,2, 0,2,
+					       3,1, 2,1, 0,1, 3,0, 2,0, 1,0 };
+const unsigned int igraph_i_classedges_4u[] = { 2,3, 1,3, 0,3, 1,2, 0,2, 0,1 };
 
 /**
  * \section about_graph_isomorphism
@@ -658,7 +665,7 @@ unsigned int igraph_i_classedges_4u[] = { 2,3, 1,3, 0,3, 1,2, 0,2, 0,1 };
  * 
  * </para><para>
  * All graphs with a given number of vertices belong to a number of
- * isomorpism classes, with every graph in a given class being
+ * isomorphism classes, with every graph in a given class being
  * isomorphic to each other.
  * 
  * </para><para>
@@ -693,7 +700,7 @@ int igraph_isoclass(const igraph_t *graph, igraph_integer_t *isoclass) {
   long int no_of_edges=igraph_ecount(graph);
   igraph_integer_t from, to;
   unsigned char idx, mul;
-  unsigned int *arr_idx, *arr_code;
+  const unsigned int *arr_idx, *arr_code;
   int code=0;
 
   if (no_of_nodes < 3 || no_of_nodes > 4) {
@@ -787,7 +794,7 @@ int igraph_isomorphic(const igraph_t *graph1, const igraph_t *graph2,
   } else if (nodes1==3 || nodes1==4) {
 	igraph_isomorphic_34(graph1, graph2, iso);
   } else if (dir1) {
-    igraph_isomorphic_vf2(graph1, graph2, iso, 0, 0);
+    igraph_isomorphic_vf2(graph1, graph2, 0, 0, 0, 0, iso, 0, 0, 0, 0, 0);
   } else {
     igraph_isomorphic_bliss(graph1, graph2, iso, 0, 0, /*sh1=*/0, /*sh2=*/0, 0, 0);
   }
@@ -847,7 +854,7 @@ int igraph_isoclass_subgraph(const igraph_t *graph, igraph_vector_t *vids,
   igraph_vector_t neis;
   
   unsigned char mul, idx;
-  unsigned int *arr_idx, *arr_code;
+  const unsigned int *arr_idx, *arr_code;
   int code=0;
   
   long int i, j, s;
@@ -924,7 +931,7 @@ int igraph_isoclass_subgraph(const igraph_t *graph, igraph_vector_t *vids,
 int igraph_isoclass_create(igraph_t *graph, igraph_integer_t size,
 			   igraph_integer_t number, igraph_bool_t directed) {
   igraph_vector_t edges;
-  unsigned int *classedges;
+  const unsigned int *classedges;
   long int power;
   long int code;
   long int pos;
@@ -1009,7 +1016,7 @@ int igraph_isoclass_create(igraph_t *graph, igraph_integer_t size,
  * matching large graphs, Proc. of the 3rd IAPR-TC-15 International
  * Workshop on Graph-based Representations, Italy, 2001.</para>
  * 
- * <para>For using it you need to define a calback function of type
+ * <para>For using it you need to define a callback function of type
  * \ref igraph_isohandler_t. This function will be called whenever VF2
  * finds an isomorphism between the two graphs. The mapping between
  * the two graphs will be also provided to this function. If the
@@ -1017,29 +1024,53 @@ int igraph_isoclass_create(igraph_t *graph, igraph_integer_t size,
  * otherwise it stops.
  * \param graph1 The first input graph.
  * \param graph2 The second input graph.
+ * \param vertex_color1 An optional color vector for the first graph. If
+ *   color vectors are given for both graphs, then the isomorphism is
+ *   calculated on the colored graphs; i.e. two vertices can match
+ *   only if their color also matches. Supply a null pointer here if
+ *   your graphs are not colored.
+ * \param vertex_color2 An optional color vector for the second graph. See
+ *   the previous argument for explanation.
+ * \param edge_color1 An optional edge color vector for the first
+ *   graph. The matching edges in the two graphs must have matching
+ *   colors as well. Supply a null pointer here if your graphs are not 
+ *   edge-colored.
+ * \param edge_color2 The edge color vector for the second graph.
  * \param map12 Pointer to an initialized vector or \c NULL. If not \c
  *   NULL and the supplied graphs are isomorphic then the permutation
  *   taking \p graph1 to \p graph is stored here. If not \c NULL and the
  *   graphs are not isomorphic then a zero-length vector is returned.
  * \param map21 This is the same as \p map12, but for the permutation
  *   taking \p graph2 to \p graph1.
- * \param function The callback function to be called if an
+ * \param isohandler_fn The callback function to be called if an
  *   isomorphism is found. See also \ref igraph_isohandler_t.
- * \param arg An extra argument to pass to \p function. E.g. if \p
- *   function needs to store the isomorphisms found, then \p arg may
- *   point to a container for them.
+ * \param node_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two nodes are compatible.
+ * \param edge_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two edges are compatible.
+ * \param arg Extra argument to supply to functions \p isohandler_fn, \p
+ *   node_compat_fn and \p edge_compat_fn. 
  * \return Error code.
  * 
  * Time complexity: exponential.
  */
   
 int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph2, 
+				   const igraph_vector_int_t *vertex_color1,
+				   const igraph_vector_int_t *vertex_color2,
+				   const igraph_vector_int_t *edge_color1,
+				   const igraph_vector_int_t *edge_color2,
 				   igraph_vector_t *map12,
 				   igraph_vector_t *map21,
-				   igraph_isohandler_t *function,
- 				   void *arg) {
+				   igraph_isohandler_t *isohandler_fn,
+				   igraph_isocompat_t *node_compat_fn,
+				   igraph_isocompat_t *edge_compat_fn,
+				   void *arg) {
   
   long int no_of_nodes=igraph_vcount(graph1);
+  long int no_of_edges=igraph_ecount(graph1);
   igraph_vector_t mycore_1, mycore_2, *core_1=&mycore_1, *core_2=&mycore_2;
   igraph_vector_t in_1, in_2, out_1, out_2;
   long int in_1_size=0, in_2_size=0, out_1_size=0, out_2_size=0;
@@ -1056,19 +1087,77 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
     IGRAPH_ERROR("Cannot compare directed and undirected graphs",
 		 IGRAPH_EINVAL);
   }
-  
+
+  if ( (vertex_color1 && !vertex_color2) || (!vertex_color1 && vertex_color2) ) {
+    IGRAPH_WARNING("Only one graph is vertex-colored, vertex colors will be ignored");
+    vertex_color1=vertex_color2=0;
+  }
+
+  if ( (edge_color1 && !edge_color2) || (!edge_color1 && edge_color2)) {
+    IGRAPH_WARNING("Only one graph is edge-colored, edge colors will be ignored");
+    edge_color1 = edge_color2 = 0;
+  }
+
+  if (vertex_color1) {
+    if (igraph_vector_int_size(vertex_color1) != no_of_nodes ||
+	igraph_vector_int_size(vertex_color2) != no_of_nodes) {
+      IGRAPH_ERROR("Invalid vertex color vector length", IGRAPH_EINVAL);
+    }
+  }
+
+  if (edge_color1) {
+    if (igraph_vector_int_size(edge_color1) != no_of_edges ||
+	igraph_vector_int_size(edge_color2) != no_of_edges) {
+      IGRAPH_ERROR("Invalid edge color vector length", IGRAPH_EINVAL);
+    }
+  }
+
   if (no_of_nodes != igraph_vcount(graph2) ||
-      igraph_ecount(graph1) != igraph_ecount(graph2)) {
+      no_of_edges != igraph_ecount(graph2)) {
     return 0;
   }
   
+  /* Check color distribution */
+  if (vertex_color1) {
+    int ret=0;
+    igraph_vector_int_t tmp1, tmp2;
+    IGRAPH_CHECK(igraph_vector_int_copy(&tmp1, vertex_color1));
+    IGRAPH_FINALLY(igraph_vector_int_destroy, &tmp1);
+    IGRAPH_CHECK(igraph_vector_int_copy(&tmp2, vertex_color2));
+    IGRAPH_FINALLY(igraph_vector_int_destroy, &tmp2);
+    igraph_vector_int_sort(&tmp1);
+    igraph_vector_int_sort(&tmp2);
+    ret= !igraph_vector_int_all_e(&tmp1, &tmp2);
+    igraph_vector_int_destroy(&tmp1);
+    igraph_vector_int_destroy(&tmp2);
+    IGRAPH_FINALLY_CLEAN(2);
+    if (ret) { return 0; }
+  }
+
+  /* Check edge color distribution */
+  if (edge_color1) {
+    int ret=0;
+    igraph_vector_int_t tmp1, tmp2;
+    IGRAPH_CHECK(igraph_vector_int_copy(&tmp1, edge_color1));
+    IGRAPH_FINALLY(igraph_vector_int_destroy, &tmp1);
+    IGRAPH_CHECK(igraph_vector_int_copy(&tmp2, edge_color2));
+    IGRAPH_FINALLY(igraph_vector_int_destroy, &tmp2);
+    igraph_vector_int_sort(&tmp1);
+    igraph_vector_int_sort(&tmp2);
+    ret= !igraph_vector_int_all_e(&tmp1, &tmp2);
+    igraph_vector_int_destroy(&tmp1);
+    igraph_vector_int_destroy(&tmp2);
+    IGRAPH_FINALLY_CLEAN(2);
+    if (ret) { return 0; }
+  }
+
   if (map12) {
     core_1=map12;
     IGRAPH_CHECK(igraph_vector_resize(core_1, no_of_nodes));
-    igraph_vector_null(core_1);
   } else {
     IGRAPH_VECTOR_INIT_FINALLY(core_1, no_of_nodes);
   }
+  igraph_vector_fill(core_1, -1);
   if (map21) {
     core_2=map21;
     IGRAPH_CHECK(igraph_vector_resize(core_2, no_of_nodes));
@@ -1076,6 +1165,8 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
   } else {
     IGRAPH_VECTOR_INIT_FINALLY(core_2, no_of_nodes);
   }
+  igraph_vector_fill(core_2, -1);
+  
   IGRAPH_VECTOR_INIT_FINALLY(&in_1, no_of_nodes);
   IGRAPH_VECTOR_INIT_FINALLY(&in_2, no_of_nodes);
   IGRAPH_VECTOR_INIT_FINALLY(&out_1, no_of_nodes);
@@ -1127,8 +1218,8 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
 	cand2=last2;
       } else {
 	i=0;
-	while (cand2<0) {
-	  if (VECTOR(out_2)[i]>0 && VECTOR(*core_2)[i]==0) {
+	while (cand2<0 && i<no_of_nodes) {
+	  if (VECTOR(out_2)[i]>0 && VECTOR(*core_2)[i] < 0) {
 	    cand2=i;
 	  }
 	  i++;
@@ -1137,7 +1228,7 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
       /* search for cand1 now, it should be bigger than last1 */
       i=last1+1;
       while (cand1<0 && i<no_of_nodes) {
-	if (VECTOR(out_1)[i]>0 && VECTOR(*core_1)[i]==0) {
+	if (VECTOR(out_1)[i]>0 && VECTOR(*core_1)[i] < 0) {
 	  cand1=i;
 	}
 	i++;
@@ -1149,8 +1240,8 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
 	cand2=last2;
       } else {
 	i=0;
-	while (cand2<0) {
-	  if (VECTOR(in_2)[i]>0 && VECTOR(*core_2)[i]==0) {
+	while (cand2<0 && i<no_of_nodes) {
+	  if (VECTOR(in_2)[i]>0 && VECTOR(*core_2)[i] < 0) {
 	    cand2=i;
 	  }
 	  i++;
@@ -1159,7 +1250,7 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
       /* search for cand1 now, should be bigger than last1 */
       i=last1+1;
       while (cand1<0 && i<no_of_nodes) {
-	if (VECTOR(in_1)[i]>0 && VECTOR(*core_1)[i]==0) {
+	if (VECTOR(in_1)[i]>0 && VECTOR(*core_1)[i] < 0) {
 	  cand1=i;
 	}
 	i++;
@@ -1172,7 +1263,7 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
       } else {
 	i=0;
 	while (cand2<0 && i<no_of_nodes) {
-	  if (VECTOR(*core_2)[i]==0) { 
+	  if (VECTOR(*core_2)[i] < 0) { 
 	    cand2=i;
 	  }
 	  i++;
@@ -1181,7 +1272,7 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
       /* search for cand1, should be bigger than last1 */
       i=last1+1;
       while (cand1<0 && i<no_of_nodes) {
-	if (VECTOR(*core_1)[i]==0) {
+	if (VECTOR(*core_1)[i] < 0) {
 	  cand1=i;
 	}
 	i++;
@@ -1196,8 +1287,8 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
 	last2=igraph_stack_pop(&path);
 	last1=igraph_stack_pop(&path);
 	matched_nodes -= 1;
-	VECTOR(*core_1)[last1]=0;
-	VECTOR(*core_2)[last2]=0;
+	VECTOR(*core_1)[last1]=-1;
+	VECTOR(*core_2)[last2]=-1;
 	
 	if (VECTOR(in_1)[last1] != 0) {
 	  in_1_size += 1;
@@ -1262,14 +1353,35 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
 	  VECTOR(outdeg1)[cand1] != VECTOR(outdeg2)[cand2]) {
 	end=1;
       }
+      if (vertex_color1 && VECTOR(*vertex_color1)[cand1] != VECTOR(*vertex_color2)[cand2]) {
+	end=1;
+      }
+      if (node_compat_fn && !node_compat_fn(graph1, graph2, 
+					    cand1, cand2, arg)) {
+	end=1;
+      }
 
       for (i=0; !end && i<igraph_vector_size(inneis_1); i++) {
 	long int node=VECTOR(*inneis_1)[i];
-	if (VECTOR(*core_1)[node]!=0) {
-	  long int node2=VECTOR(*core_1)[node]-1;
+	if (VECTOR(*core_1)[node]>=0) {
+	  long int node2=VECTOR(*core_1)[node];
 	  /* check if there is a node2->cand2 edge */
 	  if (!igraph_vector_binsearch2(inneis_2, node2)) {
 	    end=1;
+	  } else if (edge_color1 || edge_compat_fn) {
+	    igraph_integer_t eid1, eid2;
+	    igraph_get_eid(graph1, &eid1, node, cand1, /*directed=*/ 1, 
+			   /*error=*/ 1);
+	    igraph_get_eid(graph2, &eid2, node2, cand2, /*directed=*/ 1,
+			   /*error=*/ 1);
+	    if (edge_color1 && VECTOR(*edge_color1)[(long int)eid1] !=
+		VECTOR(*edge_color2)[(long int)eid2]) {
+	      end=1;
+	    }
+	    if (edge_compat_fn && !edge_compat_fn(graph1, graph2,
+						  eid1, eid2, arg)) {
+	      end=1;
+	    }
 	  }
 	} else { 
 	  if (VECTOR(in_1)[node] != 0) {
@@ -1282,11 +1394,25 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
       }
       for (i=0; !end && i<igraph_vector_size(outneis_1); i++) {
 	long int node=VECTOR(*outneis_1)[i];
-	if (VECTOR(*core_1)[node]!=0) {
-	  long int node2=VECTOR(*core_1)[node]-1;
+	if (VECTOR(*core_1)[node]>=0) {
+	  long int node2=VECTOR(*core_1)[node];
 	  /* check if there is a cand2->node2 edge */
 	  if (!igraph_vector_binsearch2(outneis_2, node2)) {
 	    end=1;
+	  } else if (edge_color1 || edge_compat_fn) {
+	    igraph_integer_t eid1, eid2;
+	    igraph_get_eid(graph1, &eid1, cand1, node, /*directed=*/ 1, 
+			   /*error=*/ 1);
+	    igraph_get_eid(graph2, &eid2, cand2, node2, /*directed=*/ 1,
+			   /*error=*/ 1);
+	    if (edge_color1 && VECTOR(*edge_color1)[(long int)eid1] != 
+		VECTOR(*edge_color2)[(long int)eid2]) {
+	      end=1;
+	    }
+	    if (edge_compat_fn && !edge_compat_fn(graph1, graph2, 
+						  eid1, eid2, arg)) {
+	      end=1;
+	    }
 	  }
 	} else {
 	  if (VECTOR(in_1)[node] != 0) {
@@ -1299,11 +1425,25 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
       }      
       for (i=0; !end && i<igraph_vector_size(inneis_2); i++) {
 	long int node=VECTOR(*inneis_2)[i];
-	if (VECTOR(*core_2)[node]!=0) {
-	  long int node2=VECTOR(*core_2)[node]-1;
+	if (VECTOR(*core_2)[node]>=0) {
+	  long int node2=VECTOR(*core_2)[node];
 	  /* check if there is a node2->cand1 edge */
 	  if (!igraph_vector_binsearch2(inneis_1, node2)) {
 	    end=1;
+	  } else if (edge_color1 || edge_compat_fn) {
+	    igraph_integer_t eid1, eid2;
+	    igraph_get_eid(graph1, &eid1, node2, cand1, /*directed=*/ 1, 
+			   /*error=*/ 1);
+	    igraph_get_eid(graph2, &eid2, node, cand2, /*directed=*/ 1,
+			   /*error=*/ 1);
+	    if (edge_color1 && VECTOR(*edge_color1)[(long int)eid1] != 
+		VECTOR(*edge_color2)[(long int)eid2]) {
+	      end=1;
+	    }
+	    if (edge_compat_fn && !edge_compat_fn(graph1, graph2, 
+						  eid1, eid2, arg)) {
+	      end=1;
+	    }
 	  }
 	} else { 
 	  if (VECTOR(in_2)[node] != 0) {
@@ -1316,11 +1456,25 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
       }      
       for (i=0; !end && i<igraph_vector_size(outneis_2); i++) {
 	long int node=VECTOR(*outneis_2)[i];
-	if (VECTOR(*core_2)[node] != 0) {
-	  long int node2=VECTOR(*core_2)[node]-1;
+	if (VECTOR(*core_2)[node] >= 0) {
+	  long int node2=VECTOR(*core_2)[node];
 	  /* check if there is a cand1->node2 edge */
 	  if (!igraph_vector_binsearch2(outneis_1, node2)) {
 	    end=1;
+	  } else if (edge_color1 || edge_compat_fn) {
+	    igraph_integer_t eid1, eid2;
+	    igraph_get_eid(graph1, &eid1, cand1, node2, /*directed=*/ 1, 
+			   /*error=*/ 1);
+	    igraph_get_eid(graph2, &eid2, cand2, node, /*directed=*/ 1, 
+			   /*error=*/ 1);
+	    if (edge_color1 && VECTOR(*edge_color1)[(long int)eid1] != 
+		VECTOR(*edge_color2)[(long int)eid2]) {
+	      end=1;
+	    }
+	    if (edge_compat_fn && !edge_compat_fn(graph1, graph2, 
+						  eid1, eid2, arg)) {
+	      end=1;
+	    }
 	  }
 	} else {
 	  if (VECTOR(in_2)[node] != 0) {
@@ -1338,8 +1492,8 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
 	IGRAPH_CHECK(igraph_stack_push(&path, cand1));
 	IGRAPH_CHECK(igraph_stack_push(&path, cand2));
 	matched_nodes += 1;
-	VECTOR(*core_1)[cand1]=cand2+1;
-	VECTOR(*core_2)[cand2]=cand1+1;
+	VECTOR(*core_1)[cand1]=cand2;
+	VECTOR(*core_2)[cand2]=cand1;
 	
 	/* update in_*, out_* */
 	if (VECTOR(in_1)[cand1] != 0) {
@@ -1358,7 +1512,7 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
 	inneis_1=igraph_lazy_adjlist_get(&inadj1, cand1);
 	for (i=0; i<igraph_vector_size(inneis_1); i++) {
 	  long int node=VECTOR(*inneis_1)[i];
-	  if (VECTOR(in_1)[node]==0 && VECTOR(*core_1)[node]==0) {
+	  if (VECTOR(in_1)[node]==0 && VECTOR(*core_1)[node] < 0) {
 	    VECTOR(in_1)[node]=depth;
 	    in_1_size += 1;
 	  }
@@ -1366,7 +1520,7 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
 	outneis_1=igraph_lazy_adjlist_get(&outadj1, cand1);
 	for (i=0; i<igraph_vector_size(outneis_1); i++) {
 	  long int node=VECTOR(*outneis_1)[i];
-	  if (VECTOR(out_1)[node]==0 && VECTOR(*core_1)[node]==0) {
+	  if (VECTOR(out_1)[node]==0 && VECTOR(*core_1)[node] < 0) {
 	    VECTOR(out_1)[node]=depth;
 	    out_1_size += 1;
 	  }
@@ -1374,7 +1528,7 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
 	inneis_2=igraph_lazy_adjlist_get(&inadj2, cand2);
 	for (i=0; i<igraph_vector_size(inneis_2); i++) {
 	  long int node=VECTOR(*inneis_2)[i];
-	  if (VECTOR(in_2)[node]==0 && VECTOR(*core_2)[node]==0) {
+	  if (VECTOR(in_2)[node]==0 && VECTOR(*core_2)[node] < 0) {
 	    VECTOR(in_2)[node]=depth;
 	    in_2_size += 1;
 	  }
@@ -1382,7 +1536,7 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
 	outneis_2=igraph_lazy_adjlist_get(&outadj2, cand2);
 	for (i=0; i<igraph_vector_size(outneis_2); i++) {
 	  long int node=VECTOR(*outneis_2)[i];
-	  if (VECTOR(out_2)[node]==0 && VECTOR(*core_2)[node]==0) {
+	  if (VECTOR(out_2)[node]==0 && VECTOR(*core_2)[node] < 0) {
 	    VECTOR(out_2)[node]=depth;
 	    out_2_size += 1;
 	  }
@@ -1395,8 +1549,8 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
       
     }
     
-    if (matched_nodes==no_of_nodes && function) {
-      if (!function(core_1, core_2, arg)) {
+    if (matched_nodes==no_of_nodes && isohandler_fn) {
+      if (!isohandler_fn(core_1, core_2, arg)) {
 	break;
       }
     }
@@ -1419,23 +1573,44 @@ int igraph_isomorphic_function_vf2(const igraph_t *graph1, const igraph_t *graph
   if (!map21) {
     igraph_vector_destroy(core_2);
     IGRAPH_FINALLY_CLEAN(1);
-  } else {
-    igraph_vector_add_constant(core_2, -1);
-  }
+  } 
   if (!map12) { 
     igraph_vector_destroy(core_1);
     IGRAPH_FINALLY_CLEAN(1);
-  } else {
-    igraph_vector_add_constant(core_1, -1);
   }
 
   return 0;
 }
 
+typedef struct {
+  igraph_isocompat_t *node_compat_fn, *edge_compat_fn;
+  void *arg, *carg;
+} igraph_i_iso_cb_data_t;
+
+igraph_bool_t igraph_i_isocompat_node_cb(const igraph_t *graph1, 
+					 const igraph_t *graph2, 
+					 const igraph_integer_t g1_num,
+					 const igraph_integer_t g2_num,
+					 void *arg) {
+  igraph_i_iso_cb_data_t *data=arg;
+  return data->node_compat_fn(graph1, graph2, g1_num, g2_num, data->carg);
+}
+
+igraph_bool_t igraph_i_isocompat_edge_cb(const igraph_t *graph1, 
+					 const igraph_t *graph2,
+					 const igraph_integer_t g1_num,
+					 const igraph_integer_t g2_num,
+					 void *arg) {
+  igraph_i_iso_cb_data_t *data=arg;
+  return data->edge_compat_fn(graph1, graph2, g1_num, g2_num, data->carg);
+}
+
 igraph_bool_t igraph_i_isomorphic_vf2(igraph_vector_t *map12,
 				      igraph_vector_t *map21,
-				      igraph_bool_t *iso) {
-  *iso=1;
+				      void *arg) {
+  igraph_i_iso_cb_data_t *data = arg;
+  igraph_bool_t *iso = data->arg;
+  *iso = 1;
   return 0;			/* don't need to continue */
 }
 
@@ -1453,6 +1628,18 @@ igraph_bool_t igraph_i_isomorphic_vf2(igraph_vector_t *map12,
  * \param graph1 The first graph, may be directed or undirected.
  * \param graph2 The second graph. It must have the same directedness
  *    as \p graph1, otherwise an error is reported.
+ * \param vertex_color1 An optional color vector for the first graph. If
+ *   color vectors are given for both graphs, then the isomorphism is
+ *   calculated on the colored graphs; i.e. two vertices can match
+ *   only if their color also matches. Supply a null pointer here if
+ *   your graphs are not colored.
+ * \param vertex_color2 An optional color vector for the second graph. See
+ *   the previous argument for explanation.
+ * \param edge_color1 An optional edge color vector for the first
+ *   graph. The matching edges in the two graphs must have matching
+ *   colors as well. Supply a null pointer here if your graphs are not 
+ *   edge-colored.
+ * \param edge_color2 The edge color vector for the second graph.
  * \param iso Pointer to a logical constant, the result of the
  *    algorithm will be placed here.
  * \param map12 Pointer to an initialized vector or a NULL pointer. If not 
@@ -1463,6 +1650,14 @@ igraph_bool_t igraph_i_isomorphic_vf2(igraph_vector_t *map12,
  *    a NULL pointer then the mapping from \p graph2 to \p graph1 is
  *    stored here. If the graphs are not isomorphic then the vector is
  *    cleared (ie. has zero elements).
+ * \param node_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two nodes are compatible.
+ * \param edge_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two edges are compatible.
+ * \param arg Extra argument to supply to functions \p node_compat_fn
+ *   and \p edge_compat_fn. 
  * \return Error code.
  * 
  * \sa \ref igraph_subisomorphic_vf2(),
@@ -1470,17 +1665,32 @@ igraph_bool_t igraph_i_isomorphic_vf2(igraph_vector_t *map12,
  * \ref igraph_get_isomorphisms_vf2(),
  * 
  * Time complexity: exponential, what did you expect?
+ * 
+ * \example examples/simple/igraph_isomorphic_vf2.c
  */
 
 int igraph_isomorphic_vf2(const igraph_t *graph1, const igraph_t *graph2, 
+			  const igraph_vector_int_t *vertex_color1,
+			  const igraph_vector_int_t *vertex_color2,
+			  const igraph_vector_int_t *edge_color1,
+			  const igraph_vector_int_t *edge_color2,
 			  igraph_bool_t *iso, igraph_vector_t *map12, 
-			  igraph_vector_t *map21) {
+			  igraph_vector_t *map21,
+			  igraph_isocompat_t *node_compat_fn,
+			  igraph_isocompat_t *edge_compat_fn,
+			  void *arg) {
 
+  igraph_i_iso_cb_data_t data = { node_compat_fn, edge_compat_fn, iso, arg };
+  igraph_isocompat_t *ncb = node_compat_fn ? igraph_i_isocompat_node_cb : 0;
+  igraph_isocompat_t *ecb = edge_compat_fn ? igraph_i_isocompat_edge_cb : 0;
   *iso=0;
-  IGRAPH_CHECK(igraph_isomorphic_function_vf2(graph1, graph2, map12, map21,
+  IGRAPH_CHECK(igraph_isomorphic_function_vf2(graph1, graph2, 
+					      vertex_color1, vertex_color2,
+					      edge_color1, edge_color2,
+					      map12, map21,
 					      (igraph_isohandler_t*)
 					      igraph_i_isomorphic_vf2,
-					      iso));
+					      ncb, ecb, &data));
   if (! *iso) {
     if (map12) { igraph_vector_clear(map12); }
     if (map21) { igraph_vector_clear(map21); }
@@ -1490,7 +1700,9 @@ int igraph_isomorphic_vf2(const igraph_t *graph1, const igraph_t *graph2,
 
 igraph_bool_t igraph_i_count_isomorphisms_vf2(const igraph_vector_t *map12,
 					      const igraph_vector_t *map21,
-					      igraph_integer_t *count) {
+					      void *arg) {
+  igraph_i_iso_cb_data_t *data = arg;
+  igraph_integer_t *count = data->arg;
   *count += 1;
   return 1;			/* always continue */
 }
@@ -1505,20 +1717,54 @@ igraph_bool_t igraph_i_count_isomorphisms_vf2(const igraph_vector_t *map12,
  * \param graph1 The first input graph, may be directed or undirected.
  * \param graph2 The second input graph, it must have the same
  *   directedness as \p graph1, or an error will be reported.
+ * \param vertex_color1 An optional color vector for the first graph. If
+ *   color vectors are given for both graphs, then the isomorphism is
+ *   calculated on the colored graphs; i.e. two vertices can match
+ *   only if their color also matches. Supply a null pointer here if
+ *   your graphs are not colored.
+ * \param vertex_color2 An optional color vector for the second graph. See
+ *   the previous argument for explanation.
+ * \param edge_color1 An optional edge color vector for the first
+ *   graph. The matching edges in the two graphs must have matching
+ *   colors as well. Supply a null pointer here if your graphs are not 
+ *   edge-colored.
+ * \param edge_color2 The edge color vector for the second graph.
  * \param count Point to an integer, the result will be stored here.
+ * \param node_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two nodes are compatible.
+ * \param edge_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two edges are compatible.
+ * \param arg Extra argument to supply to functions \p node_compat_fn and
+ *   \p edge_compat_fn.
  * \return Error code.
  * 
  * Time complexity: exponential.
  */
 
 int igraph_count_isomorphisms_vf2(const igraph_t *graph1, const igraph_t *graph2, 
-				  igraph_integer_t *count) {
-  
+				  const igraph_vector_int_t *vertex_color1,
+				  const igraph_vector_int_t *vertex_color2,
+				  const igraph_vector_int_t *edge_color1,
+				  const igraph_vector_int_t *edge_color2,
+				  igraph_integer_t *count,
+				  igraph_isocompat_t *node_compat_fn,
+				  igraph_isocompat_t *edge_compat_fn,
+				  void *arg) {
+
+  igraph_i_iso_cb_data_t data = { node_compat_fn, edge_compat_fn, 
+				  count, arg };
+  igraph_isocompat_t *ncb = node_compat_fn ? igraph_i_isocompat_node_cb : 0;
+  igraph_isocompat_t *ecb = edge_compat_fn ? igraph_i_isocompat_edge_cb : 0;
   *count=0;
-  IGRAPH_CHECK(igraph_isomorphic_function_vf2(graph1, graph2, 0, 0,
+  IGRAPH_CHECK(igraph_isomorphic_function_vf2(graph1, graph2, 
+					      vertex_color1, vertex_color2, 
+					      edge_color1, edge_color2,
+					      0, 0,
 					      (igraph_isohandler_t*)
 					      igraph_i_count_isomorphisms_vf2,
-					      count));
+					      ncb, ecb, &data));
   return 0;
 }
 
@@ -1533,8 +1779,10 @@ void igraph_i_get_isomorphisms_free(igraph_vector_ptr_t *data) {
 
 igraph_bool_t igraph_i_get_isomorphisms_vf2(const igraph_vector_t *map12,
 					    const igraph_vector_t *map21,
-					    igraph_vector_ptr_t *data) {
+					    void *arg) {
 
+  igraph_i_iso_cb_data_t *data=arg;
+  igraph_vector_ptr_t *ptrvector=data->arg;
   igraph_vector_t *newvector=igraph_Calloc(1, igraph_vector_t);
   if (!newvector) { 
     igraph_error("Out of memory", __FILE__, __LINE__, IGRAPH_ENOMEM);
@@ -1542,9 +1790,8 @@ igraph_bool_t igraph_i_get_isomorphisms_vf2(const igraph_vector_t *map12,
   }
   IGRAPH_FINALLY(igraph_free, newvector);
   IGRAPH_CHECK(igraph_vector_copy(newvector, map21));
-  igraph_vector_add_constant(newvector, -1);
   IGRAPH_FINALLY(igraph_vector_destroy, newvector);
-  IGRAPH_CHECK(igraph_vector_ptr_push_back(data, newvector));
+  IGRAPH_CHECK(igraph_vector_ptr_push_back(ptrvector, newvector));
   IGRAPH_FINALLY_CLEAN(2);
   
   return 1;			/* continue finding subisomorphisms */
@@ -1561,6 +1808,18 @@ igraph_bool_t igraph_i_get_isomorphisms_vf2(const igraph_vector_t *map12,
  * \param graph1 The first input graph, may be directed or undirected.
  * \param graph2 The second input graph, it must have the same
  *   directedness as \p graph1, or an error will be reported.
+ * \param vertex_color1 An optional color vector for the first graph. If
+ *   color vectors are given for both graphs, then the isomorphism is
+ *   calculated on the colored graphs; i.e. two vertices can match
+ *   only if their color also matches. Supply a null pointer here if
+ *   your graphs are not colored.
+ * \param vertex_color2 An optional color vector for the second graph. See
+ *   the previous argument for explanation.
+ * \param edge_color1 An optional edge color vector for the first
+ *   graph. The matching edges in the two graphs must have matching
+ *   colors as well. Supply a null pointer here if your graphs are not 
+ *   edge-colored.
+ * \param edge_color2 The edge color vector for the second graph.
  * \param maps Pointer vector. On return it is empty if the input graphs
  *   are no isomorphic. Otherwise it contains pointers to
  *   <type>igraph_vector_t</type> objects, each vector is an
@@ -1570,6 +1829,14 @@ igraph_bool_t igraph_i_get_isomorphisms_vf2(const igraph_vector_t *map12,
  *   <function>free()</function> and then 3) call \ref
  *   igraph_vector_ptr_destroy() on the pointer vector to deallocate all
  *   memory when \p maps is no longer needed.
+ * \param node_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two nodes are compatible.
+ * \param edge_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two edges are compatible.
+ * \param arg Extra argument to supply to functions \p node_compat_fn
+ *   and \p edge_compat_fn. 
  * \return Error code.
  * 
  * Time complexity: exponential.
@@ -1577,14 +1844,28 @@ igraph_bool_t igraph_i_get_isomorphisms_vf2(const igraph_vector_t *map12,
  
 int igraph_get_isomorphisms_vf2(const igraph_t *graph1,
 				const igraph_t *graph2,
-				igraph_vector_ptr_t *maps) {
+				const igraph_vector_int_t *vertex_color1,
+				const igraph_vector_int_t *vertex_color2,
+				const igraph_vector_int_t *edge_color1,
+				const igraph_vector_int_t *edge_color2,
+				igraph_vector_ptr_t *maps,
+				igraph_isocompat_t *node_compat_fn,
+				igraph_isocompat_t *edge_compat_fn,
+				void *arg) {
   
+  igraph_i_iso_cb_data_t data = { node_compat_fn, edge_compat_fn, maps, arg };
+  igraph_isocompat_t *ncb = node_compat_fn ? igraph_i_isocompat_node_cb : 0;
+  igraph_isocompat_t *ecb = edge_compat_fn ? igraph_i_isocompat_edge_cb : 0;
+
   igraph_vector_ptr_clear(maps);
   IGRAPH_FINALLY(igraph_i_get_isomorphisms_free, maps);
-  IGRAPH_CHECK(igraph_isomorphic_function_vf2(graph1, graph2, 0, 0,
+  IGRAPH_CHECK(igraph_isomorphic_function_vf2(graph1, graph2, 
+					      vertex_color1, vertex_color2, 
+					      edge_color1, edge_color2,
+					      0, 0,
 					      (igraph_isohandler_t*)
 					      igraph_i_get_isomorphisms_vf2,
-					      maps));
+					      ncb, ecb, &data));
   IGRAPH_FINALLY_CLEAN(1);
   return 0;
 }
@@ -1611,7 +1892,7 @@ int igraph_get_isomorphisms_vf2(const igraph_t *graph1,
 int igraph_subisomorphic(const igraph_t *graph1, const igraph_t *graph2,
 			 igraph_bool_t *iso) {
 
-  return igraph_subisomorphic_vf2(graph1, graph2, iso, 0, 0);
+  return igraph_subisomorphic_vf2(graph1, graph2, 0, 0, 0, 0, iso, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -1621,7 +1902,7 @@ int igraph_subisomorphic(const igraph_t *graph1, const igraph_t *graph2,
  * This function is the pair of \ref igraph_isomorphic_function_vf2(),
  * for subgraph isomorphism problems. It searches for subgraphs of \p
  * graph1 which are isomorphic to \p graph2. When it founds an
- * isomorphic mapping it calls the supplied callback \p function.
+ * isomorphic mapping it calls the supplied callback \p isohandler_fn.
  * The mapping (and its inverse) and the additional \p arg argument
  * are supplied to the callback.
  * \param graph1 The first input graph, may be directed or
@@ -1629,17 +1910,36 @@ int igraph_subisomorphic(const igraph_t *graph1, const igraph_t *graph2,
  * \param graph2 The second input graph, it must have the same
  *    directedness as \p graph1. This is supposed to be the smaller
  *    graph.
+ * \param vertex_color1 An optional color vector for the first graph. If
+ *   color vectors are given for both graphs, then the subgraph isomorphism is
+ *   calculated on the colored graphs; i.e. two vertices can match
+ *   only if their color also matches. Supply a null pointer here if
+ *   your graphs are not colored.
+ * \param vertex_color2 An optional color vector for the second graph. See
+ *   the previous argument for explanation.
+ * \param edge_color1 An optional edge color vector for the first
+ *   graph. The matching edges in the two graphs must have matching
+ *   colors as well. Supply a null pointer here if your graphs are not 
+ *   edge-colored.
+ * \param edge_color2 The edge color vector for the second graph.
  * \param map12 Pointer to a vector or \c NULL. If not \c NULL, then an
  *    isomorphic mapping from \p graph1 to \p graph2 is stored here.
  * \param map21 Pointer to a vector ot \c NULL. If not \c NULL, then
  *    an isomorphic mapping from \p graph2 to \p graph1 is stored
  *    here.
- * \param function A pointer to a function of type \ref
+ * \param isohandler_fn A pointer to a function of type \ref
  *   igraph_isohandler_t. This will be called whenever a subgraph
  *   isomorphism is found. If the function returns with a non-zero value
  *   then the search is continued, otherwise it stops and the function
  *   returns. 
- * \param arg Extra argument to supply to the callback \p function.
+ * \param node_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two nodes are compatible.
+ * \param edge_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two edges are compatible.
+ * \param arg Extra argument to supply to functions \p isohandler_fn, \p
+ *   node_compat_fn and \p edge_compat_fn.
  * \return Error code.
  * 
  * Time complexity: exponential.
@@ -1647,13 +1947,21 @@ int igraph_subisomorphic(const igraph_t *graph1, const igraph_t *graph2,
 
 int igraph_subisomorphic_function_vf2(const igraph_t *graph1, 
 				      const igraph_t *graph2,
+				      const igraph_vector_int_t *vertex_color1,
+				      const igraph_vector_int_t *vertex_color2,
+				      const igraph_vector_int_t *edge_color1,
+				      const igraph_vector_int_t *edge_color2,
 				      igraph_vector_t *map12,
 				      igraph_vector_t *map21,
-				      igraph_isohandler_t *function,
+				      igraph_isohandler_t *isohandler_fn,
+				      igraph_isocompat_t *node_compat_fn,
+				      igraph_isocompat_t *edge_compat_fn,
 				      void *arg) {
   
   long int no_of_nodes1=igraph_vcount(graph1), 
     no_of_nodes2=igraph_vcount(graph2);
+  long int no_of_edges1=igraph_ecount(graph1), 
+    no_of_edges2=igraph_ecount(graph2);
   igraph_vector_t mycore_1, mycore_2, *core_1=&mycore_1, *core_2=&mycore_2;
   igraph_vector_t in_1, in_2, out_1, out_2;
   long int in_1_size=0, in_2_size=0, out_1_size=0, out_2_size=0;
@@ -1672,24 +1980,58 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
   }
 
   if (no_of_nodes1 < no_of_nodes2 || 
-      igraph_ecount(graph1) < igraph_ecount(graph2)) {
+      no_of_edges1 < no_of_edges2) {
     return 0;
+  }
+
+  if ( (vertex_color1 && !vertex_color2) || (!vertex_color1 && vertex_color2) ) {
+    IGRAPH_WARNING("Only one graph is vertex colored, colors will be ignored");
+    vertex_color1=vertex_color2=0;
+  }
+
+  if ( (edge_color1 && !edge_color2) || (!edge_color1 && edge_color2) ) {
+    IGRAPH_WARNING("Only one graph is edge colored, colors will be ignored");
+    edge_color1=edge_color2=0;
+  }
+
+  if (vertex_color1) {
+    if (igraph_vector_int_size(vertex_color1) != no_of_nodes1 ||
+	igraph_vector_int_size(vertex_color2) != no_of_nodes2) {
+      IGRAPH_ERROR("Invalid vertex color vector length", IGRAPH_EINVAL);
+    }
+  }
+
+  if (edge_color1) {
+    if (igraph_vector_int_size(edge_color1) != no_of_edges1 ||
+	igraph_vector_int_size(edge_color2) != no_of_edges2) {
+      IGRAPH_ERROR("Invalid edge color vector length", IGRAPH_EINVAL);
+    }
+  }
+
+  /* Check color distribution */
+  if (vertex_color1) {
+    /* TODO */
+  }
+
+  /* Check edge color distribution */
+  if (edge_color1) {
+    /* TODO */
   }
 
   if (map12) {
     core_1=map12;
     IGRAPH_CHECK(igraph_vector_resize(core_1, no_of_nodes1));
-    igraph_vector_null(core_1);
   } else {
     IGRAPH_VECTOR_INIT_FINALLY(core_1, no_of_nodes1);
   }
+  igraph_vector_fill(core_1, -1);
   if (map21) {
     core_2=map21;
     IGRAPH_CHECK(igraph_vector_resize(core_2, no_of_nodes2));
-    igraph_vector_null(core_2);
   } else {
     IGRAPH_VECTOR_INIT_FINALLY(core_2, no_of_nodes2);
   }
+  igraph_vector_fill(core_2, -1);
   IGRAPH_VECTOR_INIT_FINALLY(&in_1, no_of_nodes1);
   IGRAPH_VECTOR_INIT_FINALLY(&in_2, no_of_nodes2);
   IGRAPH_VECTOR_INIT_FINALLY(&out_1, no_of_nodes1);
@@ -1742,7 +2084,7 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
       } else {
 	i=0;
 	while (cand2<0 && i<no_of_nodes2) {
-	  if (VECTOR(out_2)[i]>0 && VECTOR(*core_2)[i]==0) {
+	  if (VECTOR(out_2)[i]>0 && VECTOR(*core_2)[i] < 0) {
 	    cand2=i;
 	  }
 	  i++;
@@ -1751,7 +2093,7 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
       /* search for cand1 now, it should be bigger than last1 */
       i=last1+1;
       while (cand1<0 && i<no_of_nodes1) {
-	if (VECTOR(out_1)[i]>0 && VECTOR(*core_1)[i]==0) {
+	if (VECTOR(out_1)[i]>0 && VECTOR(*core_1)[i] < 0) {
 	  cand1=i;
 	}
 	i++;
@@ -1764,7 +2106,7 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
       } else {
 	i=0;
 	while (cand2<0 && i<no_of_nodes2) {
-	  if (VECTOR(in_2)[i]>0 && VECTOR(*core_2)[i]==0) {
+	  if (VECTOR(in_2)[i]>0 && VECTOR(*core_2)[i] < 0) {
 	    cand2=i;
 	  }
 	  i++;
@@ -1773,7 +2115,7 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
       /* search for cand1 now, should be bigger than last1 */
       i=last1+1;
       while (cand1<0 && i<no_of_nodes1) {
-	if (VECTOR(in_1)[i]>0 && VECTOR(*core_1)[i]==0) {
+	if (VECTOR(in_1)[i]>0 && VECTOR(*core_1)[i] < 0) {
 	  cand1=i;
 	}
 	i++;
@@ -1786,7 +2128,7 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
       } else {
 	i=0;
 	while (cand2<0 && i<no_of_nodes2) {
-	  if (VECTOR(*core_2)[i]==0) { 
+	  if (VECTOR(*core_2)[i] < 0) { 
 	    cand2=i;
 	  }
 	  i++;
@@ -1795,7 +2137,7 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
       /* search for cand1, should be bigger than last1 */
       i=last1+1;
       while (cand1<0 && i<no_of_nodes1) {
-	if (VECTOR(*core_1)[i]==0) {
+	if (VECTOR(*core_1)[i] < 0) {
 	  cand1=i;
 	}
 	i++;
@@ -1810,8 +2152,8 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
 	last2=igraph_stack_pop(&path);
 	last1=igraph_stack_pop(&path);
 	matched_nodes -= 1;
-	VECTOR(*core_1)[last1]=0;
-	VECTOR(*core_2)[last2]=0;
+	VECTOR(*core_1)[last1]=-1;
+	VECTOR(*core_2)[last2]=-1;
 
 	if (VECTOR(in_1)[last1] != 0) {
 	  in_1_size += 1;
@@ -1876,10 +2218,17 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
 	  VECTOR(outdeg1)[cand1] < VECTOR(outdeg2)[cand2]) {
 	end=1;
       }
+      if (vertex_color1 && VECTOR(*vertex_color1)[cand1] != VECTOR(*vertex_color2)[cand2]) {
+	end=1;
+      }
+      if (node_compat_fn && !node_compat_fn(graph1, graph2, 
+					    cand1, cand2, arg)) {
+	end=1;
+      }
 
       for (i=0; !end && i<igraph_vector_size(inneis_1); i++) {
 	long int node=VECTOR(*inneis_1)[i];
-	if (VECTOR(*core_1)[node]==0) {
+	if (VECTOR(*core_1)[node] < 0) {
 	  if (VECTOR(in_1)[node] != 0) {
 	    xin1++;
 	  }
@@ -1890,7 +2239,7 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
       }
       for (i=0; !end && i<igraph_vector_size(outneis_1); i++) {
 	long int node=VECTOR(*outneis_1)[i];
-	if (VECTOR(*core_1)[node]==0) {
+	if (VECTOR(*core_1)[node] < 0) {
 	  if (VECTOR(in_1)[node] != 0) {
 	    xin1++;
 	  }
@@ -1901,11 +2250,25 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
       }      
       for (i=0; !end && i<igraph_vector_size(inneis_2); i++) {
 	long int node=VECTOR(*inneis_2)[i];
-	if (VECTOR(*core_2)[node]!=0) {
-	  long int node2=VECTOR(*core_2)[node]-1;
+	if (VECTOR(*core_2)[node] >= 0) {
+	  long int node2=VECTOR(*core_2)[node];
 	  /* check if there is a node2->cand1 edge */
 	  if (!igraph_vector_binsearch2(inneis_1, node2)) {
 	    end=1;
+	  } else if (edge_color1 || edge_compat_fn) {
+	    igraph_integer_t eid1, eid2;
+	    igraph_get_eid(graph1, &eid1, node2, cand1, /*directed=*/ 1, 
+			   /*error=*/ 1);
+	    igraph_get_eid(graph2, &eid2, node, cand2, /*directed=*/ 1, 
+			   /*error=*/ 1);
+	    if (edge_color1 && VECTOR(*edge_color1)[(long int)eid1] != 
+		VECTOR(*edge_color2)[(long int)eid2]) {
+	      end=1;
+	    }
+	    if (edge_compat_fn && !edge_compat_fn(graph1, graph2, 
+						  eid1, eid2, arg)) {
+	      end=1;
+	    }
 	  }
 	} else { 
 	  if (VECTOR(in_2)[node] != 0) {
@@ -1918,11 +2281,25 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
       }      
       for (i=0; !end && i<igraph_vector_size(outneis_2); i++) {
 	long int node=VECTOR(*outneis_2)[i];
-	if (VECTOR(*core_2)[node] != 0) {
-	  long int node2=VECTOR(*core_2)[node]-1;
+	if (VECTOR(*core_2)[node] >= 0) {
+	  long int node2=VECTOR(*core_2)[node];
 	  /* check if there is a cand1->node2 edge */
 	  if (!igraph_vector_binsearch2(outneis_1, node2)) {
 	    end=1;
+	  } else if (edge_color1 || edge_compat_fn) {
+	    igraph_integer_t eid1, eid2;
+	    igraph_get_eid(graph1, &eid1, cand1, node2, /*directed=*/ 1, 
+			   /*error=*/ 1);
+	    igraph_get_eid(graph2, &eid2, cand2, node, /*directed=*/ 1,
+			   /*error=*/ 1);
+	    if (edge_color1 && VECTOR(*edge_color1)[(long int)eid1] != 
+		VECTOR(*edge_color2)[(long int)eid2]) {
+	      end=1;
+	    }
+	    if (edge_compat_fn && !edge_compat_fn(graph1, graph2, 
+						  eid1, eid2, arg)) {
+	      end=1;
+	    }
 	  }
 	} else {
 	  if (VECTOR(in_2)[node] != 0) {
@@ -1940,8 +2317,8 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
 	IGRAPH_CHECK(igraph_stack_push(&path, cand1));
 	IGRAPH_CHECK(igraph_stack_push(&path, cand2));
 	matched_nodes += 1;
-	VECTOR(*core_1)[cand1]=cand2+1;
-	VECTOR(*core_2)[cand2]=cand1+1;
+	VECTOR(*core_1)[cand1]=cand2;
+	VECTOR(*core_2)[cand2]=cand1;
 	
 	/* update in_*, out_* */
 	if (VECTOR(in_1)[cand1] != 0) {
@@ -1960,7 +2337,7 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
 	inneis_1=igraph_lazy_adjlist_get(&inadj1, cand1);
 	for (i=0; i<igraph_vector_size(inneis_1); i++) {
 	  long int node=VECTOR(*inneis_1)[i];
-	  if (VECTOR(in_1)[node]==0 && VECTOR(*core_1)[node]==0) {
+	  if (VECTOR(in_1)[node]==0 && VECTOR(*core_1)[node] < 0) {
 	    VECTOR(in_1)[node]=depth;
 	    in_1_size += 1;
 	  }
@@ -1968,7 +2345,7 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
 	outneis_1=igraph_lazy_adjlist_get(&outadj1, cand1);
 	for (i=0; i<igraph_vector_size(outneis_1); i++) {
 	  long int node=VECTOR(*outneis_1)[i];
-	  if (VECTOR(out_1)[node]==0 && VECTOR(*core_1)[node]==0) {
+	  if (VECTOR(out_1)[node]==0 && VECTOR(*core_1)[node] < 0) {
 	    VECTOR(out_1)[node]=depth;
 	    out_1_size += 1;
 	  }
@@ -1976,7 +2353,7 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
 	inneis_2=igraph_lazy_adjlist_get(&inadj2, cand2);
 	for (i=0; i<igraph_vector_size(inneis_2); i++) {
 	  long int node=VECTOR(*inneis_2)[i];
-	  if (VECTOR(in_2)[node]==0 && VECTOR(*core_2)[node]==0) {
+	  if (VECTOR(in_2)[node]==0 && VECTOR(*core_2)[node] < 0) {
 	    VECTOR(in_2)[node]=depth;
 	    in_2_size += 1;
 	  }
@@ -1984,7 +2361,7 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
 	outneis_2=igraph_lazy_adjlist_get(&outadj2, cand2);
 	for (i=0; i<igraph_vector_size(outneis_2); i++) {
 	  long int node=VECTOR(*outneis_2)[i];
-	  if (VECTOR(out_2)[node]==0 && VECTOR(*core_2)[node]==0) {
+	  if (VECTOR(out_2)[node]==0 && VECTOR(*core_2)[node] < 0) {
 	    VECTOR(out_2)[node]=depth;
 	    out_2_size += 1;
 	  }
@@ -1997,8 +2374,8 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
       
     }
 
-    if (matched_nodes==no_of_nodes2 && function) { 
-      if (!function(core_1, core_2, arg)) {
+    if (matched_nodes==no_of_nodes2 && isohandler_fn) { 
+      if (!isohandler_fn(core_1, core_2, arg)) {
 	break;
       }
     }
@@ -2021,14 +2398,10 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
   if (!map21) { 
     igraph_vector_destroy(core_2);
     IGRAPH_FINALLY_CLEAN(1);
-  } else {
-    igraph_vector_add_constant(core_2, -1);
   }    
   if (!map12) {
     igraph_vector_destroy(core_1);
     IGRAPH_FINALLY_CLEAN(1);
-  } else {
-    igraph_vector_add_constant(core_1, -1);
   }
 
   return 0;
@@ -2036,7 +2409,9 @@ int igraph_subisomorphic_function_vf2(const igraph_t *graph1,
 
 igraph_bool_t igraph_i_subisomorphic_vf2(const igraph_vector_t *map12,
 					 const igraph_vector_t *map21,
-					 igraph_bool_t *iso) {
+					 void *arg) {
+  igraph_i_iso_cb_data_t *data = arg;
+  igraph_bool_t *iso = data->arg;
   *iso=1;
   return 0; /* stop */
 }
@@ -2052,6 +2427,18 @@ igraph_bool_t igraph_i_subisomorphic_vf2(const igraph_vector_t *map12,
  * \param graph2 The second input graph, it must have the same
  *    directedness as \p graph1. This is supposed to be the smaller
  *    graph.
+ * \param vertex_color1 An optional color vector for the first graph. If
+ *   color vectors are given for both graphs, then the subgraph isomorphism is
+ *   calculated on the colored graphs; i.e. two vertices can match
+ *   only if their color also matches. Supply a null pointer here if
+ *   your graphs are not colored.
+ * \param vertex_color2 An optional color vector for the second graph. See
+ *   the previous argument for explanation.
+ * \param edge_color1 An optional edge color vector for the first
+ *   graph. The matching edges in the two graphs must have matching
+ *   colors as well. Supply a null pointer here if your graphs are not 
+ *   edge-colored.
+ * \param edge_color2 The edge color vector for the second graph.
  * \param iso Pointer to a boolean. The result of the decision problem
  *    is stored here.
  * \param map12 Pointer to a vector or \c NULL. If not \c NULL, then an
@@ -2059,20 +2446,42 @@ igraph_bool_t igraph_i_subisomorphic_vf2(const igraph_vector_t *map12,
  * \param map21 Pointer to a vector ot \c NULL. If not \c NULL, then
  *    an isomorphic mapping from \p graph2 to \p graph1 is stored
  *    here.
+ * \param node_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two nodes are compatible.
+ * \param edge_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two edges are compatible.
+ * \param arg Extra argument to supply to functions \p node_compat_fn 
+ *   and \p edge_compat_fn. 
  * \return Error code.
  * 
  * Time complexity: exponential.
  */
 
 int igraph_subisomorphic_vf2(const igraph_t *graph1, const igraph_t *graph2, 
+			     const igraph_vector_int_t *vertex_color1,
+			     const igraph_vector_int_t *vertex_color2,
+			     const igraph_vector_int_t *edge_color1,
+			     const igraph_vector_int_t *edge_color2,
 			     igraph_bool_t *iso, igraph_vector_t *map12, 
-			     igraph_vector_t *map21) {
- 
+			     igraph_vector_t *map21,
+			     igraph_isocompat_t *node_compat_fn,
+			     igraph_isocompat_t *edge_compat_fn,
+			     void *arg) {
+
+  igraph_i_iso_cb_data_t data = { node_compat_fn, edge_compat_fn, iso, arg };
+  igraph_isocompat_t *ncb = node_compat_fn ? igraph_i_isocompat_node_cb : 0;
+  igraph_isocompat_t *ecb = edge_compat_fn ? igraph_i_isocompat_edge_cb : 0;
+
   *iso=0;
-  IGRAPH_CHECK(igraph_subisomorphic_function_vf2(graph1, graph2, map12, map21,
+  IGRAPH_CHECK(igraph_subisomorphic_function_vf2(graph1, graph2, 
+						 vertex_color1, vertex_color2,
+						 edge_color1, edge_color2,
+						 map12, map21,
 						 (igraph_isohandler_t *)
 						 igraph_i_subisomorphic_vf2,
-						 iso));
+						 ncb, ecb, &data));
   if (! *iso) {
     if (map12) { igraph_vector_clear(map12); }
     if (map21) { igraph_vector_clear(map21); }
@@ -2082,7 +2491,9 @@ int igraph_subisomorphic_vf2(const igraph_t *graph1, const igraph_t *graph2,
 
 igraph_bool_t igraph_i_count_subisomorphisms_vf2(const igraph_vector_t *map12,
 						 const igraph_vector_t *map21,
-						 igraph_integer_t *count) {
+						 void *arg) {
+  igraph_i_iso_cb_data_t *data = arg;
+  igraph_integer_t *count = data->arg;
   *count += 1;
   return 1;			/* always continue */
 }
@@ -2099,21 +2510,55 @@ igraph_bool_t igraph_i_count_subisomorphisms_vf2(const igraph_vector_t *map12,
  * \param graph2 The second input graph, it must have the same
  *    directedness as \p graph1. This is supposed to be the smaller
  *    graph.
+ * \param vertex_color1 An optional color vector for the first graph. If
+ *   color vectors are given for both graphs, then the subgraph isomorphism is
+ *   calculated on the colored graphs; i.e. two vertices can match
+ *   only if their color also matches. Supply a null pointer here if
+ *   your graphs are not colored.
+ * \param vertex_color2 An optional color vector for the second graph. See
+ *   the previous argument for explanation.
+ * \param edge_color1 An optional edge color vector for the first
+ *   graph. The matching edges in the two graphs must have matching
+ *   colors as well. Supply a null pointer here if your graphs are not 
+ *   edge-colored.
+ * \param edge_color2 The edge color vector for the second graph.
  * \param count Pointer to an integer. The number of subgraph
  *    isomorphisms is stored here.
+ * \param node_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two nodes are compatible.
+ * \param edge_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two edges are compatible.
+ * \param arg Extra argument to supply to functions \p node_compat_fn and
+ *   \p edge_compat_fn. 
  * \return Error code.
  * 
  * Time complexity: exponential.
  */
 
 int igraph_count_subisomorphisms_vf2(const igraph_t *graph1, const igraph_t *graph2, 
-				     igraph_integer_t *count) {
-  
+				     const igraph_vector_int_t *vertex_color1,
+				     const igraph_vector_int_t *vertex_color2,
+				     const igraph_vector_int_t *edge_color1,
+				     const igraph_vector_int_t *edge_color2,
+				     igraph_integer_t *count,
+				     igraph_isocompat_t *node_compat_fn,
+				     igraph_isocompat_t *edge_compat_fn,
+				     void *arg) {
+
+  igraph_i_iso_cb_data_t data = { node_compat_fn, edge_compat_fn, 
+				  count, arg };
+  igraph_isocompat_t *ncb = node_compat_fn ? igraph_i_isocompat_node_cb : 0;
+  igraph_isocompat_t *ecb = edge_compat_fn ? igraph_i_isocompat_edge_cb : 0;
   *count=0;
-  IGRAPH_CHECK(igraph_subisomorphic_function_vf2(graph1, graph2, 0, 0,
-						 (igraph_isohandler_t*)
-						 igraph_i_count_subisomorphisms_vf2,
-						 count));
+  IGRAPH_CHECK(igraph_subisomorphic_function_vf2(graph1, graph2, 
+					 vertex_color1, vertex_color2, 
+					 edge_color1, edge_color2,
+					 0, 0,
+					 (igraph_isohandler_t*)
+					 igraph_i_count_subisomorphisms_vf2,
+					 ncb, ecb, &data));
     return 0;
   }
   
@@ -2128,8 +2573,10 @@ void igraph_i_get_subisomorphisms_free(igraph_vector_ptr_t *data) {
 
 igraph_bool_t igraph_i_get_subisomorphisms_vf2(const igraph_vector_t *map12,
 					       const igraph_vector_t *map21,
-					       igraph_vector_ptr_t *data) {
+					       void *arg) {
 
+  igraph_i_iso_cb_data_t *data = arg;
+  igraph_vector_ptr_t *vector = data->arg;
   igraph_vector_t *newvector=igraph_Calloc(1, igraph_vector_t);
   if (!newvector) { 
     igraph_error("Out of memory", __FILE__, __LINE__, IGRAPH_ENOMEM);
@@ -2137,9 +2584,8 @@ igraph_bool_t igraph_i_get_subisomorphisms_vf2(const igraph_vector_t *map12,
   }
   IGRAPH_FINALLY(igraph_free, newvector);
   IGRAPH_CHECK(igraph_vector_copy(newvector, map21));
-  igraph_vector_add_constant(newvector, -1);
   IGRAPH_FINALLY(igraph_vector_destroy, newvector);
-  IGRAPH_CHECK(igraph_vector_ptr_push_back(data, newvector));
+  IGRAPH_CHECK(igraph_vector_ptr_push_back(vector, newvector));
   IGRAPH_FINALLY_CLEAN(2);
   
   return 1;			/* continue finding subisomorphisms */
@@ -2157,6 +2603,18 @@ igraph_bool_t igraph_i_get_subisomorphisms_vf2(const igraph_vector_t *map12,
  * \param graph2 The second input graph, it must have the same
  *    directedness as \p graph1. This is supposed to be the smaller
  *    graph.
+ * \param vertex_color1 An optional color vector for the first graph. If
+ *   color vectors are given for both graphs, then the subgraph isomorphism is
+ *   calculated on the colored graphs; i.e. two vertices can match
+ *   only if their color also matches. Supply a null pointer here if
+ *   your graphs are not colored.
+ * \param vertex_color2 An optional color vector for the second graph. See
+ *   the previous argument for explanation.
+ * \param edge_color1 An optional edge color vector for the first
+ *   graph. The matching edges in the two graphs must have matching
+ *   colors as well. Supply a null pointer here if your graphs are not 
+ *   edge-colored.
+ * \param edge_color2 The edge color vector for the second graph.
  * \param maps Pointer vector. On return it contains pointers to
  *   <type>igraph_vector_t</type> objects, each vector is an
  *   isomorphic mapping of \p graph2 to a subgraph of \p graph1. Please note that
@@ -2165,6 +2623,14 @@ igraph_bool_t igraph_i_get_subisomorphisms_vf2(const igraph_vector_t *map12,
  *   <function>free()</function> and then 3) call \ref
  *   igraph_vector_ptr_destroy() on the pointer vector to deallocate all
  *   memory when \p maps is no longer needed.
+ * \param node_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two nodes are compatible.
+ * \param edge_compat_fn A pointer to a function of type \ref 
+ *   igraph_isocompat_t. This function will be called by the algorithm to
+ *   determine whether two edges are compatible.
+ * \param arg Extra argument to supply to functions \p node_compat_fn 
+ *   and \p edge_compat_fn.
  * \return Error code.
  * 
  * Time complexity: exponential.
@@ -2172,14 +2638,28 @@ igraph_bool_t igraph_i_get_subisomorphisms_vf2(const igraph_vector_t *map12,
  
 int igraph_get_subisomorphisms_vf2(const igraph_t *graph1,
 				   const igraph_t *graph2,
-				   igraph_vector_ptr_t *maps) {
+				   const igraph_vector_int_t *vertex_color1,
+				   const igraph_vector_int_t *vertex_color2,
+				   const igraph_vector_int_t *edge_color1,
+				   const igraph_vector_int_t *edge_color2,
+				   igraph_vector_ptr_t *maps,
+				   igraph_isocompat_t *node_compat_fn,
+				   igraph_isocompat_t *edge_compat_fn,
+				   void *arg) {
   
+  igraph_i_iso_cb_data_t data = { node_compat_fn, edge_compat_fn, maps, arg };
+  igraph_isocompat_t *ncb = node_compat_fn ? igraph_i_isocompat_node_cb : 0;
+  igraph_isocompat_t *ecb = edge_compat_fn ? igraph_i_isocompat_edge_cb : 0;
+
   igraph_vector_ptr_clear(maps);
   IGRAPH_FINALLY(igraph_i_get_subisomorphisms_free, maps);
-  IGRAPH_CHECK(igraph_subisomorphic_function_vf2(graph1, graph2, 0, 0,
-						 (igraph_isohandler_t*)
-						 igraph_i_get_subisomorphisms_vf2,
-						 maps));
+  IGRAPH_CHECK(igraph_subisomorphic_function_vf2(graph1, graph2, 
+					 vertex_color1, vertex_color2,
+					 edge_color1, edge_color2,
+					 0, 0,
+					 (igraph_isohandler_t*)
+					 igraph_i_get_subisomorphisms_vf2,
+					 ncb, ecb, &data));
   IGRAPH_FINALLY_CLEAN(1);
   return 0;
 }
@@ -2225,7 +2705,28 @@ int igraph_permute_vertices(const igraph_t *graph, igraph_t *res,
   }
   
   IGRAPH_CHECK(igraph_create(res, &edges, no_of_nodes, igraph_is_directed(graph)));
-
+  
+  /* Attributes */
+  if (graph->attr) {
+    igraph_vector_t index;
+    igraph_vector_t vtypes;
+    IGRAPH_I_ATTRIBUTE_DESTROY(res);
+    IGRAPH_I_ATTRIBUTE_COPY(res, graph, /*graph=*/1, /*vertex=*/0, /*edge=*/1);
+    IGRAPH_VECTOR_INIT_FINALLY(&vtypes, 0);
+    IGRAPH_CHECK(igraph_i_attribute_get_info(graph, 0, 0, 0, &vtypes, 0, 0));
+    if (igraph_vector_size(&vtypes) != 0) {      
+      IGRAPH_VECTOR_INIT_FINALLY(&index, no_of_nodes);
+      for (i=0; i<no_of_nodes; i++) {
+	VECTOR(index)[ (long int) VECTOR(*permutation)[i] ] = i;
+      }
+      IGRAPH_CHECK(igraph_i_attribute_permute_vertices(graph, res, &index));
+      igraph_vector_destroy(&index);
+      IGRAPH_FINALLY_CLEAN(1);
+    }
+    igraph_vector_destroy(&vtypes);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
+  
   igraph_vector_destroy(&edges);
   IGRAPH_FINALLY_CLEAN(1);
   return 0;

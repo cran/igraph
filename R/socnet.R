@@ -1,4 +1,25 @@
 
+#   IGraph R package
+#   Copyright (C) 2009-2012  Gabor Csardi <csardi.gabor@gmail.com>
+#   334 Harvard street, Cambridge, MA 02139 USA
+#   
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#   
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
+#   02110-1301 USA
+#
+###################################################################
+
 # TODO LIST:
 #   * adding edges to a graph
 #   * exporting graphics
@@ -186,11 +207,11 @@ tkigraph <- function() {
         command=function() { .tkigraph.dist.matrix() })
   tkadd(distances.menu, "command", label="Distances from/to vertex",
         command=function() { .tkigraph.distance.tofrom() })
-  tkadd(distances.menu, "command", label="Diameter",
+  tkadd(distances.menu, "command", label="Diameter (undirected)",
         command=function() { .tkigraph.diameter() })
   tkadd(distances.menu, "command", label="Draw diameter",
         command=function() { .tkigraph.plot.diameter(simple=FALSE) })
-  tkadd(distances.menu, "command", label="Average path length",
+  tkadd(distances.menu, "command", label="Average path length (undirected)",
         command=function() { .tkigraph.diameter(mode="path") })
   tkadd(main.menu, "cascade", label="Distances", menu=distances.menu)
 
@@ -450,7 +471,7 @@ tkigraph <- function() {
   for (i in seq(.tkigraph.graphs)) {
     .tkigraph.add.graph(.tkigraph.graphs[[i]])
   }
-  if (".tkigraph.graphs" %in% ls(all=TRUE)) {
+  if (".tkigraph.graphs" %in% ls(all.names=TRUE)) {
     rm(.tkigraph.graphs)
   }
 }
@@ -549,9 +570,9 @@ tkigraph <- function() {
   }
   graph <- get("graphs", .tkigraph.env)[[gnos]]
   if ("weight" %in% list.graph.attributes(graph)) {
-    tab <- get.adjacency(graph, attr="weight", names=FALSE)
+    tab <- get.adjacency(graph, attr="weight", names=FALSE, sparse=FALSE)
   } else {
-    tab <- get.adjacency(graph, names=FALSE)
+    tab <- get.adjacency(graph, names=FALSE, sparse=FALSE)
   }
   filename <- tkgetSaveFile(initialfile="graph.adj",
                             defaultextension="adj",
@@ -807,7 +828,7 @@ tkigraph <- function() {
   }
     
   if (!read$interactive) {
-    fun <- function(...) { x11() ; plot.igraph(...) }
+    fun <- function(...) { dev.new() ; plot.igraph(...) }
   } else {
     fun <- tkplot
   }
@@ -938,9 +959,9 @@ tkigraph <- function() {
                               mode=list(name="Mode", type="listbox",
                                 values=c("Directed (out)", "Directed (in)",
                                   "Undirected"), default="2"))
-  read$mode <- c("out", "in", "undirected")[read$mode]
+  read$mode <- c("out", "in", "undirected")[read$mode+1]
   g <- graph.tree(n=read$n, children=read$b, mode=read$mode)
-  lay <- layout.reingold.tilford(g, root=0, mode="all")
+  lay <- layout.reingold.tilford(g, root=1, mode="all")
   g <- set.graph.attribute(g, "layout", lay)
   g <- set.graph.attribute(g, "name", "Regular tree")
   .tkigraph.add.graph(g)
@@ -984,7 +1005,7 @@ tkigraph <- function() {
                               mode=list(name="Mode", type="listbox",
                                 values=c("Directed (out)", "Directed (in)",
                                   "Undirected"), default="2"))
-  read$mode <- c("out", "in", "undirected")[read$mode]
+  read$mode <- c("out", "in", "undirected")[read$mode+1]
   g <- graph.star(read$n, mode=read$mode)
   g <- set.graph.attribute(g, "name", "Star graph")
   .tkigraph.add.graph(g)
@@ -1134,11 +1155,11 @@ tkigraph <- function() {
       log <- ""
       if (read$logx) { log <- paste(sep="", log, "x") }
       if (read$logy) { log <- paste(sep="", log, "y") }
-      x11()
+      dev.new()
       plot(0:max(value[,2]), h, xlab="Degree", ylab="Relative frequency",
            type="b", main="Degree distribution", log=log)
     } else {
-      x11()
+      dev.new()
       hist(value[,2], main="Degree distribution", xlab="Degree")
     }
   }
@@ -1164,7 +1185,7 @@ tkigraph <- function() {
                                 values=c("Out", "In", "Total")))
   mode <- c("out", "in", "all")[read$type+1]
   deg <- degree(graphs[[gnos]], mode=mode)
-  x11()
+  dev.new()
   h <- hist(deg, -1:max(deg), plot=FALSE)$density
   plot(0:max(deg), h, xlab="Degree", ylab="Relative frequency",
        type="b", main="Degree distribution", log="xy")
@@ -1324,11 +1345,11 @@ tkigraph <- function() {
     return()
   }
 
-  value <- shortest.paths(graph, read$v-1, mode="out")
+  value <- shortest.paths(graph, read$v, mode="out")
   dim(value) <- NULL
   value <- data.frame( V(graph)$name, value)
   colnames(value) <- c("Vertex", "Distance")
-  mv <- paste("Mean distance:", round(mean(value),2))
+  mv <- paste("Mean distance:", round(mean(value[,2]),2))
   .tkigraph.showData(value,
                      title=paste("Distance from vertex", read$v, "in graph #",
                        gnos), showmean=mv)
@@ -1346,7 +1367,7 @@ tkigraph <- function() {
   graphs <- get("graphs", .tkigraph.env)
   for (i in seq(along=gnos)) {
     if (mode=="dia") {
-      dia[i] <- diameter(graphs[[ gnos[i] ]])
+      dia[i] <- diameter(graphs[[ gnos[i] ]], directed=FALSE)
     } else if (mode=="path") {
       dia[i] <- average.path.length(graphs[[ gnos[i] ]], directed=FALSE)
     }
@@ -1378,9 +1399,9 @@ tkigraph <- function() {
   graph <- get("graphs", .tkigraph.env)[[gnos]]
   edges <- E(graph, path=get.diameter(graph, directed=FALSE), directed=FALSE)
   color <- rep("black", ecount(graph))
-  color[edges+1] <- "red"
+  color[edges] <- "red"
   width <- rep(1, ecount(graph))
-  width[edges+1] <- 2
+  width[edges] <- 2
   .tkigraph.plot(gnos=gnos, simple=simple, edge.color=color, edge.width=width)
 }
 
@@ -1392,7 +1413,7 @@ tkigraph <- function() {
   }
   graph <- get("graphs", .tkigraph.env)[[gnos]]
   comm <- clusters(graph)
-  members <- sapply(sapply(seq(along=comm$csize)-1,
+  members <- sapply(sapply(seq(along=comm$csize),
                            function(i) which(comm$membership==i)),
                     paste, collapse=", ")
   value <- data.frame("Component"=seq(along=comm$csize), "Members"=members)
@@ -1409,7 +1430,7 @@ tkigraph <- function() {
   graph <- get("graphs", .tkigraph.env)[[gnos]]
   comm <- clusters(graph)
   value <- data.frame("Vertex"=seq(along=comm$membership),
-                 "Component"=comm$membership+1)
+                 "Component"=comm$membership)
   .tkigraph.showData(value, title=paste("Components of graph #", gnos))
 }
 
@@ -1438,12 +1459,12 @@ tkigraph <- function() {
       log <- ""
       if (read$logx) { log <- paste(sep="", log, "x") }
       if (read$logy) { log <- paste(sep="", log, "y") }
-      x11()
+      dev.new()
       plot(1:max(value[,2]), h, xlab="Component size",
            ylab="Relative frequency",
            type="b", main="Component size distribution", log=log)
     } else {
-      x11()
+      dev.new()
       hist(value[,2], main="Component size distribution", xlab="Degree")
     }
   }
@@ -1464,7 +1485,7 @@ tkigraph <- function() {
   graph <- get("graphs", .tkigraph.env)[[gnos]]
   clu <- clusters(graph)
   colbar <- rainbow(length(clu$csize)*2)
-  vertex.color <- colbar[ clu$membership+1 ]
+  vertex.color <- colbar[ clu$membership ]
   .tkigraph.plot(gnos=gnos, simple=simple, vertex.color=vertex.color)
 }
 
@@ -1476,8 +1497,8 @@ tkigraph <- function() {
   }
   graph <- get("graphs", .tkigraph.env)[[gnos]]
   clu <- clusters(graph)
-  v <- which(clu$membership+1 == which.max(clu$csize)) - 1
-  g <- subgraph(graph, v)
+  v <- which(clu$membership == which.max(clu$csize))
+  g <- induced.subgraph(graph, v)
   .tkigraph.add.graph(g)
 }
 
@@ -1496,7 +1517,7 @@ tkigraph <- function() {
     return()
   }
 
-  g <- subgraph(graph, subcomponent(graph, read$vertex-1))
+  g <- induced.subgraph(graph, subcomponent(graph, read$vertex))
   .tkigraph.add.graph(g)
 }
 
@@ -1516,8 +1537,8 @@ tkigraph <- function() {
     return()
   }
   
-  v <- which(clu$membership==read$comp-1)-1
-  g <- subgraph(graph, v)
+  v <- which(clu$membership==read$comp)
+  g <- induced.subgraph(graph, v)
   .tkigraph.add.graph(g)  
 }
 
@@ -1525,7 +1546,7 @@ tkigraph <- function() {
   read <- .tkigraph.dialogbox(TITLE="Draw all motifs",
                               size=list(name="Size", type="numeric",
                                 default=3, min=3, max=4),
-                              dir=list(name="Directed", type="boolean",
+                              directed=list(name="Directed", type="boolean",
                                 default="FALSE"))
 
   if (read$size < 3 || read$size > 4) {
@@ -1534,9 +1555,9 @@ tkigraph <- function() {
   }
 
   if (read$size == 3) {
-    co <- matrix( c(1,1, 0,0, 2,0), nc=2, byrow=TRUE)
+    co <- matrix( c(1,1, 0,0, 2,0), ncol=2, byrow=TRUE)
   } else {
-    co <- matrix( c(0,1, 1,1, 0,0, 1,0), nc=2, byrow=TRUE)
+    co <- matrix( c(0,1, 1,1, 0,0, 1,0), ncol=2, byrow=TRUE)
   }
 
   if (read$size == 3 && read$dir) {
@@ -1553,17 +1574,17 @@ tkigraph <- function() {
     rows <- 4
     cols <- 3
   }
-  names <- as.character(seq(no)-1)
-  x11()
-  layout( matrix(1:(rows*cols), nr=rows, byrow=TRUE) )
+  names <- as.character(seq(no))
+  dev.new()
+  layout( matrix(1:(rows*cols), nrow=rows, byrow=TRUE) )
   layout.show(rows*cols)
-  for (i in seq(no)-1) {
-    g <- graph.isocreate(read$size, i, dir=read$dir)
+  for (i in seq(no)) {
+    g <- graph.isocreate(read$size, i-1, directed=read$dir)
     par(mai=c(0,0,0,0), mar=c(0,0,0,0))
     par(cex=2)
     plot(g, layout=co, vertex.color="red", vertex.label=NA, frame=TRUE,
-         edge.color="black", margin=0.1)
-    text(0,0, names[i+1], col="blue")
+         edge.color="black", margin=0.1, edge.arrow.size=.5)
+    text(0,0, names[i], col="blue", cex=.5)
   }
   
 }
@@ -1587,13 +1608,10 @@ tkigraph <- function() {
   graphs <- get("graphs", .tkigraph.env)
   motifs <- graph.motifs(graphs[[gnos]], size=read$size)
 
-  x11()
-  barplot(motifs)
-
   if (read$size == 3) {
-    co <- matrix( c(1,1, 0,0, 2,0), nc=2, byrow=TRUE)
+    co <- matrix( c(1,1, 0,0, 2,0), ncol=2, byrow=TRUE)
   } else {
-    co <- matrix( c(0,1, 1,1, 0,0, 1,0), nc=2, byrow=TRUE)
+    co <- matrix( c(0,1, 1,1, 0,0, 1,0), ncol=2, byrow=TRUE)
   }
 
   if (read$size == 3 && is.directed(graphs[[gnos]])) {
@@ -1610,17 +1628,22 @@ tkigraph <- function() {
     rows <- 4
     cols <- 3
   }
-  names <- as.character(seq(no)-1)
-  x11()
-  layout( matrix(1:(rows*cols), nr=rows, byrow=TRUE) )
+
+  dev.new()
+  barplot(motifs, names.arg=seq(no))
+  
+  names <- as.character(seq(no))
+  dev.new()
+  layout( matrix(1:(rows*cols), nrow=rows, byrow=TRUE) )
   layout.show(rows*cols)
-  for (i in seq(no)-1) {
-    g <- graph.isocreate(read$size, i, dir=is.directed(graphs[[gnos]]))
+  for (i in seq(no)) {
+    g <- graph.isocreate(read$size, i-1,
+                         directed=is.directed(graphs[[gnos]]))
     par(mai=c(0,0,0,0), mar=c(0,0,0,0))
     par(cex=2)
     plot(g, layout=co, vertex.color="red", vertex.label=NA, frame=TRUE,
          edge.color="black", margin=0.1)
-    text(0,0, motifs[i+1], col="green")
+    text(0,0, motifs[i], col="green")
   }  
   
 }
@@ -1710,7 +1733,7 @@ tkigraph <- function() {
   tkconfigure(txt, state="disabled")
 
   show.communities <- function() {
-    members <- sapply(sapply(seq(along=comm$csize)-1,
+    members <- sapply(sapply(seq(along=comm$csize),
                              function(i) which(comm$membership==i)),
                       paste, collapse=", ")
     value <- data.frame("Community"=seq(along=comm$csize), "Members"=members)
@@ -1720,7 +1743,7 @@ tkigraph <- function() {
   }
   show.membership <- function() {
     value <- data.frame("Vertex"=seq(along=comm$membership),
-                   "Community"=comm$membership+1)
+                   "Community"=comm$membership)
     .tkigraph.showData(value,
                        title=paste("Communities, spinglass algorithm on graph #",
                          gnos))
@@ -1734,7 +1757,7 @@ tkigraph <- function() {
   }
   plot.communities <- function(simple=FALSE) {
     colbar <- rainbow(length(comm$csize)*2)
-    vertex.color=colbar[ comm$membership+1 ]
+    vertex.color=colbar[ comm$membership ]
     .tkigraph.plot(gnos=gnos, simple=simple, vertex.color=vertex.color)
   }
   create.subgraph <- function() {
@@ -1840,7 +1863,6 @@ tkigraph <- function() {
   tkinsert(txt, "end", paste("  Outer links:", comm$outer.links, "\n"))
 
   tkinsert(txt, "end", "\nThe community:\n")
-  .tkigraph.ttt <- NULL
   con <- textConnection(".tkigraph.ttt", open="w")
   cat(sort(comm$community), file=con, fill=TRUE, sep=", ")
   close(con)
@@ -1850,13 +1872,13 @@ tkigraph <- function() {
   plot.communities <- function(simple=FALSE) {
     graph <- get("graphs", .tkigraph.env)[[gnos]]
     color <- rep("skyblue2", vcount(graph))
-    color[ comm$community+1 ] <- "red"
+    color[ comm$community ] <- "red"
     .tkigraph.plot(gnos=gnos, simple=simple, vertex.color=color)
   }
   
   create.graph <- function() {
     graph <- get("graphs", .tkigraph.env)[[gnos]]
-    g <- subgraph(graph, comm$community)
+    g <- induced.subgraph(graph, comm$community)
     .tkigraph.add.graph(g)
   }
   
@@ -2010,7 +2032,6 @@ tkigraph <- function() {
         stop("rownumbers argument must be TRUE, FALSE or have length nrow(dataframe)")
     oldwidth <- unlist(options("width"))
     options(width = 10000)
-    .tkigraph.ttt <- NULL
     conn <- textConnection(".tkigraph.ttt", open="w")
     sink(conn)
     options(max.print=10000000)
@@ -2382,6 +2403,6 @@ matrix( c(0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,1,0,0,
           0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1,1,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1,
-          0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0), nr=23, nc=23)
+          0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0), nrow=23, ncol=23)
 
 

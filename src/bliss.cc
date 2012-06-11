@@ -22,11 +22,13 @@
 #include "bliss_kqueue.hh"
 #include "bliss_utils.hh"
 
-#include "types.h"
+#include "igraph_types.h"
+#include "igraph_topology.h"
 
-#include <cstring>
+#include <string.h>
 
 using namespace igraph;
+using namespace std;
 
 /**
  * \function igraph_canonical_permutation
@@ -139,7 +141,7 @@ int igraph_automorphisms(const igraph_t *graph,
 }
 
 bool bliss_verbose = false;
-FILE *bliss_verbstr = stdout;
+// FILE *bliss_verbstr = stdout;
 
 namespace igraph {
 

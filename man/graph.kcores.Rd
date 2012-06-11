@@ -32,11 +32,11 @@ graph.coreness(graph, mode=c("all", "out", "in"))
   Seidman S. B. (1983) Network structure and minimum degree, \emph{Social
     Networks}, 5, 269--287.
 }
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{\code{\link{degree}}}
 \examples{
 g <- graph.ring(10)
-g <- add.edges(g, c(0,1, 1,2, 0,2))
+g <- add.edges(g, c(1,2, 2,3, 1,3))
 graph.coreness(g) 		% small core triangle in a ring
 }
 \keyword{graphs}

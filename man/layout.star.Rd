@@ -8,7 +8,7 @@
   circle and the rest of the vertices equidistantly on the perimeter.
 }
 \usage{
-layout.star(graph, center = V(graph)[0], order = NULL)
+layout.star(graph, center = V(graph)[1], order = NULL)
 }
 \arguments{
   \item{graph}{The graph to layout.}
@@ -24,7 +24,7 @@ layout.star(graph, center = V(graph)[0], order = NULL)
 \value{A matrix with two columns and as many rows as the number of
   vertices in the input graph.}
 %\references{}
-\author{Gabor Csardi \email{Gabor.Csardi@unil.ch}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{\code{\link{layout}} and \code{\link{layout.drl}} for other
   layout algorithms, \code{\link{plot.igraph}} and \code{\link{tkplot}}
   on how to plot graphs and \code{\link{graph.star}} on how to create

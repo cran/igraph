@@ -27,7 +27,7 @@ graph.density(graph, loops=FALSE)
   Wasserman, S., and Faust, K.  (1994).  Social Network Analysis:
   Methods and Applications.  Cambridge: Cambridge University Press.
 }
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{\code{\link{vcount}}, \code{\link{ecount}},
   \code{\link{simplify}} to get rid of the multiple and/or loop edges.}
 \examples{
@@ -36,7 +36,7 @@ g2 <- graph.full(n=10)
 g3 <- erdos.renyi.game(n=10, 0.4)
 
 # loop edges
-g <- graph( c(0,1, 1,1, 1,2) )
+g <- graph( c(1,2, 2,2, 2,3) )
 graph.density(g, loops=FALSE)              # this is wrong!!!
 graph.density(g, loops=TRUE)               # this is right!!!
 graph.density(simplify(g), loops=FALSE)    # this is also right, but different

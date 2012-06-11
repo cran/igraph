@@ -1,7 +1,7 @@
 
 #   IGraph R package
-#   Copyright (C) 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-#   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+#   Copyright (C) 2005-2012  Gabor Csardi <csardi.gabor@gmail.com>
+#   334 Harvard street, Cambridge, MA 02139 USA
 #   
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -67,16 +67,13 @@ write.graph.fromraw <- function(buffer, file) {
 }
 
 read.graph <- function(file, format=c("edgelist", "pajek", "ncol", "lgl",
-                               "graphml", "dimacs", "graphdb", "gml"), ...) {
+                               "graphml", "dimacs", "graphdb", "gml", "dl"),
+                       ...) {
 
-  if (igraph.i.have.fmemopen) {
-    file <- read.graph.toraw(file)
-  } else {
-    if (!is.character(file) || length(grep("://", file, fixed=TRUE))>0) {
-      buffer <- read.graph.toraw(file)
-      file <- tempfile()
-      write.graph.fromraw(buffer, file)
-    }
+  if (!is.character(file) || length(grep("://", file, fixed=TRUE))>0) {
+    buffer <- read.graph.toraw(file)
+    file <- tempfile()
+    write.graph.fromraw(buffer, file)
   }
 
   format <- igraph.match.arg(format)
@@ -89,25 +86,24 @@ read.graph <- function(file, format=c("edgelist", "pajek", "ncol", "lgl",
                 "dimacs"=read.graph.dimacs(file, ...),
                 "graphdb"=read.graph.graphdb(file, ...),
                 "gml"=read.graph.gml(file, ...),
+                "dl"=read.graph.dl(file, ...),
                 stop(paste("Unknown file format:",format))
                 )
   res
 }
 
 write.graph <- function(graph, file, format=c("edgelist", "pajek", "ncol", "lgl",
-                                       "graphml", "dimacs", "gml", "dot"), ...) {
+                                       "graphml", "dimacs", "gml", "dot", "leda"), ...) {
 
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
-  if (!igraph.i.have.open.memstream) {
-    if (!is.character(file) || length(grep("://", file, fixed=TRUE))>0) {
-      tmpfile <- TRUE
-      origfile <- file
-      file <- tempfile()
-    } else {
-      tmpfile <- FALSE
-    }
+  if (!is.character(file) || length(grep("://", file, fixed=TRUE))>0) {
+    tmpfile <- TRUE
+    origfile <- file
+    file <- tempfile()
+  } else {
+    tmpfile <- FALSE
   }
   
   format <- igraph.match.arg(format)
@@ -120,16 +116,13 @@ write.graph <- function(graph, file, format=c("edgelist", "pajek", "ncol", "lgl"
                 "dimacs"=write.graph.dimacs(graph, file, ...),
                 "gml"=write.graph.gml(graph, file, ...),
                 "dot"=write.graph.dot(graph, file, ...),
+                "leda"=write.graph.leda(graph, file, ...),
                 stop(paste("Unknown file format:",format))
                 )
 
-  if (igraph.i.have.open.memstream) {
-    write.graph.fromraw(res, file)
-  } else {
-    if (tmpfile) {
-      buffer <- read.graph.toraw(file)
-      write.graph.fromraw(buffer, origfile)
-    }
+  if (tmpfile) {
+    buffer <- read.graph.toraw(file)
+    write.graph.fromraw(buffer, origfile)
   }
   
   invisible(res)
@@ -166,14 +159,16 @@ write.graph.edgelist <- function(graph, file, ...) {
 ################################################################
 
 read.graph.ncol <- function(file, predef=character(0), names=TRUE,
-                           weights=TRUE, directed=FALSE, ...) {
+                            weights=c("auto", "yes", "no"),
+                            directed=FALSE, ...) {
 
   if (length(list(...))>0) {
     stop("Unknown arguments to read.graph (NCOL format)")
   }
+  weights <- switch(igraph.match.arg(weights), "no"=0, "yes"=1, "auto"=2)
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_read_graph_ncol", file, as.character(predef),
-        as.logical(names), as.logical(weights), as.logical(directed),
+        as.logical(names), as.numeric(weights), as.logical(directed),
         PACKAGE="igraph")
 }
 
@@ -194,14 +189,17 @@ write.graph.ncol <- function(graph, file,
 }  
 
 read.graph.lgl <- function(file, names=TRUE,
-                           weights=TRUE, ...) {
+                           weights=c("auto", "yes", "no"),
+                           directed=FALSE,
+                            ...) {
 
   if (length(list(...))>0) {
     stop("Unknown arguments to read.graph (LGL format)")
   }
+  weights <- switch(igraph.match.arg(weights), "no"=0, "yes"=1, "auto"=2)
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_read_graph_lgl", file,
-        as.logical(names), as.logical(weights),
+        as.logical(names), as.numeric(weights), as.logical(directed),
         PACKAGE="igraph")
 }
 
@@ -339,6 +337,19 @@ write.graph.gml <- function(graph, file, id=NULL, creator=NULL, ...) {
 }
 
 ################################################################
+# UCINET DL
+################################################################
+
+read.graph.dl <- function(file, directed=TRUE, ...) {
+  if (length(list(...))>0) {
+    stop("Unknown arguments to read.graph (DL format)")
+  }
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  .Call("R_igraph_read_graph_dl", file, as.logical(directed),
+        PACKAGE="igraph")
+}  
+
+################################################################
 # Dot
 ################################################################
 
@@ -400,13 +411,9 @@ graph.graphdb <- function(url=NULL,
     stop(paste("Cannot open URL:", filename));
   }
 
-  if (igraph.i.have.fmemopen) {
-    f <- read.graph.toraw(f)
-  } else {
-    buffer <- read.graph.toraw(f)
-    f <- tempfile()
-    write.graph.fromraw(buffer, f)
-  }
+  buffer <- read.graph.toraw(f)
+  f <- tempfile()
+  write.graph.fromraw(buffer, f)
 
   .Call("R_igraph_read_graph_graphdb", f, as.logical(directed),
         PACKAGE="igraph")
@@ -419,5 +426,17 @@ read.graph.graphdb <- function(file, directed=TRUE, ...) {
   }
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_read_graph_graphdb", file, as.logical(directed),
+        PACKAGE="igraph")
+}
+
+write.graph.leda <- function(graph, file, vertex.attr=NULL, edge.attr=NULL,
+                             ...) {
+  if (length(list(...))>0) {
+    stop("Unknown arguments to write.graph (LEDA format)")
+  }
+  if (!is.null(vertex.attr)) { vertex.attr <- as.character(vertex.attr) }
+  if (!is.null(edge.attr))   { edge.attr   <- as.character(edge.attr)   }
+  on.exit(.Call("R_igraph_finalizer", PACKAGE="igraph") )
+  .Call("R_igraph_write_graph_leda", graph, file, vertex.attr, edge.attr,
         PACKAGE="igraph")
 }

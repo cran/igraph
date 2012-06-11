@@ -24,7 +24,7 @@ namespace igraph {
   class AbstractGraph;
 }
 
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
 #include "bliss_kstack.hh"
 #include "bliss_kqueue.hh"
@@ -34,7 +34,7 @@ namespace igraph {
 #include "bliss_bignum.hh"
 #include "bliss_eqrefhash.hh"
 
-#include "igraph.h"
+#include "igraph_datatype.h"
 
 namespace igraph {
 

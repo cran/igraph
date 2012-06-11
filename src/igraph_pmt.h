@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2007  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2007-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -31,59 +31,89 @@
 #if defined(BASE_IGRAPH_REAL)
 #define BASE igraph_real_t
 #define SHORT
-#define ATOMIC
-#define MULTIPLICITY 1
-#define FP 1
-#define IN_FORMAT "%lg"
-#define OUT_FORMAT "%g"
-#define ATOMIC_IO ATOMIC
+#define OUT_FORMAT "%G"
+#define PRINTFUNC(val) igraph_real_printf(val)
+#define FPRINTFUNC(file, val) igraph_real_fprintf(file, val)
 #define ZERO 0.0
 #define ONE 1.0
-#define BASE_EPSILON GSL_DBL_EPSILON
+#define MULTIPLICITY 1
 
 #elif defined(BASE_LONG)
 #define BASE long
 #define SHORT long
-#define ATOMIC long
-#define MULTIPLICITY 1
-#define IN_FORMAT "%ld"
 #define OUT_FORMAT "%ld"
-#define ATOMIC_IO ATOMIC
 #define ZERO 0L
 #define ONE 1L
+#define MULTIPLICITY 1
 
 #elif defined(BASE_CHAR)
 #define BASE char
 #define SHORT char
-#define ATOMIC char
-#define MULTIPLICITY 1
-#define IN_FORMAT "%d"
 #define OUT_FORMAT "%d"
-#define ATOMIC_IO int
 #define ZERO 0
 #define ONE 1
+#define MULTIPLICITY 1
 
 #elif defined(BASE_BOOL)
 #define BASE igraph_bool_t
 #define SHORT bool
-#define ATOMIC igraph_bool_t
-#define MULTIPLICITY 1
-#define IN_FORMAT "%d"
 #define OUT_FORMAT "%d"
-#define ATOMIC_IO int
 #define ZERO 0
 #define ONE 1
+#define MULTIPLICITY 1
+
+#elif defined(BASE_INT)
+#define BASE int
+#define SHORT int
+#define OUT_FORMAT "%d"
+#define ZERO 0
+#define ONE 1
+#define MULTIPLICITY 1
+
+#elif defined(BASE_LIMB)
+#define BASE limb_t
+#define SHORT limb
+#define ZERO 0
+#define ONE 1
+#define MULTIPLICITY 1
+
+#elif defined(BASE_PTR)
+#define BASE void*
+#define SHORT ptr
+#define ZERO 0
+#define MULTIPLICITY 1
+
+#elif defined(BASE_COMPLEX)
+#undef complex
+#define BASE igraph_complex_t
+#define SHORT complex
+#define ZERO igraph_complex(0,0)
+#define ONE {{1.0,0.0}}
+#define MULTIPLICITY 2
+#define NOTORDERED 1
+#define NOABS 1
+#define SUM(a,b,c) ((a) = igraph_complex_add((b),(c)))
+#define DIFF(a,b,c) ((a) = igraph_complex_sub((b),(c)))
+#define PROD(a,b,c) ((a) = igraph_complex_mul((b),(c)))
+#define DIV(a,b,c) ((a) = igraph_complex_div((b),(c)))
+#define EQ(a,b) IGRAPH_COMPLEX_EQ((a),(b))
+#define SQ(a) IGRAPH_REAL(igraph_complex_mul((a),(a)))
 
 #else
 #error unknown BASE_ directive
 #endif
 
 #if defined(BASE_IGRAPH_REAL)
-#define FUNCTION(dir,name) CONCAT2(dir,name)
-#define TYPE(dir) CONCAT2(dir,t)
+#  define FUNCTION(dir,name) CONCAT2(dir,name)
+#  define TYPE(dir) CONCAT2(dir,t)
+#elif defined(BASE_BOOL)
+   /* Special case because stdbool.h defines bool as a macro to _Bool which would
+    * screw things up */
+#  define FUNCTION(a,c) CONCAT3x(a,bool,c)
+#  define TYPE(dir) CONCAT3x(dir,bool,t)
 #else
-#define FUNCTION(a,c) CONCAT3(a,SHORT,c)
-#define TYPE(dir) CONCAT3(dir,SHORT,t)
+#  define FUNCTION(a,c) CONCAT3(a,SHORT,c)
+#  define TYPE(dir) CONCAT3(dir,SHORT,t)
 #endif
 
 #if defined(HEAP_TYPE_MIN)

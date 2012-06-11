@@ -49,15 +49,23 @@ igraph.to.graphNEL(graph)
   \code{igraph.to.graphNEL} returns a graphNEL graph object.
 }
 % \references{}
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{ \code{\link{get.adjacency}}, \code{\link{graph.adjacency}},
   \code{\link{get.adjlist}} and \code{\link{graph.adjlist}}.
 }
 \examples{
+## Undirected
 g <- graph.ring(10)
 V(g)$name <- letters[1:10]
 GNEL <- igraph.to.graphNEL(g)
 g2 <- igraph.from.graphNEL(GNEL)
 g2
+
+## Directed
+g3 <- graph.star(10, mode="in")
+V(g3)$name <- letters[1:10]
+GNEL2 <- igraph.to.graphNEL(g3)
+g4 <- igraph.from.graphNEL(GNEL2)
+g4
 }
 \keyword{graphs}

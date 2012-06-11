@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2005-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,8 +21,9 @@
 
 */
 
-#include "igraph.h"
-#include "types.h"
+#include "igraph_datatype.h"
+#include "igraph_types.h"
+#include "igraph_interface.h"
 #include "config.h"
 
 /**
@@ -35,7 +36,8 @@
  * \param v2 The second vertex.
  * \param res Boolean, \c TRUE if there is an edge from
  *         \p v1 to \p v2, \c FALSE otherwise.
- * \return Error code.
+ * \return The error code \c IGRAPH_EINVVID is returned if an invalid
+ *         vertex ID is given.
  * 
  * The function is of course symmetric for undirected graphs.
  *
@@ -54,8 +56,8 @@ int igraph_are_connected(const igraph_t *graph,
     IGRAPH_ERROR("are connected", IGRAPH_EINVVID);
   }
 
-  igraph_get_eid2(graph, &eid, v1, v2, /*directed=*/1);
-  *res = (eid >= 0);
+  igraph_get_eid(graph, &eid, v1, v2, /*directed=*/1, /*error=*/ 0);
+  *res = (eid >=0);
 
   return IGRAPH_SUCCESS;
 }

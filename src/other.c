@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2005-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,12 +21,15 @@
 
 */
 
-#include "igraph.h"
-#include "types.h"
-#include "memory.h"
+#include "igraph_nongraph.h"
+#include "igraph_types.h"
+#include "igraph_memory.h"
+#include "igraph_interrupt_internal.h"
+#include "igraph_types_internal.h"
 #include "config.h"
 #include <math.h>
 #include <stdarg.h>
+#include <string.h>
 
 /**
  * \ingroup nongraph
@@ -110,6 +113,8 @@ int igraph_running_mean(const igraph_vector_t *data, igraph_vector_t *res,
  *         \c IGRAPH_ENOMEM: not enough memory
  * 
  * Time complexity: O(n log(n)) where n is the number of vertices
+ * 
+ * \example examples/simple/igraph_convex_hull.c
  */
 int igraph_convex_hull(const igraph_matrix_t *data, igraph_vector_t *resverts,
 		       igraph_matrix_t *rescoords) {
@@ -250,5 +255,17 @@ int igraph_convex_hull(const igraph_matrix_t *data, igraph_vector_t *resverts,
 double igraph_i_fdiv(const double a, const double b) 
 {
    return a / b;
+}
+
+/**
+ * Internal function, drop-in replacement for stdup
+ * Used only in compilers that do not have strdup or _strdup
+ */
+char* igraph_i_strdup(const char *s) {
+    size_t n = strlen(s) + 1;
+    char* result = (char*)malloc(sizeof(char) * n);
+    if (result)
+        memcpy(result, s, n);
+    return result;
 }
 

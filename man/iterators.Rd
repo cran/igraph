@@ -35,7 +35,7 @@ E(graph, P=NULL, path=NULL, directed=TRUE)
     or the path are directed or not.} 
 }
 \details{
-  It is often needed to perform an operation on a subset of vertices of
+  One often needs to perform an operation on a subset of vertices of
   edges in a graph.
 
   A vertex sequence is simply a vector containing vertex ids, but it has
@@ -99,7 +99,7 @@ E(graph, P=NULL, path=NULL, directed=TRUE)
   \preformatted{
     g <- graph.tree(10)
     V(g)$color <- "grey"
-    V(g)[0:2]$color <- c("green", "blue")
+    V(g)[1:3]$color <- c("green", "blue")
   }
   
   If a new vertex/edge attribute is created with an assignment, but only
@@ -115,8 +115,9 @@ E(graph, P=NULL, path=NULL, directed=TRUE)
   
   There are some special functions which are only defined in the
   indexing expressions of vertex and edge sequences. For vertex
-  sequences these are: \code{nei}, \code{adj}, \code{from} and
-  \code{to}, \code{innei} and \code{outnei}.
+  sequences these are: \code{nei}, \code{inc}, \code{from} and
+  \code{to}, \code{innei} and \code{outnei}. (The \code{adj} special
+  function is an alias for \code{inc}, for compatibility reasons.)
 
   \code{nei} has a mandatory and an optional argument, the first is
   another vertex sequence, the second is a mode argument similar to that
@@ -124,9 +125,9 @@ E(graph, P=NULL, path=NULL, directed=TRUE)
   vector of the same length as the indexed vertex sequence and evaluates
   to \code{TRUE} for those vertices only which have a neighbor vertex in
   the vertex sequence supplied as a parameter. Thus for selecting all
-  neighbors of vertices 0 and 1 one can write:
+  neighbors of vertices 1 and 2 one can write:
   \preformatted{
-    V(g) [ nei( 0:1 ) ]
+    V(g) [ nei( 1:2 ) ]
   }
   The mode argument (just like for \code{\link{neighbors}}) gives the
   type of the neighbors to be included, it is interpreted only in
@@ -136,20 +137,20 @@ E(graph, P=NULL, path=NULL, directed=TRUE)
   shorthand for the \sQuote{outgoing} neighbors
   (\code{nei(v,mode="out")}).
 
-  \code{adj} takes an edge sequence as an argument and returns
-  \code{TRUE} for vertices which have at least one adjacent edge in it.
+  \code{inc} takes an edge sequence as an argument and returns
+  \code{TRUE} for vertices which have at least one incident edge in it.
 
-  \code{from} and \code{to} are similar to \code{adj} but only edges
+  \code{from} and \code{to} are similar to \code{inc} but only edges
   originated at (\code{from}) or pointing to (\code{to}) are taken into
   account.
 
-  For edge sequences the special functions are: \code{adj}, \code{from},
+  For edge sequences the special functions are: \code{inc}, \code{from},
   \code{to}, \code{\%--\%}, \code{\%->\%} and \code{\%<-\%}.
 
-  \code{adj} takes a vertex sequence as an argument and returns
-  \code{NULL} for edges which have an adjacent vertex in it.
+  \code{inc} takes a vertex sequence as an argument and returns
+  \code{TRUE} for edges which have an incident vertex in it.
 
-  \code{from} and \code{to} are similar to \code{adj}, but only vertices
+  \code{from} and \code{to} are similar to \code{inc}, but only vertices
   at the source (\code{from}) or target (\code{to}) of the edge.
 
   The \code{\%--\%} operator selects edges connecting two vertex
@@ -161,21 +162,31 @@ E(graph, P=NULL, path=NULL, directed=TRUE)
 
   \code{E} has two optional arguments: \code{P} and \code{path}. If
   given \code{P} can be used to select edges based on their end points,
-  eg. \code{E(g, P=c(0,1))} selects edge \code{0->1}.
+  eg. \code{E(g, P=c(1,2))} selects edge \code{1->2}.
 
   \code{path} can be used to select all edges along a path. The path
   should be given with the visited vertex ids in the appropriate order.
   
   See also the examples below.  
 }
+\note{
+  A note about the performance of the \code{V} and \code{E} functions,
+  and the selection of edges and vertices. Since all selectors
+  are evaluated as logical vectors on all vertices/edges, their
+  performance is bad on large graphs. (Time complexity is proportional
+  to the total number of vertices/edges.) We suggest using the
+  \code{\link{neighbors}}, \code{\link{incident}} functions and
+  simple R vector operations for manipulating vertex/edge sequences
+  in large graphs.
+}
 % \references{}
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 % \seealso{}
 \examples{
 # mean degree of vertices in the largest cluster in a random graph
 g <- erdos.renyi.game(100, 2/100)
 c <- clusters(g)
-vsl <- which(which.max(c$csize)-1==c$membership)-1
+vsl <- which(which.max(c$csize)==c$membership)
 mean(degree(g, vsl))
 
 # set the color of these vertices to red, others greens
@@ -195,20 +206,25 @@ for (v in vsl) {
 }
 
 # the mode argument of the nei() function
-g <- graph( c(0,1, 1,2, 1,3, 3,1) )
-V(g)[ nei( c(1,3) ) ]
-V(g)[ nei( c(1,3), "in") ]
-V(g)[ nei( c(1,3), "out") ]
+g <- graph( c(1,2, 2,3, 2,4, 4,2) )
+V(g)[ nei( c(2,4) ) ]
+V(g)[ nei( c(2,4), "in") ]
+V(g)[ nei( c(2,4), "out") ]
 
 # operators for edge sequences
 g <- barabasi.game(100, power=0.3)
-E(g) [ 0:2 \%--\% 1:5 ]
-E(g) [ 0:2 \%->\% 1:5 ]
-E(g) [ 0:2 \%<-\% 1:5 ]
+E(g) [ 1:3 \%--\% 2:6 ]
+E(g) [ 1:5 \%->\% 1:6 ]
+E(g) [ 1:3 \%<-\% 2:6 ]
 
 # the edges along the diameter
 g <- barabasi.game(100, directed=FALSE)
 d <- get.diameter(g)
 E(g, path=d)
+
+# performance for large graphs is bad
+largeg <- graph.lattice(c(1000, 100))
+system.time(E(largeg)[inc(1)])
+system.time(incident(largeg, 1))
 }
 \keyword{graphs}

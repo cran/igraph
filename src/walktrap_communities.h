@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2007  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2007-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard st, Cambridge, MA, 02138 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -60,20 +60,21 @@
 #include "walktrap_graph.h"
 #include "walktrap_heap.h"
 
-#include "igraph.h"
+#include "igraph_community.h"
+#include "config.h"
 
 class Communities;
 class Probabilities {
 public:
-  static float* tmp_vector1;	// 
-  static float* tmp_vector2;	// 
-  static int* id;	    // 
-  static int* vertices1;    //
-  static int* vertices2;    //  
-  static int current_id;    // 
+  static IGRAPH_THREAD_LOCAL float* tmp_vector1;	// 
+  static IGRAPH_THREAD_LOCAL float* tmp_vector2;	// 
+  static IGRAPH_THREAD_LOCAL int* id;	    // 
+  static IGRAPH_THREAD_LOCAL int* vertices1;    //
+  static IGRAPH_THREAD_LOCAL int* vertices2;    //  
+  static IGRAPH_THREAD_LOCAL int current_id;    // 
 
-  static Communities* C;				    // pointer to all the communities
-  static int length;					    // length of the random walks
+  static IGRAPH_THREAD_LOCAL Communities* C;				    // pointer to all the communities
+  static IGRAPH_THREAD_LOCAL int length;					    // length of the random walks
 
   
   int size;						    // number of probabilities stored

@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2007  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2007-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -59,6 +59,8 @@
 #include <algorithm>
 #include <cstring>		// strlen
 #include "walktrap_graph.h"
+
+#include "igraph_interface.h"
 
 using namespace std;
 
@@ -210,12 +212,12 @@ int Graph::convert_from_igraph(const igraph_t *graph,
 }
 
 long Graph::memory() {
-  long m = 0;
-  m += long(nb_vertices)*sizeof(Vertex);
-  m += 2*long(nb_edges)*sizeof(Edge);
+  size_t m = 0;
+  m += size_t(nb_vertices)*sizeof(Vertex);
+  m += 2*size_t(nb_edges)*sizeof(Edge);
   m += sizeof(Graph);
   if(index != 0) {
-    m += long(nb_vertices)*sizeof(char*);
+    m += size_t(nb_vertices)*sizeof(char*);
     for(int i = 0; i < nb_vertices; i++)
       m += strlen(index[i]) + 1;
   }

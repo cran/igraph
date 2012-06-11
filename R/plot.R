@@ -1,8 +1,8 @@
 
 #   IGraph R package
-#   Copyright (C) 2003, 2004, 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-#   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
-#   
+#   Copyright (C) 2003-2012  Gabor Csardi <csardi.gabor@gmail.com>
+#   334 Harvard street, Cambridge, MA 02139 USA
+
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
 #   the Free Software Foundation; either version 2 of the License, or
@@ -24,6 +24,10 @@ plot.igraph <- function(x,
                        # SPECIFIC: #####################################
                        axes=FALSE, xlab="", ylab="", add=FALSE,
                        xlim=c(-1,1), ylim=c(-1,1), main="", sub="",
+                       mark.groups=list(), mark.shape=1/2,
+                       mark.border=NA,
+                       mark.col=rainbow(length(mark.groups), alpha=0.3),
+                       mark.expand=15,
                        ...) {
 
   graph <- x
@@ -57,6 +61,7 @@ plot.igraph <- function(x,
   arrow.size         <- params("edge", "arrow.size")[1]
   arrow.width        <- params("edge", "arrow.width")[1]
   curved             <- params("edge", "curved")
+  if (is.function(curved)) { curved <- curved(graph) }
   
   layout             <- params("plot", "layout")
   margin             <- params("plot", "margin")
@@ -81,11 +86,37 @@ plot.igraph <- function(x,
     plot(0, 0, type="n", xlab=xlab, ylab=ylab, xlim=xlim, ylim=ylim,
          axes=axes, frame=frame, asp=asp, main=main, sub=sub)
   }
+
+  ################################################################
+  ## Mark vertex groups
+  if (!is.list(mark.groups) && is.numeric(mark.groups)) {
+    mark.groups <- list(mark.groups)
+  }
+
+  mark.shape  <- rep(mark.shape,  length=length(mark.groups))
+  mark.border <- rep(mark.border, length=length(mark.groups))
+  mark.col    <- rep(mark.col,    length=length(mark.groups))
+  mark.expand <- rep(mark.expand, length=length(mark.groups))
   
+  for (g in seq_along(mark.groups)) {
+    v <- mark.groups[[g]]
+    if (length(vertex.size)==1) {
+      vs <- vertex.size
+    } else {
+      vs <- rep(vertex.size, length=vcount(graph))[v]
+    }
+    igraph.polygon(layout[v,,drop=FALSE],
+                   vertex.size=vs,
+                   expand.by=mark.expand[g]/200,
+                   shape=mark.shape[g],
+                   col=mark.col[g],
+                   border=mark.border[g])
+  }
+
   ################################################################
   ## calculate position of arrow-heads
   el <- get.edgelist(graph, names=FALSE)
-  loops.v <- el[,1] [ el[,1] == el[,2] ] + 1
+  loops.v <- el[,1] [ el[,1] == el[,2] ]
   loops.e <- which(el[,1] == el[,2])
   nonloops.e <- which(el[,1] != el[,2])
   loop.labels <- edge.labels[el[,1] == el[,2]]
@@ -93,10 +124,10 @@ plot.igraph <- function(x,
   el <- el[el[,1] != el[,2],,drop=FALSE]
 
   edge.coords <- matrix(0, nrow=nrow(el), ncol=4)
-  edge.coords[,1] <- layout[,1][ el[,1]+1 ]
-  edge.coords[,2] <- layout[,2][ el[,1]+1 ]
-  edge.coords[,3] <- layout[,1][ el[,2]+1 ]
-  edge.coords[,4] <- layout[,2][ el[,2]+1 ]
+  edge.coords[,1] <- layout[,1][ el[,1] ]
+  edge.coords[,2] <- layout[,2][ el[,1] ]
+  edge.coords[,3] <- layout[,1][ el[,2] ]
+  edge.coords[,4] <- layout[,2][ el[,2] ]
   if ( length(unique(shape)) == 1) {
     ## same vertex shape for all vertices
     ec <- .igraph.shapes[[ shape[1] ]](edge.coords, el, mode="clip",
@@ -106,12 +137,12 @@ plot.igraph <- function(x,
     shape <- rep(shape, length=vcount(graph))
     ec <- edge.coords
     ec[,1:2] <- t(sapply(seq(length=nrow(el)), function(x) {
-      .igraph.shapes[[ shape[el[x,1]+1] ]](edge.coords[x,,drop=FALSE],
+      .igraph.shapes[[ shape[el[x,1]] ]](edge.coords[x,,drop=FALSE],
                                            el[x,,drop=FALSE],
                                            mode="clip", params=params, end="from")
     }))
     ec[,3:4] <- t(sapply(seq(length=nrow(el)), function(x) {
-      .igraph.shapes[[ shape[el[x,2]+1] ]](edge.coords[x,,drop=FALSE],
+      .igraph.shapes[[ shape[el[x,2]] ]](edge.coords[x,,drop=FALSE],
                                            el[x,,drop=FALSE],
                                            mode="clip", params=params, end="to")
     }))
@@ -163,7 +194,7 @@ plot.igraph <- function(x,
       rad <- angle
       center <- c(cx,cy)
       cp <- matrix( c(x0,y0, x0+.4,y0+.2, x0+.4,y0-.2, x0,y0),
-                   nc=2, byrow=TRUE)
+                   ncol=2, byrow=TRUE)
       phi <- atan2(cp[,2]-center[2], cp[,1]-center[1])
       r <- sqrt((cp[,1]-center[1])**2 + (cp[,2]-center[2])**2)
       
@@ -257,7 +288,7 @@ plot.igraph <- function(x,
     .igraph.shapes[[ shape[1] ]](layout, mode="plot", params=params)
   } else {
     sapply(seq(length=vcount(graph)), function(x) {
-      .igraph.shapes[[ shape[x] ]](layout[x,,drop=FALSE], v=x-1,
+      .igraph.shapes[[ shape[x] ]](layout[x,,drop=FALSE], v=x,
                                    mode="plot", params=params)
     })
   }
@@ -269,8 +300,17 @@ plot.igraph <- function(x,
     (vertex.size+6*8*log10(nchar(labels)+1))/200
   y <- layout[,2]+label.dist*sin(-label.degree)*
     (vertex.size+6*8*log10(nchar(labels)+1))/200
-  text(x, y, labels=labels, col=label.color, family=label.family, font=label.font,
-       cex=label.cex)
+  if (length(label.family)==1) {
+    text(x, y, labels=labels, col=label.color, family=label.family,
+         font=label.font, cex=label.cex)
+  } else {
+    if1 <- function(vect, idx) if (length(vect)==1) vect else vect[idx]
+    sapply(seq_len(vcount(graph)), function(v) {
+      text(x[v], y[v], labels=if1(labels, v), col=if1(label.color, v),
+           family=if1(label.family, v), font=if1(label.font, v),
+           cex=if1(label.cex, v))
+    })
+  }
   rm(x, y)
   invisible(NULL)
 }
@@ -484,13 +524,13 @@ rglplot.igraph <- function(x, ...) {
   for (i in seq(length=nrow(el))) {
     from <- el[i,1]
     to   <- el[i,2]
-    v1 <- layout[from+1,]
-    v2 <- layout[to+1,]
+    v1 <- layout[from,]
+    v2 <- layout[to,]
     am <- arrow.mode; if (length(am)>1) { am <- am[i] }
     ew <- edge.width; if (length(ew)>1) { ew <- ew[i] }
     ec <- edge.color; if (length(ec)>1) { ec <- ec[i] }
-    r1 <- vertex.size; if (length(r1)>1) { r1 <- r1[from+1] }
-    r2 <- vertex.size; if (length(r2)>1) { r2 <- r2[to+1] }
+    r1 <- vertex.size; if (length(r1)>1) { r1 <- r1[from] }
+    r2 <- vertex.size; if (length(r2)>1) { r2 <- r2[to] }
 
     if (from!=to) {
       create.edge(v1,v2,r1,r2,ec,ew,am,arrow.size)
@@ -522,12 +562,12 @@ rglplot.igraph <- function(x, ...) {
 
   edge.labels[is.na(edge.labels)] <- ""
   if (any(edge.labels != "")) {
-    x0 <- layout[,1][el[,1]+1]
-    x1 <- layout[,1][el[,2]+1]
-    y0 <- layout[,2][el[,1]+1]
-    y1 <- layout[,2][el[,2]+1]
-    z0 <- layout[,3][el[,1]+1]
-    z1 <- layout[,4][el[,2]+1]
+    x0 <- layout[,1][el[,1]]
+    x1 <- layout[,1][el[,2]]
+    y0 <- layout[,2][el[,1]]
+    y1 <- layout[,2][el[,2]]
+    z0 <- layout[,3][el[,1]]
+    z1 <- layout[,4][el[,2]]
     rgl.texts((x0+x1)/2, (y0+y1)/2, (z0+z1)/2, edge.labels,
               col=label.color)
   }
@@ -653,4 +693,18 @@ function (x1, y1, x2, y2,
             border=h.col.bo, lty=h.lty)
   }
 } # Arrows
+
+igraph.polygon <- function(points, vertex.size=15/200, expand.by=15/200,
+                           shape=1/2, col="#ff000033", border=NA) {
+
+  by <- expand.by
+  pp <- rbind(points,
+              cbind(points[,1]-vertex.size-by, points[,2]),
+              cbind(points[,1]+vertex.size+by, points[,2]),
+              cbind(points[,1], points[,2]-vertex.size-by),
+              cbind(points[,1], points[,2]+vertex.size+by))
+
+  cl <- convex.hull(pp)
+  xspline(cl$rescoords, shape=shape, open=FALSE, col=col, border=border)
+}
 

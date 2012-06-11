@@ -60,7 +60,7 @@
 
   If a parameter is not given in the command line, and the corresponding
   vertex/edge/graph attribute is also missing then the general igraph
-  parameters handled by \code{\link{igraph.par}} are also
+  parameters handled by \code{\link{igraph.options}} are also
   checked. Vertex parameters have prefix \sQuote{\code{vertex.}}, edge
   parameters are prefixed with \sQuote{\code{edge.}}, general parameters
   like \code{layout} are prefixed with \sQuote{\code{plot}}.
@@ -86,10 +86,10 @@
 \section{The list of parameters}{
   Vertex parameters first, note that the \sQuote{\code{vertex.}} prefix
   needs to be added if they are used as an argument or when setting via
-  \code{\link{igraph.par}}. The value of the parameter may be scalar
+  \code{\link{igraph.options}}. The value of the parameter may be scalar
   valid for every vertex or a vector with a separate value for each
   vertex. (Shorter vectors are recycled.)
-  \itemize{
+  \describe{
     \item{size}{The size of the vertex, a numeric scalar or vector, in
       the latter case each vertex sizes may differ. This vertex sizes
       are scaled in order have about the same size of vertices for a
@@ -115,23 +115,31 @@
       named color and RGB colors. Note that \code{\link{tkplot}} ignores
       the fourth byte (alpha channel) in the RGB color specification.
 
+      If you don't want (some) vertices to have any color, supply
+      \code{NA} as the color name.
+      
       The default value is \dQuote{\code{SkyBlue2}}.
     }
     \item{frame.color}{The color of the frame of the vertices, the same
       formats are allowed as for the fill color.
+
+      If you don't want vertices to have a frame, supply \code{NA} as
+      the color name.
 
       By default it is \dQuote{black}.
     }
     \item{shape}{The shape of the vertex, currently
       \dQuote{\code{circle}}, \dQuote{\code{square}},
       \dQuote{\code{csquare}}, \dQuote{\code{rectangle}},
-      \dQuote{\code{crectangle}}, \dQuote{\code{vrectangle}} and
+      \dQuote{\code{crectangle}}, \dQuote{\code{vrectangle}},
+      \dQuote{\code{\link[=vertex.shape.pie]{pie}}} and
       \dQuote{\code{none}} are supported,
       and only by the \code{\link{plot.igraph}}
       command. \dQuote{\code{none}} does not draw the vertices at all,
       although vertex label are plotted (if given). See
       \code{\link{igraph.vertex.shapes}} for details about vertex
-      shapes.
+      shapes and \code{\link{vertex.shape.pie}} for using pie charts as
+      vertices.
 
       By default vertices are drawn as circles.
     }
@@ -160,9 +168,9 @@
       symbol font is available, otherwise the first font which has
       \sQuote{symbol} in its name. If the parameter is not a name of the
       base families and it is also not a named Tk font then we pass it
-      to \code{tkfont.create} and hope the user knows what
+      to \code{\link[tcltk]{tkfont.create}} and hope the user knows what
       she is doing. The \code{label.font} and \code{label.cex}
-      parameters are also passed to \code{tkfont.create}
+      parameters are also passed to \code{\link[tcltk]{tkfont.create}}
       in this case.
 
       The default value is \sQuote{serif}.
@@ -193,7 +201,7 @@
       \code{\link[graphics]{text}} as argument \code{cex}.
 
       For \code{\link{tkplot}} it is multiplied by 12 and then used as
-      the \code{size} argument for \code{tkfont.create}.
+      the \code{size} argument for \code{\link[tcltk]{tkfont.create}}.
       The base font is thus 12 for tkplot.
 
       For \code{\link{rglplot}} it is ignored.
@@ -223,9 +231,9 @@
   }
 
   Edge parameters require to add the \sQuote{\code{edge.}} prefix when
-  used as arguments or set by \code{\link{igraph.par}}. The edge
+  used as arguments or set by \code{\link{igraph.options}}. The edge
   parameters:
-  \itemize{
+  \describe{
     \item{color}{The color of the edges, see the \code{color} vertex
       parameter for the possible values.
 
@@ -282,7 +290,7 @@
     \item{label.color}{The color of the edge labels, see the
       \code{color} vertex parameters on how to specify colors. }
     \item{curved}{Specifies whether to draw curved edges, or not. This
-      can be a logical or a numeric vector or scalar.
+      can be a logical or a numeric vector or scalar. 
 
       First the vector is replicated to have the same length as the
       number of edges in the graph. Then it is interpreted for each edge
@@ -291,7 +299,10 @@
       edge bends clockwise, positive values the opposite. \code{TRUE}
       means curvature 0.5, \code{FALSE} means curvature zero.
 
-      This parameter is ignored for loop edges.
+      By default the vector specifying the curvatire is calculated via a
+      call to the \code{\link{autocurve.edges}} function. This function makes
+      sure that multiple edges are curved and are all visible. This
+      parameter is ignored for loop edges. 
       
       The default value is \code{FALSE}.
       
@@ -335,7 +346,7 @@
   }
 
   Other parameters:
-  \itemize{
+  \describe{
     \item{layout}{
       Either a function or a numeric
       matrix. It specifies how the vertices will be placed on the plot.
@@ -388,9 +399,9 @@
     }
   }
 }
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{ \code{\link{plot.igraph}}, \code{\link{tkplot}},
-  \code{\link{rglplot}}, \code{\link{igraph.par}}}
+  \code{\link{rglplot}}, \code{\link{igraph.options}}}
 \examples{
 \dontrun{
 
@@ -422,7 +433,7 @@ g <- set.graph.attribute(g, "layout", layout.kamada.kawai(g))
 plot(g, vertex.label.dist=1.5)
 
 # draw a bunch of trees, fix layout
-igraph.par("plot.layout", layout.reingold.tilford)
+igraph.options(plot.layout=layout.reingold.tilford)
 plot(graph.tree(20, 2))
 plot(graph.tree(50, 3), vertex.size=3, vertex.label=NA)
 tkplot(graph.tree(50, 2, mode="undirected"), vertex.size=10, vertex.color="green")

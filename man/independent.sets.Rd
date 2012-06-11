@@ -56,9 +56,9 @@ independence.number(graph)
   for generating all the maximal independent sets. \emph{SIAM J Computing},
   6:505--517, 1977.
 }
-\author{Tamas Nepusz \email{ntamas@rmki.kfki.hu} ported it from the Very
+\author{Tamas Nepusz \email{ntamas@gmail.com} ported it from the Very
   Nauty Graph Library by Keith Briggs \email{google@for.it} and Gabor Csardi
-  \email{csardi@rmki.kfki.hu} wrote the R interface and this manual page. }
+  \email{csardi.gabor@gmail.com} wrote the R interface and this manual page. }
 \seealso{\code{\link{cliques}}}
 \examples{
 # A quite dense graph
@@ -67,7 +67,7 @@ independence.number(g)
 independent.vertex.sets(g, min=independence.number(g))
 largest.independent.vertex.sets(g)
 # Empty graph
-subgraph(g, largest.independent.vertex.sets(g)[[1]])
+induced.subgraph(g, largest.independent.vertex.sets(g)[[1]])
 
 length(maximal.independent.vertex.sets(g))
 }

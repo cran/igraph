@@ -1,3 +1,23 @@
+/*
+ *
+ * gengraph - generation of random simple connected graphs with prescribed
+ *            degree sequence
+ *
+ * Copyright (C) 2006  Fabien Viger
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include "gengraph_definitions.h"
 #include <cstdlib>
 #include <stdio.h>
@@ -13,6 +33,17 @@ int my_binomial(double pp, int n) { return _my_random.binomial(pp,n); }
 double my_random01() { return _my_random.rand_halfopen01(); }
 
 }
+
+#ifdef _WIN32
+#include <process.h>
+#include <windows.h>
+void set_priority_low() {
+  HANDLE hProcess=OpenProcess(PROCESS_ALL_ACCESS,TRUE,_getpid());
+  SetPriorityClass(hProcess,IDLE_PRIORITY_CLASS);
+}
+#else
+#include <unistd.h>
+#endif
 
 namespace gengraph {
 
@@ -43,13 +74,13 @@ inline void _hash_find_call() { _hash_find_c++; }
 inline void _hash_rand_iter() { _hash_rand_i++; }
 inline void _hash_rand_call() { _hash_rand_c++; }
 inline void _hash_expand_call() { _hash_expand++; }
-void _hash_prof() {
-  fprintf(stderr,"HASH_ADD : %lu / %lu\n", _hash_add_c , _hash_add_i);
-  fprintf(stderr,"HASH_PUT : %lu / %lu\n", _hash_put_c , _hash_put_i);
-  fprintf(stderr,"HASH_FIND: %lu / %lu\n", _hash_find_c, _hash_find_i);
-  fprintf(stderr,"HASH_RM  : %lu / %lu\n", _hash_rm_c  , _hash_rm_i);
-  fprintf(stderr,"HASH_RAND: %lu / %lu\n", _hash_rand_c, _hash_rand_i);
-  fprintf(stderr,"HASH_EXPAND : %lu calls\n", _hash_expand);
-}
+// void _hash_prof() {
+//   fprintf(stderr,"HASH_ADD : %lu / %lu\n", _hash_add_c , _hash_add_i);
+//   fprintf(stderr,"HASH_PUT : %lu / %lu\n", _hash_put_c , _hash_put_i);
+//   fprintf(stderr,"HASH_FIND: %lu / %lu\n", _hash_find_c, _hash_find_i);
+//   fprintf(stderr,"HASH_RM  : %lu / %lu\n", _hash_rm_c  , _hash_rm_i);
+//   fprintf(stderr,"HASH_RAND: %lu / %lu\n", _hash_rand_c, _hash_rand_i);
+//   fprintf(stderr,"HASH_EXPAND : %lu calls\n", _hash_expand);
+// }
 
 } // namespace gengraph

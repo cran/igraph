@@ -1,7 +1,7 @@
 
 #   IGraph R package
-#   Copyright (C) 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-#   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+#   Copyright (C) 2005-2012  Gabor Csardi <csardi.gabor@gmail.com>
+#   334 Harvard street, Cambridge, MA 02139 USA
 #   
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ are.connected <- function(graph, v1, v2) {
     stop("Not a graph object")
   }
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_are_connected", graph, as.igraph.vs(graph, v1),
-        as.igraph.vs(graph, v2),
+  .Call("R_igraph_are_connected", graph, as.igraph.vs(graph, v1)-1,
+        as.igraph.vs(graph, v2)-1,
         PACKAGE="igraph")
 }

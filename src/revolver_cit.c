@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph R package.
-   Copyright (C) 2007  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2007-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,8 +21,12 @@
 
 */
 
-#include "igraph.h"
-#include "memory.h"
+#include "igraph_revolver.h"
+#include "igraph_progress.h"
+#include "igraph_interrupt_internal.h"
+#include "igraph_interface.h"
+#include "igraph_iterators.h"
+#include "igraph_structural.h"
 #include "config.h"
 
 #include <math.h>
@@ -1020,7 +1024,7 @@ int igraph_revolver_ade(const igraph_t *graph,
 					    maxdegree, agebins));
       }
       
-      /* error calculattion */
+      /* error calculation */
       if (logprob || lognull) {
 	IGRAPH_CHECK(igraph_revolver_error_ade(graph, kernel, &st,
 					      cats, nocats, maxdegree, 

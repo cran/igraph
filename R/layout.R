@@ -1,7 +1,7 @@
 
 #   IGraph R package
-#   Copyright (C) 2003, 2004, 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-#   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+#   Copyright (C) 2003-2012  Gabor Csardi <csardi.gabor@gmail.com>
+#   334 Harvard street, Cambridge, MA 02139 USA
 #   
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -60,7 +60,6 @@ layout.sphere <- function(graph, params) {
 }
 
 layout.fruchterman.reingold <- function(graph, ..., dim=2,
-                                        verbose=igraph.par("verbose"),
                                         params=list()) {
 
   if (!is.igraph(graph)) {
@@ -92,18 +91,36 @@ layout.fruchterman.reingold <- function(graph, ..., dim=2,
   if (!is.null(params$start)) {
     params$start <- structure(as.numeric(params$start), dim=dim(params$start))
   }
+  if (!is.null(params$minx)) {
+    params$minx <- as.double(params$minx)
+  }
+  if (!is.null(params$maxx)) {
+    params$maxx <- as.double(params$maxx)
+  }
+  if (!is.null(params$miny)) {
+    params$miny <- as.double(params$miny)
+  }
+  if (!is.null(params$maxy)) {
+    params$maxy <- as.double(params$maxy)
+  }
+  if (!is.null(params$minz)) {
+    params$minz <- as.double(params$minz)
+  }
+  if (!is.null(params$maxz)) {
+    params$maxz <- as.double(params$maxz)
+  }
   
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call(fn, graph,
         as.double(params$niter), as.double(params$maxdelta),
         as.double(params$area), as.double(params$coolexp),
         as.double(params$repulserad), params$weights, params$start,
-        as.logical(verbose),
+        params$minx, params$maxx, params$miny, params$maxy,
+        params$minz, params$maxz,
         PACKAGE="igraph")
 }
 
 layout.fruchterman.reingold.grid <- function(graph, ...,
-                                             verbose=igraph.par("verbose"),
                                              params=list()) {
   if (!is.igraph(graph)) {
     stop("Not a graph object")
@@ -120,6 +137,11 @@ layout.fruchterman.reingold.grid <- function(graph, ...,
   if (is.null(params$repulserad)){ params$repulserad <- params$area * vc }
   if (is.null(params$cellsize))  { params$cellsize   <-
                                      (sqrt(sqrt(params$area))) }
+  if (is.null(params$weights))   {
+    params$weights <- NULL
+  } else {
+    params$weights <- as.numeric(params$weights)
+  }
   if (!is.null(params$start)) {
     params$start <- structure(as.numeric(params$start), dim=dim(params$start))
   }
@@ -129,15 +151,14 @@ layout.fruchterman.reingold.grid <- function(graph, ...,
         as.double(params$niter), as.double(params$maxdelta),
         as.double(params$area), as.double(params$coolexp),
         as.double(params$repulserad), as.double(params$cellsize),
-        params$start,
-        as.logical(verbose),
+        params$start, params$weights,
         PACKAGE="igraph")
 }
   
 
 # FROM SNA 0.5
 
-layout.kamada.kawai<-function(graph, ..., dim=2, verbose=igraph.par("verbose"),
+layout.kamada.kawai<-function(graph, ..., dim=2,
                               params=list()) {
 
   if (!is.igraph(graph)) {
@@ -161,18 +182,43 @@ layout.kamada.kawai<-function(graph, ..., dim=2, verbose=igraph.par("verbose"),
   if (is.null(params$initemp))    { params$initemp <- 10   }
   if (is.null(params$coolexp))    { params$coolexp <- 0.99 }
   if (is.null(params$kkconst))    { params$kkconst <- vc^2 }
+  if (is.null(params$fixz))       { params$fixz    <- FALSE}
   if (!is.null(params$start)) {
     params$start <- structure(as.numeric(params$start), dim=dim(params$start))
   }
+  if (!is.null(params$minx)) {
+    params$minx <- as.double(params$minx)
+  }
+  if (!is.null(params$maxx)) {
+    params$maxx <- as.double(params$maxx)
+  }
+  if (!is.null(params$miny)) {
+    params$miny <- as.double(params$miny)
+  }
+  if (!is.null(params$maxy)) {
+    params$maxy <- as.double(params$maxy)
+  }
+  if (!is.null(params$minz)) {
+    params$minz <- as.double(params$minz)
+  }
+  if (!is.null(params$maxz)) {
+    params$maxz <- as.double(params$maxz)
+  }
+  if (params$fixz && dim==2) {
+    warning("`fixz' works for 3D only, ignored.")
+  }
+  
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call(fn, graph,
         as.double(params$niter), as.double(params$initemp),
         as.double(params$coolexp), as.double(params$kkconst),
-        as.double(params$sigma), params$start, as.logical(verbose),
+        as.double(params$sigma), params$start, as.logical(params$fixz),
+        params$minx, params$maxx, params$miny, params$maxy,
+        params$minz, params$maxz,
         PACKAGE="igraph")
 }
 
-layout.graphopt <- function(graph, ..., verbose=igraph.par("verbose"),
+layout.graphopt <- function(graph, ..., 
                             params=list()) {
   
   if (!is.igraph(graph)) {
@@ -198,7 +244,6 @@ layout.graphopt <- function(graph, ..., verbose=igraph.par("verbose"),
         as.double(params$niter), as.double(params$charge),
         as.double(params$mass), as.double(params$spring.length),
         as.double(params$spring.constant), params$max.sa.movement,
-        params$start, as.logical(verbose),
         PACKAGE="igraph")
 }
 
@@ -219,13 +264,17 @@ layout.lgl <- function(graph, ..., params=list()) {
   if (is.null(params$repulserad)){ params$repulserad <- params$area * vc }
   if (is.null(params$cellsize))  { params$cellsize   <-
                                      (sqrt(sqrt(params$area))) }
-  if (is.null(params$root))      { params$root       <- -1   }
+  if (is.null(params$root))      {
+    params$root <- -1
+  } else {
+    params$root <- as.igraph.vs(graph, params$root)-1
+  }
   
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_layout_lgl", graph, as.double(params$maxiter),
         as.double(params$maxdelta), as.double(params$area),
         as.double(params$coolexp), as.double(params$repulserad),
-        as.double(params$cellsize), as.double(params$root),
+        as.double(params$cellsize), params$root,
         PACKAGE="igraph")
 }
 
@@ -238,17 +287,27 @@ layout.reingold.tilford <- function(graph, ..., params=list()) {
     params <- list(...)
   }
 
-  if (is.null(params$root))          { params$root       <- 0     }
-  if (is.null(params$circular))      { params$circular   <- FALSE }
+  if (is.null(params$root))          { params$root       <- numeric()  }
+  if (is.null(params$circular))      { params$circular   <- FALSE      }
+  if (is.null(params$rootlevel))     { params$rootlevel  <- numeric()  }
+  if (is.null(params$mode))          { params$mode       <- "out"      }
+  if (is.null(params$flip.y))        { params$flip.y     <- TRUE       }
+  params$mode <- tolower(params$mode)
+  params$mode <- switch(params$mode, "out"=1, "in"=2, "all"=3, "total"=3)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_layout_reingold_tilford", graph, as.double(params$root),
-        as.logical(params$circular),
-        PACKAGE="igraph")
+  res <- .Call("R_igraph_layout_reingold_tilford", graph,
+               as.igraph.vs(graph, params$root)-1,
+               as.double(params$mode), as.double(params$rootlevel),
+               as.logical(params$circular),
+               PACKAGE="igraph")
+  if (params$flip.y) {
+    res[,2] <- max(res[,2])-res[,2]
+  }
+  res
 }
 
-layout.merge <- function(graphs, layouts, method="dla",
-                         verbose=igraph.par("verbose")) {
+layout.merge <- function(graphs, layouts, method="dla") {
 
   if (!all(sapply(graphs, is.igraph))) {
     stop("Not a graph object")
@@ -256,8 +315,7 @@ layout.merge <- function(graphs, layouts, method="dla",
   if (method == "dla") {
     on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
     res <- .Call("R_igraph_layout_merge_dla",
-                 graphs,
-                 layouts, as.logical(verbose),
+                 graphs, layouts,
                  PACKAGE="igraph")
   } else {
     stop("Invalid `method'.")
@@ -429,44 +487,6 @@ layout.norm <- function(layout, xmin=NULL, xmax=NULL, ymin=NULL, ymax=NULL,
   (v-vr[1]) * fac + min
 }
 
-layout.mds <- function(graph, d=shortest.paths(graph), ...)
-  UseMethod("layout.mds", graph)
-
-layout.mds.igraph <- function(graph, d=shortest.paths(graph), ...){
-    
-    if (!is.igraph(graph)) {
-      stop("Not a graph object")
-    }
-
-    clust <- clusters(graph)
-    llist <- list()
-    llen <- numeric()
-    glist <- list()
-    for(i in 1:length(clust$csize)-1){
-        ind <- clust$membership==i
-        
-        if(length(which(ind))>=3){
-            llist[i+1] <- list(cmdscale(d[ind, ind]))
-        }else if(length(which(ind))==2){
-            llist[i+1] <- list(d[ind, ind])
-        } else {
-            llist[i+1] <- list(matrix(c(0, 0), nrow=1))
-        }
-        
-        llen[i+1] <- length(which(ind))
-        
-        glist[i+1] <- list(subgraph(graph, V(graph)[ind]))
-    }
-    
-    ## merge them all:
-    lmerged <- layout.merge(glist, llist)
-    
-    ## now reorder these rows to reflect original graph:
-    l <- matrix(rep(NA, 2*vcount(graph)), ncol=2)
-    l[order(clust$membership), ] <- lmerged
-    return(l)
-}
-
 layout.svd <- function(graph, d=shortest.paths(graph), ...)
   UseMethod("layout.svd", graph)
 
@@ -480,7 +500,7 @@ layout.svd.igraph <- function(graph, d=shortest.paths(graph), ...) {
     llist <- list()
     llen <- numeric()
     glist <- list()
-    for(i in 1:length(clust$csize)-1){
+    for(i in 1:length(clust$csize)){
         ind <- clust$membership==i
         
         if(length(which(ind))>=3){
@@ -496,7 +516,7 @@ layout.svd.igraph <- function(graph, d=shortest.paths(graph), ...) {
         
         llen[i+1] <- length(which(ind))
         
-        glist[i+1] <- list(subgraph(graph, V(graph)[ind]))
+        glist[i+1] <- list(induced.subgraph(graph, V(graph)[ind]))
     }
     
     ## merge them all:
@@ -524,7 +544,7 @@ piecewise.layout <- function(graph, layout=layout.kamada.kawai, ...) {
 }
 
 layout.drl <- function(graph, use.seed = FALSE,
-                       seed=matrix(runif(vcount(graph)*2), nc=2),
+                       seed=matrix(runif(vcount(graph)*2), ncol=2),
                        options=igraph.drl.default,
                        weights=E(graph)$weight,
                        fixed=NULL,
@@ -687,3 +707,147 @@ igraph.drl.final <- list(edge.cut=32/40,
                          simmer.temperature=250,
                          simmer.attraction=.5,
                          simmer.damping.mult=0)
+
+layout.auto <- function(graph, dim=2, ...) {
+
+  ## 1. If there is a 'layout' graph attribute, we just use that.
+  ## 2. Otherwise, if there are vertex attributes called 'x' and 'y',
+  ##    we use those (and the 'z' vertex attribute as well, if present).
+  ## 3. Otherwise, if the graph is connected and small (<100) we use
+  ##    the Kamada-Kawai layout.
+  ## 4. Otherwise if the graph is medium size (<1000) we use the
+  ##    Fruchterman-Reingold layout.
+  ## 5. Otherwise we use the DrL layout generator.
+  
+  if ("layout" %in% list.graph.attributes(graph)) {
+    lay <- get.graph.attribute(graph, "layout")
+    if (is.function(lay)) {
+      lay(graph, ...)
+    } else {
+      lay
+    }
+
+  } else if ( all(c("x", "y") %in% list.vertex.attributes(graph)) ) {
+    if ("z" %in% list.vertex.attributes(graph)) {
+      cbind(V(graph)$x, V(graph)$y, V(graph)$z)
+    } else {
+      cbind(V(graph)$x, V(graph)$y)
+    }
+
+  } else if (is.connected(graph) && vcount(graph) < 100) {
+    layout.kamada.kawai(graph, dim=dim, ...)
+
+  } else if (vcount(graph) < 1000) {
+    layout.fruchterman.reingold(graph, dim=dim, ...)
+
+  } else {
+    layout.drl(graph, dim=dim, ...)
+  }
+  
+}
+
+layout.sugiyama <- function(graph, layers=NULL, hgap=1, vgap=1,
+                            maxiter=100, weights=NULL,
+                            attributes=c("default", "all", "none")) {
+  # Argument checks
+  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is.null(layers)) layers <- as.numeric(layers)-1
+  hgap <- as.numeric(hgap)
+  vgap <- as.numeric(vgap)
+  maxiter <- as.integer(maxiter)
+  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
+    weights <- E(graph)$weight 
+  } 
+  if (!is.null(weights) && any(!is.na(weights))) { 
+    weights <- as.numeric(weights) 
+  } else { 
+    weights <- NULL 
+  }
+  attributes <- igraph.match.arg(attributes)
+  
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_layout_sugiyama", graph, layers, hgap,
+               vgap, maxiter, weights, PACKAGE="igraph")
+
+  # Flip the y coordinates, more natural this way
+  res$res[,2] <- max(res$res[,2]) - res$res[,2] + 1
+
+  # Separate real and dummy vertices
+  vc <- vcount(graph)
+  res$layout <- res$res[seq_len(vc),]
+  if (nrow(res$res)==vc) {
+    res$layout.dummy <- matrix(nrow=0, ncol=2)
+  } else {
+    res$layout.dummy <- res$res[(vc+1):nrow(res$res),]
+  }
+  
+  # Add some attributes to the extended graph
+  E(res$extd_graph)$orig <- res$extd_to_orig_eids
+  res$extd_to_orig_eids <- NULL
+
+  res$extd_graph <- set.vertex.attribute(res$extd_graph, "dummy",
+                                         value=c(rep(FALSE, vc),
+                                           rep(TRUE, nrow(res$res)-vc)))
+
+  res$extd_graph$layout <- rbind(res$layout, res$layout.dummy)
+
+  if (attributes=="default" || attributes=="all") {
+    if ("size" %in% list.vertex.attributes(graph)) {
+      V(res$extd_graph)$size <- 0
+      V(res$extd_graph)$size[ !V(res$extd_graph)$dummy ] <- V(graph)$size
+    }
+    if ("size2" %in% list.vertex.attributes(graph)) {
+      V(res$extd_graph)$size2 <- 0
+      V(res$extd_graph)$size2[ !V(res$extd_graph)$dummy ] <- V(graph)$size2
+    }
+    if ("shape" %in% list.vertex.attributes(graph)) {
+      V(res$extd_graph)$shape <- "none"
+      V(res$extd_graph)$shape[ !V(res$extd_graph)$dummy ] <- V(graph)$shape
+    }
+    if ("label" %in% list.vertex.attributes(graph)) {
+      V(res$extd_graph)$label <- ""
+      V(res$extd_graph)$label[ !V(res$extd_graph)$dummy ] <- V(graph)$label
+    }
+    if ("color" %in% list.vertex.attributes(graph)) {
+      V(res$extd_graph)$color <- head(V(graph)$color, 1)
+      V(res$extd_graph)$color[ !V(res$extd_graph)$dummy ] <- V(graph)$color
+    }
+    eetar <- get.edgelist(res$extd_graph, names=FALSE)[,2]
+    E(res$extd_graph)$arrow.mode <- 0
+    if ("arrow.mode" %in% list.edge.attributes(graph)) {
+      E(res$extd_graph)$arrow.mode[ eetar <= vc ] <- E(graph)$arrow.mode
+    } else {
+      E(res$extd_graph)$arrow.mode[ eetar <= vc ] <- is.directed(graph) * 2
+    }
+    if ("arrow.size" %in% list.edge.attributes(graph)) {
+      E(res$extd_graph)$arrow.size <- 0
+      E(res$extd_graph)$arrow.size[ eetar <= vc ] <- E(graph)$arrow.size
+    }
+  }
+
+  if (attributes=="all") {
+    gatt <- setdiff(list.graph.attributes(graph), "layout")
+    vatt <- setdiff(list.vertex.attributes(graph),
+                    c("size", "size2", "shape", "label", "color"))
+    eatt <- setdiff(list.edge.attributes(graph),
+                    c("arrow.mode", "arrow.size"))
+    for (ga in gatt) {
+      res$extd_graph <- set.graph.attribute(res$extd_graph, ga,
+                                            get.graph.attribute(graph, ga))
+    }
+    for (va in vatt) {
+      notdummy <- which(!V(res$extd_graph)$dummy)
+      res$extd_graph <- set.vertex.attribute(res$extd_graph, va,
+                                             notdummy,
+                                             get.vertex.attribute(graph, va))
+    }
+    for (ea in eatt) {
+      eanew <- get.edge.attribute(graph, ea)[E(res$extd_graph)$orig]
+      res$extd_graph <- set.edge.attribute(res$extd_graph, ea, value=eanew)
+    }
+  }
+  
+  res$res <- NULL
+  res
+}

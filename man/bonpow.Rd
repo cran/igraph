@@ -11,7 +11,7 @@
 }
 \usage{
 bonpow(graph, nodes=V(graph), loops=FALSE, exponent=1,
-    rescale=FALSE, tol=1e-7)
+    rescale=FALSE, tol=1e-7, sparse=TRUE)
 }
 %- maybe also `usage' for other objects documented here.
 \arguments{
@@ -26,7 +26,10 @@ bonpow(graph, nodes=V(graph), loops=FALSE, exponent=1,
   \item{rescale}{ if true, centrality scores are rescaled such that they
     sum to 1. } 
   \item{tol}{ tolerance for near-singularities during matrix inversion
-    (see \code{\link{solve}}) } 
+    (see \code{\link{solve}}) }
+  \item{sparse}{Logical scalar, whether to use sparse matrices for the
+    calculation. The \sQuote{Matrix} package is required for sparse
+    matrix support}
 }
 \details{
 Bonacich's power centrality measure is defined by
@@ -79,7 +82,7 @@ a non-ad hoc basis.
   \emph{American Journal of Sociology}, 92, 1170-1182. 
  }
 \author{ Carter T. Butts \email{buttsc@uci.edu}, ported to igraph by
-  Gabor Csardi \email{csardi@rmki.kfki.hu}}
+  Gabor Csardi \email{csardi.gabor@gmail.com}}
 \section{Warning }{Singular adjacency matrices cause no end of headaches
   for this algorithm; thus, the routine may fail in certain cases.  This
   will be fixed when I get a better algorithm.  \code{bonpow} will not
@@ -89,10 +92,10 @@ a non-ad hoc basis.
 \note{ This function was ported (ie. copied) from the SNA package. }
 \examples{
 # Generate some test data from Bonacich, 1987:
-g.c <- graph( c(1,2,1,3,2,4,3,5)-1, dir=FALSE)
-g.d <- graph( c(1,2,1,3,1,4,2,5,3,6,4,7)-1, dir=FALSE)
-g.e <- graph( c(1,2,1,3,1,4,2,5,2,6,3,7,3,8,4,9,4,10)-1, dir=FALSE)
-g.f <- graph( c(1,2,1,3,1,4,2,5,2,6,2,7,3,8,3,9,3,10,4,11,4,12,4,13)-1, dir=FALSE)
+g.c <- graph( c(1,2,1,3,2,4,3,5), dir=FALSE)
+g.d <- graph( c(1,2,1,3,1,4,2,5,3,6,4,7), dir=FALSE)
+g.e <- graph( c(1,2,1,3,1,4,2,5,2,6,3,7,3,8,4,9,4,10), dir=FALSE)
+g.f <- graph( c(1,2,1,3,1,4,2,5,2,6,2,7,3,8,3,9,3,10,4,11,4,12,4,13), dir=FALSE)
 # Compute Bonpow scores
 for (e in seq(-0.5,.5, by=0.1)) {
   print(round(bonpow(g.c, exp=e)[c(1,2,4)], 2))

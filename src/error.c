@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2005-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,16 +21,19 @@
 
 */
 
-#include "igraph.h"
 #include "config.h"
+#include "igraph_error.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdarg.h>
 
-static igraph_error_handler_t *igraph_i_error_handler=0;
+static IGRAPH_THREAD_LOCAL igraph_error_handler_t *igraph_i_error_handler=0;
+static IGRAPH_THREAD_LOCAL char igraph_i_errormsg_buffer[500];
+static IGRAPH_THREAD_LOCAL char igraph_i_warningmsg_buffer[500];
 
-static char *igraph_i_error_strings[]=
+static const char *igraph_i_error_strings[]=
   { /*  0 */ "No error",
     /*  1 */ "Failed",
     /*  2 */ "Out of memory",
@@ -49,7 +52,7 @@ static char *igraph_i_error_strings[]=
     /* 15 */ "Matrix-vector product failed",
     /* 16 */ "N must be positive", 
     /* 17 */ "NEV must be positive",
-    /* 18 */ "NCV must be bigger",
+    /* 18 */ "NCV must be greater than NEV and less than or equal to N",
     /* 19 */ "Maximum number of iterations should be positive",
     /* 20 */ "Invalid WHICH parameter",
     /* 21 */ "Invalid BMAT parameter",
@@ -69,7 +72,25 @@ static char *igraph_i_error_strings[]=
     /* 35 */ "LAPACK (dtrevc) error for calculating eigenvectors",
     /* 36 */ "Unknown ARPACK error",
     /* 37 */ "Negative loop detected while calculating shortest paths",
-    /* 38 */ "Internal error, likely a bug in igraph"
+    /* 38 */ "Internal error, likely a bug in igraph",
+    /* 39 */ "Maximum number of iterations reached",
+    /* 40 */ "No shifts could be applied during a cycle of the "
+             "Implicitly restarted Arnoldi iteration. One possibility "
+             "is to increase the size of NCV relative to NEV",
+    /* 41 */ "The Schur form computed by LAPACK routine dlahqr "
+             "could not be reordered by LAPACK routine dtrsen.",
+    /* 42 */ "Big integer division by zero",
+    /* 43 */ "GLPK Error, GLP_EBOUND",
+    /* 44 */ "GLPK Error, GLP_EROOT",
+    /* 45 */ "GLPK Error, GLP_ENOPFS",
+    /* 46 */ "GLPK Error, GLP_ENODFS",
+    /* 47 */ "GLPK Error, GLP_EFAIL",
+    /* 48 */ "GLPK Error, GLP_EMIPGAP",
+    /* 49 */ "GLPK Error, GLP_ETMLIM",
+    /* 50 */ "GLPK Error, GLP_STOP",
+    /* 51 */ "Internal attribute handler error",
+    /* 52 */ "Unimplemented attribute combination for this type",
+    /* 53 */ "LAPACK call resulted an error"
 };
 
 const char* igraph_strerror(const int igraph_errno) {
@@ -81,30 +102,52 @@ int igraph_error(const char *reason, const char *file, int line,
 
   if (igraph_i_error_handler) {
     igraph_i_error_handler(reason, file, line, igraph_errno);
+#ifndef USING_R
   }  else {
     igraph_error_handler_abort(reason, file, line, igraph_errno);
+#endif
   }
   return igraph_errno;
 }
 
+int igraph_errorf(const char *reason, const char *file, int line, 
+		  int igraph_errno, ...) {
+  va_list ap;
+  va_start(ap, igraph_errno);
+  vsnprintf(igraph_i_errormsg_buffer, 
+	    sizeof(igraph_i_errormsg_buffer) / sizeof(char), reason, ap);
+  return igraph_error(igraph_i_errormsg_buffer, file, line, igraph_errno);
+}
+
+int igraph_errorvf(const char *reason, const char *file, int line,
+		   int igraph_errno, va_list ap) {
+  vsnprintf(igraph_i_errormsg_buffer, 
+	    sizeof(igraph_i_errormsg_buffer) / sizeof(char), reason, ap);
+  return igraph_error(igraph_i_errormsg_buffer, file, line, igraph_errno);
+}
+
+#ifndef USING_R
 void igraph_error_handler_abort (const char *reason, const char *file,
 				 int line, int igraph_errno) {
   fprintf(stderr, "Error at %s:%i :%s, %s\n", file, line, reason,
 	  igraph_strerror(igraph_errno));
   abort();
 }
+#endif
 
 void igraph_error_handler_ignore (const char *reason, const char *file,
 				  int line, int igraph_errno) {
   IGRAPH_FINALLY_FREE();
 }
 
+#ifndef USING_R
 void igraph_error_handler_printignore (const char *reason, const char *file,
 				       int line, int igraph_errno) {
   IGRAPH_FINALLY_FREE();
   fprintf(stderr, "Error at %s:%i :%s, %s\n", file, line, reason,
 	  igraph_strerror(igraph_errno));
 }
+#endif
 
 igraph_error_handler_t *
 igraph_set_error_handler (igraph_error_handler_t * new_handler)
@@ -114,7 +157,7 @@ igraph_set_error_handler (igraph_error_handler_t * new_handler)
   return previous_handler;
 }
 
-struct igraph_i_protectedPtr igraph_i_finally_stack[100];
+IGRAPH_THREAD_LOCAL struct igraph_i_protectedPtr igraph_i_finally_stack[100];
 
 /*
  * Adds another element to the free list
@@ -133,7 +176,7 @@ void IGRAPH_FINALLY_REAL(void (*func)(void*), void* ptr) {
 void IGRAPH_FINALLY_CLEAN(int minus) { 
   igraph_i_finally_stack[0].all -= minus;
   if (igraph_i_finally_stack[0].all < 0) {
-    fprintf(stderr, "corrupt finally stack, popping %d elements when only %d left\n", minus, igraph_i_finally_stack[0].all+minus);
+    /* fprintf(stderr, "corrupt finally stack, popping %d elements when only %d left\n", minus, igraph_i_finally_stack[0].all+minus); */
     igraph_i_finally_stack[0].all = 0;
   }
   /* printf("<-- Finally stack contains now %d elements\n", igraph_i_finally_stack[0].all); */
@@ -152,22 +195,68 @@ int IGRAPH_FINALLY_STACK_SIZE(void) {
   return igraph_i_finally_stack[0].all;
 }
 
-static igraph_warning_handler_t *igraph_i_warning_handler=0;
+static IGRAPH_THREAD_LOCAL igraph_warning_handler_t *igraph_i_warning_handler=0;
+
+/**
+ * \function igraph_warning_handler_ignore
+ * Ignore all warnings
+ *
+ * This warning handler function simply ignores all warnings.
+ * \param reason Textual description of the warning.
+ * \param file The source file in which the warning was noticed.
+ * \param line The number of line in the source file which triggered the
+ *         warning..
+ * \param igraph_errno Warnings could have potentially error codes as well, 
+ *        but this is currently not used in igraph.
+ */
+
+void igraph_warning_handler_ignore (const char *reason, const char *file,
+				   int line, int igraph_errno) {
+}
+
+#ifndef USING_R
+
+/**
+ * \function igraph_warning_handler_print
+ * Print all warning to the standard error
+ *
+ * This warning handler function simply prints all warnings to the 
+ * standard error.
+ * \param reason Textual description of the warning.
+ * \param file The source file in which the warning was noticed.
+ * \param line The number of line in the source file which triggered the
+ *         warning..
+ * \param igraph_errno Warnings could have potentially error codes as well, 
+ *        but this is currently not used in igraph.
+ */
 
 void igraph_warning_handler_print (const char *reason, const char *file,
 				   int line, int igraph_errno) {
   fprintf(stderr, "Warning: %s in file %s, line %i\n", reason, file, line);
 }
+#endif
 
 int igraph_warning(const char *reason, const char *file, int line,
 		   int igraph_errno) {
 
   if (igraph_i_warning_handler) {
     igraph_i_warning_handler(reason, file, line, igraph_errno);
+#ifndef USING_R
   }  else {
     igraph_warning_handler_print(reason, file, line, igraph_errno);
+#endif
   }
   return igraph_errno;
+}
+
+int igraph_warningf(const char *reason, const char *file, int line, 
+		    int igraph_errno, ...) {
+  va_list ap;
+  va_start(ap, igraph_errno);
+  vsnprintf(igraph_i_warningmsg_buffer, 
+	    sizeof(igraph_i_warningmsg_buffer) / sizeof(char), reason, ap);
+  return igraph_warning(igraph_i_warningmsg_buffer, file, line, 
+			igraph_errno);
 }
 
 igraph_warning_handler_t *

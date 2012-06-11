@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2005-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,14 +21,15 @@
 
 */
 
-#include "igraph.h"
+#include "igraph_interrupt.h"
 #include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 
-igraph_interruption_handler_t *igraph_i_interruption_handler=0;
+IGRAPH_THREAD_LOCAL igraph_interruption_handler_t 
+  *igraph_i_interruption_handler=0;
 
 int igraph_allow_interruption(void* data) {
   if (igraph_i_interruption_handler) {

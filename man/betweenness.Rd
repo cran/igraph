@@ -11,11 +11,13 @@
   edge. 
 }
 \usage{
-betweenness(graph, v=V(graph), directed = TRUE, verbose = igraph.par("verbose"))
-edge.betweenness(graph, e=E(graph), directed = TRUE)
+betweenness(graph, v=V(graph), directed = TRUE, weights = NULL,
+     nobigint = TRUE, normalized = FALSE)
+edge.betweenness(graph, e=E(graph), directed = TRUE, weights = NULL)
 betweenness.estimate(graph, vids = V(graph), directed = TRUE, cutoff,
-     verbose = igraph.par("verbose"))
-edge.betweenness.estimate(graph, directed = TRUE, cutoff)
+     weights = NULL, nobigint = TRUE)
+edge.betweenness.estimate(graph, e=E(graph),
+     directed = TRUE, cutoff, weights = NULL)
 }
 \arguments{
   \item{graph}{The graph to analyze.}
@@ -25,7 +27,18 @@ edge.betweenness.estimate(graph, directed = TRUE, cutoff)
     calculated.}
   \item{directed}{Logical, whether directed paths should be considered
     while determining the shortest paths.}
-  \item{verbose}{Logical, whether to show a progress bar.}
+  \item{weights}{Optional positive weight vector for calculating
+    weighted betweenness. If the graph has a \code{weight} edge
+    attribute, then this is used by default.}
+  \item{nobigint}{Logical scalar, whether to use big integers during the
+    calculation. This is only required for lattice-like graphs that have
+    very many shortest paths between a pair of vertices. If \code{TRUE}
+    (the default), then big integers are not used.}
+  \item{normalized}{Logical scalar, whether to normalize the betweenness
+    scores. If \code{TRUE}, then the results are normalized according to
+    \deqn{B^n=\frac{2B}{n^2-3n+2}}{Bnorm=2*B/(n*n-3*n+2)}, where
+    \eqn{B^n}{Bnorm} is the normalized, \eqn{B} the raw betweenness, and
+    \eqn{n} is the number of vertices in the graph.}
   \item{vids}{The vertices for which the vertex betweenness estimation
     will be calculated.}
   \item{cutoff}{The maximum path length to consider when calculating the
@@ -38,7 +51,7 @@ edge.betweenness.estimate(graph, directed = TRUE, cutoff)
   
   The edge betweenness of edge \eqn{e}{\code{e}} is defined by
 
-  \deqn{\sum_{i\ne j} g{iej}/g_{ij}}{sum( g_iej / g_ij, i!=j)}.
+  \deqn{\sum_{i\ne j} g{iej}/g_{ij}.}{sum( g_iej / g_ij, i!=j).}
 
   \code{betweenness} calculates vertex betweenness,
   \code{edge.betweenness} calculates edge.betweenness.
@@ -73,7 +86,7 @@ edge.betweenness.estimate(graph, directed = TRUE, cutoff)
   Ulrik Brandes, A Faster Algorithm for Betweenness Centrality. \emph{Journal
   of Mathematical Sociology} 25(2):163-177, 2001. 
 }
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{\code{\link{closeness}}, \code{\link{degree}}}
 \examples{
 g <- random.graph.game(10, 3/10)

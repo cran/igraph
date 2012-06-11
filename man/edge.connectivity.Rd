@@ -62,19 +62,19 @@ graph.adhesion(graph, checks=TRUE)
 \references{Douglas R. White and Frank Harary: The cohesiveness of
   blocks in social networks: node connectivity and conditional
   density, TODO: citation}
-\author{ Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{ Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{\code{\link{graph.maxflow}}, \code{\link{vertex.connectivity}},
   \code{\link{vertex.disjoint.paths}}, \code{\link{graph.cohesion}}}
 \examples{
 g <- barabasi.game(100, m=1)
 g2 <- barabasi.game(100, m=5)
-edge.connectivity(g, 99, 0)
-edge.connectivity(g2, 99, 0)
-edge.disjoint.paths(g2, 99, 0)
+edge.connectivity(g, 100, 1)
+edge.connectivity(g2, 100, 1)
+edge.disjoint.paths(g2, 100, 1)
 
 g <- erdos.renyi.game(50, 5/50)
 g <- as.directed(g)
-g <- subgraph(g, subcomponent(g, 1))
+g <- induced.subgraph(g, subcomponent(g, 1))
 graph.adhesion(g)
 }
 \keyword{graphs}

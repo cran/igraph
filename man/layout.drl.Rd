@@ -14,7 +14,7 @@
 }
 \usage{
 layout.drl (graph, use.seed = FALSE, seed = matrix(runif(vcount(graph) * 
-    2), nc = 2), options = igraph.drl.default, weights = E(graph)$weight, 
+    2), ncol = 2), options = igraph.drl.default, weights = E(graph)$weight, 
     fixed = NULL, dim = 2) 
 }
 \arguments{
@@ -42,7 +42,7 @@ layout.drl (graph, use.seed = FALSE, seed = matrix(runif(vcount(graph) *
   This function implements the force-directed DrL layout generator.
 
   The generator has the following parameters:
-  \itemize{
+  \describe{
     \item{edge.cut}{Edge cutting is done in the late stages of the
       algorithm in order to achieve less dense layouts.  Edges are cut
       if there is a lot of stress on them (a large value in the
@@ -87,7 +87,7 @@ layout.drl (graph, use.seed = FALSE, seed = matrix(runif(vcount(graph) *
   \url{http://www.cs.sandia.gov/~smartin/software.html}
 }
 \author{Shawn Martin \email{google@for.it} and Gabor Csardi
-  \email{csardi@rmki.kfki.hu} for the R/igraph interface and the three
+  \email{csardi.gabor@gmail.com} for the R/igraph interface and the three
     dimensional version.}
 \seealso{\code{\link{layout}} for other layout generators.}
 \examples{

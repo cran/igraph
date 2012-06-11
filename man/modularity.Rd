@@ -1,20 +1,22 @@
 \name{modularity}
 \alias{modularity}
+\alias{modularity.igraph}
 \concept{Modularity}
 \title{Modularity of a community structure of a graph}
 \description{This function calculates how modular is a given division of a
   graph into subgraphs.
 }
 \usage{
-modularity(graph, membership, weights = NULL)
+\method{modularity}{igraph}(x, membership, weights = NULL, \dots)
 }
 \arguments{
-  \item{graph}{The input graph.}
+  \item{x}{The input graph.}
   \item{membership}{Numeric vector, for each vertex it gives its
-    community. The communities are numbered from zero.
+    community. The communities are numbered from one.
   }
   \item{weights}{If not \code{NULL} then a numeric vector giving edge
     weights.}
+  \item{\dots}{Additional arguments, none currently.}
 }
 \details{
   The modularity of a graph with respect to some division (or vertex
@@ -40,7 +42,7 @@ modularity(graph, membership, weights = NULL)
   MEJ Newman and M Girvan: Finding and evaluating community
   structure in networks. Physical Review E 69 026113, 2004.
 }
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{
   \code{\link{walktrap.community}},
   \code{\link{edge.betweenness.community}},
@@ -50,9 +52,9 @@ modularity(graph, membership, weights = NULL)
 }
 \examples{
 g <- graph.full(5) \%du\% graph.full(5) \%du\% graph.full(5)
-g <- add.edges(g, c(0,5, 0,10, 5, 10))
+g <- add.edges(g, c(1,6, 1,11, 6, 11))
 wtc <- walktrap.community(g)
-memb <- community.to.membership(g, wtc$merges, steps=12)
-modularity(g, memb$membership)
+modularity(wtc)
+modularity(g, membership(wtc))
 }
 \keyword{graphs}

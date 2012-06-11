@@ -6,7 +6,7 @@
   implemented right now.}
 \usage{
 write.graph(graph, file, format=c("edgelist", "pajek", "ncol",
-       "lgl", "graphml", "dimacs", "gml", "dot"), \dots)
+       "lgl", "graphml", "dimacs", "gml", "dot", "leda"), \dots)
 }
 \arguments{
   \item{graph}{The graph to export.}
@@ -20,30 +20,34 @@ write.graph(graph, file, format=c("edgelist", "pajek", "ncol",
   }
   \item{\dots}{Other, format specific arguments, see below.}
 }
-\details{
+\section{Edge list format}{
   The \code{edgelist} format is a simple text file, with one edge in a
   line, the two vertex ids separated by a space character. The file is
   sorted by the first and the second column. This format has no
   additional arguments.
-
+}
+\section{Pajek format}{
   The Pajek format is a text file, see \code{\link{read.graph}} for
   details. Appropriate vertex and edge attributes are also written to
   the file. This format has no additional arguments.
-
+}
+\section{GraphML format}{
   The GraphML format is a flexible XML based format. See
   \code{\link{read.graph}} for GraphML details. Vertex and edge
   attributes are also written to the file. This format has no additional
   arguments.
-
+}
+\section{Dot format}{
   The dot format is used by the popular GraphViz program. Vertex and
   edge attributes are written to the file. There are no additional
   arguments for this format.
-  
+}
+\section{LGL format}{
   The \code{lgl} format is also a simple text file, this is the
   format expected by the 'Large Graph Layout' layout generator software.
   See \link{read.graph} for details.
   Additional arguments:
-  \itemize{
+  \describe{
     \item{names}{If you want to write symbolic vertex names instead of
       vertex ids, supply the name of the vertex attribute containing the
       symbolic names here. By default the \sQuote{name} attribute is
@@ -56,11 +60,12 @@ write.graph(graph, file, format=c("edgelist", "pajek", "ncol",
     \item{isolates}{Logical, if \code{TRUE} the isolate vertices are
       also written to the file, they are omitted by default.}
   }
-
+}
+\section{NCOL format}{
   The \code{ncol} format is also used by LGL, it is a text file, see
   \link{read.graph} for details.
   Additional arguments:
-  \itemize{
+  \describe{
     \item{names}{If you want to write symbolic vertex names instead of
       vertex ids, supply the name of the vertex attribute containing the
       symbolic names here. By default the \sQuote{name} attribute is
@@ -71,7 +76,8 @@ write.graph(graph, file, format=c("edgelist", "pajek", "ncol",
       attribute \sQuote{weights} are used if they are installed.
       Supply \code{NULL} here if you want to omit the weights.}
   }
-
+}
+\section{Dimacs format}{
   The \code{dimacs} file format, more specifically the 
   version for network flow problems, see the files at
   \url{ftp://dimacs.rutgers.edu/pub/netflow/general-info/}
@@ -94,7 +100,7 @@ write.graph(graph, file, format=c("edgelist", "pajek", "ncol",
   Vertex ids are numbered from 1.
   
   Additional arguments:
-  \itemize{
+  \describe{
     \item{source}{The id of the source vertex, if \code{NULL} (the
       default) then it is taken from the \code{source} graph attribute.}
     \item{target}{The id of the target vertex, if \code{NULL} (the
@@ -103,7 +109,8 @@ write.graph(graph, file, format=c("edgelist", "pajek", "ncol",
       \code{NULL} (the default) then it is taken from the
       \code{capacity} edge attribute.}
   }
-
+}
+\section{GML file format}{
   GML is a quite general textual format, see 
   \url{http://www.infosun.fim.uni-passau.de/Graphlet/GML/} for details.
  
@@ -135,7 +142,7 @@ write.graph(graph, file, format=c("edgelist", "pajek", "ncol",
   before calling this function if you want to preserve them.
 
   Additional arguments:
-  \itemize{
+  \describe{
     \item{id}{\code{NULL} or a numeric vector giving the vertex ids. See
       details above.}
     \item{creator}{A character scalar to be added to the
@@ -143,11 +150,30 @@ write.graph(graph, file, format=c("edgelist", "pajek", "ncol",
       default) then the current date and time is added.}
   }
 }
+\section{LEDA file format}{
+  LEDA is a library for efficient data types and algorithms. 
+  The support for the LEDA format is very basic at the moment; igraph
+  writes only the LEDA graph section which supports one selected vertex
+  and edge attribute and no layout information or visual attributes.
+  See
+  \url{http://www.algorithmic-solutions.info/leda_guide/graphs/leda_native_graph_fileformat.html}
+  for the details of this format.
+
+  Additional arguments:
+  \describe{
+    \item{vertex.attr}{The name of the vertex attribute whose values
+      are to be stored in the output or \code{NULL} if no vertex
+      attribute has to be stored.} 
+    \item{edge.attr}{The name of the edge attribute whose values
+      are to be stored in the output or \code{NULL} if no edge attribute
+      has to be stored.}
+  }
+}
 \value{A NULL, invisibly.}
 \references{Adai AT, Date SV, Wieland S, Marcotte EM. LGL: creating a
   map of protein function with an algorithm for visualizing very large
   biological networks. \emph{J Mol Biol.} 2004 Jun 25;340(1):179-90.}
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{ \code{\link{read.graph}} }
 \examples{
 g <- graph.ring(10)

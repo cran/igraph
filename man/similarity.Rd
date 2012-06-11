@@ -53,8 +53,8 @@ similarity.invlogweighted(graph, vids = V(graph),
 }
 \references{Lada A. Adamic and Eytan Adar:
  Friends and neighbors on the Web. \emph{Social Networks}, 25(3):211-230, 2003.}
-\author{Tamas Nepusz \email{ntamas@rmki.kfki.hu} and Gabor Csardi
-  \email{csardi@rmki.kfki.hu} for the manual page.}
+\author{Tamas Nepusz \email{ntamas@gmail.com} and Gabor Csardi
+  \email{csardi.gabor@gmail.com} for the manual page.}
 \seealso{\code{\link{cocitation}} and \code{\link{bibcoupling}}}
 \examples{
 g <- graph.ring(5)

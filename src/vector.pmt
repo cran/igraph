@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2003, 2004, 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2003-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,9 +21,10 @@
 
 */
 
-#include "memory.h"
-#include "error.h"
-#include "random.h"
+#include "igraph_memory.h"
+#include "igraph_error.h"
+#include "igraph_random.h"
+#include "igraph_qsort.h"
 
 #include <assert.h>
 #include <string.h> 		/* memcpy & co. */
@@ -99,7 +100,11 @@
  * </para><para>
  * Every vector needs to be initialized before it can be used, and
  * there are a number of initialization functions or otherwise called
- * constructors. 
+ * constructors. This function constructs a vector of the given size and
+ * initializes each entry to 0. Note that \ref igraph_vector_null() can be
+ * used to set each element of a vector to zero. However, if you want a
+ * vector of zeros, it is much faster to use this function than to create a
+ * vector and then invoke \ref igraph_vector_null().
  * 
  * </para><para>
  * Every vector object initialized by this function should be
@@ -158,6 +163,8 @@ const TYPE(igraph_vector)*FUNCTION(igraph_vector,view) (const TYPE(igraph_vector
   v2->end=v->stor_end;
   return v;
 }
+
+#ifndef BASE_COMPLEX
 
 /**
  * \ingroup vector
@@ -345,6 +352,8 @@ int FUNCTION(igraph_vector_init,int_end)(TYPE(igraph_vector) *v, int endmark, ..
   return 0;
 }
 
+#endif /* ifndef BASE_COMPLEX */
+
 /**
  * \ingroup vector
  * \function igraph_vector_destroy
@@ -371,14 +380,35 @@ void FUNCTION(igraph_vector,destroy)   (TYPE(igraph_vector)* v) {
 
 /**
  * \ingroup vector
+ * \function igraph_vector_capacity
+ * \brief Returns the allocated capacity of the vector
+ * 
+ * Note that this might be different from the size of the vector (as 
+ * queried by \ref igraph_vector_size(), and specifies how many elements 
+ * the vector can hold, without reallocation.
+ * \param v Pointer to the (previously initialized) vector object
+ *          to query.
+ * \return The allocated capacity.
+ * 
+ * \sa \ref igraph_vector_size().
+ * 
+ * Time complexity: O(1).
+ */
+
+long int FUNCTION(igraph_vector,capacity)(const TYPE(igraph_vector)*v) {
+  return v->stor_end - v->stor_begin;
+}
+
+/**
+ * \ingroup vector
  * \function igraph_vector_reserve
  * \brief Reserves memory for a vector.
  * 
  * </para><para>
  * \a igraph vectors are flexible, they can grow and
  * shrink. Growing 
- * however occasionally needs the data in the vector to be copyed.
- * In order to avoid you can call this function to reserve space for
+ * however occasionally needs the data in the vector to be copied.
+ * In order to avoid this, you can call this function to reserve space for
  * future growth of the vector. 
  * 
  * </para><para>
@@ -390,7 +420,7 @@ void FUNCTION(igraph_vector,destroy)   (TYPE(igraph_vector)* v) {
  * \param v The vector object.
  * \param size The new \em allocated size of the vector.
  * \return Error code:
- *         \c IGRPAH_ENOMEM if there is not enough memory.
+ *         \c IGRAPH_ENOMEM if there is not enough memory.
  *
  * Time complexity: operating system dependent, should be around
  * O(n), n 
@@ -483,7 +513,7 @@ void FUNCTION(igraph_vector,clear)     (TYPE(igraph_vector)* v) {
  * \return Error code:
  *         \c IGRAPH_ENOMEM: not enough memory.
  * 
- * Time complexity: operating system dependent. What is important that
+ * Time complexity: operating system dependent. What is important is that
  * a sequence of n
  * subsequent calls to this function has time complexity
  * O(n), even if there 
@@ -616,7 +646,8 @@ void FUNCTION(igraph_vector,set)       (TYPE(igraph_vector)* v,
  * </para><para>
  * Note that \ref igraph_vector_init() sets the elements to zero as well, so
  * it makes no sense to call this function on a just initialized
- * vector. 
+ * vector. Thus if you want to construct a vector of zeros, then you should
+ * use \ref igraph_vector_init().
  * \param v The vector object.
  *
  * Time complexity: O(n), the size of
@@ -695,10 +726,12 @@ BASE FUNCTION(igraph_vector,pop_back)(TYPE(igraph_vector)* v) {
   return tmp;
 }
 
+#ifndef NOTORDERED
+
 /**
  * \ingroup vector
  * \function igraph_vector_sort_cmp
- * \brief Internal comparision function of vector elements, used by 
+ * \brief Internal comparison function of vector elements, used by 
  * \ref igraph_vector_sort().
  */
 
@@ -727,9 +760,86 @@ int FUNCTION(igraph_vector,sort_cmp)(const void *a, const void *b) {
 void FUNCTION(igraph_vector,sort)(TYPE(igraph_vector) *v) {
   assert(v != NULL);
   assert(v->stor_begin != NULL);
-  qsort(v->stor_begin, FUNCTION(igraph_vector,size)(v), 
+  igraph_qsort(v->stor_begin, FUNCTION(igraph_vector,size)(v), 
     sizeof(BASE), FUNCTION(igraph_vector,sort_cmp));
 }
+
+/**
+ * Ascending comparison function passed to qsort from  igraph_vector_qsort_ind
+ */
+int FUNCTION(igraph_vector,i_qsort_ind_cmp_asc)(const void *p1 , const void *p2) {
+  BASE **pa = (BASE **) p1;
+  BASE **pb = (BASE **) p2;
+  if( **pa < **pb ) return -1;
+  if( **pa > **pb) return 1;
+  return 0;
+}
+
+/**
+ * Descending comparison function passed to qsort from  igraph_vector_qsort_ind
+ */
+int FUNCTION(igraph_vector,i_qsort_ind_cmp_desc)(const void *p1 , const void *p2) {
+  BASE **pa = (BASE **) p1;
+  BASE **pb = (BASE **) p2;
+  if( **pa < **pb ) return 1;
+  if( **pa > **pb) return -1;
+  return 0;
+}
+
+/**
+ * \function igraph_vector_qsort_ind
+ * \brief Return a permutation of indices that sorts a vector 
+ *
+ * Takes an unsorted array \c v as input and computes an array of
+ * indices inds such that v[ inds[i] ], with i increasing from 0, is
+ * an ordered array (either ascending or descending, depending on
+ * \v order). The order of indices for identical elements is not
+ * defined.
+ *
+ * \param v the array to be sorted
+ * \param inds the output array of indices. this must be initialized,
+ *         but will be resized 
+ * \param descending whether the output array should be sorted in descending
+ *        order.
+ * \return Error code.
+ *
+ * This routine uses the C library qsort routine.
+ * Algorithm: 1) create an array of pointers to the elements of v. 2)
+ * Pass this array to qsort. 3) after sorting the difference between
+ * the pointer value and the first pointer value gives its original
+ * position in the array. Use this to set the values of inds. 
+ *
+ * Some tests show that this routine is faster than
+ * igraph_vector_heapsort_ind by about 10 percent 
+ * for small vectors to a factor of two for large vectors.
+ */
+
+long int FUNCTION(igraph_vector,qsort_ind)(TYPE(igraph_vector) *v, 
+					   igraph_vector_t *inds, igraph_bool_t descending) {
+  long int i;
+  BASE **vind, *first;
+  long int n = FUNCTION(igraph_vector,size)(v);
+  IGRAPH_CHECK(igraph_vector_resize(inds, n));
+  vind = igraph_Calloc(n, BASE*);
+  if (vind == 0) {
+    IGRAPH_ERROR("igraph_vector_qsort_ind failed", IGRAPH_ENOMEM);
+  }
+  for(i=0; i<n; i++) {
+    vind[i] = &VECTOR(*v)[i];
+  }
+  first = vind[0];
+  if (descending)
+    igraph_qsort(vind, n, sizeof(BASE**), FUNCTION(igraph_vector,i_qsort_ind_cmp_desc));
+  else
+    igraph_qsort(vind, n, sizeof(BASE**), FUNCTION(igraph_vector,i_qsort_ind_cmp_asc));
+  for(i=0; i<n; i++) {
+    VECTOR(*inds)[i] = vind[i]-first;
+  }
+  igraph_Free(vind);
+  return 0;
+}
+
+#endif
 
 /**
  * \ingroup vector
@@ -749,7 +859,8 @@ void FUNCTION(igraph_vector,sort)(TYPE(igraph_vector) *v) {
  *         memory. Note that this function \em never returns an error
  *         if the vector is made smaller.
  * \sa \ref igraph_vector_reserve() for allocating memory for future
- * extensions of a vector.
+ * extensions of a vector. \ref igraph_vector_resize_min() for 
+ * deallocating the unnneded memory for a vector.
  * 
  * Time complexity: O(1) if the new
  * size is smaller, operating system dependent if it is larger. In the
@@ -765,6 +876,41 @@ int FUNCTION(igraph_vector,resize)(TYPE(igraph_vector)* v, long int newsize) {
   v->end = v->stor_begin+newsize;
   return 0;
 }
+
+/**
+ * \ingroup vector
+ * \function igraph_vector_resize_min
+ * \brief Deallocate the unused memory of a vector.
+ * 
+ * </para><para>
+ * Note that this function involves additional memory allocation and 
+ * may result an out-of-memory error.
+ * \param v Pointer to an initialized vector.
+ * \return Error code.
+ *
+ * \sa \ref igraph_vector_resize(), \ref igraph_vector_reserve().
+ * 
+ * Time complexity: operating system dependent. 
+ */
+
+int FUNCTION(igraph_vector,resize_min)(TYPE(igraph_vector)*v) {
+  long int size;
+  BASE *tmp;
+  if (v->stor_end == v->end) { return 0; }
+  
+  size = v->end - v->stor_begin;
+  tmp=igraph_Realloc(v->stor_begin, size, BASE);
+  if (tmp==0) {
+    IGRAPH_ERROR("cannot resize vector", IGRAPH_ENOMEM);
+  } else {
+    v->stor_begin = tmp;
+    v->stor_end = v->end = v->stor_begin + size;
+  }
+  
+  return 0;
+}
+
+#ifndef NOTORDERED
 
 /**
  * \ingroup vector
@@ -894,6 +1040,8 @@ long int FUNCTION(igraph_vector,which_min)(const TYPE(igraph_vector)* v) {
   return which;
 }
 
+#endif
+
 /**
  * \ingroup vector
  * \function igraph_vector_init_copy
@@ -969,7 +1117,7 @@ int FUNCTION(igraph_vector,copy)(TYPE(igraph_vector) *to,
   assert(from->stor_begin != NULL);
   to->stor_begin=igraph_Calloc(FUNCTION(igraph_vector,size)(from), BASE);
   if (to->stor_begin==0) {
-    IGRAPH_ERROR("canot copy vector", IGRAPH_ENOMEM);
+    IGRAPH_ERROR("cannot copy vector", IGRAPH_ENOMEM);
   }
   to->stor_end=to->stor_begin+FUNCTION(igraph_vector,size)(from);
   to->end=to->stor_end;
@@ -994,16 +1142,35 @@ int FUNCTION(igraph_vector,copy)(TYPE(igraph_vector) *to,
  */
 
 BASE FUNCTION(igraph_vector,sum)(const TYPE(igraph_vector) *v) {
-  BASE res=0;
+  BASE res=ZERO;
   BASE *p;
   assert(v != NULL);
   assert(v->stor_begin != NULL);
   for (p=v->stor_begin; p<v->end; p++) {
+#ifdef SUM
+    SUM(res,res,*p);
+#else
     res += *p;
+#endif
   }
   return res;
 }
 
+igraph_real_t FUNCTION(igraph_vector,sumsq)(const TYPE(igraph_vector) *v) {
+  igraph_real_t res=0.0;
+  BASE *p;
+  assert(v != NULL);
+  assert(v->stor_begin != NULL);
+  for (p=v->stor_begin; p<v->end; p++) {
+#ifdef SQ
+    res += SQ(*p);
+#else
+    res += (*p) * (*p);
+#endif
+  }
+  return res;
+}
+  
 /**
  * \ingroup vector
  * \function igraph_vector_prod
@@ -1019,15 +1186,60 @@ BASE FUNCTION(igraph_vector,sum)(const TYPE(igraph_vector) *v) {
  */
 
 BASE FUNCTION(igraph_vector,prod)(const TYPE(igraph_vector) *v) {
-  BASE res=1;
+  BASE res=ONE;
   BASE *p;
   assert(v != NULL);
   assert(v->stor_begin != NULL);
   for (p=v->stor_begin; p<v->end; p++) {
+#ifdef PROD
+    PROD(res,res,*p);
+#else
     res *= *p;
+#endif
   }
   return res;
 }
+
+/**
+ * \ingroup vector
+ * \function igraph_vector_cumsum
+ * \brief Calculates the cumulative sum of the elements in the vector.
+ *
+ * </para><para>
+ * \param to An initialized vector object that will store the cumulative
+ *           sums. Element i of this vector will store the sum of the elements
+ *           of the 'from' vector, up to and including element i.
+ * \param from The input vector.
+ * \return Error code.
+ * 
+ * Time complexity: O(n), the size of the vector. 
+ */
+
+int FUNCTION(igraph_vector,cumsum)(TYPE(igraph_vector) *to,
+                                   const TYPE(igraph_vector) *from) {
+  BASE res=ZERO;
+  BASE *p, *p2;
+
+  assert(from != NULL);
+  assert(from->stor_begin != NULL);
+  assert(to != NULL);
+  assert(to->stor_begin != NULL);
+
+  IGRAPH_CHECK(FUNCTION(igraph_vector,resize)(to, FUNCTION(igraph_vector,size)(from)));
+
+  for (p = from->stor_begin, p2 = to->stor_begin; p < from->end; p++, p2++) {
+#ifdef SUM
+    SUM(res,res,*p);
+#else
+    res += *p;
+#endif
+    *p2 = res;
+  }
+
+  return 0;
+}
+
+#ifndef NOTORDERED
 
 /**
  * \ingroup vector
@@ -1059,6 +1271,8 @@ int FUNCTION(igraph_vector,init_seq)(TYPE(igraph_vector) *v,
   return 0;
 }
 
+#endif
+
 /**
  * \ingroup vector
  * \function igraph_vector_remove_section
@@ -1080,8 +1294,11 @@ void FUNCTION(igraph_vector,remove_section)(TYPE(igraph_vector) *v,
 					    long int from, long int to) {
   assert(v != NULL);
   assert(v->stor_begin != NULL);
-  memmove(v->stor_begin+from, v->stor_begin+to,
-	  sizeof(BASE)*(v->end-v->stor_begin-to));
+  /* Not removing from the end? */
+  if (to < FUNCTION(igraph_vector,size)(v)) {
+    memmove(v->stor_begin+from, v->stor_begin+to,
+	    sizeof(BASE)*(v->end-v->stor_begin-to));
+  }
   v->end -= (to-from);
 }
 
@@ -1182,6 +1399,8 @@ void FUNCTION(igraph_vector,remove_negidx)(TYPE(igraph_vector) *v,
   v->end -= nremove;
 }
 
+#ifndef NOTORDERED
+
 /**
  * \ingroup vector
  * \function igraph_vector_isininterval
@@ -1240,23 +1459,24 @@ igraph_bool_t FUNCTION(igraph_vector,any_smaller)(const TYPE(igraph_vector) *v,
   return 0;
 }
 
+#endif
+
 /**
  * \ingroup vector
- * \function igraph_vector_is_equal
- * \brief Decides whether two vectors contain exactly the same elements
- * (in the same order).
+ * \function igraph_vector_all_e
+ * \brief Are all elements equal?
  * 
  * \param lhs The first vector.
  * \param rhs The second vector.
- * \return Positive integer if the two vectors are equal element by
- * element or zero if they are not.
+ * \return Positive integer (=true) if the elements in the \p lhs are all 
+ *    equal to the corresponding elements in \p rhs. Returns \c 0
+ *    (=false) if the lengths of the vectors don't match.
  * 
- * Time complexity: O(n), the length
- * of the vectors.
+ * Time complexity: O(n), the length of the vectors.
  */
 
-igraph_bool_t FUNCTION(igraph_vector,is_equal)(const TYPE(igraph_vector) *lhs, 
-					       const TYPE(igraph_vector) *rhs) {
+igraph_bool_t FUNCTION(igraph_vector,all_e)(const TYPE(igraph_vector) *lhs, 
+					    const TYPE(igraph_vector) *rhs) {
   long int i, s;
   assert(lhs != 0);
   assert(rhs != 0);
@@ -1268,13 +1488,188 @@ igraph_bool_t FUNCTION(igraph_vector,is_equal)(const TYPE(igraph_vector) *lhs,
     return 0;
   } else {
     for (i=0; i<s; i++) {
-      if (VECTOR(*lhs)[i] != VECTOR(*rhs)[i]) {
+      BASE l=VECTOR(*lhs)[i];
+      BASE r=VECTOR(*rhs)[i];
+#ifdef EQ
+      if (!EQ(l,r)) {
+#else
+      if (l!=r) {
+#endif
 	return 0;
       }
     }
     return 1;
   }
 }
+
+igraph_bool_t 
+FUNCTION(igraph_vector,is_equal)(const TYPE(igraph_vector) *lhs, 
+				 const TYPE(igraph_vector) *rhs) {
+  return FUNCTION(igraph_vector,all_e)(lhs, rhs);
+}
+
+#ifndef NOTORDERED
+
+/**
+ * \ingroup vector
+ * \function igraph_vector_all_l
+ * \brief Are all elements less?
+ * 
+ * \param lhs The first vector.
+ * \param rhs The second vector.
+ * \return Positive integer (=true) if the elements in the \p lhs are all 
+ *    less than the corresponding elements in \p rhs. Returns \c 0
+ *    (=false) if the lengths of the vectors don't match.
+ * 
+ * Time complexity: O(n), the length of the vectors.
+ */
+
+igraph_bool_t FUNCTION(igraph_vector,all_l)(const TYPE(igraph_vector) *lhs, 
+					    const TYPE(igraph_vector) *rhs) {
+  long int i, s;
+  assert(lhs != 0);
+  assert(rhs != 0);
+  assert(lhs->stor_begin != 0);
+  assert(rhs->stor_begin != 0);
+  
+  s=FUNCTION(igraph_vector,size)(lhs);
+  if (s != FUNCTION(igraph_vector,size)(rhs)) {
+    return 0;
+  } else {
+    for (i=0; i<s; i++) {
+      BASE l=VECTOR(*lhs)[i];
+      BASE r=VECTOR(*rhs)[i];
+      if (l>=r) {
+	return 0;
+      }
+    }
+    return 1;
+  }  
+}
+
+/**
+ * \ingroup vector
+ * \function igraph_vector_all_g
+ * \brief Are all elements greater?
+ * 
+ * \param lhs The first vector.
+ * \param rhs The second vector.
+ * \return Positive integer (=true) if the elements in the \p lhs are all 
+ *    greater than the corresponding elements in \p rhs. Returns \c 0
+ *    (=false) if the lengths of the vectors don't match.
+ * 
+ * Time complexity: O(n), the length of the vectors.
+ */
+
+igraph_bool_t FUNCTION(igraph_vector,all_g)(const TYPE(igraph_vector) *lhs, 
+					    const TYPE(igraph_vector) *rhs) {
+
+  long int i, s;
+  assert(lhs != 0);
+  assert(rhs != 0);
+  assert(lhs->stor_begin != 0);
+  assert(rhs->stor_begin != 0);
+  
+  s=FUNCTION(igraph_vector,size)(lhs);
+  if (s != FUNCTION(igraph_vector,size)(rhs)) {
+    return 0;
+  } else {
+    for (i=0; i<s; i++) {
+      BASE l=VECTOR(*lhs)[i];
+      BASE r=VECTOR(*rhs)[i];
+      if (l<=r) {
+	return 0;
+      }
+    }
+    return 1;
+  }  
+}
+
+/**
+ * \ingroup vector
+ * \function igraph_vector_all_le
+ * \brief Are all elements less or equal?
+ * 
+ * \param lhs The first vector.
+ * \param rhs The second vector.
+ * \return Positive integer (=true) if the elements in the \p lhs are all 
+ *    less than or equal to the corresponding elements in \p
+ *    rhs. Returns \c 0 (=false) if the lengths of the vectors don't
+ *    match.
+ * 
+ * Time complexity: O(n), the length of the vectors.
+ */
+
+igraph_bool_t 
+FUNCTION(igraph_vector,all_le)(const TYPE(igraph_vector) *lhs, 
+			       const TYPE(igraph_vector) *rhs) {
+  long int i, s;
+  assert(lhs != 0);
+  assert(rhs != 0);
+  assert(lhs->stor_begin != 0);
+  assert(rhs->stor_begin != 0);
+  
+  s=FUNCTION(igraph_vector,size)(lhs);
+  if (s != FUNCTION(igraph_vector,size)(rhs)) {
+    return 0;
+  } else {
+    for (i=0; i<s; i++) {
+      BASE l=VECTOR(*lhs)[i];
+      BASE r=VECTOR(*rhs)[i];
+      if (l>r) {
+	return 0;
+      }
+    }
+    return 1;
+  }  
+}
+
+/**
+ * \ingroup vector
+ * \function igraph_vector_all_ge
+ * \brief Are all elements greater or equal?
+ * 
+ * \param lhs The first vector.
+ * \param rhs The second vector.
+ * \return Positive integer (=true) if the elements in the \p lhs are all 
+ *    greater than or equal to the corresponding elements in \p
+ *    rhs. Returns \c 0 (=false) if the lengths of the vectors don't
+ *    match.
+ * 
+ * Time complexity: O(n), the length of the vectors.
+ */
+
+igraph_bool_t 
+FUNCTION(igraph_vector,all_ge)(const TYPE(igraph_vector) *lhs, 
+			       const TYPE(igraph_vector) *rhs) {
+  long int i, s;
+  assert(lhs != 0);
+  assert(rhs != 0);
+  assert(lhs->stor_begin != 0);
+  assert(rhs->stor_begin != 0);
+  
+  s=FUNCTION(igraph_vector,size)(lhs);
+  if (s != FUNCTION(igraph_vector,size)(rhs)) {
+    return 0;
+  } else {
+    for (i=0; i<s; i++) {
+      BASE l=VECTOR(*lhs)[i];
+      BASE r=VECTOR(*rhs)[i];
+      if (l<r) {
+	return 0;
+      }
+    }
+    return 1;
+  }  
+}
+
+#endif
+
+igraph_bool_t FUNCTION(igraph_i_vector,binsearch_slice)(const TYPE(igraph_vector) *v,
+                                                        BASE what, long int *pos,
+                                                        long int start, long int end);
+
+#ifndef NOTORDERED
 
 /**
  * \ingroup vector
@@ -1304,40 +1699,37 @@ igraph_bool_t FUNCTION(igraph_vector,is_equal)(const TYPE(igraph_vector) *lhs,
 
 igraph_bool_t FUNCTION(igraph_vector,binsearch)(const TYPE(igraph_vector) *v, 
 						BASE what, long int *pos) {
-  long int left=0;
-  long int right=FUNCTION(igraph_vector,size)(v)-1;
+  return FUNCTION(igraph_i_vector,binsearch_slice)(v, what, pos,
+      0, FUNCTION(igraph_vector,size)(v));
+}
 
-  if (right < 0) {
-    if (pos != 0) *pos=0;
-	return 0;
-  }
+igraph_bool_t FUNCTION(igraph_i_vector,binsearch_slice)(const TYPE(igraph_vector) *v,
+                                                        BASE what, long int *pos,
+                                                        long int start, long int end) {
+  long int left  = start;
+  long int right = end-1;
 
-  while (left < right-1) {
-    long int middle=(left+right)/2;
+  while (left <= right) {
+    /* (right + left) / 2 could theoretically overflow for long vectors */
+    long int middle = left + ((right - left) >> 1);
     if (VECTOR(*v)[middle] > what) {
-      right=middle;
+      right = middle - 1;
     } else if (VECTOR(*v)[middle] < what) {
-      left=middle;
+      left = middle + 1;
     } else {
-      left=middle;
-      break;
+      if (pos != 0) {
+        *pos = middle;
+      }
+      return 1;
     }
   }
 
-  if (VECTOR(*v)[left] < what) {
-    if (VECTOR(*v)[right] < what) left=right+1;
-    else left=right;
-  }
-  
+  /* if we are here, the element was not found */
   if (pos != 0) {
-    *pos=left;
+    *pos = left;
   }
-  
-  if (left < FUNCTION(igraph_vector,size)(v)) {
-    return VECTOR(*v)[left]==what;
-  } else { 
-    return 0;
-  }
+
+  return 0;
 }
 
 /**
@@ -1346,10 +1738,7 @@ igraph_bool_t FUNCTION(igraph_vector,binsearch)(const TYPE(igraph_vector) *v,
  * \brief Binary search, without returning the index.
  * 
  * </para><para>
- * It is assumed that the vector is sorted. If the specified element
- * (\p what) is not in the vector, then the
- * position of where it should be inserted (to keep the vector sorted)
- * is returned.
+ * It is assumed that the vector is sorted.
  * \param v The \type igraph_vector_t object.
  * \param what The element to search for.
  * \return Positive integer (true) if \p what is
@@ -1363,26 +1752,24 @@ igraph_bool_t FUNCTION(igraph_vector,binsearch)(const TYPE(igraph_vector) *v,
 igraph_bool_t FUNCTION(igraph_vector,binsearch2)(const TYPE(igraph_vector) *v, 
 						 BASE what) {
   long int left=0;
-  long int right=v->end - v->stor_begin-1;
+  long int right=FUNCTION(igraph_vector,size)(v)-1;
 
-  if (right<0) {
-    return 0;
-  }
-
-  while (left < right-1) {
-    long int middle=(left+right)/2;
-    if (VECTOR(*v)[middle] > what) {
-      right=middle;
-    } else if (VECTOR(*v)[middle] < what) {
-      left=middle;
+  while (left <= right) {
+    /* (right + left) / 2 could theoretically overflow for long vectors */
+    long int middle = left + ((right - left) >> 1);
+    if (what < VECTOR(*v)[middle]) {
+      right = middle - 1;
+    } else if (what > VECTOR(*v)[middle]) {
+      left = middle + 1;
     } else {
-      left=middle;
-      break;
+      return 1;
     }
   }
 
-  return VECTOR(*v)[left]==what || VECTOR(*v)[right]==what;
+  return 0;
 }
+
+#endif
 
 /**
  * \function igraph_vector_scale
@@ -1400,7 +1787,11 @@ igraph_bool_t FUNCTION(igraph_vector,binsearch2)(const TYPE(igraph_vector) *v,
 void FUNCTION(igraph_vector,scale)(TYPE(igraph_vector) *v, BASE by) {
   long int i;
   for (i=0; i<FUNCTION(igraph_vector,size)(v); i++) {
+#ifdef PROD
+    PROD(VECTOR(*v)[i], VECTOR(*v)[i], by);
+#else
     VECTOR(*v)[i] *= by;
+#endif
   }
 }
 
@@ -1419,7 +1810,11 @@ void FUNCTION(igraph_vector,scale)(TYPE(igraph_vector) *v, BASE by) {
 void FUNCTION(igraph_vector,add_constant)(TYPE(igraph_vector) *v, BASE plus) {
   long int i, n=FUNCTION(igraph_vector,size)(v);
   for (i=0; i<n; i++) {
+#ifdef SUM
+    SUM(VECTOR(*v)[i], VECTOR(*v)[i], plus);
+#else
     VECTOR(*v)[i] += plus;
+#endif
   }
 }
 
@@ -1440,7 +1835,11 @@ igraph_bool_t FUNCTION(igraph_vector,contains)(const TYPE(igraph_vector) *v,
 					       BASE e) {
   BASE *p=v->stor_begin;
   while (p<v->end) {
+#ifdef EQ
+    if (EQ(*p,e)) {
+#else
     if (*p==e) { 
+#endif
       return 1;
     }
     p++;
@@ -1473,7 +1872,11 @@ igraph_bool_t FUNCTION(igraph_vector,search)(const TYPE(igraph_vector) *v,
 					     long int *pos) {
   long int i, n=FUNCTION(igraph_vector,size)(v);  
   for (i=from; i<n; i++) {
+#ifdef EQ
+    if (EQ(VECTOR(*v)[i], what)) break;
+#else
     if (VECTOR(*v)[i]==what) break;
+#endif
   }
   
   if (i<n) {
@@ -1485,6 +1888,8 @@ igraph_bool_t FUNCTION(igraph_vector,search)(const TYPE(igraph_vector) *v,
     return 0;
   }
 }
+
+#ifndef NOTORDERED
 
 /**
  * \function igraph_vector_filter_smaller
@@ -1507,6 +1912,8 @@ int FUNCTION(igraph_vector,filter_smaller)(TYPE(igraph_vector) *v,
   FUNCTION(igraph_vector,remove_section)(v, 0, i+(s-i)/2);
   return 0;
 }
+
+#endif
 
 /**
  * \function igraph_vector_append
@@ -1546,16 +1953,18 @@ int FUNCTION(igraph_vector,get_interval)(const TYPE(igraph_vector) *v,
   return 0;
 }
 
+#ifndef NOTORDERED
+
 /**
  * \function igraph_vector_maxdifference
- * \brief The largest element of \p m1 - \p m2
+ * \brief The maximum absolute difference of \p m1 and \p m2
  *
- * The maximum the elementwise performed difference is returned.
- * Both vectors must be non-empty, but they not need to have the same
- * length, the extra elements in the longer vector are ignored.
+ * The element with the largest absolute value in \p m1 - \p m2 is
+ * returned. Both vectors must be non-empty, but they not need to have
+ * the same length, the extra elements in the longer vector are ignored.
  * \param m1 The first vector.
  * \param m2 The second vector.
- * \return The maximum of the difference of \p m1 and \p m2.
+ * \return The maximum absolute difference of \p m1 and \p m2.
  *
  * Time complexity: O(n), the number of elements in the shorter
  * vector.
@@ -1578,6 +1987,8 @@ BASE FUNCTION(igraph_vector,maxdifference)(const TYPE(igraph_vector) *m1,
   
   return diff;
 }
+
+#endif
 
 /**
  * \function igraph_vector_update
@@ -1636,10 +2047,10 @@ int FUNCTION(igraph_vector,swap)(TYPE(igraph_vector) *v1, TYPE(igraph_vector) *v
  * \function igraph_vector_swap_elements
  * \brief Swap two elements in a vector.
  * 
- * Note that currently no range checking if performed.
+ * Note that currently no range checking is performed.
  * \param v The input vector.
  * \param i Index of the first element.
- * \param j index of the second element. (Might be the same the
+ * \param j index of the second element. (Might be the same as the
  * first.)
  * \return Error code, currently always \c IGRAPH_SUCCESS.
  * 
@@ -1697,6 +2108,20 @@ int FUNCTION(igraph_vector,reverse)(TYPE(igraph_vector) *v) {
  * Time complexity: O(n),
  * n is the number of elements in the
  * vector. 
+ *
+ * </para><para>
+ * References:
+ * \clist
+ * \cli (Fisher &amp; Yates 1963)
+ *   R. A. Fisher and F. Yates. \emb Statistical Tables for Biological,
+ *   Agricultural and Medical Research. \eme Oliver and Boyd, 6th edition,
+ *   1963, page 37.
+ * \cli (Knuth 1998)
+ *   D. E. Knuth. \emb Seminumerical Algorithms, \eme volume 2 of \emb The Art
+ *   of Computer Programming. \eme Addison-Wesley, 3rd edition, 1998, page 145.
+ * \endclist
+ *
+ * \example examples/simple/igraph_fisher_yates_shuffle.c
  */
 
 int FUNCTION(igraph_vector,shuffle)(TYPE(igraph_vector) *v) {
@@ -1742,7 +2167,11 @@ int FUNCTION(igraph_vector,add)(TYPE(igraph_vector) *v1,
   }
   
   for (i=0; i<n1; i++) {
+#ifdef SUM
+    SUM(VECTOR(*v1)[i], VECTOR(*v1)[i], VECTOR(*v2)[i]);
+#else
     VECTOR(*v1)[i] += VECTOR(*v2)[i];
+#endif
   }
   
   return 0;
@@ -1752,7 +2181,7 @@ int FUNCTION(igraph_vector,add)(TYPE(igraph_vector) *v1,
  * \function igraph_vector_sub
  * \brief Subtract a vector from another one.
  * 
- * Substract the elements of \p v2 from \p v1, the result is stored in
+ * Subtract the elements of \p v2 from \p v1, the result is stored in
  * \p v1. The two vectors must have the same length.
  * \param v1 The first vector, to subtract from. The result is stored
  *    here.
@@ -1774,7 +2203,11 @@ int FUNCTION(igraph_vector,sub)(TYPE(igraph_vector) *v1,
   }
   
   for (i=0; i<n1; i++) {
+#ifdef DIFF
+    DIFF(VECTOR(*v1)[i], VECTOR(*v1)[i], VECTOR(*v2)[i]);
+#else
     VECTOR(*v1)[i] -= VECTOR(*v2)[i];
+#endif
   }
   
   return 0;
@@ -1805,7 +2238,11 @@ int FUNCTION(igraph_vector,mul)(TYPE(igraph_vector) *v1,
   }
   
   for (i=0; i<n1; i++) {
+#ifdef PROD
+    PROD(VECTOR(*v1)[i], VECTOR(*v1)[i], VECTOR(*v2)[i]);
+#else
     VECTOR(*v1)[i] *= VECTOR(*v2)[i];
+#endif
   }
   
   return 0;
@@ -1838,11 +2275,30 @@ int FUNCTION(igraph_vector,div)(TYPE(igraph_vector) *v1,
   }
   
   for (i=0; i<n1; i++) {
+#ifdef DIV
+    DIV(VECTOR(*v1)[i], VECTOR(*v1)[i], VECTOR(*v2)[i]);
+#else
     VECTOR(*v1)[i] /= VECTOR(*v2)[i];
+#endif
   }
   
   return 0;
 }
+
+#ifndef NOABS
+
+int FUNCTION(igraph_vector,abs)(TYPE(igraph_vector) *v) {
+  long int i, n=FUNCTION(igraph_vector,size)(v);
+  for (i=0; i<n; i++) {
+    VECTOR(*v)[i]= VECTOR(*v)[i] >= 0 ? VECTOR(*v)[i] : -VECTOR(*v)[i];
+  }
+  
+  return 0;
+}
+
+#endif
+
+#ifndef NOTORDERED
 
 /**
  * \function igraph_vector_minmax
@@ -1914,6 +2370,8 @@ int FUNCTION(igraph_vector,which_minmax)(const TYPE(igraph_vector) *v,
   return 0;
 }
 
+#endif
+
 /**
  * \function igraph_vector_isnull
  * \brief Are all elements zero?
@@ -1931,12 +2389,23 @@ igraph_bool_t FUNCTION(igraph_vector,isnull)(const TYPE(igraph_vector) *v) {
   long int n=FUNCTION(igraph_vector,size)(v);
   long int i=0;
   
-  while ( i<n && VECTOR(*v)[i]==0) {
+#ifdef EQ
+  while (i<n && EQ(VECTOR(*v)[i], ZERO)) {
+#else
+  while (i<n && VECTOR(*v)[i]==ZERO) {
+#endif
     i++;
   }
   
   return i==n;
 }
+
+#ifndef NOTORDERED
+
+int FUNCTION(igraph_i_vector,intersect_sorted)(
+    const TYPE(igraph_vector) *v1, long int begin1, long int end1,
+    const TYPE(igraph_vector) *v2, long int begin2, long int end2,
+    TYPE(igraph_vector) *result);
 
 /**
  * \function igraph_vector_intersect_sorted
@@ -1945,36 +2414,209 @@ igraph_bool_t FUNCTION(igraph_vector,isnull)(const TYPE(igraph_vector) *v) {
  * The elements that are contained in both vectors are stored in the result
  * vector. All three vectors must be initialized.
  *
+ * </para><para>
+ * Instead of the naive intersection which takes O(n), this function uses
+ * the set intersection method of Ricardo Baeza-Yates, which is more efficient
+ * when one of the vectors is significantly smaller than the other, and
+ * gives similar performance on average when the two vectors are equal.
+ *
+ * </para><para>
+ * The algorithm keeps the multiplicities of the elements: if an element appears
+ * k1 times in the first vector and k2 times in the second, the result
+ * will include that element min(k1, k2) times.
+ *
+ * </para><para>
+ * Reference: Baeza-Yates R: A fast set intersection algorithm for sorted
+ * sequences. In: Lecture Notes in Computer Science, vol. 3109/2004, pp.
+ * 400--408, 2004. Springer Berlin/Heidelberg. ISBN: 978-3-540-22341-2.
+ *
  * \param v1 the first vector
  * \param v2 the second vector
- * \param result the result vector
- * \param keep_multiplicity whether to preserve the multiplicity of the
- *   elements. If \c FALSE, all elements in the resulting vector will be
- *   unique
+ * \param result the result vector, which will also be sorted.
+ *
+ * Time complexity: O(m log(n)) where m is the size of the smaller vector
+ * and n is the size of the larger one.
  */
 int FUNCTION(igraph_vector,intersect_sorted)(const TYPE(igraph_vector) *v1,
-    const TYPE(igraph_vector) *v2, TYPE(igraph_vector) *result,
-    igraph_bool_t keep_multiplicity) {
-  long int i, j, k, i0, j0;
-  i0 = FUNCTION(igraph_vector,size)(v1);
-  j0 = FUNCTION(igraph_vector,size)(v2);
-  i = j = 0;
+    const TYPE(igraph_vector) *v2, TYPE(igraph_vector) *result) {
+  long int size1, size2;
+
+  size1 = FUNCTION(igraph_vector,size)(v1);
+  size2 = FUNCTION(igraph_vector,size)(v2);
+
   FUNCTION(igraph_vector,clear)(result);
-  while (i < i0 && j < j0) {
-    BASE element;
-    if (VECTOR(*v1)[i] == VECTOR(*v2)[j]) {
-      element = VECTOR(*v1)[i]; k=0;
-      while (i < i0 && VECTOR(*v1)[i] == element) { i++; k++; }
-      while (j < j0 && VECTOR(*v2)[j] == element) { j++; k++; }
-      if (!keep_multiplicity) k=1;
-      while (k>0) {
-        FUNCTION(igraph_vector,push_back)(result, element);
-        k--;
-      }
-    } else if (VECTOR(*v1)[i] < VECTOR(*v2)[j]) i++;
-    else j++;
+
+  if (size1 == 0 || size2 == 0)
+    return 0;
+
+  IGRAPH_CHECK(FUNCTION(igraph_i_vector,intersect_sorted)(
+    v1, 0, size1, v2, 0, size2, result));
+  return 0;
+}
+
+int FUNCTION(igraph_i_vector,intersect_sorted)(
+    const TYPE(igraph_vector) *v1, long int begin1, long int end1,
+    const TYPE(igraph_vector) *v2, long int begin2, long int end2,
+    TYPE(igraph_vector) *result) {
+  long int size1, size2, probe1, probe2;
+
+  if (begin1 == end1 || begin2 == end2)
+    return 0;
+
+  size1 = end1 - begin1;
+  size2 = end2 - begin2;
+
+  if (size1 < size2) {
+    probe1 = begin1 + (size1 >> 1);      /* pick the median element */
+    FUNCTION(igraph_i_vector,binsearch_slice)(v2, VECTOR(*v1)[probe1], &probe2, begin2, end2);
+    IGRAPH_CHECK(FUNCTION(igraph_i_vector,intersect_sorted)(
+        v1, begin1, probe1, v2, begin2, probe2, result
+    ));
+    if (!(probe2 == end2 || VECTOR(*v1)[probe1] < VECTOR(*v2)[probe2])) {
+      IGRAPH_CHECK(FUNCTION(igraph_vector,push_back)(result, VECTOR(*v2)[probe2]));
+      probe2++;
+    }
+    IGRAPH_CHECK(FUNCTION(igraph_i_vector,intersect_sorted)(
+        v1, probe1+1, end1, v2, probe2, end2, result
+    ));
+  } else {
+    probe2 = begin2 + (size2 >> 1);      /* pick the median element */
+    FUNCTION(igraph_i_vector,binsearch_slice)(v1, VECTOR(*v2)[probe2], &probe1, begin1, end1);
+    IGRAPH_CHECK(FUNCTION(igraph_i_vector,intersect_sorted)(
+        v1, begin1, probe1, v2, begin2, probe2, result
+    ));
+    if (!(probe1 == end1 || VECTOR(*v2)[probe2] < VECTOR(*v1)[probe1])) {
+      IGRAPH_CHECK(FUNCTION(igraph_vector,push_back)(result, VECTOR(*v2)[probe2]));
+      probe1++;
+    }
+    IGRAPH_CHECK(FUNCTION(igraph_i_vector,intersect_sorted)(
+        v1, probe1, end1, v2, probe2+1, end2, result
+    ));
   }
 
   return 0;
 }
 
+/**
+ * \function igraph_vector_difference_sorted
+ * \brief Calculates the difference between two sorted vectors (considered as sets)
+ *
+ * The elements that are contained in only the first vector but not the second are
+ * stored in the result vector. All three vectors must be initialized.
+ *
+ * \param v1 the first vector
+ * \param v2 the second vector
+ * \param result the result vector
+ */
+int FUNCTION(igraph_vector,difference_sorted)(const TYPE(igraph_vector) *v1,
+    const TYPE(igraph_vector) *v2, TYPE(igraph_vector) *result) {
+  long int i, j, i0, j0;
+  i0 = FUNCTION(igraph_vector,size)(v1);
+  j0 = FUNCTION(igraph_vector,size)(v2);
+  i = j = 0;
+
+  if (i0 == 0) {
+    /* v1 is empty, this is easy */
+    FUNCTION(igraph_vector,clear)(result);
+    return IGRAPH_SUCCESS;
+  }
+
+  if (j0 == 0) {
+    /* v2 is empty, this is easy */
+    IGRAPH_CHECK(FUNCTION(igraph_vector,resize)(result, i0));
+    memcpy(result->stor_begin, v1->stor_begin, sizeof(BASE) * i0);
+    return IGRAPH_SUCCESS;
+  }
+
+  FUNCTION(igraph_vector,clear)(result);
+
+  /* Copy the part of v1 that is less than the first element of v2 */
+  while (i < i0 && VECTOR(*v1)[i] < VECTOR(*v2)[j]) { i++; }
+  if (i > 0) {
+    IGRAPH_CHECK(FUNCTION(igraph_vector,resize)(result, i));
+    memcpy(result->stor_begin, v1->stor_begin, sizeof(BASE) * i);
+  }
+
+  while (i < i0 && j < j0) {
+    BASE element = VECTOR(*v1)[i];
+    if (element == VECTOR(*v2)[j]) {
+      i++; j++;
+      while (i < i0 && VECTOR(*v1)[i] == element) { i++; }
+      while (j < j0 && VECTOR(*v2)[j] == element) { j++; }
+    } else if (element < VECTOR(*v2)[j]) {
+      IGRAPH_CHECK(FUNCTION(igraph_vector,push_back)(result, element));
+      i++;
+    }
+    else j++;
+  }
+  if (i < i0) {
+    int oldsize = FUNCTION(igraph_vector,size)(result);
+    IGRAPH_CHECK(FUNCTION(igraph_vector,resize)(result, oldsize+i0-i));
+    memcpy(result->stor_begin+oldsize, v1->stor_begin+i, sizeof(BASE)*(i0-i));
+  }
+
+  return 0;
+}
+
+#endif
+
+#if defined(OUT_FORMAT)
+
+#ifndef USING_R
+int FUNCTION(igraph_vector,print)(const TYPE(igraph_vector) *v) {
+  long int i, n=FUNCTION(igraph_vector,size)(v);
+  if (n!=0) {
+#ifdef PRINTFUNC
+    PRINTFUNC(VECTOR(*v)[0]);
+#else
+    printf(OUT_FORMAT, VECTOR(*v)[0]);
+#endif
+  }
+  for (i=1; i<n; i++) {
+#ifdef PRINTFUNC
+    putchar(' '); PRINTFUNC(VECTOR(*v)[i]);
+#else
+    printf(" " OUT_FORMAT, VECTOR(*v)[i]);
+#endif
+  }
+  printf("\n");
+  return 0;
+}
+#endif
+
+int FUNCTION(igraph_vector,fprint)(const TYPE(igraph_vector) *v, FILE *file) {
+  long int i, n=FUNCTION(igraph_vector,size)(v);
+  if (n!=0) {
+#ifdef FPRINTFUNC
+    FPRINTFUNC(file, VECTOR(*v)[0]);
+#else
+    fprintf(file, OUT_FORMAT, VECTOR(*v)[0]);
+#endif
+  }
+  for (i=1; i<n; i++) {
+#ifdef FPRINTFUNC
+    fputc(' ', file); FPRINTFUNC(file, VECTOR(*v)[i]);
+#else
+    fprintf(file, " " OUT_FORMAT, VECTOR(*v)[i]);
+#endif
+  }
+  fprintf(file, "\n");
+  return 0;
+}
+
+#endif
+
+int FUNCTION(igraph_vector,index)(const TYPE(igraph_vector) *v,
+                                  TYPE(igraph_vector) *newv,
+                                  const igraph_vector_t *idx) {
+  
+  long int i, newlen=igraph_vector_size(idx);
+  IGRAPH_CHECK(FUNCTION(igraph_vector,resize)(newv, newlen));
+  
+  for (i=0; i<newlen; i++) {
+    long int j=VECTOR(*idx)[i];
+    VECTOR(*newv)[i] = VECTOR(*v)[j];
+  }
+  
+  return 0;
+}

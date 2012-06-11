@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2006  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2006-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,8 +21,10 @@
 
 */
 
-#include "types.h"
-#include "memory.h"
+#include "igraph_types.h"
+#include "igraph_types_internal.h"
+#include "igraph_memory.h"
+#include "igraph_error.h"
 #include "config.h"
 #include <string.h>
 
@@ -43,7 +45,7 @@ void igraph_hashtable_destroy(igraph_hashtable_t *ht) {
   igraph_strvector_destroy(&ht->defaults);
 }
 
-/* Note: may leave the hashtable in an inconsistent state if a new
+/* Note: may leave the hash table in an inconsistent state if a new
    element is added, but this is not a big problem, since while the
    defaults, or the defaults plus the elements may contain more elements
    than the keys trie, but the data is always retrieved based on the trie

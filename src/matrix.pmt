@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2003, 2004, 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2003-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@
 
 */
 
-#include "memory.h"
-#include "random.h"
-#include "error.h"
+#include "igraph_memory.h"
+#include "igraph_random.h"
+#include "igraph_error.h"
 
 #include <assert.h>
 #include <string.h> 		/* memcpy & co. */
@@ -35,7 +35,7 @@
  * <para>This type is just an interface to \type igraph_vector_t.</para>
  *
  * <para>The \type igraph_matrix_t type usually stores n
- * elements in O(n) space, but not always, see the documentation of
+ * elements in O(n) space, but not always. See the documentation of
  * the vector type.</para>
  */
 
@@ -50,9 +50,9 @@
  * \brief Initializes a matrix.
  * 
  * </para><para>
- * Every matrix needs to be initialized before using it, this is done
+ * Every matrix needs to be initialized before using it. This is done
  * by calling this function. A matrix has to be destroyed if it is not
- * needed any more, see \ref igraph_matrix_destroy().
+ * needed any more; see \ref igraph_matrix_destroy().
  * \param m Pointer to a not yet initialized matrix object to be
  *        initialized. 
  * \param nrow The number of rows in the matrix.
@@ -91,6 +91,29 @@ void FUNCTION(igraph_matrix,destroy)(TYPE(igraph_matrix) *m) {
 }
 
 /**
+ * \ingroup matrix
+ * \function igraph_matrix_capacity
+ * \brief Returns the number of elements allocated for a matrix.
+ * 
+ * Note that this might be different from the size of the matrix (as 
+ * queried by \ref igraph_matrix_size(), and specifies how many elements 
+ * the matrix can hold, without reallocation.
+ * \param v Pointer to the (previously initialized) matrix object
+ *          to query.
+ * \return The allocated capacity.
+ * 
+ * \sa \ref igraph_matrix_size(), \ref igraph_matrix_nrow(),
+ * \ref igraph_matrix_ncol(). 
+ * 
+ * Time complexity: O(1).
+ */
+
+long int FUNCTION(igraph_matrix,capacity)(const TYPE(igraph_matrix) *m) {
+  return FUNCTION(igraph_vector,capacity)(&m->data);
+}
+
+
+/**
  * \section igraph_matrix_accessing_elements Accessing elements of a matrix
  */
 
@@ -102,7 +125,7 @@ void FUNCTION(igraph_matrix,destroy)(TYPE(igraph_matrix) *m) {
  * </para><para>
  * This function resizes a matrix by adding more elements to it.
  * The matrix contains arbitrary data after resizing it.
- * Ie. after calling this function you cannot expect that element
+ * That is, after calling this function you cannot expect that element
  * (i,j) in the matrix remains the
  * same as before.  
  * \param m Pointer to an already initialized matrix object.
@@ -122,6 +145,42 @@ int FUNCTION(igraph_matrix,resize)(TYPE(igraph_matrix) *m, long int nrow, long i
   m->ncol=ncol;
   return 0;
 }
+
+/**
+ * \ingroup matrix
+ * \function igraph_matrix_resize_min
+ * \brief Deallocates unused memory for a matrix.
+ * 
+ * </para><para>
+ * Note that this function might fail if there is not enough memory
+ * available. 
+ * 
+ * </para><para>
+ * Also note, that this function leaves the matrix intact, i.e. 
+ * it does not destroy any of the elements. However, usually it involves 
+ * copying the matrix in memory.
+ * \param m Pointer to an initialized matrix.
+ * \return Error code.
+ * 
+ * \sa \ref igraph_matrix_resize().
+ * 
+ * Time complexity: operating system dependent.
+ */
+
+int FUNCTION(igraph_matrix,resize_min)(TYPE(igraph_matrix) *m) {
+  TYPE(igraph_vector) tmp;
+  long int size=FUNCTION(igraph_matrix,size)(m);
+  long int capacity=FUNCTION(igraph_matrix,capacity)(m);
+  if (size == capacity) { return 0; }
+  
+  IGRAPH_CHECK(FUNCTION(igraph_vector,init)(&tmp, size));
+  FUNCTION(igraph_vector,update)(&tmp, &m->data);
+  FUNCTION(igraph_vector,destroy)(&m->data);
+  m->data = tmp;
+  
+  return 0;
+}
+
 
 /**
  * \ingroup matrix
@@ -176,10 +235,10 @@ long int FUNCTION(igraph_matrix,ncol)(const TYPE(igraph_matrix) *m) {
  * </para><para>
  * The matrix is copied columnwise, as this is the format most
  * programs and languages use.
- * The C array should be of sufficient size, there are (of course) not
- * range checks done.
+ * The C array should be of sufficient size; there are (of course) no
+ * range checks.
  * \param m Pointer to an initialized matrix object.
- * \param to Pointer to a C array, the place to copy the data to.
+ * \param to Pointer to a C array; the place to copy the data to.
  * \return Error code.
  *
  * Time complexity: O(n),
@@ -194,7 +253,7 @@ void FUNCTION(igraph_matrix,copy_to)(const TYPE(igraph_matrix) *m, BASE *to) {
 /** 
  * \ingroup matrix
  * \function igraph_matrix_null
- * \brief Sets all element in a matrix to zero.
+ * \brief Sets all elements in a matrix to zero.
  * 
  * \param m Pointer to an initialized matrix object.
  * 
@@ -235,7 +294,7 @@ int FUNCTION(igraph_matrix,add_cols)(TYPE(igraph_matrix) *m, long int n) {
  *   isn't enough memory for the operation.
  * 
  * Time complexity: linear with the number of elements of the new,
- * resized, matrix.
+ * resized matrix.
  */
 
 int FUNCTION(igraph_matrix,add_rows)(TYPE(igraph_matrix) *m, long int n) {
@@ -279,9 +338,9 @@ int FUNCTION(igraph_matrix,remove_col)(TYPE(igraph_matrix) *m, long int col) {
 
 int FUNCTION(igraph_matrix,permdelete_rows)(TYPE(igraph_matrix) *m, long int *index, long int nremove) {
   long int i, j;
-  for (i=0; i<m->ncol; i++) {
-    for (j=0; j<m->nrow; j++) {
-      if (index[j] != 0) {
+  for (j=0; j<m->nrow; j++) {
+    if (index[j] != 0) {
+      for (i=0; i<m->ncol; i++) {
         MATRIX(*m, index[j]-1, i) = MATRIX(*m, j, i);
       }
     }
@@ -326,7 +385,7 @@ int FUNCTION(igraph_matrix,delete_rows_neg)(TYPE(igraph_matrix) *m,
  * \brief Copies a matrix.
  *
  * </para><para>
- * Creates a matrix object by copying another one.
+ * Creates a matrix object by copying from an existing matrix.
  * \param to Pointer to an uninitialized matrix object.
  * \param from The initialized matrix object to copy.
  * \return Error code, \c IGRAPH_ENOMEM if there
@@ -341,6 +400,8 @@ int FUNCTION(igraph_matrix,copy)(TYPE(igraph_matrix) *to, const TYPE(igraph_matr
   to->ncol = from->ncol;
   return FUNCTION(igraph_vector,copy)(&to->data, &from->data);
 }
+
+#ifndef NOTORDERED
 
 /**
  * \function igraph_matrix_max
@@ -358,6 +419,8 @@ int FUNCTION(igraph_matrix,copy)(TYPE(igraph_matrix) *to, const TYPE(igraph_matr
 igraph_real_t FUNCTION(igraph_matrix,max)(const TYPE(igraph_matrix) *m) {
   return FUNCTION(igraph_vector,max)(&m->data);
 }
+
+#endif
 
 /**
  * \function igraph_matrix_scale
@@ -377,7 +440,7 @@ void FUNCTION(igraph_matrix,scale)(TYPE(igraph_matrix) *m, BASE by) {
 
 /**
  * \function igraph_matrix_select_rows
- * \brief Select some rows of a matrix
+ * \brief Select some rows of a matrix.
  * 
  * This function selects some rows of a matrix and returns them in a
  * new matrix. The result matrix should be initialized before calling
@@ -385,7 +448,7 @@ void FUNCTION(igraph_matrix,scale)(TYPE(igraph_matrix) *m, BASE by) {
  * \param m The input matrix.
  * \param res The result matrix. It should be initialized and will be
  *    resized as needed.
- * \param rows Vector, it contains the row indices (starting with
+ * \param rows Vector; it contains the row indices (starting with
  *    zero) to extract. Note that no range checking is performed.
  * \return Error code.
  * 
@@ -410,14 +473,53 @@ int FUNCTION(igraph_matrix,select_rows)(const TYPE(igraph_matrix) *m,
 }
 
 /**
- * \function igraph_matrix_get_col
- * \brief Select a column
+ * \function igraph_matrix_select_rows_cols
+ * \brief Select some rows and columns of a matrix.
  * 
- * Extract a column of a matrix and return it in a vector.
+ * This function selects some rows and columns of a matrix and returns
+ * them in a new matrix. The result matrix should be initialized before
+ * calling the function.
+ * \param m The input matrix.
+ * \param res The result matrix. It should be initialized and will be
+ *    resized as needed.
+ * \param rows Vector; it contains the row indices (starting with
+ *    zero) to extract. Note that no range checking is performed.
+ * \param cols Vector; it contains the column indices (starting with
+ *    zero) to extract. Note that no range checking is performed.
+ * \return Error code.
+ * 
+ * Time complexity: O(nm), n is the number of rows, m the number of
+ * columns of the result matrix.
+ */
+
+int FUNCTION(igraph_matrix,select_rows_cols)(const TYPE(igraph_matrix) *m, 
+					TYPE(igraph_matrix) *res, 
+					const igraph_vector_t *rows,
+					const igraph_vector_t *cols) {
+  long int nrows=igraph_vector_size(rows);
+  long int ncols=igraph_vector_size(cols);
+  long int i, j;
+  
+  IGRAPH_CHECK(FUNCTION(igraph_matrix,resize)(res, nrows, ncols));
+  for (i=0; i<nrows; i++) {
+    for (j=0; j<ncols; j++) {
+      MATRIX(*res, i, j) = MATRIX(*m, (long int)VECTOR(*rows)[i],
+	                                  (long int)VECTOR(*cols)[j]);
+    }
+  }
+  
+  return 0;
+}
+
+/**
+ * \function igraph_matrix_get_col
+ * \brief Select a column.
+ * 
+ * Extract a column of a matrix and return it as a vector.
  * \param m The input matrix.
  * \param res The result will we stored in this vector. It should be
  *   initialized and will be resized as needed.
- * \param index The index of the solumn to select.
+ * \param index The index of the column to select.
  * \return Error code.
  * 
  * Time complexity: O(n), the number of rows in the matrix.
@@ -438,7 +540,7 @@ int FUNCTION(igraph_matrix,get_col)(const TYPE(igraph_matrix) *m,
 
 /**
  * \function igraph_matrix_sum
- * \brief Sum of elements
+ * \brief Sum of elements.
  * 
  * Returns the sum of the elements of a matrix.
  * \param m The input matrix.
@@ -447,41 +549,132 @@ int FUNCTION(igraph_matrix,get_col)(const TYPE(igraph_matrix) *m,
  * Time complexity: O(mn), the number of elements in the matrix.
  */
 
-igraph_real_t FUNCTION(igraph_matrix,sum)(const TYPE(igraph_matrix) *m) {
+BASE FUNCTION(igraph_matrix,sum)(const TYPE(igraph_matrix) *m) {
   return FUNCTION(igraph_vector,sum)(&m->data);
 }
 
 /**
- * \function igraph_matrix_is_equal
- * \brief Are two matrices equal?
+ * \function igraph_matrix_all_e
+ * \brief Are all elements equal?
  * 
- * Decides whether two matrices are equal. Two matrices are equal if
- * they have the same size and contain exactly the same elements.
- * \param m1 The first matrix.
- * \param m2 The second matrix.
- * \return \c TRUE if they are equal, \c FALSE otherwise.
+ * \param lhs The first matrix.
+ * \param rhs The second matrix.
+ * \return Positive integer (=true) if the elements in the \p lhs are all 
+ *    equal to the corresponding elements in \p rhs. Returns \c 0
+ *    (=false) if the dimensions of the matrices don't match.
  * 
- * Time complexity: O(1) if the sizes are different, O(mn) otherwise.
+ * Time complexity: O(nm), the size of the matrices.
  */
 
-igraph_bool_t FUNCTION(igraph_matrix,is_equal)(const TYPE(igraph_matrix) *m1, 
-					      const TYPE(igraph_matrix) *m2) {
-  return m1->ncol==m2->ncol && m1->nrow==m2->nrow &&
-    FUNCTION(igraph_vector,is_equal)(&m1->data, &m2->data);
+igraph_bool_t FUNCTION(igraph_matrix,all_e)(const TYPE(igraph_matrix) *lhs, 
+					    const TYPE(igraph_matrix) *rhs) {
+  return lhs->ncol==rhs->ncol && lhs->nrow==rhs->nrow &&
+    FUNCTION(igraph_vector,all_e)(&lhs->data, &rhs->data);
+}
+
+igraph_bool_t 
+FUNCTION(igraph_matrix,is_equal)(const TYPE(igraph_matrix) *lhs, 
+				 const TYPE(igraph_matrix) *rhs) {
+  return FUNCTION(igraph_matrix,all_e)(lhs, rhs);
+}
+
+#ifndef NOTORDERED
+
+/**
+ * \function igraph_matrix_all_l
+ * \brief Are all elements less?
+ * 
+ * \param lhs The first matrix.
+ * \param rhs The second matrix.
+ * \return Positive integer (=true) if the elements in the \p lhs are all 
+ *    less than the corresponding elements in \p rhs. Returns \c 0
+ *    (=false) if the dimensions of the matrices don't match.
+ * 
+ * Time complexity: O(nm), the size of the matrices.
+ */
+
+igraph_bool_t FUNCTION(igraph_matrix,all_l)(const TYPE(igraph_matrix) *lhs, 
+					    const TYPE(igraph_matrix) *rhs) {
+  return lhs->ncol==rhs->ncol && lhs->nrow==rhs->nrow &&
+    FUNCTION(igraph_vector,all_l)(&lhs->data, &rhs->data);
 }
 
 /**
- * \function igraph_matrix_maxdifference
- * \brief Maximum difference
+ * \function igraph_matrix_all_g
+ * \brief Are all elements greater?
  * 
- * Calculate the maximum difference of two matrices. Both matrices
- * must be non-empty. If their size differs then a warning is given
- * and the comparision is performed by vectors columnwise from both
- * matrices, columnwise, the remaining elements in the larger vector
- * are ignored.
+ * \param lhs The first matrix.
+ * \param rhs The second matrix.
+ * \return Positive integer (=true) if the elements in the \p lhs are all 
+ *    greater than the corresponding elements in \p rhs. Returns \c 0
+ *    (=false) if the dimensions of the matrices don't match.
+ * 
+ * Time complexity: O(nm), the size of the matrices.
+ */
+
+igraph_bool_t FUNCTION(igraph_matrix,all_g)(const TYPE(igraph_matrix) *lhs, 
+					    const TYPE(igraph_matrix) *rhs) {
+  return lhs->ncol==rhs->ncol && lhs->nrow==rhs->nrow &&
+    FUNCTION(igraph_vector,all_g)(&lhs->data, &rhs->data);
+}
+
+/**
+ * \function igraph_matrix_all_le
+ * \brief Are all elements less or equal?
+ * 
+ * \param lhs The first matrix.
+ * \param rhs The second matrix.
+ * \return Positive integer (=true) if the elements in the \p lhs are all 
+ *    less than or equal to the corresponding elements in \p
+ *    rhs. Returns \c 0 (=false) if the dimensions of the matrices
+ *    don't match.
+ * 
+ * Time complexity: O(nm), the size of the matrices.
+ */
+
+igraph_bool_t 
+FUNCTION(igraph_matrix,all_le)(const TYPE(igraph_matrix) *lhs, 
+			       const TYPE(igraph_matrix) *rhs) {
+  return lhs->ncol==rhs->ncol && lhs->nrow==rhs->nrow &&
+    FUNCTION(igraph_vector,all_le)(&lhs->data, &rhs->data);
+}
+
+/**
+ * \function igraph_matrix_all_ge
+ * \brief Are all elements greater or equal?
+ * 
+ * \param lhs The first matrix.
+ * \param rhs The second matrix.
+ * \return Positive integer (=true) if the elements in the \p lhs are all 
+ *    greater than or equal to the corresponding elements in \p
+ *    rhs. Returns \c 0 (=false) if the dimensions of the matrices
+ *    don't match.
+ * 
+ * Time complexity: O(nm), the size of the matrices.
+ */
+
+igraph_bool_t 
+FUNCTION(igraph_matrix,all_ge)(const TYPE(igraph_matrix) *lhs, 
+			       const TYPE(igraph_matrix) *rhs) {
+  return lhs->ncol==rhs->ncol && lhs->nrow==rhs->nrow &&
+    FUNCTION(igraph_vector,all_ge)(&lhs->data, &rhs->data);
+}
+
+#endif
+
+#ifndef NOTORDERED
+
+/**
+ * \function igraph_matrix_maxdifference
+ * \brief Maximum absolute difference between two matrices.
+ * 
+ * Calculate the maximum absolute difference of two matrices. Both matrices
+ * must be non-empty. If their dimensions differ then a warning is given and
+ * the comparison is performed by vectors columnwise from both matrices.
+ * The remaining elements in the larger vector are ignored.
  * \param m1 The first matrix.
  * \param m2 The second matrix.
- * \return The maximum of \c m1 - \c m2.
+ * \return The element with the largest absolute value in \c m1 - \c m2.
  * 
  * Time complexity: O(mn), the elements in the smaller matrix.
  */
@@ -498,9 +691,11 @@ BASE FUNCTION(igraph_matrix,maxdifference)(const TYPE(igraph_matrix) *m1,
   return FUNCTION(igraph_vector,maxdifference)(&m1->data, &m2->data);
 }
 
+#endif
+
 /**
  * \function igraph_matrix_transpose
- * \brief Transpose
+ * \brief Transpose a matrix.
  * 
  * Calculate the transpose of a matrix. Note that the function
  * reallocates the memory used for the matrix.
@@ -534,7 +729,7 @@ int FUNCTION(igraph_matrix,transpose)(TYPE(igraph_matrix) *m) {
 
 /**
  * \function igraph_matrix_e
- * Extract an element
+ * Extract an element from a matrix.
  * 
  * Use this if you need a function for some reason and cannot use the
  * \ref MATRIX macro. Note that no range checking is performed.
@@ -553,7 +748,7 @@ BASE FUNCTION(igraph_matrix,e)(const TYPE(igraph_matrix) *m,
 
 /**
  * \function igraph_matrix_e_ptr
- * Pointer to an element
+ * Pointer to an element of a matrix.
  * 
  * The function returns a pointer to an element. No range checking is
  * performed. 
@@ -574,7 +769,7 @@ BASE* FUNCTION(igraph_matrix,e_ptr)(const TYPE(igraph_matrix) *m,
  * \function igraph_matrix_set
  * Set an element.
  * 
- * Set and element of a matrix. No range cheking is performed.
+ * Set an element of a matrix. No range checking is performed.
  * \param m The input matrix.
  * \param row The row index.
  * \param col The column index.
@@ -610,7 +805,7 @@ void FUNCTION(igraph_matrix,fill)(TYPE(igraph_matrix) *m, BASE e) {
  * This function replicates \p from in the matrix \p to. 
  * Note that \p to must be already initialized.
  * \param to The result matrix.
- * \param from The matrix to replicate, it is left unchanged.
+ * \param from The matrix to replicate; it is left unchanged.
  * \return Error code.
  * 
  * Time complexity: O(mn), the number of elements.
@@ -626,12 +821,12 @@ int FUNCTION(igraph_matrix,update)(TYPE(igraph_matrix) *to,
 
 /**
  * \function igraph_matrix_rbind
- * Combine two matrices rowwise
+ * Combine two matrices rowwise.
  *
  * This function places the rows of \p from below the rows of \c to
  * and stores the result in \p to. The number of columns in the two
  * matrices must match.
- * \param to The upper matrix, the result is also stored here.
+ * \param to The upper matrix; the result is also stored here.
  * \param from The lower matrix. It is left unchanged.
  * \return Error code.
  * 
@@ -645,7 +840,7 @@ int FUNCTION(igraph_matrix,rbind)(TYPE(igraph_matrix) *to,
   long int torows=to->nrow, fromrows=from->nrow;
   long int offset, c, r, index, offset2;
   if (tocols != fromcols) {
-    IGRAPH_ERROR("Cannot do rbind, number of colums do not match", IGRAPH_EINVAL);
+    IGRAPH_ERROR("Cannot do rbind, number of columns do not match", IGRAPH_EINVAL);
   }
   
   IGRAPH_CHECK(FUNCTION(igraph_vector,resize)(&to->data, 
@@ -673,11 +868,11 @@ int FUNCTION(igraph_matrix,rbind)(TYPE(igraph_matrix) *to,
 
 /**
  * \function igraph_matrix_cbind
- * Combine matrices, columnwise.
+ * Combine matrices columnwise.
  * 
  * This function places the columns of \p from on the right of \p to,
  * and stores the result in \p to.
- * \param to The left matrix, the result is stored here too.
+ * \param to The left matrix; the result is stored here too.
  * \param from The right matrix. It is left unchanged.
  * \return Error code.
  * 
@@ -699,10 +894,10 @@ int FUNCTION(igraph_matrix,cbind)(TYPE(igraph_matrix) *to,
 
 /**
  * \function igraph_matrix_swap
- * Swap two matrices
+ * Swap two matrices.
  * 
- * The contents of the two matrices will be swapped. They must be the
- * same size.
+ * The contents of the two matrices will be swapped. They must have the
+ * same dimensions.
  * \param m1 The first matrix.
  * \param m2 The second matrix.
  * \return Error code.
@@ -719,11 +914,11 @@ int FUNCTION(igraph_matrix,swap)(TYPE(igraph_matrix) *m1, TYPE(igraph_matrix) *m
 
 /**
  * \function igraph_matrix_get_row
- * Extract a row
+ * Extract a row.
  * 
  * Extract a row from a matrix and return it as a vector.
  * \param m The input matrix.
- * \param res Pointer to an initialized vector, it will be resized if
+ * \param res Pointer to an initialized vector; it will be resized if
  *   needed.
  * \param index The index of the row to select.
  * \return Error code.
@@ -751,9 +946,10 @@ int FUNCTION(igraph_matrix,get_row)(const TYPE(igraph_matrix) *m,
  * \function igraph_matrix_set_row
  * Set a row from a vector.
  * 
- * Sets the elements of a row, from the given vector. The length of
+ * Sets the elements of a row with the given vector. This has the effect of
+ * setting row \c index to have the elements in the vector \c v. The length of
  * the vector and the number of columns in the matrix must match,
- * otherwise and error is triggered.
+ * otherwise an error is triggered.
  * \param m The input matrix.
  * \param v The vector containing the new elements of the row.
  * \param index Index of the row to set.
@@ -783,9 +979,10 @@ int FUNCTION(igraph_matrix,set_row)(TYPE(igraph_matrix) *m,
  * \function igraph_matrix_set_col
  * Set a column from a vector.
  *
- * Sets the elements of a column, from the given vector. The length of
+ * Sets the elements of a column with the given vector. In effect, column
+ * \c index will be set with elements from the vector \c v. The length of
  * the vector and the number of rows in the matrix must match,
- * otherwise and error is triggered.
+ * otherwise an error is triggered.
  * \param m The input matrix.
  * \param v The vector containing the new elements of the column.
  * \param index Index of the column to set.
@@ -813,7 +1010,7 @@ int FUNCTION(igraph_matrix,set_col)(TYPE(igraph_matrix) *m,
 
 /**
  * \function igraph_matrix_swap_rows
- * Swap two rows
+ * Swap two rows.
  * 
  * Swap two rows in the matrix.
  * \param m The input matrix.
@@ -844,7 +1041,7 @@ int FUNCTION(igraph_matrix,swap_rows)(TYPE(igraph_matrix) *m,
 
 /**
  * \function igraph_matrix_swap_cols
- * Swap two columns
+ * Swap two columns.
  * 
  * Swap two columns in the matrix.
  * \param m The input matrix.
@@ -889,10 +1086,10 @@ void FUNCTION(igraph_matrix,add_constant)(TYPE(igraph_matrix) *m, BASE plus) {
  * \function igraph_matrix_add
  * Add two matrices.
  * 
- * Add \p m2 to \p m1, and store the result in \p m1. The size of the
+ * Add \p m2 to \p m1, and store the result in \p m1. The dimensions of the
  * matrices must match.
- * \param m1 The first matrix, the result will be stored here.
- * \param m2 The second matrix, it is left unchanged.
+ * \param m1 The first matrix; the result will be stored here.
+ * \param m2 The second matrix; it is left unchanged.
  * \return Error code.
  * 
  * Time complexity: O(mn), the number of elements.
@@ -911,9 +1108,9 @@ int FUNCTION(igraph_matrix,add)(TYPE(igraph_matrix) *m1,
  * Difference of two matrices.
  * 
  * Subtract \p m2 from \p m1 and store the result in \p m1.
- * The size of the two matrices must match.
- * \param m1 The first matrix, the result is stored here.
- * \param m2 The second matrix, it is left unchanged.
+ * The dimensions of the two matrices must match.
+ * \param m1 The first matrix; the result is stored here.
+ * \param m2 The second matrix; it is left unchanged.
  * \return Error code.
  * 
  * Time complexity: O(mn), the number of elements.
@@ -932,9 +1129,9 @@ int FUNCTION(igraph_matrix,sub)(TYPE(igraph_matrix) *m1,
  * Elementwise multiplication.
  * 
  * Multiply \p m1 by \p m2 elementwise and store the result in \p m1.
- * The size of the two matrices must match.
- * \param m1 The first matrix, the result is stored here.
- * \param m2 The second matrix, it is left unchanged.
+ * The dimensions of the two matrices must match.
+ * \param m1 The first matrix; the result is stored here.
+ * \param m2 The second matrix; it is left unchanged.
  * \return Error code.
  * 
  * Time complexity: O(mn), the number of elements.
@@ -953,8 +1150,8 @@ int FUNCTION(igraph_matrix,mul_elements)(TYPE(igraph_matrix) *m1,
  * Elementwise division.
  * 
  * Divide \p m1 by \p m2 elementwise and store the result in \p m1.
- * The size of the two matrices must match.
- * \param m1 The divident. The result is store here.
+ * The dimensions of the two matrices must match.
+ * \param m1 The dividend. The result is store here.
  * \param m2 The divisor. It is left unchanged.
  * \return Error code.
  * 
@@ -968,6 +1165,8 @@ int FUNCTION(igraph_matrix,div_elements)(TYPE(igraph_matrix) *m1,
   }
   return FUNCTION(igraph_vector,div)(&m1->data, &m2->data);
 }
+
+#ifndef NOTORDERED
 
 /**
  * \function igraph_matrix_min
@@ -1082,6 +1281,8 @@ int FUNCTION(igraph_matrix,which_minmax)(const TYPE(igraph_matrix) *m,
   return 0;
 }
 
+#endif
+
 /**
  * \function igraph_matrix_isnull
  * Check for a null matrix.
@@ -1137,9 +1338,13 @@ igraph_bool_t FUNCTION(igraph_matrix,is_symmetric)(const TYPE(igraph_matrix) *m)
   }
   for (r=1; r<n; r++) {
     for (c=0; c<r; c++) {
-      if (MATRIX(*m, r, c) != MATRIX(*m, c, r)) {
-	return 0;
-      }
+      BASE a1=MATRIX(*m, r, c);
+      BASE a2=MATRIX(*m, c, r);
+#ifdef EQ      
+      if (!EQ(a1,a2)) { return 0; }
+#else
+      if (a1 != a2) { return 0; }
+#endif
     }
   }
   return 1;
@@ -1149,25 +1354,25 @@ igraph_bool_t FUNCTION(igraph_matrix,is_symmetric)(const TYPE(igraph_matrix) *m)
  * \function igraph_matrix_prod
  * Product of the elements.
  * 
- * Note this function can result an overflow easily, even for not too
+ * Note this function can result in overflow easily, even for not too
  * big matrices.
- * \param The input matrix.
+ * \param m The input matrix.
  * \return The product of the elements.
  * 
  * Time complexity: O(mn), the number of elements.
  */
 
-igraph_real_t FUNCTION(igraph_matrix,prod)(const TYPE(igraph_matrix) *m) {
+BASE FUNCTION(igraph_matrix,prod)(const TYPE(igraph_matrix) *m) {
   return FUNCTION(igraph_vector,prod)(&m->data);
 }
 
 /**
  * \function igraph_matrix_rowsum
- * Rowwise sum
+ * Rowwise sum.
  * 
  * Calculate the sum of the elements in each row.
  * \param m The input matrix.
- * \param res Pointer to an initialized vector, the result is stored
+ * \param res Pointer to an initialized vector; the result is stored
  *   here. It will be resized if necessary.
  * \return Error code.
  * 
@@ -1175,15 +1380,19 @@ igraph_real_t FUNCTION(igraph_matrix,prod)(const TYPE(igraph_matrix) *m) {
  */
 
 int FUNCTION(igraph_matrix,rowsum)(const TYPE(igraph_matrix) *m,
-				   igraph_vector_t *res) {
+				   TYPE(igraph_vector) *res) {
   long int nrow=m->nrow, ncol=m->ncol;
   long int r, c;
-  igraph_real_t sum;
-  IGRAPH_CHECK(igraph_vector_resize(res, nrow));
+  BASE sum;
+  IGRAPH_CHECK(FUNCTION(igraph_vector,resize)(res, nrow));
   for (r=0; r<nrow; r++) {
-    sum=0;
+    sum=ZERO;
     for (c=0; c<ncol; c++) {
+#ifdef SUM
+      SUM(sum, sum, MATRIX(*m, r, c));
+#else
       sum += MATRIX(*m, r, c);
+#endif
     }
     VECTOR(*res)[r]=sum;
   }
@@ -1192,11 +1401,11 @@ int FUNCTION(igraph_matrix,rowsum)(const TYPE(igraph_matrix) *m,
 
 /**
  * \function igraph_matrix_colsum
- * Columnwise sum
+ * Columnwise sum.
  * 
  * Calculate the sum of the elements in each column.
  * \param m The input matrix.
- * \param res Pointer to an initialized vector, the result is stored
+ * \param res Pointer to an initialized vector; the result is stored
  *   here. It will be resized if necessary.
  * \return Error code.
  * 
@@ -1204,15 +1413,19 @@ int FUNCTION(igraph_matrix,rowsum)(const TYPE(igraph_matrix) *m,
  */
 
 int FUNCTION(igraph_matrix,colsum)(const TYPE(igraph_matrix) *m,
-				   igraph_vector_t *res) {
+				   TYPE(igraph_vector) *res) {
   long int nrow=m->nrow, ncol=m->ncol;
   long int r, c;
-  igraph_real_t sum;
-  IGRAPH_CHECK(igraph_vector_resize(res, ncol));
+  BASE sum;
+  IGRAPH_CHECK(FUNCTION(igraph_vector,resize)(res, ncol));
   for (c=0; c<ncol; c++) {
-    sum=0;
+    sum=ZERO;
     for (r=0; r<nrow; r++) {
+#ifdef SUM
+      SUM(sum, sum, MATRIX(*m, r, c));
+#else
       sum += MATRIX(*m, r, c);
+#endif
     }
     VECTOR(*res)[c]=sum;
   }
@@ -1273,7 +1486,7 @@ igraph_bool_t FUNCTION(igraph_matrix,search)(const TYPE(igraph_matrix) *m,
 
 /**
  * \function igraph_matrix_remove_row
- * Remove a row
+ * Remove a row.
  * 
  * A row is removed from the matrix. 
  * \param m The input matrix.
@@ -1305,7 +1518,7 @@ int FUNCTION(igraph_matrix,remove_row)(TYPE(igraph_matrix) *m, long int row) {
 
 /**
  * \function igraph_matrix_select_cols
- * \brief Select some columns of a matrix
+ * \brief Select some columns of a matrix.
  * 
  * This function selects some columns of a matrix and returns them in a
  * new matrix. The result matrix should be initialized before calling
@@ -1313,7 +1526,7 @@ int FUNCTION(igraph_matrix,remove_row)(TYPE(igraph_matrix) *m, long int row) {
  * \param m The input matrix.
  * \param res The result matrix. It should be initialized and will be
  *    resized as needed.
- * \param cols Vector, it contains the column indices (starting with
+ * \param cols Vector; it contains the column indices (starting with
  *    zero) to extract. Note that no range checking is performed.
  * \return Error code.
  * 
@@ -1337,3 +1550,41 @@ int FUNCTION(igraph_matrix,select_cols)(const TYPE(igraph_matrix) *m,
   return 0;
 }
 
+#ifdef OUT_FORMAT
+
+#ifndef USING_R
+int FUNCTION(igraph_matrix,print)(const TYPE(igraph_matrix) *m) {
+
+  long int nr=FUNCTION(igraph_matrix,nrow)(m);
+  long int nc=FUNCTION(igraph_matrix,ncol)(m);
+  long int i, j;
+  for (i=0; i<nr; i++) {
+    for (j=0; j<nc; j++) {
+      if (j!=0) { putchar(' '); }
+      printf(OUT_FORMAT, MATRIX(*m, i, j));
+    }
+    printf("\n");
+  }
+  
+  return 0;
+}
+#endif
+
+int FUNCTION(igraph_matrix,fprint)(const TYPE(igraph_matrix) *m,
+				   FILE *file) {
+
+  long int nr=FUNCTION(igraph_matrix,nrow)(m);
+  long int nc=FUNCTION(igraph_matrix,ncol)(m);
+  long int i, j;
+  for (i=0; i<nr; i++) {
+    for (j=0; j<nc; j++) {
+      if (j!=0) { fputc(' ', file); }
+      fprintf(file, OUT_FORMAT, MATRIX(*m, i, j));
+    }
+    fprintf(file, "\n");
+  }
+  
+  return 0;
+}
+
+#endif

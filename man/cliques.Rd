@@ -13,7 +13,7 @@
 \usage{
 cliques(graph, min=NULL, max=NULL)
 largest.cliques(graph)
-maximal.cliques(graph)
+maximal.cliques(graph, min=NULL, max=NULL)
 clique.number(graph)
 }
 \arguments{
@@ -50,8 +50,8 @@ clique.number(graph)
   \code{clique.number} returns an integer constant.
 }
 %\references{TODO}
-\author{Tamas Nepusz \email{ntamas@rmki.kfki.hu} and Gabor Csardi
-  \email{csardi@rmki.kfki.hu} for the R interface and the manual page. }
+\author{Tamas Nepusz \email{ntamas@gmail.com} and Gabor Csardi
+  \email{csardi.gabor@gmail.com} for the R interface and the manual page. }
 \seealso{\code{\link{independent.vertex.sets}}}
 \examples{
 # this usually contains cliques of size six

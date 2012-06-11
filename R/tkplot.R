@@ -1,7 +1,7 @@
 
 #   IGraph R package
-#   Copyright (C) 2003, 2004, 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-#   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+#   Copyright (C) 2003-2012  Gabor Csardi <csardi.gabor@gmail.com>
+#   334 Harvard street, Cambridge, MA 02139 USA
 #   
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ tkplot <- function(graph, canvas.width=450, canvas.height=450, ...) {
   curved <- params("edge", "curved")
   curved <- rep(curved, length=ecount(graph))
   
-  layout <- params("plot", "layout")
+  layout <- unname(params("plot", "layout"))
   layout[,2] <- -layout[,2]
   margin <- params("plot", "margin")
   margin <- rep(margin, length=4)
@@ -87,11 +87,16 @@ tkplot <- function(graph, canvas.width=450, canvas.height=450, ...) {
   tkpack(canvas, fill="both", expand=1)
 
   # Create parameters
-  params <- list(vertex.color=vertex.color, vertex.size=vertex.size,
+  vertex.params <- sdf(vertex.color=vertex.color,
+                       vertex.size=vertex.size,
+                       label.font=label.font,
+                       NROW=vcount(graph))
+                       
+  params <- list(vertex.params=vertex.params,
                  edge.color=edge.color, label.color=label.color,
                  labels.state=1, edge.width=edge.width,
                  padding=margin*300+max(vertex.size)+5,
-                 grid=0, label.font=label.font, label.degree=label.degree,
+                 grid=0, label.degree=label.degree,
                  label.dist=label.dist, edge.labels=edge.labels,
                  vertex.frame.color=vertex.frame.color,
                  loop.angle=loop.angle, edge.lty=edge.lty, arrow.mode=arrow.mode,
@@ -112,9 +117,7 @@ tkplot <- function(graph, canvas.width=450, canvas.height=450, ...) {
           vids <- .tkplot.get.selected.vertices(tkp.id)
           if (length(vids)==0) return(FALSE)
           
-          initialcolor <- ifelse(length(tkp$params$vertex.color)>1,
-                                 tkp$params$vertex.color[vids[1]+1],
-                                 tkp$params$vertex.color)
+          initialcolor <- tkp$params$vertex.params[vids[1], "vertex.color"]
           color <- .tkplot.select.color(initialcolor)
           if (color=="") return(FALSE) # Cancel
           
@@ -126,9 +129,7 @@ tkplot <- function(graph, canvas.width=450, canvas.height=450, ...) {
           vids <- .tkplot.get.selected.vertices(tkp.id)
           if (length(vids)==0) return(FALSE)
 
-          initialsize <- ifelse(length(tkp$params$vertex.size)>1,
-                                tkp$params$vertex.size[vids[1]+1],
-                                tkp$params$vertex.size)
+          initialsize <- tkp$params$vertex.params[1, "vertex.size"]
           size <- .tkplot.select.number("Vertex size", initialsize, 1, 20)
           if (is.na(size)) return(FALSE)
 
@@ -206,7 +207,7 @@ tkplot <- function(graph, canvas.width=450, canvas.height=450, ...) {
          function(deg) {
            tkadd(rotate.menu, "command",
                  label=paste(deg, "degree"), command=function() {
-                   tkplot.rotate(tkp.id, deg=deg)
+                   tkplot.rotate(tkp.id, degree=deg)
                  })
          })
   export.menu <- tkmenu(main.menu)
@@ -335,16 +336,16 @@ tkplot <- function(graph, canvas.width=450, canvas.height=450, ...) {
       id <- as.numeric(strsplit(tags[pmatch("v-", tags)],
                                 "-", fixed=TRUE)[[1]][2])
       if (is.na(id)) { return() }
-      phi <- pi+atan2(tkp$coords[id+1,2]-y, tkp$coords[id+1,1]-x)
+      phi <- pi+atan2(tkp$coords[id,2]-y, tkp$coords[id,1]-x)
       .tkplot.set.label.degree(tkp.id, id, phi)
-      .tkplot.update.label(tkp.id, id, tkp$coords[id+1,1], tkp$coords[id+1,2])
+      .tkplot.update.label(tkp.id, id, tkp$coords[id,1], tkp$coords[id,2])
     })
   }
   
   # We don't need these any more, they are stored in the environment
   rm(tkp, params, layout, vertex.color, edge.color, top, canvas,
      main.menu, layout.menu, view.menu, export.menu, label.font, label.degree,
-     vertex.frame.color)
+     vertex.frame.color, vertex.params)
   
   tkp.id
 }
@@ -462,7 +463,7 @@ tkplot <- function(graph, canvas.width=450, canvas.height=450, ...) {
                        params=list(
                          root=list(name="Root vertex",
                            type="numeric",
-                           default=0)
+                           default=1)
                          )
                        )
                   )
@@ -559,6 +560,7 @@ tkplot.export.postscript <- function(tkp.id) {
 
 tkplot.getcoords <- function(tkp.id, norm=FALSE) {
   coords <- .tkplot.get(tkp.id, "coords")
+  coords[,2] <- max(coords[,2]) - coords[,2]
   if (norm) {
     # Shift
     coords[,1] <- coords[,1]-min(coords[,1])
@@ -633,7 +635,7 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
 }
 
 .tkplot.set.vertex.coords <- function(tkp.id, id, x, y) {
-  cmd <- paste(sep="", "tkp.", tkp.id, "$coords[",id+1,",]<-c(",x,",",y,")")
+  cmd <- paste(sep="", "tkp.", tkp.id, "$coords[",id,",]<-c(",x,",",y,")")
   eval(parse(text=cmd), .tkplot.env)
   TRUE
 }
@@ -643,7 +645,7 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
   
   if (length(tkp$params$label.degree)==1) {
     label.degree <- rep(tkp$params$label.degree, times=vcount(tkp$graph))
-    label.degree[id+1] <- phi
+    label.degree[id] <- phi
     assign("tmp", label.degree, .tkplot.env)
     cmd <- paste(sep="", "tkp.", tkp.id, "$params$label.degree <- tmp")
     eval(parse(text=cmd), .tkplot.env)
@@ -663,14 +665,10 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
 # Creates a new vertex tk object
 .tkplot.create.vertex <- function(tkp.id, id, label, x=0, y=0) {
   tkp <- .tkplot.get(tkp.id)
-  vertex.size <- ifelse(length(tkp$params$vertex.size)>1,
-                        tkp$params$vertex.size[id+1],
-                        tkp$params$vertex.size)
-  vertex.color <- ifelse(length(tkp$params$vertex.color)>1,
-                         tkp$params$vertex.color[id+1],
-                         tkp$params$vertex.color)
+  vertex.size <- tkp$params$vertex.params[id, "vertex.size"]
+  vertex.color <- tkp$params$vertex.params[id, "vertex.color"]
   vertex.frame.color <- ifelse(length(tkp$params$vertex.frame.color)>1,
-                               tkp$params$vertex.frame.color[id+1],
+                               tkp$params$vertex.frame.color[id],
                                tkp$params$vertex.frame.color)
   item <- tkcreate(tkp$canvas, "oval", x-vertex.size, y-vertex.size,
                    x+vertex.size, y+vertex.size, width=1,
@@ -679,18 +677,18 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
   tkaddtag(tkp$canvas, paste("v-", id, sep=""), "withtag", item)
   if (!is.na(label)) {
     label.degree <- ifelse(length(tkp$params$label.degree)>1,
-                           tkp$params$label.degree[id+1],
+                           tkp$params$label.degree[id],
                            tkp$params$label.degree)
     label.color <- if (length(tkp$params$label.color)>1) {
-      tkp$params$label.color[id+1]
+      tkp$params$label.color[id]
     } else {
       tkp$params$label.color
     }
     label.dist <- tkp$params$label.dist
     label.x <- x+label.dist*cos(label.degree)*
-      (vertex.size+6+4*(ceiling(log10(id+1))))
+      (vertex.size+6+4*(ceiling(log10(id))))
     label.y <- y+label.dist*sin(label.degree)*
-      (vertex.size+6+4*(ceiling(log10(id+1))))
+      (vertex.size+6+4*(ceiling(log10(id))))
     if (label.dist==0)
       { afill <- label.color }
     else
@@ -698,7 +696,7 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
     litem <- tkcreate(tkp$canvas, "text", label.x, label.y,
                       text=as.character(label), state="normal",
                       fill=label.color, activefill=afill,
-                      font=tkp$params$label.font)
+                      font=tkp$params$vertex.params[id, "label.font"])
     tkaddtag(tkp$canvas, "label", "withtag", litem)
     tkaddtag(tkp$canvas, paste("v-", id, sep=""), "withtag", litem)
   }
@@ -714,31 +712,27 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
   labels <- i.get.labels(tkp$graph, tkp$labels)
 
   mapply(function(v, l, x, y) .tkplot.create.vertex(tkp.id, v, l, x, y),
-         0:(n-1), labels, tkp$coords[,1], tkp$coords[,2])
+         1:n, labels, tkp$coords[,1], tkp$coords[,2])
 }
 
 .tkplot.update.label <- function(tkp.id, id, x, y) {
   tkp <- .tkplot.get(tkp.id)
-  vertex.size <- ifelse(length(tkp$params$vertex.size)>1,
-                        tkp$params$vertex.size[id+1],
-                        tkp$params$vertex.size)
+  vertex.size <- tkp$params$vertex.params[id, "vertex.size"]
   label.degree <- ifelse(length(tkp$params$label.degree)>1,
-                         tkp$params$label.degree[id+1],
+                         tkp$params$label.degree[id],
                          tkp$params$label.degree)
   label.dist <- tkp$params$label.dist
   label.x <- x+label.dist*cos(label.degree)*
-    (vertex.size+6+4*(ceiling(log10(id+1))))
+    (vertex.size+6+4*(ceiling(log10(id))))
   label.y <- y+label.dist*sin(label.degree)*
-    (vertex.size+6+4*(ceiling(log10(id+1))))
+    (vertex.size+6+4*(ceiling(log10(id))))
   tkcoords(tkp$canvas, paste("label&&v-", id, sep=""),
            label.x, label.y)
 }
 
 .tkplot.update.vertex <- function(tkp.id, id, x, y) {
   tkp <- .tkplot.get(tkp.id)
-  vertex.size <- ifelse(length(tkp$params$vertex.size)>1,
-                        tkp$params$vertex.size[id+1],
-                        tkp$params$vertex.size)
+  vertex.size <- tkp$params$vertex.params[id, "vertex.size"]
   # Vertex
   tkcoords(tkp$canvas, paste("vertex&&v-", id, sep=""),
            x-vertex.size, y-vertex.size,
@@ -762,15 +756,15 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
 .tkplot.update.vertices <- function(tkp.id) {
   tkp <- .tkplot.get(tkp.id)
   n <- vcount(tkp$graph)
-  mapply(function(v, x, y) .tkplot.update.vertex(tkp.id, v, x, y), 0:(n-1),
+  mapply(function(v, x, y) .tkplot.update.vertex(tkp.id, v, x, y), 1:n,
          tkp$coords[,1], tkp$coords[,2])
 }
 
 # Creates tk object for edge 'id'
 .tkplot.create.edge <- function(tkp.id, from, to, id) {
   tkp <- .tkplot.get(tkp.id)  
-  from.c <- tkp$coords[from+1,]
-  to.c   <- tkp$coords[to+1,]
+  from.c <- tkp$coords[from,]
+  to.c   <- tkp$coords[to,]
   edge.color <- ifelse(length(tkp$params$edge.color)>1,
                        tkp$params$edge.color[id],
                        tkp$params$edge.color)
@@ -860,20 +854,16 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
   tags <- as.character(tkgettags(tkp$canvas, itemid))
   from <- as.numeric(substring(grep("from-", tags, value=TRUE, fixed=TRUE),6))
   to <- as.numeric(substring(grep("to-", tags, value=TRUE, fixed=TRUE),4))
-  from.c <- tkp$coords[from+1,]
-  to.c <- tkp$coords[to+1,]
+  from.c <- tkp$coords[from,]
+  to.c <- tkp$coords[to,]
 
   edgeid <- as.numeric(substring(tags[ pmatch("edge-", tags) ], 6))
 
   if (from != to) {
     phi <- atan2(to.c[2]-from.c[2], to.c[1]-from.c[1])
     r <- sqrt( (to.c[1]-from.c[1])^2 + (to.c[2]-from.c[2])^2 )
-    vertex.size <- ifelse(length(tkp$params$vertex.size)>1,
-                          tkp$params$vertex.size[to+1],
-                          tkp$params$vertex.size)
-    vertex.size2 <- ifelse(length(tkp$params$vertex.size)>1,
-                           tkp$params$vertex.size[from+1],
-                           tkp$params$vertex.size)
+    vertex.size <- tkp$params$vertex.params[to, "vertex.size"]
+    vertex.size2 <- tkp$params$vertex.params[from, "vertex.size"]
     curved <- tkp$params$curved[[edgeid]]
     to.c[1] <- from.c[1] + (r-vertex.size)*cos(phi)
     to.c[2] <- from.c[2] + (r-vertex.size)*sin(phi)
@@ -891,16 +881,14 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
                to.c[1], to.c[2])
     }
   } else {
-    vertex.size <- ifelse(length(tkp$params$vertex.size)>1,
-                          tkp$params$vertex.size[to+1],
-                          tkp$params$vertex.size)
+    vertex.size <- tkp$params$vertex.params[to, "vertex.size"]
     loop.angle <- ifelse(length(tkp$param$loop.angle)>1,
-                         tkp$params$loop.angle[edgeid+1],
+                         tkp$params$loop.angle[edgeid],
                          tkp$params$loop.angle)
     xx <- from.c[1] + cos(loop.angle/180*pi)*vertex.size
     yy <- from.c[2] + sin(loop.angle/180*pi)*vertex.size
     cc <- matrix(c(xx,yy, xx+20,yy-10, xx+30,yy, xx+20,yy+10, xx,yy),
-                 nc=2, byrow=TRUE)
+                 ncol=2, byrow=TRUE)
 
     phi <- atan2(cc[,2]-yy, cc[,1]-xx)
     r <- sqrt((cc[,1]-xx)**2 + (cc[,2]-yy)**2)
@@ -951,24 +939,9 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
 
 .tkplot.update.vertex.color <- function(tkp.id, vids, newcolor) {
   tkp <- .tkplot.get(tkp.id)
-  colors <- tkp$params$vertex.color
-  if (length(colors)==1 && length(vids)==vcount(tkp$graph)) {
-    ## Uniform color -> uniform color
-    .tkplot.set(tkp.id, "params$vertex.color", newcolor)
-  } else if (length(colors)==1) {
-    ## Uniform color -> nonuniform color
-    colors <- rep(colors, vcount(tkp$graph))
-    colors[vids+1] <- newcolor
-    .tkplot.set(tkp.id, "params$vertex.color", colors)
-  } else if (length(vids)==vcount(tkp$graph)) {
-    ## Non-uniform -> uniform
-    .tkplot.set(tkp.id, "params$vertex.color", newcolor)
-  } else {
-    ## Non-uniform -> non-uniform
-    colors[vids+1] <- newcolor
-    .tkplot.set(tkp.id, "params$vertex.color", colors)
-  }
-
+  vparams <- tkp$params$vertex.params
+  vparams[vids, "vertex.color"] <- newcolor
+  .tkplot.set(tkp.id, "params$vertex.params", vparams)
   tkitemconfigure(tkp$canvas, "selected&&vertex", "-fill", newcolor)
 }
 
@@ -1021,26 +994,11 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
 
 .tkplot.update.vertex.size <- function(tkp.id, vids, newsize) {
   tkp <- .tkplot.get(tkp.id)
-  sizes <- tkp$params$vertex.size
-  if (length(sizes)==1 && length(vids)==vcount(tkp$graph)) {
-    ## Uniform -> uniform
-    .tkplot.set(tkp.id, "params$vertex.size", newsize)
-  } else if (length(sizes)==1) {
-    ## Uniform size -> nonuniform size
-    sizes <- rep(sizes, vcount(tkp$graph))
-    sizes[vids+1] <- newsize
-    .tkplot.set(tkp.id, "params$vertex.size", sizes)
-  } else if (length(vids)==vcount(tkp$graph)) {
-    ## Non-uniform -> uniform
-    .tkplot.set(tkp.id, "params$vertex.size", newsize)
-  } else {
-    ## Non-uniform -> non-uniform
-    sizes[vids+1] <- newsize
-    .tkplot.set(tkp.id, "params$vertex.size", sizes)
-  }
-
+  vparams <- tkp$params$vertex.params
+  vparams[vids, "vertex.size"] <- newsize
+  .tkplot.set(tkp.id, "params$vertex.params", vparams)
   sapply(vids, function(id) {
-    .tkplot.update.vertex(tkp.id, id, tkp$coords[id+1,1], tkp$coords[id+1,2])
+    .tkplot.update.vertex(tkp.id, id, tkp$coords[id,1], tkp$coords[id,2])
   })
 }
 
@@ -1178,7 +1136,7 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
   tags <- as.character(tkgettags(canvas, tkid))
   id <- as.numeric(substring(tags[pmatch("v-", tags)], 3))
   vertex.frame.color <- ifelse(length(tkp$params$vertex.frame.color)>1,
-                               tkp$params$vertex.frame.color[id+1],
+                               tkp$params$vertex.frame.color[id],
                                tkp$params$vertex.frame.color)  
   tkitemconfigure(canvas, tkid, "-outline", vertex.frame.color,
                   "-width", 1)
@@ -1445,7 +1403,10 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
     idx <- substr(col,1,1)=="#" & nchar(col)==9
     col[idx] <- substr(col[idx],1,7)
   }
-  
+
+  ## replace NA's with ""
+  col[is.na(col)] <- ""
+
   col
 }
 
@@ -1460,6 +1421,11 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
     family <- as.character(family)
     cex <- as.numeric(cex)    
 
+    ## multiple sizes
+    if (length(cex) > 1) {
+      return(sapply(cex, .tkplot.convert.font, font=font, family=family))
+    }
+    
     ## set slant & weight
     if (font==2) {
       slant <- "roman"
@@ -1490,7 +1456,7 @@ tkplot.rotate <- function(tkp.id, degree=NULL, rad=NULL) {
     }
     
     newfont <- tkfont.create(family=tkfamily, slant=slant, weight=weight,
-                             size=12*cex)
+                             size=as.integer(12*cex))
     as.character(newfont)
   }
 }

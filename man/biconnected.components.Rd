@@ -24,24 +24,25 @@ biconnected.components(graph)
   A named list with three components:
   \item{no}{Numeric scalar, an integer giving the number of
     biconnected components in the graph.}
-  \item{components}{The components themselves, a list of numeric
+  \item{tree_edges}{The components themselves, a list of numeric
     vectors. Each vector is a set of edge ids giving the edges in a
-    biconnected component.}
+    biconnected component. These edges define a spanning tree of the
+    component.}
+  \item{component_edges}{A list of numeric vectors. It gives all edges
+  in the components.}
+  \item{components}{A list of numeric vectors, the vertices of the
+    components.}
   \item{articulation_points}{The articulation points of the graph. See
     \code{\link{articulation.points}}.}
-  
-  See examples below on how to extract the vertex ids of the biconnected
-  components from the result.
 }
 %\references
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{\code{\link{articulation.points}}, \code{\link{clusters}},
   \code{\link{is.connected}}, \code{\link{vertex.connectivity}}}
 \examples{
 g <- graph.disjoint.union( graph.full(5), graph.full(5) )
 clu <- clusters(g)$membership
-g <- add.edges(g, c(which(clu==0), which(clu==1))-1)
+g <- add.edges(g, c(which(clu==1), which(clu==2)))
 bc <- biconnected.components(g)
-vertices <- lapply(bc$components, function(x) unique(as.vector(get.edges(g, x))))
 }
 \keyword{graphs}

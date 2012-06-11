@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2007  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2007-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@
 
 */
 
-#include "types.h"
+#include "igraph_types.h"
+#include "igraph_stack.h"
 
 #define BASE_IGRAPH_REAL
 #include "igraph_pmt.h"
@@ -46,3 +47,37 @@
 #include "stack.pmt"
 #include "igraph_pmt_off.h"
 #undef BASE_BOOL
+
+#define BASE_PTR
+#include "igraph_pmt.h"
+#include "stack.pmt"
+#include "igraph_pmt_off.h"
+#undef BASE_PTR
+
+/**
+ * \ingroup stack
+ * \brief Calls free() on all elements of a pointer stack.
+ */
+
+void igraph_stack_ptr_free_all   (igraph_stack_ptr_t* v) {
+  void **ptr;
+  assert(v != 0);
+  assert(v->stor_begin != 0);
+  for (ptr=v->stor_begin; ptr<v->end; ptr++) {
+    igraph_Free(*ptr);
+  }
+}
+
+/**
+ * \ingroup stack
+ * \brief Calls free() on all elements and destroys the stack.
+ */
+
+void igraph_stack_ptr_destroy_all   (igraph_stack_ptr_t* v) { 
+  assert(v != 0);
+  assert(v->stor_begin != 0);
+  igraph_stack_ptr_free_all(v);
+  igraph_stack_ptr_destroy(v);
+}
+
+

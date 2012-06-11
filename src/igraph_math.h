@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2008  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2008-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@
 #define IGRAPH_MATH_H
 
 #include "config.h"
+#include <math.h>
+#include <stddef.h>
 
 #undef __BEGIN_DECLS
 #undef __END_DECLS
@@ -41,13 +43,13 @@ __BEGIN_DECLS
 /*
  * Compiler-related hacks, mostly because of Microsoft Visual C++
  */
-double igraph_i_fdiv(const double a, const double b);
-int igraph_i_snprintf(char *buffer, size_t count, const char *format, ...);
 double igraph_i_round(double X);
+int igraph_i_snprintf(char *buffer, size_t count, const char *format, ...);
 
 double igraph_log2(const double a);
 long double igraph_logbl(long double a);
 double igraph_log1p(double a);
+long double igraph_fabsl(long double a);
 double igraph_fmin(double a, double b);
 #ifndef HAVE_LOG2
 #define log2(a) igraph_log2(a)
@@ -57,6 +59,9 @@ double igraph_fmin(double a, double b);
 #endif
 #ifndef HAVE_LOG1P
 #define log1p(a) igraph_log1p(a)
+#endif
+#ifndef HAVE_FABSL
+#define fabsl(a) igraph_fabsl(a)
 #endif
 #ifndef HAVE_FMIN
 #define fmin(a,b) igraph_fmin((a),(b))
@@ -68,8 +73,11 @@ double igraph_fmin(double a, double b);
 #ifndef M_PI
 #  define M_PI 3.14159265358979323846
 #endif
-#if !defined(M_LN2)
+#ifndef M_LN2
 #  define M_LN2 0.69314718055994530942
+#endif
+#ifndef M_SQRT2
+#  define M_SQRT2 1.4142135623730950488016887
 #endif
 
 __END_DECLS

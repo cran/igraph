@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2005-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,14 +21,877 @@
 
 */
 
-#include "random.h"
-#include "error.h"
+#include "igraph_random.h"
+#include "igraph_error.h"
 #include "config.h"
 
 #include <math.h>
+#include <limits.h>
+#include <string.h>
 #include "igraph_math.h"
+#include "igraph_types.h"
+#include "igraph_vector.h"
+#include "igraph_memory.h"
 
-int igraph_rng_inited = 0;
+/** 
+ * \section about_rngs 
+ * 
+ * <section>
+ * <title>About random numbers in igraph, use cases</title>
+ * 
+ * <para> 
+ * Some algorithms in igraph, e.g. the generation of random graphs,
+ * require random number generators (RNGs). Prior to version 0.6
+ * igraph did not have a sophisticated way to deal with random number
+ * generators at the C level, but this has changed. From version 0.6
+ * different and multiple random number generators are supported.
+ * </para>
+ * </section>
+ * 
+ */
+
+/** 
+ * \section rng_use_cases
+ * 
+ * <section><title>Use cases</title>
+ * 
+ * <section><title>Normal (default) use</title>
+ * <para> 
+ * If the user does not use any of the RNG functions explicitly, but calls
+ * some of the randomized igraph functions, then a default RNG is set
+ * up the first time an igraph function needs random numbers. The
+ * seed of this RNG is the output of the <code>time(0)</code> function
+ * call, using the <code>time</code> function from the standard C
+ * library. This ensures that igraph creates a different random graph,
+ * each time the C program is called.
+ * </para>
+ * 
+ * <para> 
+ * The created default generator is stored internally and can be
+ * queried with the \ref igraph_rng_default() function.
+ * </para>
+ * </section>
+ * 
+ * <section><title>Reproducible simulations</title>
+ * <para> 
+ * If reproducible results are needed, then the user should set the
+ * seed of the default random number generator explicitly, using the 
+ * \ref igraph_rng_seed() function on the default generator, \ref
+ * igraph_rng_default(). When setting the seed to the same number,
+ * igraph generates exactly the same random graph (or series of random
+ * graphs).
+ * </para>
+ * </section>
+ * 
+ * <section><title>Changing the default generator</title>
+ * <para> 
+ * By default igraph uses the \ref igraph_rng_default() random number
+ * generator. This can be changed any time by calling \ref
+ * igraph_rng_set_default(), with an already initialized random number
+ * generator. Note that the old (replaced) generator is not
+ * destroyed, so no memory is deallocated.
+ * </para>
+ * </section>
+ *
+ * <section><title>Using multiple generators</title>
+ * <para> 
+ * igraph also provides functions to set up multiple random number
+ * generators, using the \ref igraph_rng_init() function, and then
+ * generating random numbers from them, e.g. with \ref igraph_rng_get_integer()
+ * and/or \ref igraph_rng_get_unif() calls. 
+ * </para>
+ * 
+ * <para>
+ * Note that initializing a new random number generator is
+ * independent of the generator that the igraph functions themselves
+ * use. If you want to replace that, then please use \ref
+ * igraph_rng_set_default().
+ * </para>
+ * </section>
+ *
+ * <section><title>Example</title>
+ * <para>
+ * \example examples/simple/random_seed.c
+ * </para>
+ * </section>
+ *
+ * </section>
+ */
+
+/* ------------------------------------ */
+
+typedef struct {
+  int i, j;
+  long int x[31];
+} igraph_i_rng_glibc2_state_t;
+
+unsigned long int igraph_i_rng_glibc2_get(int *i, int *j, int n, 
+					  long int *x) {
+  long int k;
+
+  x[*i] += x[*j];
+  k = (x[*i] >> 1) & 0x7FFFFFFF;
+  
+  (*i)++;
+  if (*i == n) {
+    *i = 0;
+  }
+  
+  (*j)++ ;
+  if (*j == n) {
+    *j = 0;
+  }
+
+  return k;
+}
+
+unsigned long int igraph_rng_glibc2_get(void *vstate) {
+  igraph_i_rng_glibc2_state_t *state = 
+    (igraph_i_rng_glibc2_state_t*) vstate;
+  return igraph_i_rng_glibc2_get(&state->i, &state->j, 31, state->x);
+}
+
+igraph_real_t igraph_rng_glibc2_get_real(void *state) {
+  return igraph_rng_glibc2_get(state) / 2147483648.0;
+}
+
+/* this function is independent of the bit size */
+
+void igraph_i_rng_glibc2_init(long int *x, int n, 
+			      unsigned long int s) {
+  int i;
+  
+  if (s==0) { s=1; }
+  
+  x[0] = s;
+  for (i=1 ; i<n ; i++) {
+    const long int h = s / 127773;
+    const long int t = 16807 * (s - h * 127773) - h * 2836;
+    if (t < 0) {
+      s = t + 2147483647 ;
+    } else { 
+      s = t ;
+    }
+    
+    x[i] = s ;
+  }
+}
+
+int igraph_rng_glibc2_seed(void *vstate, unsigned long int seed) {
+  igraph_i_rng_glibc2_state_t *state = 
+    (igraph_i_rng_glibc2_state_t*) vstate;
+  int i;
+  
+  igraph_i_rng_glibc2_init(state->x, 31, seed);
+  
+  state->i=3;
+  state->j=0;
+  
+  for (i=0;i<10*31; i++) {
+    igraph_rng_glibc2_get(state);
+  }
+  
+  return 0;
+}
+
+int igraph_rng_glibc2_init(void **state) {
+  igraph_i_rng_glibc2_state_t *st;
+
+  st=igraph_Calloc(1, igraph_i_rng_glibc2_state_t);
+  if (!st) {
+    IGRAPH_ERROR("Cannot initialize RNG", IGRAPH_ENOMEM);
+  }
+  (*state)=st;
+
+  igraph_rng_glibc2_seed(st, 0);
+  
+  return 0;
+}
+
+void igraph_rng_glibc2_destroy(void *vstate) {
+  igraph_i_rng_glibc2_state_t *state = 
+    (igraph_i_rng_glibc2_state_t*) vstate;
+  igraph_Free(state);
+}
+
+/**
+ * \var igraph_rngtype_glibc2
+ * \brief The random number generator type introduced in GNU libc 2
+ * 
+ * It is a linear feedback shift register generator with a 128-byte
+ * buffer. This generator was the default prior to igraph version 0.6,
+ * at least on systems relying on GNU libc.
+ * 
+ * This generator was ported from the GNU Scientific Library.
+ */
+
+const igraph_rng_type_t igraph_rngtype_glibc2 = {
+  /* name= */      "LIBC",
+  /* min=  */      0,
+  /* max=  */      RAND_MAX,
+  /* init= */      igraph_rng_glibc2_init,
+  /* destroy= */   igraph_rng_glibc2_destroy,
+  /* seed= */      igraph_rng_glibc2_seed,
+  /* get= */       igraph_rng_glibc2_get,
+  /* get_real= */  igraph_rng_glibc2_get_real,
+  /* get_norm= */  0,
+  /* get_geom= */  0,
+  /* get_binom= */ 0,
+  /* get_exp= */   0
+};
+
+/* ------------------------------------ */
+
+typedef struct {
+  unsigned long int x;
+} igraph_i_rng_rand_state_t;
+
+unsigned long int igraph_rng_rand_get(void *vstate) {
+  igraph_i_rng_rand_state_t *state = vstate;
+  state->x = (1103515245 * state->x + 12345) & 0x7fffffffUL;
+  return state->x;
+}
+
+igraph_real_t igraph_rng_rand_get_real(void *vstate) {
+  return igraph_rng_rand_get (vstate) / 2147483648.0 ;
+}
+
+int igraph_rng_rand_seed(void *vstate, unsigned long int seed) {
+  igraph_i_rng_rand_state_t *state = vstate;
+  state->x = seed;
+  return 0;
+}
+
+int igraph_rng_rand_init(void **state) {
+  igraph_i_rng_rand_state_t *st;
+
+  st=igraph_Calloc(1, igraph_i_rng_rand_state_t);
+  if (!st) {
+    IGRAPH_ERROR("Cannot initialize RNG", IGRAPH_ENOMEM);
+  }
+  (*state)=st;
+  
+  igraph_rng_rand_seed(st, 0);
+  
+  return 0;
+}
+
+void igraph_rng_rand_destroy(void *vstate) {
+  igraph_i_rng_rand_state_t *state = 
+    (igraph_i_rng_rand_state_t*) vstate;
+  igraph_Free(state);  
+}  
+
+/**
+ * \var igraph_rngtype_rand
+ * \brief The old BSD rand/stand random number generator
+ * 
+ * The sequence is 
+ *     x_{n+1} = (a x_n + c) mod m 
+ * with a = 1103515245, c = 12345 and m = 2^31 = 2147483648. The seed
+ * specifies the initial value, x_1.
+ * 
+ * The theoretical value of x_{10001} is 1910041713.
+ *
+ *  The period of this generator is 2^31.
+ * 
+ * This generator is not very good -- the low bits of successive
+ * numbers are correlated.
+ * 
+ * This generator was ported from the GNU Scientific Library.
+ */
+
+const igraph_rng_type_t igraph_rngtype_rand = {
+  /* name= */      "RAND",
+  /* min=  */      0,
+  /* max=  */      0x7fffffffUL,
+  /* init= */      igraph_rng_rand_init,
+  /* destroy= */   igraph_rng_rand_destroy,
+  /* seed= */      igraph_rng_rand_seed,
+  /* get= */       igraph_rng_rand_get,
+  /* get_real= */  igraph_rng_rand_get_real,
+  /* get_norm= */  0,
+  /* get_geom= */  0,
+  /* get_binom= */ 0,
+  /* get_exp= */   0
+};
+
+/* ------------------------------------ */
+
+#define N 624   /* Period parameters */
+#define M 397
+
+/* most significant w-r bits */
+static const unsigned long UPPER_MASK = 0x80000000UL;   
+
+/* least significant r bits */
+static const unsigned long LOWER_MASK = 0x7fffffffUL;   
+
+typedef struct {
+  unsigned long mt[N];
+  int mti;
+} igraph_i_rng_mt19937_state_t;
+
+unsigned long int igraph_rng_mt19937_get(void *vstate) {
+  igraph_i_rng_mt19937_state_t *state = vstate;
+
+  unsigned long k ;
+  unsigned long int *const mt = state->mt;
+
+#define MAGIC(y) (((y)&0x1) ? 0x9908b0dfUL : 0)
+
+  if (state->mti >= N) {
+    /* generate N words at one time */
+    int kk;
+    
+    for (kk = 0; kk < N - M; kk++) {
+      unsigned long y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
+      mt[kk] = mt[kk + M] ^ (y >> 1) ^ MAGIC(y);
+    }
+    for (; kk < N - 1; kk++) {
+      unsigned long y = (mt[kk] & UPPER_MASK) | (mt[kk + 1] & LOWER_MASK);
+      mt[kk] = mt[kk + (M - N)] ^ (y >> 1) ^ MAGIC(y);
+    }
+    
+    {
+      unsigned long y = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
+      mt[N - 1] = mt[M - 1] ^ (y >> 1) ^ MAGIC(y);
+    }
+    
+    state->mti = 0;
+  }
+
+#undef MAGIC
+
+  /* Tempering */
+  
+  k = mt[state->mti];
+  k ^= (k >> 11);
+  k ^= (k << 7) & 0x9d2c5680UL;
+  k ^= (k << 15) & 0xefc60000UL;
+  k ^= (k >> 18);
+
+  state->mti++;
+
+  return k;
+}
+
+igraph_real_t igraph_rng_mt19937_get_real(void *vstate) {
+  return igraph_rng_mt19937_get (vstate) / 4294967296.0 ;
+}
+
+int igraph_rng_mt19937_seed(void *vstate, unsigned long int seed) {
+  igraph_i_rng_mt19937_state_t *state = vstate;
+  int i;
+
+  memset(state, 0, sizeof(igraph_i_rng_mt19937_state_t));
+
+  if (seed == 0) {
+    seed = 4357;   /* the default seed is 4357 */
+  }
+  state->mt[0]= seed & 0xffffffffUL;
+
+  for (i = 1; i < N; i++) {
+    /* See Knuth's "Art of Computer Programming" Vol. 2, 3rd
+       Ed. p.106 for multiplier. */
+    state->mt[i] =
+      (1812433253UL * (state->mt[i-1] ^ (state->mt[i-1] >> 30)) + i);
+    state->mt[i] &= 0xffffffffUL;
+  }
+  
+  state->mti = i;
+  return 0;
+}
+
+int igraph_rng_mt19937_init(void **state) {
+  igraph_i_rng_mt19937_state_t *st;
+
+  st=igraph_Calloc(1, igraph_i_rng_mt19937_state_t);
+  if (!st) {
+    IGRAPH_ERROR("Cannot initialize RNG", IGRAPH_ENOMEM);
+  }
+  (*state)=st;
+  
+  igraph_rng_mt19937_seed(st, 0);
+  
+  return 0;
+}
+
+void igraph_rng_mt19937_destroy(void *vstate) {
+  igraph_i_rng_mt19937_state_t *state = 
+    (igraph_i_rng_mt19937_state_t*) vstate;
+  igraph_Free(state);  
+}  
+
+/** 
+ * \var igraph_rngtype_mt19937
+ * \brief The MT19937 random number generator
+ * 
+ * The MT19937 generator of Makoto Matsumoto and Takuji Nishimura is a
+ * variant of the twisted generalized feedback shift-register
+ * algorithm, and is known as the “Mersenne Twister” generator. It has
+ * a Mersenne prime period of 2^19937 - 1 (about 10^6000) and is
+ * equi-distributed in 623 dimensions. It has passed the diehard
+ * statistical tests. It uses 624 words of state per generator and is
+ * comparable in speed to the other generators. The original generator
+ * used a default seed of 4357 and choosing s equal to zero in
+ * gsl_rng_set reproduces this. Later versions switched to 5489 as the
+ * default seed, you can choose this explicitly via igraph_rng_seed
+ * instead if you require it. 
+ * 
+ * For more information see,
+ * Makoto Matsumoto and Takuji Nishimura, “Mersenne Twister: A
+ * 623-dimensionally equidistributed uniform pseudorandom number
+ * generator”. ACM Transactions on Modeling and Computer Simulation,
+ * Vol. 8, No. 1 (Jan. 1998), Pages 3–30 
+ * 
+ * The generator igraph_rngtype_mt19937 uses the second revision of the
+ * seeding procedure published by the two authors above in 2002. The
+ * original seeding procedures could cause spurious artifacts for some
+ * seed values.
+ * 
+ * This generator was ported from the GNU Scientific Library.
+ */
+
+const igraph_rng_type_t igraph_rngtype_mt19937 = {
+  /* name= */      "MT19937",
+  /* min=  */      0,
+  /* max=  */      0xffffffffUL,
+  /* init= */      igraph_rng_mt19937_init,
+  /* destroy= */   igraph_rng_mt19937_destroy,
+  /* seed= */      igraph_rng_mt19937_seed,
+  /* get= */       igraph_rng_mt19937_get,
+  /* get_real= */  igraph_rng_mt19937_get_real,
+  /* get_norm= */  0,
+  /* get_geom= */  0,
+  /* get_binom= */ 0,
+  /* get_exp= */   0
+};
+
+#undef N
+#undef M
+
+/* ------------------------------------ */
+
+#ifndef USING_R
+
+igraph_i_rng_mt19937_state_t igraph_i_rng_default_state;
+
+#define addr(a) (&a)
+
+/**
+ * \var igraph_i_rng_default
+ * The default igraph random number generator
+ * 
+ * This generator is used by all builtin igraph functions that need to
+ * generate random numbers; e.g. all random graph generators. 
+ * 
+ * You can use \ref igraph_i_rng_default with \ref igraph_rng_seed()
+ * to set its seed.
+ * 
+ * You can change the default generator using the \ref
+ * igraph_rng_set_default() function. 
+ */
+
+IGRAPH_THREAD_LOCAL igraph_rng_t igraph_i_rng_default = { 
+  addr(igraph_rngtype_mt19937),
+  addr(igraph_i_rng_default_state),
+  /* def= */ 1
+};
+
+#undef addr
+
+/** 
+ * \function igraph_rng_set_default
+ * Set the default igraph random number generator
+ * 
+ * \param rng The random number generator to use as default from now
+ *    on. Calling \ref igraph_rng_destroy() on it, while it is still
+ *    being used as the default will result craches and/or
+ *    unpredictable results.
+ * 
+ * Time complexity: O(1).
+ */
+
+void igraph_rng_set_default(igraph_rng_t *rng) {
+  igraph_i_rng_default = (*rng);
+}
+
+#endif
+
+
+/* ------------------------------------ */
+
+#ifdef USING_R
+
+double  unif_rand(void);
+double  norm_rand(void);
+double  exp_rand(void);
+double  Rf_rgeom(double);
+double  Rf_rbinom(double, double);
+
+int igraph_rng_R_init(void **state) {
+  IGRAPH_ERROR("R RNG error, unsupported function called",
+	       IGRAPH_EINTERNAL);
+  return 0;
+}
+
+void igraph_rng_R_destroy(void *state) {
+  igraph_error("R RNG error, unsupported function called",
+	       __FILE__, __LINE__, IGRAPH_EINTERNAL);
+}
+
+int igraph_rng_R_seed(void *state, unsigned long int seed) {
+  IGRAPH_ERROR("R RNG error, unsupported function called",
+	       IGRAPH_EINTERNAL);
+  return 0;
+}
+
+unsigned long int igraph_rng_R_get(void *state) {
+  return unif_rand() * 0x7FFFFFFFUL;
+}
+
+igraph_real_t igraph_rng_R_get_real(void *state) {
+  return unif_rand();
+}
+
+igraph_real_t igraph_rng_R_get_norm(void *state) {
+  return norm_rand();
+}
+
+igraph_real_t igraph_rng_R_get_geom(void *state, igraph_real_t p) {
+  return Rf_rgeom(p);
+}
+ 
+igraph_real_t igraph_rng_R_get_binom(void *state, long int n,
+				     igraph_real_t p) {
+  return Rf_rbinom(n, p);
+}
+
+igraph_real_t igraph_rng_R_get_exp(void *state, igraph_real_t rate) {
+  igraph_real_t scale = 1.0 / rate;
+  if (!IGRAPH_FINITE(scale) || scale <= 0.0) {
+    if (scale == 0.0) { return 0.0; }
+    return IGRAPH_NAN;
+  }
+  return scale * exp_rand();
+}
+
+igraph_rng_type_t igraph_rngtype_R = {
+  /* name= */      "GNU R",
+  /* min=  */      0,
+  /* max=  */      0x7FFFFFFFUL,
+  /* init= */      igraph_rng_R_init,
+  /* destroy= */   igraph_rng_R_destroy,
+  /* seed= */      igraph_rng_R_seed,
+  /* get= */       igraph_rng_R_get,
+  /* get_real= */  igraph_rng_R_get_real,
+  /* get_norm= */  igraph_rng_R_get_norm,
+  /* get_geom= */  igraph_rng_R_get_geom,
+  /* get_binom= */ igraph_rng_R_get_binom,
+  /* get_exp= */   igraph_rng_R_get_exp
+};
+
+IGRAPH_THREAD_LOCAL igraph_rng_t igraph_i_rng_default = { 
+  &igraph_rngtype_R,
+  0,
+  /* def= */ 1
+};
+
+#endif
+
+/* ------------------------------------ */
+
+/**
+ * \function igraph_rng_default
+ * Query the default random number generator.
+ * 
+ * \return A pointer to the default random number generator.
+ * 
+ * \sa igraph_rng_set_default()
+ */
+
+igraph_rng_t *igraph_rng_default() {
+  return &igraph_i_rng_default;
+}
+
+/* ------------------------------------ */
+
+double igraph_norm_rand(igraph_rng_t *rng);
+double igraph_rgeom(igraph_rng_t *rng, double p);
+double igraph_rbinom(igraph_rng_t *rng, double nin, double pp);
+double igraph_rexp(igraph_rng_t *rng, double rate);
+
+/** 
+ * \function igraph_rng_init
+ * Initialize a random number generator
+ * 
+ * This function allocates memory for a random number generator, with
+ * the given type, and sets its seed to the default.
+ * 
+ * \param rng Pointer to an uninitialized RNG.
+ * \param type The type of the RNG, please see the documentation for
+ *    the supported types.
+ * \return Error code.
+ * 
+ * Time complexity: depends on the type of the generator, but usually
+ * it should be O(1).
+ */
+
+int igraph_rng_init(igraph_rng_t *rng, const igraph_rng_type_t *type) {
+  rng->type=type;
+  IGRAPH_CHECK(rng->type->init(&rng->state));
+  return 0;
+}
+
+/** 
+ * \function igraph_rng_destroy
+ * Deallocate memory associated with a random number generator
+ * 
+ * \param rng The RNG to destroy. Do not destroy an RNG that is used
+ *    as the default igraph RNG. 
+ * 
+ * Time complexity: O(1).
+ */
+
+void igraph_rng_destroy(igraph_rng_t *rng) {
+  rng->type->destroy(rng->state);
+}
+
+/**
+ * \function igraph_rng_seed
+ * Set the seed of a random number generator
+ * 
+ * \param rng The RNG. 
+ * \param seed The new seed.
+ * \return Error code.
+ * 
+ * Time complexity: usually O(1), but may depend on the type of the
+ * RNG.
+ */
+int igraph_rng_seed(igraph_rng_t *rng, unsigned long int seed) {
+  const igraph_rng_type_t *type=rng->type;
+  rng->def=0;
+  IGRAPH_CHECK(type->seed(rng->state, seed));
+  return 0;
+}
+
+/** 
+ * \function igraph_rng_max 
+ * Query the maximum possible integer for a random number generator
+ * 
+ * \param rng The RNG.
+ * \return The largest possible integer that can be generated by
+ *         calling \ref igraph_rng_get_integer() on the RNG.
+ * 
+ * Time complexity: O(1).
+ */
+
+unsigned long int igraph_rng_max(igraph_rng_t *rng) {
+  const igraph_rng_type_t *type=rng->type;
+  return type->max;
+}
+
+/**
+ * \function igraph_rng_min
+ * Query the minimum possible integer for a random number generator
+ * 
+ * \param rng The RNG.
+ * \return The smallest possible integer that can be generated by
+ *         calling \ref igraph_rng_get_integer() on the RNG.
+ * 
+ * Time complexity: O(1).
+ */
+
+unsigned long int igraph_rng_min(igraph_rng_t *rng) {
+  const igraph_rng_type_t *type=rng->type;
+  return type->min;
+}
+
+/** 
+ * \function igraph_rng_name
+ * Query the type of a random number generator
+ * 
+ * \param rng The RNG.
+ * \return The name of the type of the generator. Do not deallocate or
+ *         change the returned string pointer.
+ * 
+ * Time complexity: O(1).
+ */
+
+const char *igraph_rng_name(igraph_rng_t *rng) {
+  const igraph_rng_type_t *type=rng->type;
+  return type->name;
+}
+
+/** 
+ * \function igraph_rng_get_integer
+ * Generate an integer random number from an interval
+ * 
+ * \param rng Pointer to the RNG to use for the generation. Use \ref
+ *        igraph_rng_default() here to use the default igraph RNG.
+ * \param l Lower limit, inclusive, it can be negative as well.
+ * \param h Upper limit, inclusive, it can be negative as well, but it
+ *        should be at least <code>l</code>.
+ * \return The generated random integer.
+ * 
+ * Time complexity: depends on the generator, but should be usually
+ * O(1).
+ */
+
+long int igraph_rng_get_integer(igraph_rng_t *rng,
+				long int l, long int h) {
+  const igraph_rng_type_t *type=rng->type;
+  if (type->get_real) {
+    return (long int)(type->get_real(rng->state)*(h-l+1)+l);
+  } else if (type->get) {
+    unsigned long int max=type->max;
+    return (long int)(type->get(rng->state))/
+      ((double)max+1)*(h-l+1)+l;
+  }
+  IGRAPH_ERROR("Internal random generator error", IGRAPH_EINTERNAL);
+  return 0;
+}
+
+/** 
+ * \function igraph_rng_get_normal
+ * Normally distributed random numbers
+ * 
+ * \param rng Pointer to the RNG to use. Use \ref igraph_rng_default()
+ *        here to use the default igraph RNG.
+ * \param m The mean.
+ * \param s Standard deviation.
+ * \return The generated normally distributed random number.
+ * 
+ * Time complexity: depends on the type of the RNG.
+ */
+
+igraph_real_t igraph_rng_get_normal(igraph_rng_t *rng, 
+				    igraph_real_t m, igraph_real_t s) {
+  const igraph_rng_type_t *type=rng->type;
+  if (type->get_norm) {
+    return type->get_norm(rng->state)*s+m;
+  } else {
+    return igraph_norm_rand(rng)*s+m;
+  }
+}
+
+/** 
+ * \function igraph_rng_get_unif
+ * Generate real, uniform random numbers from an interval
+ * 
+ * \param rng Pointer to the RNG to use. Use \ref igraph_rng_default()
+ *        here to use the default igraph RNG.
+ * \param l The lower bound, it can be negative.
+ * \param h The upper bound, it can be negative, but it has to be
+ *        larger than the lower bound.
+ * \return The generated uniformly distributed random number.
+ * 
+ * Time complexity: depends on the type of the RNG.
+ */
+
+igraph_real_t igraph_rng_get_unif(igraph_rng_t *rng, 
+				  igraph_real_t l, igraph_real_t h) {
+  const igraph_rng_type_t *type=rng->type;
+  if (type->get_real) {
+    return type->get_real(rng->state)*(h-l)+l;
+  } else if (type->get) {
+    unsigned long int max=type->max;
+    return type->get(rng->state)/((double)max+1)*(double)(h-l)+l;
+  }
+  IGRAPH_ERROR("Internal random generator error", IGRAPH_EINTERNAL);
+  return 0;  
+}
+
+/** 
+ * \function igraph_rng_get_unif01
+ * Generate real, uniform random number from the unit interval
+ *
+ * \param rng Pointer to the RNG to use. Use \ref igraph_rng_default()
+ *        here to use the default igraph RNG.
+ * \return The generated uniformly distributed random number.
+ * 
+ * Time complexity: depends on the type of the RNG.
+ */
+
+igraph_real_t igraph_rng_get_unif01(igraph_rng_t *rng) {
+  const igraph_rng_type_t *type=rng->type;
+  if (type->get_real) {
+    return type->get_real(rng->state);
+  } else if (type->get) {
+    unsigned long int max=type->max;
+    return type->get(rng->state)/((double)max+1);
+  }
+  IGRAPH_ERROR("Internal random generator error", IGRAPH_EINTERNAL);
+  return 0;  
+}
+
+/** 
+ * \function igraph_rng_get_geom
+ * Generate geometrically distributed random numbers
+ * 
+ * \param rng Pointer to the RNG to use. Use \ref igraph_rng_default()
+ *        here to use the default igraph RNG.
+ * \param p The probability of success in each trial. Must be larger
+ *        than zero and smaller or equal to 1.
+ * \return The generated geometrically distributed random number.
+ * 
+ * Time complexity: depends on the type of the RNG.
+ */
+
+igraph_real_t igraph_rng_get_geom(igraph_rng_t *rng, igraph_real_t p) {
+  const igraph_rng_type_t *type=rng->type;
+  if (type->get_geom) {
+    return type->get_geom(rng->state, p);
+  } else {
+    return igraph_rgeom(rng, p);
+  }
+}
+
+/** 
+ * \function igraph_rng_get_binom
+ * Generate binomially distributed random numbers
+ * 
+ * \param rng Pointer to the RNG to use. Use \ref igraph_rng_default()
+ *        here to use the default igraph RNG.
+ * \param n Number of observations.
+ * \param p Probability of an event.
+ * \return The generated binomially distributed random number.
+ * 
+ * Time complexity: depends on the type of the RNG.
+ */
+
+igraph_real_t igraph_rng_get_binom(igraph_rng_t *rng, long int n, 
+				   igraph_real_t p) {
+  const igraph_rng_type_t *type=rng->type;
+  if (type->get_binom) {
+    return type->get_binom(rng->state, n, p);
+  } else {
+    return igraph_rbinom(rng, n, p);
+  }
+}
+
+unsigned long int igraph_rng_get_int31(igraph_rng_t *rng) {
+  const igraph_rng_type_t *type=rng->type;
+  unsigned long int max=type->max;
+  if (type->get && max==0x7FFFFFFFUL) {
+    return type->get(rng->state);
+  } else if (type->get_real) {
+    return type->get_real(rng->state)*0x7FFFFFFFUL;
+  } else { 
+    return igraph_rng_get_unif01(rng)*0x7FFFFFFFUL;
+  }
+}
+
+igraph_real_t igraph_rng_get_exp(igraph_rng_t *rng, igraph_real_t rate) {
+  const igraph_rng_type_t *type=rng->type;
+  if (type->get_exp) {
+    return type->get_exp(rng->state, rate);
+  } else { 
+    return igraph_rexp(rng, rate);
+  }
+}
+
 
 #ifndef HAVE_EXPM1
 #ifndef USING_R			/* R provides a replacement */
@@ -37,7 +900,7 @@ static double expm1 (double x)
 {
     if (fabs(x) < M_LN2)
     {
-        /* Compute the taylor series S = x + (1/2!) x^2 + (1/3!) x^3 + ... */
+        /* Compute the Taylor series S = x + (1/2!) x^2 + (1/3!) x^3 + ... */
 
         double i = 1.0;
         double sum = x;
@@ -68,8 +931,8 @@ static double rint (double x)
 #endif
 #endif
 
-#if HAVE_RINTF != 1
-static float rintf (float x)
+#ifndef HAVE_RINTF
+float rintf (float x)
 {
    return ( (x<(float)0.) ? -(float)floor(-x+.5) : (float)floor(x+.5) );
 }
@@ -82,7 +945,7 @@ static float rintf (float x)
  * result vector.
  */
 
-int igraph_random_sample_alga(igraph_vector_t *res, igraph_integer_t l, igraph_integer_t h, 
+int igraph_i_random_sample_alga(igraph_vector_t *res, igraph_integer_t l, igraph_integer_t h, 
 			      igraph_integer_t length) {
   igraph_real_t N=h-l+1;
   igraph_real_t n=length;
@@ -122,26 +985,49 @@ int igraph_random_sample_alga(igraph_vector_t *res, igraph_integer_t l, igraph_i
  * \brief Generates an increasing random sequence of integers.
  * 
  * </para><para>
- * This function generates an incresing sequence of random integer
+ * This function generates an increasing sequence of random integer
  * numbers from a given interval. The algorithm is taken literally
- * from Jeffrey Scott Vitter: 'An Efficient Algorithm for Sequential
- * Random Sampling', ACM Transactions on Mathematical Software, 13/1,
- * 58--67. This method can be used for generating numbers from a
- * \em very large interval, it is primilarly created for randomly
+ * from (Vitter 1987). This method can be used for generating numbers from a
+ * \em very large interval. It is primarily created for randomly
  * selecting some edges from the sometimes huge set of possible edges
  * in a large graph.
- * \param res Pointer to an initialized vector, this will hold the
+ * </para><para>
+ * Note that the type of the lower and the upper limit is \c igraph_real_t,
+ * not \c igraph_integer_t. This does not mean that you can pass fractional
+ * numbers there; these values must still be integral, but we need the
+ * longer range of \c igraph_real_t in several places in the library
+ * (for instance, when generating Erdos-Renyi graphs).
+ * \param res Pointer to an initialized vector. This will hold the
  *        result. It will be resized to the proper size.
- * \param l The lower limit of the generation interval (inclusive).
- * \param h The upper limit of the generation interval (inclusive).
+ * \param l The lower limit of the generation interval (inclusive). This must
+ *        be less than or equal to the upper limit, and it must be integral.
+ *        Passing a fractional number here results in undefined behaviour.
+ * \param h The upper limit of the generation interval (inclusive). This must
+ *        be greater than or equal to the lower limit, and it must be integral.
+ *        Passing a fractional number here results in undefined behaviour.
  * \param length The number of random integers to generate.
- * \return Error code.
+ * \return The error code \c IGRAPH_EINVAL is returned in each of the
+ *         following cases: (1) The given lower limit is greater than the
+ *         given upper limit, i.e. \c l &gt; \c h. (2) Assuming that
+ *         \c l &lt; \c h and N is the sample size, the above error code is
+ *         returned if N &gt; |\c h - \c l|, i.e. the sample size exceeds the
+ *         size of the candidate pool.
  *
- * Time complexity: according to the referenced paper, the expected
+ * Time complexity: according to (Vitter 1987), the expected
  * running time is O(length).
+ *
+ * </para><para>
+ * Reference:
+ * \clist
+ * \cli (Vitter 1987)
+ *   J. S. Vitter. An efficient algorithm for sequential random sampling.
+ *   \emb ACM Transactions on Mathematical Software, \eme 13(1):58--67, 1987.
+ * \endclist
+ *
+ * \example examples/simple/igraph_random_sample.c
  */
 
-int igraph_random_sample(igraph_vector_t *res, igraph_integer_t l, igraph_integer_t h, 
+int igraph_random_sample(igraph_vector_t *res, igraph_real_t l, igraph_real_t h, 
 			 igraph_integer_t length) {
   igraph_real_t N=h-l+1;
   igraph_real_t n=length;
@@ -156,13 +1042,36 @@ int igraph_random_sample(igraph_vector_t *res, igraph_integer_t l, igraph_intege
   igraph_real_t negalphainv=-13;
   igraph_real_t threshold=-negalphainv*n;
   igraph_real_t S;
-  
+
+  /* getting back some sense of sanity */
+  if (l > h)
+    IGRAPH_ERROR("Lower limit is greater than upper limit", IGRAPH_EINVAL);
+  /* now we know that l <= h */
+  if (length > N)
+    IGRAPH_ERROR("Sample size exceeds size of candidate pool", IGRAPH_EINVAL);
+
+  /* treat rare cases quickly */
+  if (l==h) {
+    IGRAPH_CHECK(igraph_vector_resize(res, 1));
+    VECTOR(*res)[0] = l;
+    return 0;
+  }
+  if (length==N) {
+    long int i = 0;
+    IGRAPH_CHECK(igraph_vector_resize(res, length));
+    for (i = 0; i < length; i++) {
+      VECTOR(*res)[i] = l++;
+    }
+    return 0;
+  }
+
   igraph_vector_clear(res);
   IGRAPH_CHECK(igraph_vector_reserve(res, length));  
 
   RNG_BEGIN();
   
   Vprime=exp(log(RNG_UNIF01())*ninv);
+  l=l-1;
 
   while (n>1 && threshold < N) {
     igraph_real_t X, U;
@@ -173,7 +1082,7 @@ int igraph_random_sample(igraph_vector_t *res, igraph_integer_t l, igraph_intege
       while(1) {
 	X=Nreal*(-Vprime+1.0);
 	S=floor(X);
-	if (S==0) { S=1; }
+	// if (S==0) { S=1; }
 	if (S <qu1) { break; }
 	Vprime = exp(log(RNG_UNIF01())*ninv);
       }
@@ -205,7 +1114,7 @@ int igraph_random_sample(igraph_vector_t *res, igraph_integer_t l, igraph_intege
       Vprime=exp(log(RNG_UNIF01())*ninv);
     }
         
-    l+=S;
+    l+=S+1;
     igraph_vector_push_back(res, l);	/* allocated */
     N=-S+(-1+N);   Nreal=negSreal+(-1.0+Nreal);
     n=-1+n;   nreal=-1.0+nreal; ninv=nmin1inv;
@@ -214,11 +1123,11 @@ int igraph_random_sample(igraph_vector_t *res, igraph_integer_t l, igraph_intege
   }
   
   if (n>1) {
-    retval=igraph_random_sample_alga(res, l, h, n);
+    retval=igraph_i_random_sample_alga(res, l+1, h, n);
   } else {
     retval=0;
     S=floor(N*Vprime);
-    l+=S;
+    l+=S+1;
     igraph_vector_push_back(res, l);	/* allocated */
   }
 
@@ -228,6 +1137,29 @@ int igraph_random_sample(igraph_vector_t *res, igraph_integer_t l, igraph_intege
 }
   
 #ifdef USING_R
+
+/* These are never called. But they are correct, nevertheless */
+
+double igraph_norm_rand(igraph_rng_t *rng) {
+  return norm_rand();
+}
+
+double igraph_rgeom(igraph_rng_t *rng, double p) {
+  return Rf_rgeom(p);
+}
+
+double igraph_rbinom(igraph_rng_t *rng, double nin, double pp) {
+  return Rf_rbinom(nin, pp);
+}
+
+double igraph_rexp(igraph_rng_t *rng, double rate) {
+  igraph_real_t scale = 1.0 / rate;
+  if (!IGRAPH_FINITE(scale) || scale <= 0.0) {
+    if (scale == 0.0) { return 0.0; }
+    return IGRAPH_NAN;
+  }
+  return scale * exp_rand();
+}
 
 #else
 
@@ -328,7 +1260,7 @@ int igraph_random_sample(igraph_vector_t *res, igraph_integer_t l, igraph_intege
 #define ME_PRECISION	8
 /*	does not have "full" precision */
 #define ME_UNDERFLOW	16
-/*	and underflow occured (important for IEEE)*/
+/*	and underflow occurred (important for IEEE)*/
 
 #define ML_ERR_return_NAN { ML_ERROR(ME_DOMAIN); return ML_NAN; }
 
@@ -604,14 +1536,14 @@ int R_isnancpp(double x)
 #  define ISNAN(x)     (isnan(x)!=0)
 #endif
 
-double igraph_norm_rand(void) {
+double igraph_norm_rand(igraph_rng_t *rng) {
   
   double u1;
 
 #define BIG 134217728 /* 2^27 */
   /* unif_rand() alone is not of high enough precision */
-  u1 = RNG_UNIF(0,1);
-  u1 = (int)(BIG*u1) + RNG_UNIF(0,1);
+  u1 = igraph_rng_get_unif01(rng);
+  u1 = (int)(BIG*u1) + igraph_rng_get_unif01(rng);
   return igraph_qnorm5(u1/BIG, 0.0, 1.0, 1, 0);
 }
 
@@ -651,7 +1583,7 @@ double igraph_norm_rand(void) {
  *    Comm. ACM, 15, 873-882.
  */
 
-double igraph_exp_rand(void)
+double igraph_exp_rand(igraph_rng_t *rng)
 {
     /* q[k-1] = sum(log(2)^k / k!)  k=1,..,n, */
     /* The highest n (here 8) is determined by q[n-1] = 1.0 */
@@ -680,8 +1612,8 @@ double igraph_exp_rand(void)
 
     a = 0.;
     /* precaution if u = 0 is ever returned */
-    u = RNG_UNIF01();
-    while(u <= 0.0 || u >= 1.0) u = RNG_UNIF01();
+    u = igraph_rng_get_unif01(rng);
+    while(u <= 0.0 || u >= 1.0) u = igraph_rng_get_unif01(rng);
     for (;;) {
 	u += u;
 	if (u > 1.0)
@@ -694,10 +1626,10 @@ double igraph_exp_rand(void)
 	return a + u;
 
     i = 0;
-    ustar = RNG_UNIF01();
+    ustar = igraph_rng_get_unif01(rng);
     umin = ustar;
     do {
-	ustar = RNG_UNIF01();
+        ustar = igraph_rng_get_unif01(rng);
 	if (ustar < umin)
 	    umin = ustar;
 	i++;
@@ -760,7 +1692,7 @@ double igraph_exp_rand(void)
 #define TRUE  1
 #define M_1_SQRT_2PI    0.398942280401432677939946059934     /* 1/sqrt(2pi) */
 
-double igraph_rpois(double mu)
+double igraph_rpois(igraph_rng_t *rng, double mu)
 {
     /* Factorial Table (0:9)! */
     const double fact[10] =
@@ -769,12 +1701,12 @@ double igraph_rpois(double mu)
     };
 
     /* These are static --- persistent between calls for same mu : */
-    static int l, m;
+    static IGRAPH_THREAD_LOCAL int l, m;
 
-    static double b1, b2, c, c0, c1, c2, c3;
-    static double pp[36], p0, p, q, s, d, omega;
-    static double big_l;/* integer "w/o overflow" */
-    static double muprev = 0., muprev2 = 0.;/*, muold	 = 0.*/
+    static IGRAPH_THREAD_LOCAL double b1, b2, c, c0, c1, c2, c3;
+    static IGRAPH_THREAD_LOCAL double pp[36], p0, p, q, s, d, omega;
+    static IGRAPH_THREAD_LOCAL double big_l;/* integer "w/o overflow" */
+    static IGRAPH_THREAD_LOCAL double muprev = 0., muprev2 = 0.;/*, muold	 = 0.*/
 
     /* Local Vars  [initialize some for -Wall]: */
     double del, difmuk= 0., E= 0., fk= 0., fx, fy, g, px, py, t, u= 0., v, x;
@@ -796,7 +1728,7 @@ double igraph_rpois(double mu)
 	if (big_mu) {
 	    new_big_mu = TRUE;
 	    /* Case A. (recalculation of s,d,l	because mu has changed):
-	     * The poisson probabilities pk exceed the discrete normal
+	     * The Poisson probabilities pk exceed the discrete normal
 	     * probabilities fk whenever k >= m(mu).
 	     */
 	    muprev = mu;
@@ -819,12 +1751,12 @@ double igraph_rpois(double mu)
 
 	    repeat {
 		/* Step U. uniform sample for inversion method */
-		u = RNG_UNIF01();
+	        u = igraph_rng_get_unif01(rng);
 		if (u <= p0)
 		    return 0.;
 
 		/* Step T. table comparison until the end pp[l] of the
-		   pp-table of cumulative poisson probabilities
+		   pp-table of cumulative Poisson probabilities
 		   (0.458 > ~= pp[9](= 0.45792971447) for mu=10 ) */
 		if (l != 0) {
 		    for (k = (u <= 0.458) ? 1 : imin2(l, m);  k <= l; k++)
@@ -833,7 +1765,7 @@ double igraph_rpois(double mu)
 		    if (l == 35) /* u > pp[35] */
 			continue;
 		}
-		/* Step C. creation of new poisson
+		/* Step C. creation of new Poisson
 		   probabilities p[l..] and their cumulatives q =: pp[k] */
 		l++;
 		for (k = l; k <= 35; k++) {
@@ -854,7 +1786,7 @@ double igraph_rpois(double mu)
 /* Only if mu >= 10 : ----------------------- */
 
     /* Step N. normal sample */
-    g = mu + s * igraph_norm_rand();/* norm_rand() ~ N(0,1), standard normal */
+    g = mu + s * igraph_norm_rand(rng);/* norm_rand() ~ N(0,1), standard normal */
 
     if (g >= 0.) {
 	pois = floor(g);
@@ -864,7 +1796,7 @@ double igraph_rpois(double mu)
 	/* Step S. squeeze acceptance */
 	fk = pois;
 	difmuk = mu - fk;
-	u = RNG_UNIF01(); /* ~ U(0,1) - sample */
+	u = igraph_rng_get_unif01(rng); /* ~ U(0,1) - sample */
 	if (d * u >= difmuk * difmuk * difmuk)
 	    return pois;
     }
@@ -900,11 +1832,11 @@ double igraph_rpois(double mu)
     repeat {
 	/* Step E. Exponential Sample */
 
-	E = igraph_exp_rand();	/* ~ Exp(1) (standard exponential) */
+	E = igraph_exp_rand(rng);/* ~ Exp(1) (standard exponential) */
 
 	/*  sample t from the laplace 'hat'
 	    (if t <= -0.6744 then pk < fk for all mu >= 10.) */
-	u = 2 * RNG_UNIF01() - 1.;
+	u = 2 * igraph_rng_get_unif01(rng) - 1.;
 	t = 1.8 + fsign(E, u);
 	if (t > -0.6744) {
 	    pois = floor(mu + s * t);
@@ -951,26 +1883,26 @@ double igraph_rpois(double mu)
     return pois;
 }
 
-double igraph_rgeom(double p) {
+double igraph_rgeom(igraph_rng_t *rng, double p) {
     if (ISNAN(p) || p <= 0 || p > 1) ML_ERR_return_NAN;
 
-    return igraph_rpois(igraph_exp_rand() * ((1 - p) / p));
+    return igraph_rpois(rng, igraph_exp_rand(rng) * ((1 - p) / p));
 }
 
 /* This is from nmath/rbinom.c */
 
 #define repeat for(;;)
 
-double igraph_rbinom(double nin, double pp)
+double igraph_rbinom(igraph_rng_t *rng, double nin, double pp)
 {
     /* FIXME: These should become THREAD_specific globals : */
 
-    static double c, fm, npq, p1, p2, p3, p4, qn;
-    static double xl, xll, xlr, xm, xr;
+    static IGRAPH_THREAD_LOCAL double c, fm, npq, p1, p2, p3, p4, qn;
+    static IGRAPH_THREAD_LOCAL double xl, xll, xlr, xm, xr;
 
-    static double psave = -1.0;
-    static int nsave = -1;
-    static int m;
+    static IGRAPH_THREAD_LOCAL double psave = -1.0;
+    static IGRAPH_THREAD_LOCAL int nsave = -1;
+    static IGRAPH_THREAD_LOCAL int m;
 
     double f, f1, f2, u, v, w, w2, x, x1, x2, z, z2;
     double p, q, np, g, r, al, alv, amaxp, ffm, ynorm;
@@ -1030,8 +1962,8 @@ double igraph_rbinom(double nin, double pp)
 
     /*-------------------------- np = n*p >= 30 : ------------------- */
     repeat {
-      u = RNG_UNIF01() * p4;
-      v = RNG_UNIF01();
+      u = igraph_rng_get_unif01(rng) * p4;
+      v = igraph_rng_get_unif01(rng);
       /* triangular region */
       if (u <= p1) {
 	  ix = xm - p1 * v + u;
@@ -1079,7 +2011,7 @@ double igraph_rbinom(double nin, double pp)
 	  if (alv < ynorm - amaxp)
 	      goto finis;
 	  if (alv <= ynorm + amaxp) {
-	      /* stirling's formula to machine accuracy */
+	      /* Stirling's formula to machine accuracy */
 	      /* for the final acceptance/rejection test */
 	      x1 = ix + 1;
 	      f1 = fm + 1.0;
@@ -1101,7 +2033,7 @@ double igraph_rbinom(double nin, double pp)
   repeat {
      ix = 0;
      f = qn;
-     u = RNG_UNIF01();
+     u = igraph_rng_get_unif01(rng);
      repeat {
 	 if (u < f)
 	     goto finis;
@@ -1118,6 +2050,15 @@ double igraph_rbinom(double nin, double pp)
   return (double)ix;
 }
 
+igraph_real_t igraph_rexp(igraph_rng_t *rng, double rate) {
+  igraph_real_t scale = 1.0 / rate;
+  if (!IGRAPH_FINITE(scale) || scale <= 0.0) {
+    if (scale == 0.0) { return 0.0; }
+    return IGRAPH_NAN;
+  }
+  return scale * igraph_exp_rand(rng);
+}
+
 #endif
 
 /**********************************************************
@@ -1128,21 +2069,24 @@ double igraph_rbinom(double nin, double pp)
 
 /*   int i; */
 
-/*   for (i=0; i<100; i++) { */
-/*     printf("%i ", RNG_INTEGER(0,10)); */
+/*   RNG_BEGIN(); */
+
+/*   for (i=0; i<1000; i++) { */
+/*     printf("%li ", RNG_INTEGER(1,10)); */
 /*   } */
 /*   printf("\n"); */
 
-/*   for (i=0; i<100; i++) { */
+/*   for (i=0; i<1000; i++) { */
 /*     printf("%f ", RNG_UNIF(0,1)); */
 /*   } */
 /*   printf("\n"); */
 
-/*   for (i=0; i<100; i++) { */
+/*   for (i=0; i<1000; i++) { */
 /*     printf("%f ", RNG_NORMAL(0,5)); */
 /*   } */
 /*   printf("\n"); */
 
-/* } */
+/*   RNG_END(); */
 
-  
+/*   return 0; */
+/* } */

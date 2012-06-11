@@ -8,7 +8,8 @@
   a graph, like an adjacency matrix or an edge list.}
 \usage{
 get.adjacency(graph, type=c("both", "upper", "lower"),
-       attr=NULL, names=TRUE, binary=FALSE, sparse=FALSE)
+       attr=NULL, edges=FALSE, names=TRUE,
+       sparse=getIgraphOpt("sparsematrices"))
 get.edgelist(graph, names=TRUE)
 }
 \arguments{
@@ -24,7 +25,10 @@ get.edgelist(graph, names=TRUE)
     returned. If not \code{NULL} then the values of the given edge
     attribute are included in the adjacency matrix. If the graph has
     multiple edges, the edge attribute of an arbitrarily chosen edge
-    (for the multiple edges) is included.}
+    (for the multiple edges) is included. This argument is ignored if
+    \code{edges} is \code{TRUE}.}
+  \item{edges}{Logical scalar, whether to return the edge ids in the
+    matrix. For non-existant edges zero is returned.}
   \item{names}{Logical constant.
 
     For \code{graph.adjacenct} it gives whether to assign row and column names
@@ -35,8 +39,6 @@ get.edgelist(graph, names=TRUE)
     matrix containing vertex names (ie. the \code{name} vertex
     attribute) if they exist or numeric vertex ids.
   }
-  \item{binary}{Logical, whether to return a binary matrix. This argument
-    is ignored if \code{attr} is not \code{NULL}.}
   \item{sparse}{Logical scalar, whether to create a sparse matrix. The
     \sQuote{\code{Matrix}} package must be installed for creating sparse
     matrices.}
@@ -58,7 +60,7 @@ get.edgelist(graph, names=TRUE)
   A \code{ecount(graph)} by 2 numeric matrix for \code{get.edgelist}.
 }
 % \references{}
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{\code{\link{graph.adjacency}}, \code{\link{read.graph}}}
 \examples{
 g <- erdos.renyi.game(10, 2/10)

@@ -27,8 +27,7 @@ class Partition;
 
 }
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
 #include "bliss_kstack.hh"
 #include "bliss_kqueue.hh"
 #include "bliss_heap.hh"
@@ -101,10 +100,6 @@ public:
   void init(const unsigned int);
 
   bool is_discrete() const {return(free_cells == 0); }
-
-  void print(FILE *fp);
-  void print_signature(FILE *fp);
-
 
   /*
    * Splits "cell" into [cell_1,...,cell_n] so that &cell_1 == &cell

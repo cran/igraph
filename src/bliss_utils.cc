@@ -17,41 +17,44 @@ Copyright (C) 2003-2006 Tommi Junttila
 
 /* FSF address fixed in the above notice on 1 Oct 2009 by Tamas Nepusz */
 
-#include <assert.h>
 #include "bliss_utils.hh"
+#include "bliss_bignum.hh"
+
+using namespace std;
+
+#include <cstring>
+
+#if defined(BLISS_USE_GMP)
 
 namespace igraph {
 
-void print_permutation(FILE *fp,
-		       const unsigned int N,
-		       const unsigned int *perm)
-{
-  assert(N > 0);
-  assert(perm);
-  for(unsigned int i = 0; i < N; i++) {
-    unsigned int j = perm[i];
-    if(j == i)
-      continue;
-    bool is_first = true;
-    while(j != i) {
-      if(j < i) {
-        is_first = false;
-        break;
-      }
-      j = perm[j];
-    }
-    if(!is_first)
-      continue;
-    fprintf(fp, "(%u,", i);
-    j = perm[i];
-    while(j != i) {
-      fprintf(fp, "%u", j);
-      j = perm[j];
-      if(j != i)
-        fprintf(fp, ",");
-    }
-    fprintf(fp, ")");
+int BigNum::tostring(char **str) { 
+  *str=igraph_Calloc(mpz_sizeinbase(v, 10)+2, char);
+  if (! *str) { 
+    IGRAPH_ERROR("Cannot convert big number to string", IGRAPH_ENOMEM);
   }
+  mpz_get_str(*str, 10, v);
+  return 0;
 }
 
 }
+
+#else
+
+namespace igraph {
+
+int BigNum::tostring(char **str) {
+  int size=static_cast<int>( (log(abs(v))/log(10.0))+4 );
+  *str=igraph_Calloc(size, char );
+  if (! *str) {
+    IGRAPH_ERROR("Cannot convert big number to string", IGRAPH_ENOMEM);
+  }
+  std::stringstream ss;
+  ss << v;
+  strncpy(*str, ss.str().c_str(), size);
+  return 0;
+}
+
+}
+
+#endif

@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2007  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2007-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -111,4 +111,44 @@
 
 #ifdef HEAPLESSEQ
 #undef HEAPLESSEQ
+#endif
+
+#ifdef SUM
+#undef SUM
+#endif
+
+#ifdef SQ
+#undef SQ
+#endif
+
+#ifdef PROD
+#undef PROD
+#endif
+
+#ifdef NOTORDERED
+#undef NOTORDERED
+#endif
+
+#ifdef EQ
+#undef EQ
+#endif
+
+#ifdef DIFF
+#undef DIFF
+#endif
+
+#ifdef DIV
+#undef DIV
+#endif
+
+#ifdef NOABS
+#undef NOABS
+#endif
+
+#ifdef PRINTFUNC
+#undef PRINTFUNC
+#endif
+
+#ifdef FPRINTFUNC
+#undef PRINTFUNC
 #endif

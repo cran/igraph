@@ -6,7 +6,8 @@
 \description{Simple graphs are graphs which do not contain loop and
   multiple edges.}
 \usage{
-simplify(graph, remove.multiple = TRUE, remove.loops = TRUE)
+simplify(graph, remove.multiple = TRUE, remove.loops = TRUE,
+         edge.attr.comb = getIgraphOpt("edge.attr.comb"))
 is.simple(graph)
 }
 \arguments{
@@ -15,6 +16,11 @@ is.simple(graph)
     removed.}
   \item{remove.multiple}{Logical, whether the multiple edges are to be
     removed.}
+  \item{edge.attr.comb}{Specifies what to do with edge attributes, if
+    \code{remove.multiple=TRUE}. In this case many edges might be mapped
+    to a single one in the new graph, and their attributes are
+    combined. Please see \code{\link{attribute.combination}} for details
+    on this.}
 }
 \details{
   A loop edge is an edge for which the two endpoints are the same
@@ -30,7 +36,7 @@ is.simple(graph)
 }
 \value{A new graph object with the edges deleted. }
 % \references{}
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{\code{\link{is.loop}}, \code{\link{is.multiple}} and
   \code{\link{count.multiple}}, \code{\link{delete.edges}},
   \code{\link{delete.vertices}}}

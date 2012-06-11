@@ -4,12 +4,20 @@
 \title{Graph Laplacian}
 \description{The Laplacian of a graph.}
 \usage{
-graph.laplacian(graph, normalized=FALSE)
+graph.laplacian(graph, normalized=FALSE, weights=NULL,
+   sparse=getIgraphOpt("sparsematrices"))
 }
 \arguments{
   \item{graph}{The input graph.}
   \item{normalized}{Whether to calculate the normalized Laplacian. See
     definitions below.}
+  \item{weights}{An optional vector giving edge weights for weighted
+    Laplacian matrix. If this is \code{NULL} and the graph has an edge
+    attribute called \code{weight}, then it will be used
+    automatically. Set this to \code{NA} if you want the unweighted
+    Laplacian on a graph that has a \code{weight} edge attribute.}
+  \item{sparse}{Logical scalar, whether to return the result as a sparse
+    matrix. The \code{Matrix} package is required for sparse matrices.}
 }
 \details{
   The Laplacian Matrix of a graph is a symmetric matrix having
@@ -21,15 +29,21 @@ graph.laplacian(graph, normalized=FALSE)
   A normalized version of the Laplacian Matrix is similar: element (i,j)
   is 1 if i==j, -1/sqrt(d[i] d[j]) if i!=j and there is an edge between
   vertices i and j and 0 otherwise.
+
+  The weighted version of the Laplacian simply works with the weighted
+  degree instead of the plain degree. I.e. (i,j) is d[i], the weighted
+  degree of vertex i if if i==j, -w if i!=j and there is an edge between
+  vertices i and j with weight w, and 0 otherwise. The weighted degree
+  of a vertex is the sum of the weights of its adjacent edges.
 }
-\value{A square matrix with as many rows as the number of vertices in
-  the input graph.}
+\value{A numeric matrix.}
 % \references{}
-\author{ Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{ Gabor Csardi \email{csardi.gabor@gmail.com}}
 % \seealso{}
 \examples{
 g <- graph.ring(10)
 graph.laplacian(g)
 graph.laplacian(g, norm=TRUE)
+graph.laplacian(g, norm=TRUE, sparse=FALSE)
 }
 \keyword{graphs}

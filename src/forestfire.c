@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2007  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2007-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,9 +21,14 @@
 
 */
 
-#include "igraph.h"
-#include "memory.h"
-#include "random.h"
+#include "igraph_games.h"
+#include "igraph_memory.h"
+#include "igraph_random.h"
+#include "igraph_progress.h"
+#include "igraph_interrupt_internal.h"
+#include "igraph_interface.h"
+#include "igraph_constructors.h"
+#include "igraph_dqueue.h"
 #include "config.h"
 
 typedef struct igraph_i_forest_fire_data_t {
@@ -225,7 +230,7 @@ int igraph_forest_fire_game(igraph_t *graph, igraph_integer_t nodes,
 	  long int which=RNG_INTEGER(0, ileft-1);
 	  long int nei=VECTOR(*inv)[which];
 	  VECTOR(*inv)[which] = VECTOR(*inv)[ileft-1];
-	  VECTOR(*inv)[ileft-1] = which;
+	  VECTOR(*inv)[ileft-1] = nei;
 	  if (VECTOR(visited)[nei] != actnode+1) {
 	    ADD_EDGE_TO(nei);
 	    i++;

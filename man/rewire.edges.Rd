@@ -4,12 +4,16 @@
 \description{This function rewires the endpoints of the edges with a
   constant probability uniformly randomly to a new vertex in a graph. } 
 \usage{
-rewire.edges(graph, prob)
+rewire.edges(graph, prob, loops=FALSE, multiple=FALSE)
 }
 \arguments{
   \item{graph}{The input graph}
   \item{prob}{The rewiring probability, a real number between zero and
     one.}
+  \item{loops}{Logical scalar, whether loop edges are allowed in the
+    rewired graph.}
+  \item{multiple}{Logical scalar, whether multiple edges are allowed
+    int the generated graph.}
 }
 \details{
   Note that this function might create graphs with multiple and/or loop
@@ -17,7 +21,7 @@ rewire.edges(graph, prob)
 }
 \value{A new graph object.}
 %\references{}
-\author{ Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{ Gabor Csardi \email{csardi.gabor@gmail.com}}
 %\seealso{}
 \examples{
 # Some random shortcuts shorten the distances on a lattice

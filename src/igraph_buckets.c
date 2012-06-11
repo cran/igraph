@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2006  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2006-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,10 +21,31 @@
 
 */
 
-#include "types.h"
+#include "igraph_types.h"
+#include "igraph_types_internal.h"
 #include "config.h"
 
 #include <stdio.h>
+
+/* The igraph_buckets_t data structure can store at most 'size' 
+ * unique integers in 'bsize' buckets. It has the following simple 
+ * operations (in addition to _init() and _destroy():
+ * - _add() adding an element to the given bucket.
+ * - _popmax() removing an element from the bucket with the highest
+ *   id.
+ *   Currently buckets work as stacks, last-in-first-out mode.
+ * - _empty() queries whether the buckets is empty.
+ * 
+ * Internal representation: we use a vector to create single linked
+ * lists, and another vector that points to the starting element of
+ * each bucket. Zero means the end of the chain. So bucket i contains
+ * elements bptr[i], buckets[bptr[i]], buckets[buckets[bptr[i]]],
+ * etc., until a zero is found. 
+ * 
+ * We also keep the total number of elements in the buckets and the
+ * id of the non-empty bucket with the highest id, to facilitate the
+ * _empty() and _popmax() operations.
+ */ 
 
 int igraph_buckets_init(igraph_buckets_t *b, long int bsize, long int size) {
   IGRAPH_VECTOR_INIT_FINALLY(&b->bptr, bsize);
@@ -65,4 +86,11 @@ void igraph_buckets_add(igraph_buckets_t *b, long int bucket,
     b->max = bucket;
   }
   b->no++;
+}
+
+void igraph_buckets_clear(igraph_buckets_t *b) {
+  igraph_vector_null(&b->bptr);
+  igraph_vector_null(&b->buckets);
+  b->max = -1; 
+  b->no = 0;
 }

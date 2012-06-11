@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2008  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2008-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,8 +21,12 @@
 
 */
 
-#include "igraph.h"
-#include "attributes.h"
+#include "igraph_bipartite.h"
+#include "igraph_attributes.h"
+#include "igraph_adjlist.h"
+#include "igraph_interface.h"
+#include "igraph_constructors.h"
+#include "igraph_dqueue.h"
 
 /**
  * \section about_bipartite Bipartite networks in igraph
@@ -74,6 +78,8 @@
  * Time complexity: O(|V|*d^2+|E|), |V| is the number of vertices, |E|
  * is the number of edges, d is the average (total) degree of the
  * graphs.
+ * 
+ * \example examples/simple/igraph_bipartite_projection.c
  */
 
 int igraph_bipartite_projection_size(const igraph_t *graph,
@@ -137,7 +143,8 @@ int igraph_bipartite_projection_size(const igraph_t *graph,
 int igraph_i_bipartite_projection(const igraph_t *graph,
 				  const igraph_vector_bool_t *types,
 				  igraph_t *proj,
-				  int which) {
+				  int which,
+				  igraph_vector_t *multiplicity) {
   
   long int no_of_nodes=igraph_vcount(graph);
   long int i, j, k, remaining_nodes=0;
@@ -147,6 +154,7 @@ int igraph_i_bipartite_projection(const igraph_t *graph,
   igraph_vector_t *neis1, *neis2;
   long int neilen1, neilen2;
   igraph_vector_long_t added;
+  igraph_vector_t mult;
 
   if (which < 0) { return 0; }
   
@@ -158,6 +166,10 @@ int igraph_i_bipartite_projection(const igraph_t *graph,
   IGRAPH_FINALLY(igraph_vector_long_destroy, &added);
   IGRAPH_CHECK(igraph_adjlist_init(graph, &adjlist, IGRAPH_ALL));
   IGRAPH_FINALLY(igraph_adjlist_destroy, &adjlist);
+  if (multiplicity) { 
+    IGRAPH_VECTOR_INIT_FINALLY(&mult, no_of_nodes); 
+    igraph_vector_clear(multiplicity);
+  }
   
   for (i=0; i<no_of_nodes; i++) {
     if (VECTOR(*types)[i] == which) {
@@ -169,6 +181,7 @@ int igraph_i_bipartite_projection(const igraph_t *graph,
   for (i=0; i<no_of_nodes; i++) {
     if (VECTOR(*types)[i] == which) {
       long int new_i=VECTOR(vertex_index)[i]-1;
+      long int iedges=0;
       neis1=igraph_adjlist_get(&adjlist, i);
       neilen1=igraph_vector_size(neis1);
       for (j=0; j<neilen1; j++) {
@@ -178,16 +191,45 @@ int igraph_i_bipartite_projection(const igraph_t *graph,
 	for (k=0; k<neilen2; k++) {
 	  long int nei2=VECTOR(*neis2)[k], new_nei2;
 	  if (nei2 <= i) { continue; }
-	  if (VECTOR(added)[nei2] == i+1) { continue; }
+	  if (VECTOR(added)[nei2] == i+1) { 
+	    if (multiplicity) { VECTOR(mult)[nei2]+=1; }
+	    continue; 
+	  }
 	  VECTOR(added)[nei2] = i+1;
-	  new_nei2=VECTOR(vertex_index)[nei2]-1;
+	  if (multiplicity) { VECTOR(mult)[nei2]=1; }
+	  iedges++;
+
 	  IGRAPH_CHECK(igraph_vector_push_back(&edges, new_i));
-	  IGRAPH_CHECK(igraph_vector_push_back(&edges, new_nei2));
+	  if (multiplicity) { 
+	    /* If we need the multiplicity as well, then we put in the
+	       old vertex ids here and rewrite it later */
+	    IGRAPH_CHECK(igraph_vector_push_back(&edges, nei2));
+	  } else { 
+	    new_nei2=VECTOR(vertex_index)[nei2]-1;
+	    IGRAPH_CHECK(igraph_vector_push_back(&edges, new_nei2));
+	  }
 	}
       }
-    }
+      if (multiplicity) {
+	/* OK, we need to go through all the edges added for vertex new_i 
+	   and check their multiplicity */
+	long int now=igraph_vector_size(&edges);
+	long int from=now-iedges*2;
+	for (j=from; j<now; j+=2) {
+	  long int nei2=VECTOR(edges)[j+1];
+	  long int new_nei2=VECTOR(vertex_index)[nei2]-1;
+	  long int m=VECTOR(mult)[nei2];
+	  VECTOR(edges)[j+1]=new_nei2;
+	  IGRAPH_CHECK(igraph_vector_push_back(multiplicity, m));
+	}
+      }
+    } /* if VECTOR(*type)[i] == which */
   }
 
+  if (multiplicity) { 
+    igraph_vector_destroy(&mult);
+    IGRAPH_FINALLY_CLEAN(1);
+  }
   igraph_adjlist_destroy(&adjlist);
   igraph_vector_long_destroy(&added);
   igraph_vector_destroy(&vertex_index);
@@ -201,8 +243,7 @@ int igraph_i_bipartite_projection(const igraph_t *graph,
   
   IGRAPH_I_ATTRIBUTE_DESTROY(proj);
   IGRAPH_I_ATTRIBUTE_COPY(proj, graph, 1, 0, 0);
-  /*  For this we need the new attribute handling interface first... */
-  /*   IGRAPH_CHECK(igraph_i_attribute_permute_vertices(graph, proj, &vertex_perm)); */
+  IGRAPH_CHECK(igraph_i_attribute_permute_vertices(graph, proj, &vertex_perm));
   igraph_vector_destroy(&vertex_perm);
   IGRAPH_FINALLY_CLEAN(2);
   
@@ -220,6 +261,14 @@ int igraph_i_bipartite_projection(const igraph_t *graph,
  * \param proj1 Pointer to an uninitialized graph object, the first
  *   projection will be created here. It a null pointer, then it is
  *   ignored, see also the \p probe1 argument.
+ * \param multiplicity1 Pointer to a vector, or a null pointer. If not
+ *   the latter, then the multiplicity of the edges is stored
+ *   here. E.g. if there is an A-C-B and also an A-D-B triple in the
+ *   bipartite graph (but no more X, such that A-X-B is also in the
+ *   graph), then the multiplicity of the A-B edge in the projection
+ *   will be 2.
+ * \param multiplicity2 The same as \c multiplicity1, but for the
+ *   other projection.
  * \param proj2 Pointer to an uninitialized graph object, the second
  *   projection is created here, if it is not a null pointer. See also
  *   the \p probe1 argument.
@@ -232,12 +281,16 @@ int igraph_i_bipartite_projection(const igraph_t *graph,
  * Time complexity: O(|V|*d^2+|E|), |V| is the number of vertices, |E|
  * is the number of edges, d is the average (total) degree of the
  * graphs.
+ * 
+ * \example examples/simple/igraph_bipartite_projection.c
  */
 
 int igraph_bipartite_projection(const igraph_t *graph, 
 				const igraph_vector_bool_t *types,
 				igraph_t *proj1,
 				igraph_t *proj2,
+				igraph_vector_t *multiplicity1,
+				igraph_vector_t *multiplicity2,
 				igraph_integer_t probe1) {
   
   long int no_of_nodes=igraph_vcount(graph);
@@ -270,9 +323,9 @@ int igraph_bipartite_projection(const igraph_t *graph,
     t2 = proj2 ? 1 : -1;
   }
 
-  IGRAPH_CHECK(igraph_i_bipartite_projection(graph, types, proj1, t1));
+  IGRAPH_CHECK(igraph_i_bipartite_projection(graph, types, proj1, t1, multiplicity1));
   IGRAPH_FINALLY(igraph_destroy, proj1);
-  IGRAPH_CHECK(igraph_i_bipartite_projection(graph, types, proj2, t2));
+  IGRAPH_CHECK(igraph_i_bipartite_projection(graph, types, proj2, t2, multiplicity2));
   
   IGRAPH_FINALLY_CLEAN(1);
   return 0;
@@ -401,7 +454,7 @@ int igraph_full_bipartite(igraph_t *graph,
  * the graph is indeed bipartite with respect to the given \p types
  * vector. If there is an edge connecting two vertices of the same
  * kind, then an error is reported.
- * \param graph Pointer to an uninitlized graph object, the result is
+ * \param graph Pointer to an uninitialized graph object, the result is
  *   created here.
  * \param types Boolean vector giving the vertex types. The length of
  *   the vector defines the number of vertices in the graph.
@@ -414,6 +467,8 @@ int igraph_full_bipartite(igraph_t *graph,
  * 
  * Time complexity: O(|V|+|E|), linear in the number of vertices and
  * edges.
+ * 
+ * \example examples/simple/igraph_bipartite_create.c
  */
  
 int igraph_create_bipartite(igraph_t *graph, const igraph_vector_bool_t *types,

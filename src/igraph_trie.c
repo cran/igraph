@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph library.
-   Copyright (C) 2003, 2004, 2005  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2003-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,10 +21,11 @@
 
 */
 
-#include "types.h"
-#include "memory.h"
-#include "random.h"
-#include "error.h"
+#include "igraph_types.h"
+#include "igraph_types_internal.h"
+#include "igraph_memory.h"
+#include "igraph_random.h"
+#include "igraph_error.h"
 #include "config.h"
 
 #include <assert.h>
@@ -337,7 +338,7 @@ int igraph_trie_get2(igraph_trie_t *t, const char *key, long int length,
   char *tmp=igraph_Calloc(length+1, char);
 
   if (tmp==0) {
-    IGRAPH_ERROR("canot get from trie", IGRAPH_ENOMEM);
+    IGRAPH_ERROR("Cannot get from trie", IGRAPH_ENOMEM);
   }
   
   strncpy(tmp, key, length);

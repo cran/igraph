@@ -1,8 +1,8 @@
 /* -*- mode: C -*-  */
 /* 
    IGraph R package.
-   Copyright (C) 2006  Gabor Csardi <csardi@rmki.kfki.hu>
-   MTA RMKI, Konkoly-Thege Miklos st. 29-33, Budapest 1121, Hungary
+   Copyright (C) 2006-2012  Gabor Csardi <csardi.gabor@gmail.com>
+   334 Harvard street, Cambridge, MA 02139 USA
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 */
 
-#include "igraph.h"
+#include "igraph_constructors.h"
 #include "atlas-edges.h"
 #include "config.h"
 
@@ -56,6 +56,8 @@
  * 
  * Time complexity: O(|V|+|E|), the number of vertices plus the number of 
  * edges.
+ * 
+ * \example examples/simple/igraph_atlas.c
  */
 int igraph_atlas(igraph_t *graph, int number) {
   

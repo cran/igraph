@@ -1,5 +1,4 @@
-\name{communities}
-\alias{communities}
+\name{community.to.membership}
 \alias{community.to.membership}
 \concept{Community structure}
 \title{Common functions supporting community detection algorithms}
@@ -28,7 +27,7 @@ community.to.membership(graph, merges, steps, membership=TRUE, csize=TRUE)
   \item{csize}{A numeric vector giving the sizes of the communities.}
 }
 %\references{}
-\author{Gabor Csardi \email{csardi@rmki.kfki.hu}}
+\author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{
   \code{\link{walktrap.community}},
   \code{\link{edge.betweenness.community}},
@@ -38,7 +37,7 @@ community.to.membership(graph, merges, steps, membership=TRUE, csize=TRUE)
 }
 \examples{
 g <- graph.full(5) \%du\% graph.full(5) \%du\% graph.full(5)
-g <- add.edges(g, c(0,5, 0,10, 5, 10))
+g <- add.edges(g, c(1,6, 1,11, 6, 11))
 wtc <- walktrap.community(g)
 community.to.membership(g, wtc$merges, steps=12)
 }
