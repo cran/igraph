@@ -85,4 +85,4 @@ $ecount2
 > 
 > proc.time()
    user  system elapsed 
-  0.302   0.040   0.329 
+  0.307   0.041   0.334 

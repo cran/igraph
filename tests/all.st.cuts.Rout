@@ -154,4 +154,4 @@ $partition1s[[3]]
 > 
 > proc.time()
    user  system elapsed 
-  0.303   0.042   0.330 
+  0.304   0.041   0.331 

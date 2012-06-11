@@ -45,4 +45,4 @@ Fernando    Garth    Diane  Heather    Andre  Beverly    Carol       Ed
 > 
 > proc.time()
    user  system elapsed 
-  0.299   0.039   0.324 
+  0.298   0.040   0.324 

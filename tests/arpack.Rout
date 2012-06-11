@@ -159,4 +159,4 @@ Loading required package: lattice
 > 
 > proc.time()
    user  system elapsed 
-  2.435   0.076   2.498 
+  2.402   0.075   2.465 

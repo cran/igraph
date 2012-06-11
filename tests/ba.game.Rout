@@ -121,4 +121,4 @@ IGRAPH D--- 10 9 -- Barabasi graph
 > 
 > proc.time()
    user  system elapsed 
-  0.307   0.039   0.334 
+  0.313   0.044   0.342 

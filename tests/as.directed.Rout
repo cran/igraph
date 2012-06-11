@@ -91,4 +91,4 @@ IGRAPH DNW- 5 3 -- Small graph
 > 
 > proc.time()
    user  system elapsed 
-  0.314   0.040   0.340 
+  0.324   0.043   0.353 

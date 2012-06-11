@@ -57,4 +57,4 @@ IGRAPH D-W- 10 7 --
 > 
 > proc.time()
    user  system elapsed 
-  0.304   0.040   0.331 
+  0.298   0.040   0.325 

@@ -79,4 +79,4 @@ IGRAPH UNW- 4 2 -- Tiny graph
 > 
 > proc.time()
    user  system elapsed 
-  0.316   0.041   0.343 
+  0.322   0.044   0.348 

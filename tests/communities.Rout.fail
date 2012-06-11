@@ -57,30 +57,5 @@ Type 'q()' to quit R.
 [1] "optimal.community"
 [1] TRUE TRUE TRUE TRUE
 [1] "spinglass.community"
-[1] TRUE TRUE TRUE TRUE
-[1] "walktrap.community"
-[1] TRUE TRUE TRUE TRUE
-> 
-> fc <- fastgreedy.community(karate)
-> modularity(karate, cutat(fc, no=1))
-[1] 0
-> modularity(karate, cutat(fc, no=2))
-[1] 0.3717949
-> modularity(karate, cutat(fc, no=3))
-[1] 0.3806706
-> modularity(karate, cutat(fc, no=4))
-[1] 0.3759862
-> 
-> crossing(fc, karate)
- [1]  TRUE  TRUE  TRUE FALSE FALSE FALSE  TRUE  TRUE FALSE FALSE  TRUE  TRUE
-[13]  TRUE FALSE  TRUE  TRUE FALSE FALSE FALSE FALSE FALSE  TRUE FALSE  TRUE
-[25] FALSE FALSE  TRUE  TRUE  TRUE FALSE  TRUE FALSE FALSE FALSE FALSE FALSE
-[37] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE FALSE
-[49] FALSE FALSE FALSE FALSE  TRUE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
-[61] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
-[73] FALSE FALSE FALSE FALSE FALSE FALSE
-> 
-> 
-> proc.time()
-   user  system elapsed 
-  1.309   0.061   1.357 
+
+Execution halted
