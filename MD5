@@ -1,4 +1,4 @@
-971443e01ed55c4a237498a02829160f *DESCRIPTION
+4ac11a2192bd55243017ae69cfc405f1 *DESCRIPTION
 eb723b61539feef013de476e68b5c50a *LICENSE
 ddb9b5cd9ecbebbe0e3a5af39f7b9ff7 *NAMESPACE
 387a6fe9236ee67a5ec354bad3233d94 *R/attributes.R
@@ -714,7 +714,7 @@ f9a82bcf4a3a750ab39528bc8d304053 *src/qsort_r.c
 97ebb333ec07930a6be3d3e18df24e5c *src/revolver_cit.c
 427ad8273a9f6dab43fd3d6a9cd92b59 *src/revolver_grow.c
 ef5978a767d508998d189621f550b32b *src/revolver_ml_cit.c
-130365ba26173795ddb48df6d4e5033d *src/rinterface.c
+6ade1fb16cc0afc2f436f6594735c46c *src/rinterface.c
 3bc0f1802a0de2718213b62b126cbb5c *src/rinterface.h
 c284532488b2a6c0559d77e09d8f1904 *src/scg.c
 eb46c29ac6ec754a4cd41b871e9572e7 *src/scg_approximate_methods.c
