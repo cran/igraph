@@ -39,6 +39,7 @@
 #include "igraph_types_internal.h"
 #include "igraph_dqueue.h"
 #include "igraph_attributes.h"
+#include "igraph_qsort.h"
 #include "config.h"
 
 #include <assert.h>
@@ -99,7 +100,7 @@ int igraph_diameter(const igraph_t *graph, igraph_integer_t *pres,
 
   igraph_dqueue_t q=IGRAPH_DQUEUE_NULL;
   igraph_vector_t *neis;
-  igraph_integer_t dirmode;
+  igraph_neimode_t dirmode;
   igraph_adjlist_t allneis;
   
   if (directed) { dirmode=IGRAPH_OUT; } else { dirmode=IGRAPH_ALL; }
@@ -225,7 +226,7 @@ int igraph_average_path_length(const igraph_t *graph, igraph_real_t *res,
 
   igraph_dqueue_t q=IGRAPH_DQUEUE_NULL;
   igraph_vector_t *neis;
-  igraph_integer_t dirmode;
+  igraph_neimode_t dirmode;
   igraph_adjlist_t allneis;
 
   *res=0;  
@@ -321,7 +322,7 @@ int igraph_path_length_hist(const igraph_t *graph, igraph_vector_t *res,
   
   igraph_dqueue_t q=IGRAPH_DQUEUE_NULL;
   igraph_vector_t *neis;
-  igraph_integer_t dirmode;
+  igraph_neimode_t dirmode;
   igraph_adjlist_t allneis;
   igraph_real_t unconn = 0;
   long int ressize;
@@ -913,7 +914,7 @@ int igraph_get_all_shortest_paths(const igraph_t *graph,
   igraph_vector_t ptrlist;
   igraph_vector_t ptrhead;
   long int n, j, i;
-  long int to_reach, reached=0, maxdist=-1;
+  long int to_reach, reached=0, maxdist=0;
 
   igraph_vit_t vit;
 
@@ -995,7 +996,7 @@ int igraph_get_all_shortest_paths(const igraph_t *graph,
     IGRAPH_ALLOW_INTERRUPTION();
 
     if (reached >= to_reach) {
-	    /* all nodes were reached. Since we need all the shortest paths
+      /* all nodes were reached. Since we need all the shortest paths
        * to all these nodes, we can stop the search only if the distance
        * of the current node to the root is larger than the distance of
        * any of the nodes we wanted to reach */
@@ -1291,7 +1292,7 @@ int igraph_pagerank_old(const igraph_t *graph, igraph_vector_t *res,
   long int i, j, n, nodes_to_calc;
   igraph_real_t *prvec, *prvec_new, *prvec_aux, *prvec_scaled;
   igraph_vector_t *neis, outdegree;
-  igraph_integer_t dirmode;
+  igraph_neimode_t dirmode;
   igraph_adjlist_t allneis;
   igraph_real_t maxdiff=eps;
   igraph_vit_t vit;
@@ -1432,10 +1433,17 @@ int igraph_pagerank_old(const igraph_t *graph, igraph_vector_t *res,
  * \param graph The graph object to be rewired.
  * \param n Number of rewiring trials to perform.
  * \param mode The rewiring algorithm to be used. It can be one of the following:
- *         \c IGRAPH_REWIRING_SIMPLE: simple rewiring algorithm which
- *         chooses two arbitrary edges in each step (namely (a,b) and (c,d))
- *         and substitutes them with (a,d) and (c,b) if they don't exist.
- *         Time complexity: TODO.
+ *         \clist
+ *           \cli IGRAPH_REWIRING_SIMPLE
+ *                Simple rewiring algorithm which chooses two arbitrary edges
+ *                in each step (namely (a,b) and (c,d)) and substitutes them
+ *                with (a,d) and (c,b) if they don't exist.  The method will
+ *                neither destroy nor create self-loops.
+ *           \cli IGRAPH_REWIRING_SIMPLE_LOOPS
+ *                Same as \c IGRAPH_REWIRING_SIMPLE but allows the creation or
+ *                destruction of self-loops.
+ *         \endclist
+ *
  * \return Error code:
  *         \clist
  *           \cli IGRAPH_EINVMODE
@@ -1454,91 +1462,121 @@ int igraph_pagerank_old(const igraph_t *graph, igraph_vector_t *res,
 
 int igraph_rewire(igraph_t *graph, igraph_integer_t n, igraph_rewiring_t mode) {
   long int no_of_nodes=igraph_vcount(graph);
-  long int i, a, b, c, d;
-  igraph_adjlist_t allneis;
-  igraph_vector_t *neis[2], edgevec;
-  igraph_bool_t directed;
+  long int no_of_edges=igraph_ecount(graph);
+  long int i;
+  char message[256];
+  igraph_integer_t a, b, c, d, dummy, num_swaps, num_successful_swaps;
+  igraph_vector_t eids, edgevec;
+  igraph_bool_t directed, loops, ok;
   igraph_es_t es;
   
-  if (mode == IGRAPH_REWIRING_SIMPLE && no_of_nodes<4)
+  if ((mode == IGRAPH_REWIRING_SIMPLE || mode == IGRAPH_REWIRING_SIMPLE_LOOPS) &&
+      no_of_nodes<4)
     IGRAPH_ERROR("graph unsuitable for rewiring", IGRAPH_EINVAL);
   
   directed = igraph_is_directed(graph);
+  loops = (mode == IGRAPH_REWIRING_SIMPLE_LOOPS);
   
   RNG_BEGIN();
-  
-  igraph_adjlist_init(graph, &allneis, IGRAPH_OUT);
-  IGRAPH_FINALLY(igraph_adjlist_destroy, &allneis);
-  igraph_vector_init(&edgevec, 4);
-  IGRAPH_FINALLY(igraph_vector_destroy, &edgevec);
 
-  while (n>0) {
+  IGRAPH_VECTOR_INIT_FINALLY(&edgevec, 4);
+  IGRAPH_VECTOR_INIT_FINALLY(&eids, 2);
+  es = igraph_ess_vector(&eids);
+
+  /* We don't want the algorithm to get stuck in an infinite loop when
+   * it can't choose two edges satisfying the conditions. Instead of
+   * this, we choose two arbitrary edges and if they have endpoints
+   * in common, we just decrease the number of trials left and continue
+   * (so unsuccessful rewirings still count as a trial)
+   */
+
+  num_swaps = num_successful_swaps = 0;
+  while (num_swaps < n) {
     
     IGRAPH_ALLOW_INTERRUPTION();
+    if (num_swaps % 1000 == 0) {
+      snprintf(message, sizeof(message),
+          "Random rewiring (%.2f%% of the trials were successful)",
+          (100.0 * num_successful_swaps) / num_swaps);
+      IGRAPH_PROGRESS(message, (100.0 * num_swaps) / n, 0);
+    }
     
     switch (mode) {
     case IGRAPH_REWIRING_SIMPLE:
-      a=RNG_INTEGER(0, no_of_nodes-1);
-      do { c=RNG_INTEGER(0, no_of_nodes-1); } while (c==a);
-      
-      /* We don't want the algorithm to get stuck in an infinite loop when
-       * it can't choose two edges satisfying the conditions. Instead of
-       * this, we choose two arbitrary edges and if they have endpoints
-       * in common, we just decrease the number of trials left and continue
-       * (so unsuccessful rewirings still count as a trial)
-       */
-      neis[0]=igraph_adjlist_get(&allneis, a);
-      i=igraph_vector_size(neis[0]);
-      if (i==0) b=c;
-      else b=VECTOR(*neis[0])[RNG_INTEGER(0, i-1)];
-      
-      neis[1]=igraph_adjlist_get(&allneis, c);
-      i=igraph_vector_size(neis[1]);
-      if (i==0) d=a;
-      else d=VECTOR(*neis[1])[RNG_INTEGER(0, i-1)];
-      
-      /* Okay, we have two edges. Can they be rewired?
-       * neis[0] mustn't contain d and neis[1] mustn't contain b
-       */
-      if (!igraph_vector_search(neis[0], 0, d, NULL) &&
-	  !igraph_vector_search(neis[1], 0, b, NULL) &&
-	  b!=c && a!=d && a!=b && c!=d) {
-	/* printf("Deleting: %d -> %d, %d -> %d\n", a, b, c, d); */
-	IGRAPH_CHECK(igraph_es_pairs_small(&es, directed, a, b, c, d, -1));
-	IGRAPH_FINALLY(igraph_es_destroy, &es);
+    case IGRAPH_REWIRING_SIMPLE_LOOPS:
+      ok = 1;
+
+      /* Choose two edges randomly */
+      VECTOR(eids)[0]=RNG_INTEGER(0, no_of_edges-1);
+      do {
+        VECTOR(eids)[1]=RNG_INTEGER(0, no_of_edges-1);
+      } while (VECTOR(eids)[0] == VECTOR(eids)[1]);
+
+      /* Get the endpoints */
+      IGRAPH_CHECK(igraph_edge(graph, VECTOR(eids)[0], &a, &b));
+      IGRAPH_CHECK(igraph_edge(graph, VECTOR(eids)[1], &c, &d));
+
+      /* For an undirected graph, we have two "variants" of each edge, i.e.
+       * a -- b and b -- a. Since some rewirings can be performed only when we
+       * "swap" the endpoints, we do it now with probability 0.5 */
+      if (!directed && RNG_UNIF01() < 0.5) {
+        dummy = c; c = d; d = dummy;
+      }
+
+      /* If we do not touch loops, check whether a == b or c == d and disallow
+       * the swap if needed */
+      if (!loops && (a == b || c == d)) {
+        ok = 0;
+      } else {
+        /* Check whether they are suitable for rewiring */
+        if (a == c || b == d) {
+          /* Swapping would have no effect */
+          ok = 0;
+        } else {
+          /* a != c && b != d */
+          /* If a == d or b == c, the swap would generate at least one loop, so
+           * we disallow them unless we want to have loops */
+          ok = loops || (a != d && b != c);
+          /* Also, if a == b and c == d and we allow loops, doing the swap
+           * would result in a multiple edge if the graph is undirected */
+          ok = ok && (directed || a != b || c != d);
+        }
+      }
+
+      /* All good so far. Now check for the existence of a --> d and c --> b to
+       * disallow the creation of multiple edges */
+      if (ok) {
+        IGRAPH_CHECK(igraph_are_connected(graph, a, d, &ok));
+        ok = !ok;
+      }
+      if (ok) {
+        IGRAPH_CHECK(igraph_are_connected(graph, c, b, &ok));
+        ok = !ok;
+      }
+
+      /* If we are still okay, we can perform the rewiring */
+      if (ok) {
+	/* printf("Deleting: %ld -> %ld, %ld -> %ld\n",
+                  (long)a, (long)b, (long)c, (long)d); */
 	IGRAPH_CHECK(igraph_delete_edges(graph, es));	
-	igraph_es_destroy(&es);
-	IGRAPH_FINALLY_CLEAN(1);
 	VECTOR(edgevec)[0]=a; VECTOR(edgevec)[1]=d;
 	VECTOR(edgevec)[2]=c; VECTOR(edgevec)[3]=b;
-	/* printf("Adding: %d -> %d, %d -> %d\n", a, d, c, b); */
+	/* printf("Adding: %ld -> %ld, %ld -> %ld\n",
+                  (long)a, (long)d, (long)c, (long)b); */
 	igraph_add_edges(graph, &edgevec, 0);
-	/* We have to adjust the adjacency list view as well.
-	   It's a luck that we have the pointers in neis[0] and neis[1] */
-	for (i=igraph_vector_size(neis[0])-1; i>=0; i--)
-	  if (VECTOR(*neis[0])[i]==b) { VECTOR(*neis[0])[i]=d; break; }
-	for (i=igraph_vector_size(neis[1])-1; i>=0; i--)
-	  if (VECTOR(*neis[1])[i]==d) { VECTOR(*neis[1])[i]=b; break; }
-	/* In case of an undirected graph, we have to adjust the
-	 * adjacency view of vertices b and d as well */
-	if (!directed) {
-	  neis[0] = igraph_adjlist_get(&allneis, b);
-	  neis[1] = igraph_adjlist_get(&allneis, d);
-	  for (i=igraph_vector_size(neis[0])-1; i>=0; i--)
-	    if (VECTOR(*neis[0])[i]==a) { VECTOR(*neis[0])[i]=c; break; }
-	  for (i=igraph_vector_size(neis[1])-1; i>=0; i--)
-	    if (VECTOR(*neis[1])[i]==c) { VECTOR(*neis[1])[i]=a; break; }
-	}
+        num_successful_swaps++;
       }
       break;
     default:
       RNG_END();
       IGRAPH_ERROR("unknown rewiring mode", IGRAPH_EINVMODE);
     }
-    n--;
+    num_swaps++;
   }
   
-  igraph_adjlist_destroy(&allneis);
+  IGRAPH_PROGRESS("Random rewiring: ", 100.0, 0);
+
+  igraph_vector_destroy(&eids);
   igraph_vector_destroy(&edgevec);
   IGRAPH_FINALLY_CLEAN(2);
   
@@ -4944,8 +4982,7 @@ int igraph_shortest_paths_dijkstra(const igraph_t *graph,
        maximum heap and we need a minimum heap.
      - we don't use IGRAPH_INFINITY in the res matrix during the
        computation, as IGRAPH_FINITE() might involve a function call 
-       and we want to spare that. So we store distance+1.0 instead of 
-       distance in the res matrix, and zero denotes infinity.
+       and we want to spare that. -1 will denote infinity instead.
   */
   
   long int no_of_nodes=igraph_vcount(graph);
@@ -5192,6 +5229,7 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
   IGRAPH_FINALLY(igraph_lazy_inclist_destroy, &inclist);
 
   IGRAPH_VECTOR_INIT_FINALLY(&dists, no_of_nodes);
+  igraph_vector_fill(&dists, -1.0);
 
   parents = igraph_Calloc(no_of_nodes, long int);
   if (parents == 0) IGRAPH_ERROR("Can't calculate shortest paths", IGRAPH_ENOMEM);
@@ -5210,7 +5248,7 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
     }
   }
 
-  VECTOR(dists)[(long int)from] = 1.0;	/* zero distance */
+  VECTOR(dists)[(long int)from] = 0.0;	/* zero distance */
   parents[(long int)from] = 0;
   igraph_2wheap_push_with_index(&Q, from, 0);
     
@@ -5234,14 +5272,14 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
       long int to=IGRAPH_OTHER(graph, edge, minnei);
       igraph_real_t altdist=mindist + VECTOR(*weights)[edge];
       igraph_real_t curdist=VECTOR(dists)[to];
-      if (curdist==0) {
-        /* This is the first non-infinite distance */
-        VECTOR(dists)[to] = altdist+1.0;
+      if (curdist < 0) {
+        /* This is the first finite distance */
+        VECTOR(dists)[to] = altdist;
         parents[to] = edge+1;
         IGRAPH_CHECK(igraph_2wheap_push_with_index(&Q, to, -altdist));
-      } else if (altdist < curdist-1) {
+      } else if (altdist < curdist) {
 	      /* This is a shorter path */
-        VECTOR(dists)[to] = altdist+1.0;
+        VECTOR(dists)[to] = altdist;
         parents[to] = edge+1;
         IGRAPH_CHECK(igraph_2wheap_modify(&Q, to, -altdist));
       }
@@ -5418,7 +5456,7 @@ int igraph_i_vector_tail_cmp(const void* path1, const void* path2) {
  *        shortest paths will be calculated. A vertex might be given multiple
  *        times.
  * \param weights a vector holding the edge weights. All weights must be
- *        positive.
+ *        non-negative.
  * \param mode The type of shortest paths to be use for the
  *        calculation in directed graphs. Possible values: 
  *        \clist
@@ -5500,6 +5538,7 @@ int igraph_get_all_shortest_paths_dijkstra(const igraph_t *graph,
 
   /* distance of each vertex from the root */
   IGRAPH_VECTOR_INIT_FINALLY(&dists, no_of_nodes);
+  igraph_vector_fill(&dists, -1.0);
 
   /* order lists the order of vertices in which they were found during
    * the traversal */
@@ -5532,7 +5571,7 @@ int igraph_get_all_shortest_paths_dijkstra(const igraph_t *graph,
   igraph_vit_destroy(&vit);
   IGRAPH_FINALLY_CLEAN(1);
 
-  VECTOR(dists)[(long int)from] = 1.0;	/* zero distance */
+  VECTOR(dists)[(long int)from] = 0.0;	/* zero distance */
   igraph_2wheap_push_with_index(&Q, from, 0);
     
   while (!igraph_2wheap_empty(&Q) && to_reach > 0) {
@@ -5565,19 +5604,23 @@ int igraph_get_all_shortest_paths_dijkstra(const igraph_t *graph,
       igraph_real_t curdist=VECTOR(dists)[to];
       igraph_vector_t *parent_vec;
 
-      if (curdist==0) {
-        /* This is the first non-infinite distance */
-        VECTOR(dists)[to] = altdist+1.0;
+      if (curdist< 0) {
+        /* This is the first finite distance */
+        VECTOR(dists)[to] = altdist;
         parent_vec = (igraph_vector_t*)VECTOR(parents)[to];
         IGRAPH_CHECK(igraph_vector_push_back(parent_vec, minnei));
         IGRAPH_CHECK(igraph_2wheap_push_with_index(&Q, to, -altdist));
-      } else if (altdist == curdist-1) {
-	      /* This is an alternative path with exactly the same length */
+      } else if (altdist == curdist && VECTOR(*weights)[edge] > 0) {
+	/* This is an alternative path with exactly the same length.
+         * Note that we consider this case only if the edge via which we
+         * reached the node has a nonzero weight; otherwise we could create
+         * infinite loops in undirected graphs by traversing zero-weight edges
+         * back-and-forth */
         parent_vec = (igraph_vector_t*)VECTOR(parents)[to];
         IGRAPH_CHECK(igraph_vector_push_back(parent_vec, minnei));
-      } else if (altdist < curdist-1) {
-	      /* This is a shorter path */
-        VECTOR(dists)[to] = altdist+1.0;
+      } else if (altdist < curdist) {
+	/* This is a shorter path */
+        VECTOR(dists)[to] = altdist;
         parent_vec = (igraph_vector_t*)VECTOR(parents)[to];
         igraph_vector_clear(parent_vec);
         IGRAPH_CHECK(igraph_vector_push_back(parent_vec, minnei));
@@ -5595,10 +5638,15 @@ int igraph_get_all_shortest_paths_dijkstra(const igraph_t *graph,
   IGRAPH_FINALLY_CLEAN(2);
 
   /*
+  printf("Order:\n");
+  igraph_vector_print(&order);
+
   printf("Parent vertices:\n");
   for (i = 0; i < no_of_nodes; i++) {
-    printf("[%ld]: ", (long int)i);
-    igraph_vector_print(VECTOR(parents)[i]);
+    if (igraph_vector_size(VECTOR(parents)[i]) > 0) {
+      printf("[%ld]: ", (long int)i);
+      igraph_vector_print(VECTOR(parents)[i]);
+    }
   }
   */
 
@@ -5738,6 +5786,7 @@ int igraph_get_all_shortest_paths_dijkstra(const igraph_t *graph,
       /* now, take the parent vertices */
       parent_vec = (igraph_vector_t*)VECTOR(parents)[node];
       m = igraph_vector_size(parent_vec);
+
       /*
       printf("Calculating shortest paths to vertex %ld\n", node);
       printf("Parents are: ");
@@ -6700,7 +6749,7 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
   igraph_inclist_t inclist;
   igraph_vector_long_t already_added;
   long int source;
-  igraph_integer_t dirmode = directed ? IGRAPH_OUT : IGRAPH_ALL;
+  igraph_neimode_t dirmode = directed ? IGRAPH_OUT : IGRAPH_ALL;
 
   long int from=-1, to=-1;
   igraph_real_t res=0;
@@ -6724,6 +6773,7 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
   IGRAPH_CHECK(igraph_vector_long_init(&already_added, no_of_nodes));
   IGRAPH_FINALLY(igraph_vector_long_destroy, &already_added);
   IGRAPH_VECTOR_INIT_FINALLY(&dist, no_of_nodes);
+  igraph_vector_fill(&dist, -1);
   IGRAPH_CHECK(igraph_indheap_init(&Q, no_of_nodes));
   IGRAPH_FINALLY(igraph_indheap_destroy, &Q);
   IGRAPH_CHECK(igraph_inclist_init(graph, &inclist, dirmode));
@@ -6736,7 +6786,7 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
 
     igraph_indheap_push_with_index(&Q, source, -0);
     VECTOR(already_added)[source] = source+1;
-    VECTOR(dist)[source] = 1.0;
+    VECTOR(dist)[source] = 0.0;
     nodes_reached = 0.0;
 
     while (!igraph_indheap_empty(&Q)) {
@@ -6757,16 +6807,16 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
 	long int to=IGRAPH_OTHER(graph, edge, minnei);
 	igraph_real_t altdist=mindist + VECTOR(*weights)[edge];
 	igraph_real_t curdist= (VECTOR(already_added)[to]==source+1) ? 
-	  VECTOR(dist)[to] : 0;
+	  VECTOR(dist)[to] : -1;
 	
-	if (curdist==0) {
-	  /* First non-finite distance */
+	if (curdist < 0) {
+	  /* First finite distance */
 	  VECTOR(already_added)[to] = source+1;
-	  VECTOR(dist)[to] = altdist+1.0;
+	  VECTOR(dist)[to] = altdist;
 	  IGRAPH_CHECK(igraph_indheap_push_with_index(&Q, to, -altdist));
-	} else if (altdist < curdist-1) {
+	} else if (altdist < curdist) {
 	  /* A shorter path */
-	  VECTOR(dist)[to] = altdist+1.0;
+	  VECTOR(dist)[to] = altdist;
 	  IGRAPH_CHECK(igraph_indheap_modify(&Q, to, -altdist));
 	}
       }
@@ -7184,3 +7234,293 @@ int igraph_diversity(igraph_t *graph, const igraph_vector_t *weights,
   
   return 0;
 }
+
+#define SUCCEED {   \
+  if (res) {        \
+    *res = 1;       \
+    return IGRAPH_SUCCESS; \
+  }                 \
+}
+
+#define FAIL {   \
+  if (res) {     \
+    *res = 0;    \
+    return IGRAPH_SUCCESS; \
+  }              \
+}
+
+/**
+ * \function igraph_is_degree_sequence
+ * Determines whether a degree sequence is valid.
+ *
+ * A sequence of n integers is a valid degree sequence if there exists some
+ * graph where the degree of the i-th vertex is equal to the i-th element of the
+ * sequence. Note that the graph may contain multiple or loop edges; if you are
+ * interested in whether the degrees of some \em simple graph may realize the
+ * given sequence, use \ref igraph_is_graphical_degree_sequence.
+ *
+ * </para><para>
+ * In particular, the function checks whether all the degrees are non-negative.
+ * For undirected graphs, it also checks whether the sum of degrees is even.
+ * For directed graphs, the function checks whether the lengths of the two
+ * degree vectors are equal and whether their sums are also equal. These are
+ * known sufficient and necessary conditions for a degree sequence to be
+ * valid.
+ *
+ * \param out_degrees  an integer vector specifying the degree sequence for
+ *     undirected graphs or the out-degree sequence for directed graphs.
+ * \param in_degrees   an integer vector specifying the in-degrees of the
+ *     vertices for directed graphs. For undirected graphs, this must be null.
+ * \param res  pointer to a boolean variable, the result will be stored here
+ * \return Error code.
+ * 
+ * Time complexity: O(n), where n is the length of the degree sequence.
+ */
+int igraph_is_degree_sequence(const igraph_vector_t *out_degrees,
+    const igraph_vector_t *in_degrees, igraph_bool_t *res) {
+  /* degrees must be non-negative */
+  if (igraph_vector_any_smaller(out_degrees, 0))
+    FAIL;
+  if (in_degrees && igraph_vector_any_smaller(in_degrees, 0))
+    FAIL;
+
+  if (in_degrees == 0) {
+    /* sum of degrees must be even */
+    if (((long int)igraph_vector_sum(out_degrees) % 2) != 0)
+      FAIL;
+  } else {
+    /* length of the two degree vectors must be equal */
+    if (igraph_vector_size(out_degrees) != igraph_vector_size(in_degrees))
+      FAIL;
+    /* sum of in-degrees must be equal to sum of out-degrees */
+    if (igraph_vector_sum(out_degrees) != igraph_vector_sum(in_degrees))
+      FAIL;
+  }
+
+  SUCCEED;
+  return 0;
+}
+
+int igraph_i_is_graphical_degree_sequence_undirected(
+    const igraph_vector_t *degrees, igraph_bool_t *res);
+int igraph_i_is_graphical_degree_sequence_directed(
+    const igraph_vector_t *out_degrees, const igraph_vector_t *in_degrees,
+    igraph_bool_t *res);
+
+/**
+ * \function igraph_is_graphical_degree_sequence
+ * Determines whether a sequence of integers can be a degree sequence of some
+ * simple graph.
+ *
+ * </para><para>
+ * References:
+ *
+ * </para><para>
+ * Hakimi SL: On the realizability of a set of integers as degrees of the
+ * vertices of a simple graph. J SIAM Appl Math 10:496-506, 1962.
+ *
+ * </para><para>
+ * PL Erdos, I Miklos and Z Toroczkai: A simple Havel-Hakimi type algorithm
+ * to realize graphical degree sequences of directed graphs. The Electronic
+ * Journal of Combinatorics 17(1):R66, 2010.
+ *
+ * \param out_degrees  an integer vector specifying the degree sequence for
+ *     undirected graphs or the out-degree sequence for directed graphs.
+ * \param in_degrees   an integer vector specifying the in-degrees of the
+ *     vertices for directed graphs. For undirected graphs, this must be null.
+ * \param res  pointer to a boolean variable, the result will be stored here
+ * \return Error code.
+ * 
+ * Time complexity: O(n^2 log n) where n is the length of the degree sequence.
+ */
+int igraph_is_graphical_degree_sequence(const igraph_vector_t *out_degrees,
+    const igraph_vector_t *in_degrees, igraph_bool_t *res) {
+  IGRAPH_CHECK(igraph_is_degree_sequence(out_degrees, in_degrees, res));
+  if (!*res)
+    FAIL;
+
+  if (igraph_vector_size(out_degrees) == 0)
+    SUCCEED;
+
+  if (in_degrees == 0) {
+    return igraph_i_is_graphical_degree_sequence_undirected(out_degrees, res);
+  } else {
+    return igraph_i_is_graphical_degree_sequence_directed(out_degrees, in_degrees, res);
+  }
+}
+
+int igraph_i_is_graphical_degree_sequence_undirected(
+    const igraph_vector_t *degrees, igraph_bool_t *res) {
+  igraph_vector_t work;
+  igraph_integer_t degree;
+  long int i, vcount;
+
+  IGRAPH_CHECK(igraph_vector_copy(&work, degrees));
+  IGRAPH_FINALLY(igraph_vector_destroy, &work);
+
+  vcount = igraph_vector_size(&work);
+  *res = 0;
+  while (vcount) {
+    /* RFE: theoretically, a counting sort would be only O(n) here and not
+     * O(n log n) since the degrees are bounded from above by n. I am not sure
+     * whether it's worth the fuss, though, sort() in the C library is highly
+     * optimized */
+    igraph_vector_sort(&work);
+    if (VECTOR(work)[0] < 0)
+      break;
+
+    degree = igraph_vector_pop_back(&work);
+    vcount--;
+
+    if (degree == 0) {
+      *res = 1;
+      break;
+    }
+
+    if (degree > vcount)
+      break;
+
+    for (i = vcount-degree; i < vcount; i++) {
+      VECTOR(work)[i]--;
+    }
+  }
+
+  igraph_vector_destroy(&work);
+  IGRAPH_FINALLY_CLEAN(1);
+
+  return 0;
+}
+
+typedef struct {
+	igraph_vector_t* first;
+	igraph_vector_t* second;
+} igraph_i_qsort_dual_vector_cmp_data_t;
+
+int igraph_i_qsort_dual_vector_cmp_asc(void* data, const void *p1, const void *p2) {
+	igraph_i_qsort_dual_vector_cmp_data_t* sort_data =
+		(igraph_i_qsort_dual_vector_cmp_data_t*)data;
+	long int index1 = *((long int*)p1);
+	long int index2 = *((long int*)p2);
+	if (VECTOR(*sort_data->first)[index1] < VECTOR(*sort_data->first)[index2])
+		return -1;
+	if (VECTOR(*sort_data->first)[index1] > VECTOR(*sort_data->first)[index2])
+		return 1;
+	if (VECTOR(*sort_data->second)[index1] < VECTOR(*sort_data->second)[index2])
+		return -1;
+	if (VECTOR(*sort_data->second)[index1] > VECTOR(*sort_data->second)[index2])
+		return 1;
+	return 0;
+}
+
+int igraph_i_is_graphical_degree_sequence_directed(
+    const igraph_vector_t *out_degrees, const igraph_vector_t *in_degrees,
+    igraph_bool_t *res) {
+  igraph_vector_t work_in;
+	igraph_vector_t work_out;
+	igraph_vector_long_t out_vertices;
+	igraph_vector_long_t index_array;
+	long int i, vcount, u, v, degree;
+	long int index_array_unused_prefix_length, nonzero_indegree_count;
+	igraph_i_qsort_dual_vector_cmp_data_t sort_data;
+
+  IGRAPH_CHECK(igraph_vector_copy(&work_in, in_degrees));
+  IGRAPH_FINALLY(igraph_vector_destroy, &work_in);
+  IGRAPH_CHECK(igraph_vector_copy(&work_out, out_degrees));
+  IGRAPH_FINALLY(igraph_vector_destroy, &work_in);
+	IGRAPH_CHECK(igraph_vector_long_init(&out_vertices, 0));
+	IGRAPH_FINALLY(igraph_vector_long_destroy, &out_vertices);
+	
+  vcount = igraph_vector_size(&work_out);
+	IGRAPH_CHECK(igraph_vector_long_reserve(&out_vertices, vcount));
+
+	IGRAPH_CHECK(igraph_vector_long_init(&index_array, vcount));
+	IGRAPH_FINALLY(igraph_vector_long_destroy, &index_array);
+
+	/* Set up the auxiliary struct for sorting */
+  sort_data.first  = &work_in;
+  sort_data.second = &work_out;
+
+	/* Fill the index array. This will contain the indices of the "active" vertices,
+	 * i.e. those that have a non-zero in- or out-degree */
+	nonzero_indegree_count = 0;
+	for (i = 0; i < vcount; i++) {
+		if (VECTOR(work_in)[i] > 0) {
+			VECTOR(index_array)[i] = i;
+			nonzero_indegree_count++;
+		}
+		if (VECTOR(work_out)[i] > 0) {
+			IGRAPH_CHECK(igraph_vector_long_push_back(&out_vertices, i));
+		}
+	}
+
+  *res = 0;
+	index_array_unused_prefix_length = 0;
+  while (!igraph_vector_long_empty(&out_vertices)) {
+		/* Find a vertex with non-zero out-degree. */
+		u = igraph_vector_long_pop_back(&out_vertices);
+		/*
+		printf("Using vertex %ld\n", (long int)u);
+		printf("  Degree vectors:\n  ");
+		igraph_vector_print(&work_out); printf("  ");
+		igraph_vector_print(&work_in);
+		*/
+
+		/* Remember the degree of u and clear the degree itself */
+		degree = VECTOR(work_out)[u];
+		VECTOR(work_out)[u] = 0;
+		/* printf("  Out-degree: %ld\n", (long int)degree); */
+
+		/* Is the degree larger than the number of vertices with nonzero in-degree?
+		 * (Make sure that u is excluded from the vertices with nonzero in-degree).
+		 */
+		if (degree > nonzero_indegree_count - (VECTOR(work_in)[u] > 0 ? 1 : 0))
+			break;
+
+		/* Find the prefix of index_array that consists solely of vertices with
+		 * zero indegree. We don't need to sort these */
+		while (index_array_unused_prefix_length < vcount &&
+				VECTOR(work_in)[VECTOR(index_array)[index_array_unused_prefix_length]] == 0) {
+			index_array_unused_prefix_length++;
+			nonzero_indegree_count--;
+		}
+
+		/* Sort work_in first and then sort work_out for equal indegrees only. This
+		 * is done by sorting an index vector first; indexing work_out and work_in by
+		 * the sorted index vector would then give the sorted order of these vectors. */
+		igraph_qsort_r(VECTOR(index_array) + index_array_unused_prefix_length,
+				nonzero_indegree_count, sizeof(long int), &sort_data,
+				igraph_i_qsort_dual_vector_cmp_asc);
+		/* printf("  Sorted index array:\n  ");
+		igraph_vector_long_print(&index_array); */
+
+		/* Create edges from u to the vertices with the largest in-degrees */
+		i = vcount;
+		while (degree > 0) {
+			v = VECTOR(index_array)[--i];
+			if (u == v) {
+				/* Avoid creating a loop edge */
+				continue;
+			}
+      VECTOR(work_in)[v]--;
+		  /* printf("  Created edge from %ld to %ld, in-degree is now %ld\n", 
+					(long int)u, (long int)v, (long int)VECTOR(work_in)[v]); */
+			degree--;
+    }
+	}
+
+	if (igraph_vector_long_empty(&out_vertices)) {
+		/* No more vertices with non-zero outdegree, so we were successful */
+		*res = 1;
+	}
+
+	igraph_vector_long_destroy(&index_array);
+	igraph_vector_long_destroy(&out_vertices);
+  igraph_vector_destroy(&work_out);
+  igraph_vector_destroy(&work_in);
+  IGRAPH_FINALLY_CLEAN(4);
+
+	return IGRAPH_SUCCESS;
+}
+
+#undef SUCCEED
+#undef FAIL

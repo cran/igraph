@@ -142,9 +142,11 @@ graph.adjacency.dense <- function(adjmatrix, mode=c("directed", "undirected", "m
       stop("not a square matrix")
     }
 
+    mode(adjmatrix) <- "numeric"
+    
     on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
     res <- .Call("R_igraph_weighted_adjacency", adjmatrix,
-                 as.numeric(mode), "weight", diag,
+                 as.numeric(mode), weighted, diag,
                  PACKAGE="igraph")
   } else {
     
@@ -152,6 +154,8 @@ graph.adjacency.dense <- function(adjmatrix, mode=c("directed", "undirected", "m
     attrs <- attributes(adjmatrix)
     adjmatrix <- as.numeric(adjmatrix)
     attributes(adjmatrix) <- attrs
+
+    if (!diag) { diag(adjmatrix) <- 0 }
     
     on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
     res <- .Call("R_igraph_graph_adjacency", adjmatrix, as.numeric(mode),
@@ -518,6 +522,12 @@ graph.data.frame <- function(d, directed=TRUE, vertices=NULL) {
     stop("the data frame should contain at least two columns")
   }
 
+  ## This is to avoid scientific notation in vertex names, if they
+  ## happen to be numbers
+  scipen <- getOption("scipen")
+  options("scipen"=999)
+  on.exit(options(scipen=scipen))
+  
   ## Handle if some elements are 'NA'
   if (any(is.na(d[,1:2]))) {
     warning("In `d' `NA' elements were replaced with string \"NA\"")
@@ -768,7 +778,7 @@ graph.incidence.sparse <- function(incidence, directed, mode, multiple,
 
 graph.incidence.dense <- function(incidence, directed, mode, multiple,
                                   weighted) {
-  
+
   if (!is.null(weighted)) {
     if (is.logical(weighted) && weighted) {
       weighted <- "weight"
@@ -843,6 +853,7 @@ graph.incidence <- function(incidence, directed=FALSE,
                                   mode=mode, multiple=multiple,
                                   weighted=weighted)
   } else {
+    incidence <- as.matrix(incidence)
     res <- graph.incidence.dense(incidence, directed=directed, mode=mode,
                                  multiple=multiple, weighted=weighted)
   }

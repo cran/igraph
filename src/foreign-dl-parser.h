@@ -74,7 +74,7 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 85 "foreign-dl-parser.y"
+#line 86 "foreign-dl-parser.y"
 {
   long int integer;
   igraph_real_t real;

@@ -54,7 +54,7 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 79 "foreign-lgl-parser.y"
+#line 80 "foreign-lgl-parser.y"
 {
   long int edgenum;
   double weightnum;

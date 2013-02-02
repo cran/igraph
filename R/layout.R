@@ -244,6 +244,7 @@ layout.graphopt <- function(graph, ...,
         as.double(params$niter), as.double(params$charge),
         as.double(params$mass), as.double(params$spring.length),
         as.double(params$spring.constant), params$max.sa.movement,
+        params$start,
         PACKAGE="igraph")
 }
 
@@ -394,7 +395,7 @@ layout.spring<-function(graph, ..., params=list()) {
   tempa <- sample((0:(vc-1))/vc) #Set initial positions randomly on the circle
   x <- vc/(2*pi)*sin(2*pi*tempa)
   y <- vc/(2*pi)*cos(2*pi*tempa)
-  ds <- symmetrize.mat(get.adjacency(graph))#Symmetrize/dichotomize the graph
+  ds <- symmetrize.mat(get.adjacency(graph, sparse=FALSE))#Symmetrize/dichotomize the graph
   kfr <- params$kfr                     #Set initial friction level
   niter <- 1                            #Set the iteration counter
   #Simulate, with increasing friction, until motion stops    
@@ -507,16 +508,16 @@ layout.svd.igraph <- function(graph, d=shortest.paths(graph), ...) {
             thisl <- svd(d[ind, ind], 2)[[2]]
             thisl[, 1] <- thisl[, 1]/dist(range(thisl[, 1]))
             thisl[, 2] <- thisl[, 2]/dist(range(thisl[, 2]))
-            llist[i+1] <- list(thisl)
+            llist[[i]] <- thisl
         }else if(length(which(ind))==2){
-            llist[i+1] <- list(d[ind, ind])
+            llist[[i]] <- d[ind, ind]
         } else {
-            llist[i+1] <- list(matrix(c(0, 0), nrow=1))
+            llist[[i]] <- matrix(c(0, 0), nrow=1)
         }
         
-        llen[i+1] <- length(which(ind))
+        llen[i] <- length(which(ind))
         
-        glist[i+1] <- list(induced.subgraph(graph, V(graph)[ind]))
+        glist[[i]] <- induced.subgraph(graph, V(graph)[ind])
     }
     
     ## merge them all:
@@ -849,5 +850,21 @@ layout.sugiyama <- function(graph, layers=NULL, hgap=1, vgap=1,
   }
   
   res$res <- NULL
+  res
+}
+
+layout.mds <- function(graph, dist=NULL, dim=2,
+                       options=igraph.arpack.default) {
+  
+  # Argument checks
+  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is.null(dist)) dist <- structure(as.double(dist), dim=dim(dist))
+  dim <- as.integer(dim)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_layout_mds", graph, dist, dim,
+        PACKAGE="igraph")
+
   res
 }

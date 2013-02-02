@@ -464,6 +464,12 @@ void igraph_pajek_yyset_in  (FILE * in_str, void* yyscanner );
  * <command>igraph</command> does not support some Pajek features, like 
  * multigraphs.
  * 
+ * </para><para>
+ * Starting from version 0.6.1 igraph reads bipartite (two-mode) 
+ * graphs from Pajek files and add the \c type vertex attribute for them.
+ * Warnings are given for invalid edges, i.e. edges connecting
+ * vertices of the same type.
+ * 
  * </para><para> 
  * The list of the current limitations:
  * \olist
@@ -476,8 +482,6 @@ void igraph_pajek_yyset_in  (FILE * in_str, void* yyscanner );
  * \oli Graphs with both directed and non-directed edges are not
  * supported, are they cannot be represented in
  * <command>igraph</command>.
- * \oli Bipartite or affiliation networks are not supported. They can
- * be imported but the vertex type information is omitted.
  * \oli Only Pajek networks are supported, permutations, hierarchies,
  * clusters and vectors are not.
  * \oli Graphs with multiple edge sets are not supported.
@@ -579,7 +583,9 @@ int igraph_read_graph_pajek(igraph_t *graph, FILE *instream) {
 
   if (context.vcount < 0)
     IGRAPH_ERROR("invalid vertex count in Pajek file", IGRAPH_EINVAL);
-
+  if (context.vcount2 < 0) 
+    IGRAPH_ERROR("invalid 2-mode vertex count in Pajek file", IGRAPH_EINVAL);
+  
   for (i=0; i<igraph_vector_ptr_size(&eattrs); i++) {
     igraph_attribute_record_t *rec=VECTOR(eattrs)[i];
     if (rec->type==IGRAPH_ATTRIBUTE_NUMERIC) {
@@ -1924,6 +1930,7 @@ int igraph_i_pajek_escape(char* src, char** dest) {
   long int destlen=0;
   igraph_bool_t need_escape=0;
 
+  /* Determine whether the string contains characters to be escaped */
   char *s, *d;
   for (s=src; *s; s++, destlen++) {
     if (*s == '\\') {
@@ -1938,7 +1945,20 @@ int igraph_i_pajek_escape(char* src, char** dest) {
   }
 
   if (!need_escape) {
-    *dest=strdup(src);
+    /* At this point, we know that the string does not contain any chars
+     * that would warrant escaping. Therefore, we simply quote it and
+     * return the quoted string. This is necessary because Pajek uses some
+     * reserved words in its format (like 'c' standing for color) and they
+     * have to be quoted as well.
+     */
+    *dest=igraph_Calloc(destlen+3, char);
+    if (!*dest)
+      IGRAPH_ERROR("Not enough memory", IGRAPH_ENOMEM);
+
+    d = *dest;
+    strcpy(d+1, src);
+    d[0] = d[destlen+1] = '"';
+    d[destlen+2] = 0;
     return IGRAPH_SUCCESS;
   }
 
@@ -1960,7 +1980,7 @@ int igraph_i_pajek_escape(char* src, char** dest) {
   }
   *d='"'; d++; *d=0;
 
-  return 0;
+  return IGRAPH_SUCCESS;
 }
 
 /**

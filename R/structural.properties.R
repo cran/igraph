@@ -216,7 +216,7 @@ get.shortest.paths <- function(graph, from, to=V(graph),
                as.igraph.vs(graph, from)-1, to, as.numeric(mode), as.numeric(length(to)),
                weights, as.numeric(output), PACKAGE="igraph")
 
-  if (output!="both") {
+  if (output !=2 ) {
     res <- lapply(res, function(x) x+1)
   } else {
     res <- list(vpath=lapply(res$vpath, function(x) x+1),
@@ -359,6 +359,7 @@ transitivity <- function(graph, type=c("undirected", "global", "globalundirected
     .Call("R_igraph_transitivity_avglocal_undirected", graph, isolates,
           PACKAGE="igraph")
   } else if (type==3) {
+    if (is.null(vids)) { vids <- V(graph) }
     vids <- as.igraph.vs(graph, vids)-1
     if (is.null(weights)) {
       .Call("R_igraph_transitivity_local_undirected", graph, vids,
@@ -518,14 +519,14 @@ reciprocity <- function(graph, ignore.loops=TRUE,
         as.numeric(mode), PACKAGE="igraph")
 }
 
-rewire <- function(graph, mode="simple", niter=100) {
+rewire <- function(graph, mode=c("simple", "loops"), niter=100) {
   
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
   
   mode <- igraph.match.arg(mode)
-  mode <- switch(mode, "simple"=0)
+  mode <- switch(mode, "simple"=0, "loops"=1)
   
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   .Call("R_igraph_rewire", graph, as.numeric(niter), as.numeric(mode),
@@ -620,6 +621,9 @@ alpha.centrality.dense <- function(graph, nodes=V(graph), alpha=1,
   } else if (is.null(weights)) {
     ## weights == NULL, but there is no "weight" edge attribute
     attr <- NULL
+  } else if (is.character(weights) && length(weights)==1) {
+    ## name of an edge attribute, nothing to do
+    attr <- "weight"
   } else if (any(!is.na(weights))) {
     ## weights != NULL and weights != rep(NA, x)
     graph <- set.edge.attribute(graph, "weight", value=as.numeric(weights))
@@ -629,7 +633,7 @@ alpha.centrality.dense <- function(graph, nodes=V(graph), alpha=1,
     attr <- NULL
   }
 
-  d <- t(get.adjacency(graph, attr=attr))
+  d <- t(get.adjacency(graph, attr=attr, sparse=FALSE))
   if (!loops) {
     diag(d) <- 0
   }
@@ -660,11 +664,14 @@ alpha.centrality.sparse <- function(graph, nodes=V(graph), alpha=1,
   } else if (is.null(weights)) {
     ## weights == NULL, but there is no "weight" edge attribute
     weights <- rep(1, ecount(graph))
+  } else if (is.character(weights) && length(weights)==1) {
+    weights <- get.edge.attribute(graph, weights)
   } else if (any(!is.na(weights))) {
     weights <- as.numeric(weights)
+  } else {
     ## weights != NULL, but weights == rep(NA, x)
     weights <- rep(1, ecount(graph))
-  }
+  } 
   
   el <- get.edgelist(graph, names=FALSE)
   M <- sparseMatrix(dims=c(vc, vc), i=el[,2], j=el[,1], x=weights)

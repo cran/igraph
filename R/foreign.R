@@ -70,7 +70,8 @@ read.graph <- function(file, format=c("edgelist", "pajek", "ncol", "lgl",
                                "graphml", "dimacs", "graphdb", "gml", "dl"),
                        ...) {
 
-  if (!is.character(file) || length(grep("://", file, fixed=TRUE))>0) {
+  if (!is.character(file) || length(grep("://", file, fixed=TRUE)) > 0 ||
+      length(grep("~", file, fixed=TRUE)) > 0) {
     buffer <- read.graph.toraw(file)
     file <- tempfile()
     write.graph.fromraw(buffer, file)
@@ -98,7 +99,8 @@ write.graph <- function(graph, file, format=c("edgelist", "pajek", "ncol", "lgl"
   if (!is.igraph(graph)) {
     stop("Not a graph object")
   }
-  if (!is.character(file) || length(grep("://", file, fixed=TRUE))>0) {
+  if (!is.character(file) || length(grep("://", file, fixed=TRUE)) > 0 ||
+      length(grep("~", file, fixed=TRUE)) > 0) {
     tmpfile <- TRUE
     origfile <- file
     file <- tempfile()
@@ -226,8 +228,14 @@ read.graph.pajek <- function(file, ...) {
     stop("Unknown arguments to read.graph (Pajek format)")
   }
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_read_graph_pajek", file,
-        PACKAGE="igraph")
+  res <- .Call("R_igraph_read_graph_pajek", file,
+               PACKAGE="igraph")
+  if ("type" %in% list.vertex.attributes(res)) {
+    type <- as.logical(V(res)$type)
+    res <- remove.vertex.attribute(res, "type")
+    res <- set.vertex.attribute(res, "type", value=type)
+  }
+  res
 }
 
 write.graph.pajek <- function(graph, file, ...) {

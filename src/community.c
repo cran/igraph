@@ -837,7 +837,7 @@ int igraph_community_to_membership(const igraph_matrix_t *merges,
  * 
  * The modularity of a graph with respect to some division (or vertex
  * types) measures how good the division is, or how separated are the 
- * different vertex types from each other. It defined as 
+ * different vertex types from each other. It is defined as 
  * Q=1/(2m) * sum(Aij-ki*kj/(2m)delta(ci,cj),i,j), here `m' is the
  * number of edges, `Aij' is the element of the `A' adjacency matrix
  * in row `i' and column `j', `ki' is the degree of `i', `kj' is the
@@ -1499,7 +1499,7 @@ int igraph_community_leading_eigenvector(const igraph_t *graph,
     extra.comm=comm;
 
     /* We try calling the solver twice, once from a random starting
-       point, onece from a fixed one. This is because for some hard
+       point, once from a fixed one. This is because for some hard
        cases it tends to fail. We need to suppress error handling for
        the first call. */
     {
@@ -1940,10 +1940,10 @@ int igraph_community_label_propagation(const igraph_t *graph,
     }
     /* Check if the labels used are valid, initialize membership vector */
     for (i=0; i<no_of_nodes; i++) {
-      if (VECTOR(*initial)[i] < -1) {
+      if (VECTOR(*initial)[i] < 0) {
         VECTOR(*membership)[i] = 0;
       } else {
-        VECTOR(*membership)[i] = VECTOR(*initial)[i] + 1;
+        VECTOR(*membership)[i] = floor(VECTOR(*initial)[i]) + 1;
       }
     }
     if (fixed) {
@@ -2777,6 +2777,7 @@ int igraph_i_split_join_distance(const igraph_vector_t *v1,
  *
  * \param  comm1   the membership vector of the first community structure
  * \param  comm2   the membership vector of the second community structure
+ * \param  result  the result is stored here.
  * \param  method  the comparison method to use. \c IGRAPH_COMMCMP_VI
  *                 selects the variation of information (VI) metric of
  *                 Meila (2003), \c IGRAPH_COMMCMP_NMI selects the
@@ -3001,8 +3002,8 @@ int igraph_i_entropy_and_mutual_information(const igraph_vector_t* v1,
 }
 
 /**
- * Implementation of the variation of information metric (VI) of
- * Meila et al. This function assumes that the community membership
+ * Implementation of the normalized mutual information (NMI) measure of
+ * Danon et al. This function assumes that the community membership
  * vectors have already been normalized using igraph_reindex_communities().
  *
  * </para><para>
@@ -3027,8 +3028,8 @@ int igraph_i_compare_communities_nmi(const igraph_vector_t *v1, const igraph_vec
 }
 
 /**
- * Implementation of the normalized mutual information (NMI) measure of
- * Danon et al. This function assumes that the community membership
+ * Implementation of the variation of information metric (VI) of
+ * Meila et al. This function assumes that the community membership
  * vectors have already been normalized using igraph_reindex_communities().
  *
  * </para><para>

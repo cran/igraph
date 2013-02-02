@@ -914,11 +914,23 @@ int igraph_i_pagerank(igraph_real_t *to, const igraph_real_t *from,
   igraph_real_t sumfrom=0.0;
   igraph_real_t fact=1-data->damping;
 
+  /* Calculate p(x) / outdegree(x) in advance for all the vertices.
+   * Note that we may divide by zero here; this is intentional since
+   * we won't use those values and we save a comparison this way.
+   * At the same time, we calculate the global probability of a
+   * random jump in `sumfrom`. For vertices with no outgoing edges,
+   * we will surely jump from there if we are there, hence those
+   * vertices contribute p(x) to the teleportation probability.
+   * For vertices with some outgoing edges, we jump from there with
+   * probability `fact` if we are there, hence they contribute
+   * p(x)*fact */
   for (i=0; i<n; i++) {
     sumfrom += VECTOR(*outdegree)[i]!=0 ? from[i] * fact : from[i];
     VECTOR(*tmp)[i] = from[i] / VECTOR(*outdegree)[i];
   }
-  
+
+  /* Here we calculate the part of the `to` vector that results from
+   * moving along links (and not from teleportation) */
   for (i=0; i<n; i++) {
     neis=igraph_adjlist_get(adjlist, i);
     nlen=igraph_vector_size(neis);
@@ -929,6 +941,12 @@ int igraph_i_pagerank(igraph_real_t *to, const igraph_real_t *from,
     }
     to[i] *= data->damping;
   }
+
+  /* Now we add the contribution from random jumps. `reset` is a vector
+   * that defines the probability of ending up in vertex i after a jump.
+   * `sumfrom` is the global probability of jumping as mentioned above. */
+  /* printf("sumfrom = %.6f\n", (float)sumfrom); */
+
   if (reset) {
     /* Running personalized PageRank */
     for (i=0; i<n; i++) {
@@ -982,6 +1000,9 @@ int igraph_i_pagerank2(igraph_real_t *to, const igraph_real_t *from,
     }
     to[i] *= data->damping;
   }
+
+  /* printf("sumfrom = %.6f\n", (float)sumfrom); */
+
   if (reset) {
     /* Running personalized PageRank */
     for (i=0; i<n; i++) {
@@ -1337,6 +1358,7 @@ int igraph_personalized_pagerank(const igraph_t *graph, igraph_vector_t *vector,
   } else {
     
     igraph_inclist_t inclist;
+    igraph_bool_t negative_weight_warned = 0;
     igraph_i_pagerank_data2_t data = { graph, &inclist, weights,
 				       damping, &outdegree, &tmp, reset };    
 
@@ -1348,6 +1370,11 @@ int igraph_personalized_pagerank(const igraph_t *graph, igraph_vector_t *vector,
       long int from=IGRAPH_FROM(graph, i);
       long int to=IGRAPH_TO(graph, i);
       igraph_real_t weight=VECTOR(*weights)[i];
+      if (weight < 0 && !negative_weight_warned) {
+        IGRAPH_WARNING("replacing negative weights with zeros");
+        weight = 0;
+        negative_weight_warned = 1;
+      }
       VECTOR(outdegree)[from] += weight;
       VECTOR(indegree) [to]   += weight;
       if (!directed) { 
@@ -2799,35 +2826,38 @@ int igraph_centralization_degree_tmax(const igraph_t *graph,
 				      igraph_real_t *res) {
 
   igraph_bool_t directed=mode != IGRAPH_ALL;
+  igraph_real_t real_nodes;
 
   if (graph) {
     directed=igraph_is_directed(graph);
     nodes=igraph_vcount(graph);
   }
 
+  real_nodes = nodes;    /* implicit cast to igraph_real_t */
+
   if (directed) {
     switch (mode) {
     case IGRAPH_IN:
     case IGRAPH_OUT:
       if (!loops) {
-	*res = (nodes-1) * (nodes-1);
+	*res = (real_nodes-1) * (real_nodes-1);
       } else {
-	*res = (nodes-1) * nodes;
+	*res = (real_nodes-1) * real_nodes;
       }
       break;
     case IGRAPH_ALL:
       if (!loops) {
-	*res = 2 * (nodes-1) * (nodes-2);
+	*res = 2 * (real_nodes-1) * (real_nodes-2);
       } else {
-	*res = 2 * (nodes-1) * (nodes-1);
+	*res = 2 * (real_nodes-1) * (real_nodes-1);
       }
       break;
     }
   } else {
     if (!loops) {
-      *res = (nodes-1) * (nodes-2);
+      *res = (real_nodes-1) * (real_nodes-2);
     } else {
-      *res = (nodes-1) * nodes;
+      *res = (real_nodes-1) * real_nodes;
     }
   }
 
@@ -2946,15 +2976,19 @@ int igraph_centralization_betweenness_tmax(const igraph_t *graph,
 					   igraph_integer_t nodes,
 					   igraph_bool_t directed,
 					   igraph_real_t *res) {
+  igraph_real_t real_nodes;
+
   if (graph) { 
     directed=directed && igraph_is_directed(graph); 
     nodes=igraph_vcount(graph);
   }
-  
+
+  real_nodes = nodes;    /* implicit cast to igraph_real_t */
+
   if (directed) {
-    *res = (nodes-1) * (nodes-1) * (nodes-2);
+    *res = (real_nodes-1) * (real_nodes-1) * (real_nodes-2);
   } else {
-    *res = (nodes-1) * (nodes-1) * (nodes-2) / 2.0;
+    *res = (real_nodes-1) * (real_nodes-1) * (real_nodes-2) / 2.0;
   }
   
   return 0;
@@ -3071,15 +3105,19 @@ int igraph_centralization_closeness_tmax(const igraph_t *graph,
 					 igraph_integer_t nodes,
 					 igraph_neimode_t mode,
 					 igraph_real_t *res) {
+  igraph_real_t real_nodes;
+
   if (graph) {
     nodes=igraph_vcount(graph); 
     if (!igraph_is_directed(graph)) { mode=IGRAPH_ALL; }
   }
-  
+
+  real_nodes = nodes;    /* implicit cast to igraph_real_t */
+
   if (mode != IGRAPH_ALL) {
-    *res = (nodes-1) * (1.0-1.0/nodes);
+    *res = (real_nodes-1) * (1.0-1.0/real_nodes);
   } else {
-    *res = (nodes-1) * (nodes-2) / (2.0*nodes-3);
+    *res = (real_nodes-1) * (real_nodes-2) / (2.0*real_nodes-3);
   }
   
   return 0;

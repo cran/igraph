@@ -39,7 +39,17 @@ get.adjacency.dense <- function(graph, type=c("both", "upper", "lower"),
     if (! attr %in% list.edge.attributes(graph)) {
       stop("no such edge attribute")
     }
-    res <- matrix(0, nrow=vcount(graph), ncol=vcount(graph))
+    exattr <- get.edge.attribute(graph, attr)
+    if (is.logical(exattr)) {
+      res <- matrix(FALSE, nrow=vcount(graph), ncol=vcount(graph))
+    } else if (is.character(exattr)) {
+      res <- matrix("", nrow=vcount(graph), ncol=vcount(graph))
+    } else if (is.numeric(exattr)) {
+      res <- matrix(0, nrow=vcount(graph), ncol=vcount(graph))
+    } else {
+      stop("Sparse matrices must be either numeric or logical,",
+           "and the edge attribute is not")
+    }
     if (is.directed(graph)) {
       for (i in seq(length=ecount(graph))) {
         e <- get.edge(graph, i)
@@ -100,6 +110,10 @@ get.adjacency.sparse <- function(graph, type=c("both", "upper", "lower"),
       stop("no such edge attribute")
     }
     value <- get.edge.attribute(graph, name=attr)
+    if (!is.numeric(value) && !is.logical(value)) {
+      stop("Sparse matrices must be either numeric or logical,",
+           "and the edge attribute is not")
+    }
   } else {
     value <- rep(1, nrow(el))
   }
@@ -457,3 +471,31 @@ get.incidence <- function(graph, types=NULL, attr=NULL,
   }
 }
 
+get.data.frame <- function(x, what=c("edges", "vertices", "both")) {
+
+  if (!is.igraph(x)) { stop("Not a graph object") }
+  what <- igraph.match.arg(what)
+
+  if (what %in% c("vertices", "both")) {
+    ver <- .Call("R_igraph_mybracket2", x, 9L, 3L, PACKAGE="igraph")
+    class(ver) <- "data.frame"
+    rn <- if (is.named(x)) { V(x)$name } else { seq_len(vcount(x)) }
+    rownames(ver) <- rn
+  }
+
+  if (what %in% c("edges", "both")) {
+    el <- get.edgelist(x)
+    edg <- c(list(from=el[,1]), list(to=el[,2]),
+             .Call("R_igraph_mybracket2", x, 9L, 4L, PACKAGE="igraph"))
+    class(edg) <- "data.frame"
+    rownames(edg) <- seq_len(ecount(x))
+  }
+  
+  if (what=="both") {
+    list(vertices=ver, edges=edg)
+  } else if (what=="vertices") {
+    ver
+  } else {
+    edg
+  }
+}

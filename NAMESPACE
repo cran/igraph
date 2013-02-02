@@ -100,7 +100,7 @@ S3method("compare", default)
 
 export(get.adjacency, get.edgelist, as.directed, as.undirected,
        get.adjlist, get.adjedgelist, igraph.from.graphNEL, 
-       igraph.to.graphNEL)
+       igraph.to.graphNEL, get.data.frame)
 
 # fitting, other
 
@@ -136,7 +136,8 @@ export(subgraph, degree, degree.distribution, diameter,
 export(plot.igraph, tkplot, tkplot.close, tkplot.off, tkplot.fit.to.screen,
        tkplot.reshape, tkplot.export.postscript, tkplot.getcoords,
        tkplot.center, tkplot.rotate, rglplot.igraph, rglplot,
-       autocurve.edges)
+       autocurve.edges, vertex.shapes, add.vertex.shape,
+       igraph.shape.noclip, igraph.shape.noplot)
 
 S3method(rglplot, igraph)
 
@@ -279,6 +280,7 @@ export(forest.fire.game)
 export(interconnected.islands.game)
 export(static.fitness.game)
 export(static.power.law.game)
+export(k.regular.game)
 export(closeness)
 export(closeness.estimate)
 export(betweenness.estimate)
@@ -319,6 +321,8 @@ export(contract.vertices)
 export(eccentricity)
 export(radius)
 export(graph.diversity)
+export(is.degree.sequence)
+export(is.graphical.degree.sequence)
 export(graph.bfs)
 export(graph.dfs)
 export(bipartite.projection.size)
