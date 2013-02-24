@@ -1438,7 +1438,8 @@ int igraph_pagerank_old(const igraph_t *graph, igraph_vector_t *res,
  *                Simple rewiring algorithm which chooses two arbitrary edges
  *                in each step (namely (a,b) and (c,d)) and substitutes them
  *                with (a,d) and (c,b) if they don't exist.  The method will
- *                neither destroy nor create self-loops.
+ *                neither destroy nor create self-loops. Undirected edges may
+ *                be chosen for rewiring in either direction.
  *           \cli IGRAPH_REWIRING_SIMPLE_LOOPS
  *                Same as \c IGRAPH_REWIRING_SIMPLE but allows the creation or
  *                destruction of self-loops.
@@ -1463,7 +1464,6 @@ int igraph_pagerank_old(const igraph_t *graph, igraph_vector_t *res,
 int igraph_rewire(igraph_t *graph, igraph_integer_t n, igraph_rewiring_t mode) {
   long int no_of_nodes=igraph_vcount(graph);
   long int no_of_edges=igraph_ecount(graph);
-  long int i;
   char message[256];
   igraph_integer_t a, b, c, d, dummy, num_swaps, num_successful_swaps;
   igraph_vector_t eids, edgevec;
@@ -4314,14 +4314,21 @@ int igraph_has_multiple(const igraph_t *graph, igraph_bool_t *res) {
     long int i, j, n;
     igraph_bool_t found=0;
     IGRAPH_VECTOR_INIT_FINALLY(&neis, 0);    
-    for (i=0; i < vc; i++) {
+    for (i=0; i < vc && !found; i++) {
       IGRAPH_CHECK(igraph_neighbors(graph, &neis, i, IGRAPH_OUT));
       n = igraph_vector_size(&neis);
       for (j=1; j < n; j++) {
 	      if (VECTOR(neis)[j-1] == VECTOR(neis)[j]) {
           /* If the graph is undirected, loop edges appear twice in the neighbor
            * list, so check the next item as well */
-          if (directed || (j < n-1 && VECTOR(neis)[j] == VECTOR(neis)[j+1])) {
+          if (directed) {
+            /* Directed, so this is a real multiple edge */
+            found=1; break;
+          } else if (VECTOR(neis)[j-1] != i) {
+            /* Undirected, but not a loop edge */
+            found=1; break;
+          } else if (j < n-1 && VECTOR(neis)[j] == VECTOR(neis)[j+1]) {
+            /* Undirected, loop edge, multiple times */
             found=1; break;
           }
         }
