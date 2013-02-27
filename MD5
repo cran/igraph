@@ -1,8 +1,8 @@
 7a56cfd27c8b143a8af0417c18bedafc *AUTHORS
-8c2ae158647137275927ac1a277691a5 *DESCRIPTION
+b77828bcbe7632b4edc089d3225dbf6b *DESCRIPTION
 eb723b61539feef013de476e68b5c50a *LICENSE
 c9f8da4473e410180b2d067bfbd3ea86 *NAMESPACE
-ec3c1cf94a48ba9434c675c36b560f72 *NEWS
+aa8cd4dc9d6c652f787e99ed354d9cef *NEWS
 b4519ea7580d831d732ec97b11d16de3 *R/attributes.R
 4ccd6fa1ff3348ebafe8cef660c8e210 *R/auto.R
 99b409e71bd977062cbd91aec4c15e2f *R/basic.R
@@ -756,7 +756,7 @@ f9a82bcf4a3a750ab39528bc8d304053 *src/qsort_r.c
 97ebb333ec07930a6be3d3e18df24e5c *src/revolver_cit.c
 427ad8273a9f6dab43fd3d6a9cd92b59 *src/revolver_grow.c
 ef5978a767d508998d189621f550b32b *src/revolver_ml_cit.c
-a6798952f7f128edd29c2915a58db378 *src/rinterface.c
+a4e4f9c6a4094627cb954d3d1a28df17 *src/rinterface.c
 3bc0f1802a0de2718213b62b126cbb5c *src/rinterface.h
 c284532488b2a6c0559d77e09d8f1904 *src/scg.c
 eb46c29ac6ec754a4cd41b871e9572e7 *src/scg_approximate_methods.c
