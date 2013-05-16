@@ -1,10 +1,10 @@
 7a56cfd27c8b143a8af0417c18bedafc *AUTHORS
-b77828bcbe7632b4edc089d3225dbf6b *DESCRIPTION
-eb723b61539feef013de476e68b5c50a *LICENSE
+b9bd6602ca265cbc25ceaf0880934151 *DESCRIPTION
 c9f8da4473e410180b2d067bfbd3ea86 *NAMESPACE
-aa8cd4dc9d6c652f787e99ed354d9cef *NEWS
+371f758eed61f2d8adcf85df92dfb910 *NEWS
 b4519ea7580d831d732ec97b11d16de3 *R/attributes.R
 4ccd6fa1ff3348ebafe8cef660c8e210 *R/auto.R
+d41d8cd98f00b204e9800998ecf8427e *R/auto.R.in
 99b409e71bd977062cbd91aec4c15e2f *R/basic.R
 6a74e50ad9ea298c2f2bcbf507aee99a *R/bipartite.R
 2c17f0aabd4fab45af427086b6dc317e *R/centrality.R
@@ -47,8 +47,8 @@ f930b1a1802fee4f5b8b2482ce0f7014 *R/structure.generators.R
 5e3734f8f19d4c68b53fee8943f3421e *R/structure.info.R
 7dd14da8dba3e413ac6e2607da588f9f *R/tkplot.R
 c58b3c4c7dc7fa01e88275fe8a424e1c *R/topology.R
-15bcbe52b3b098a5faaa073f6cf9ea17 *configure
-15216a56ac0c4efb9971c329d5b53f0c *configure.in
+8f8ff0f6358121baaa5bcc7f4c4d9dad *configure
+ec0d68ca48487df61d52dc64e6b98b1e *configure.in
 d41d8cd98f00b204e9800998ecf8427e *configure.win
 11a8e3d53479b4bf617d289466bae7dc *demo/00Index
 1b36208ff2a1e5ff5251d56bb592a3bf *demo/centrality.R
@@ -136,7 +136,7 @@ fc4a39e6adbd5b47530150a3a36bd4e6 *man/graph.dfs.Rd
 b2c65bb8ffa89b27a8d3ed715951da77 *man/graph.famous.Rd
 6ae05752609a14ede5201817b9320b92 *man/graph.formula.Rd
 737f1b74fa5d9645f8dc4642ad480be7 *man/graph.full.bipartite.Rd
-c5ddd6d7440899aed6d284763e252178 *man/graph.graphdb.Rd
+c8196ff359ae509a20a47e8e6afb31b0 *man/graph.graphdb.Rd
 64c8830f9eeb9c16f8b6cc6857a2e0ce *man/graph.incidence.Rd
 fc601be285576510a24d5612a1e683de *man/graph.isomorphism.Rd
 16564b70c1f7d0f42e25c78885ee4fac *man/graph.kautz.Rd
@@ -155,7 +155,7 @@ c61a5eeb50205147a45e629d6a252171 *man/hrg.Rd
 c3cc06fcff62664939e29d6e480fef22 *man/igraph.console.Rd
 16a0023ca6c392ed70a60b2cfa3cdc9a *man/igraph.par.Rd
 59fa45e754df67baff9e59e047d176b6 *man/igraph.sample.Rd
-cacafc0774b900e8f7c73bad9c867e94 *man/igraph.vertex.shapes.Rd
+cd108cf0e010b90d0b44c01ac2454383 *man/igraph.vertex.shapes.Rd
 d03bd59be3c1ea2762f726250fd659c1 *man/igraphdemo.Rd
 bb87901bac1d7e3daae0da0b4bc22a2c *man/independent.sets.Rd
 d1fdc3d43bac7fd339de2110aa649eb0 *man/infomap.Rd
@@ -243,6 +243,7 @@ fc67113e1f6fbfdcda59cf39aab3ff00 *src/DensityGrid_3d.cpp
 5cfb53cff37ca7d43a52db4f8e44ba94 *src/DensityGrid_3d.h
 b7e28bfbaa40e1e5b3f19bfe3119834d *src/Light.cpp
 fc1ac41ed58e82e6d592e35d9f832e99 *src/Light.h
+d7570776eb059392355f8c9e15b88a5f *src/Makevars
 db46763d3df8b7525773afc935144468 *src/Makevars.in
 dff25bb12d0c78b8458bedfa1763df2b *src/Makevars.win
 47ce39714f6f9d6ec3bd7c91624d87f4 *src/NetDataTypes.cpp
@@ -277,11 +278,11 @@ da7c5120c89bb6c50a71d9826416b8ca *src/amd_control.c
 b82d8ed7fea392e568f4fd8962cbb928 *src/amd_postorder.c
 2def6a2ca54e5d6ceccf7bdf1cdf5a7d *src/amd_preprocess.c
 44c8934cd1690b307fb15b90a66924f3 *src/amd_valid.c
-04e3222c8b272935d3cd8a3ea7f3caa3 *src/arpack.c
+a074a0eab26c68e51c5572e9555c603e *src/arpack.c
 84d831cf06a12ccddc98d577cf34638f *src/array.c
 28757abe7ee47a2a3752132e6521dbe7 *src/array.pmt
 46ebbbc9a7d738bc44853dfa2125c4eb *src/atlas-edges.h
-e29f812a394d6bbc6d9c76ee37b4ba75 *src/atlas.c
+6f2299525957c225d7a0dc457bb666cc *src/atlas.c
 053002c64e5881f6ae11688eb59fef5b *src/attributes.c
 d9c2e9f065d30814e89a6750825c74c8 *src/basic_query.c
 a649243800a289d19c6262aabfe47bef *src/bfgs.c
@@ -321,7 +322,7 @@ f3b1c097f8ada3ba02454dbc2a1332af *src/community.c
 c878447bf8cd5bd7d6ad60299325589f *src/complex.c
 1618100a5971c2ea2801b3bf684d361c *src/components.c
 d41d8cd98f00b204e9800998ecf8427e *src/config.h
-82dda076792a36c20755ed6462656702 *src/config.h.in
+aeb3c39e45ebd567dd719589bad0e1df *src/config.h.in
 33f5cdc70e745a54cf59ec311564b136 *src/conversion.c
 dc1fcdbcfcb9fe25e8341f102e1e9531 *src/cores.c
 71e3b8f8d5465f43ca1d555d45ea13d7 *src/cs/UFconfig.h
@@ -614,7 +615,7 @@ aa24b037d218c2525ba09ead3425f554 *src/hrg_splittree_eq.h
 b8a69b801b0fedd099ced115d6f643f6 *src/igraph.h
 9cb78c76294cedf54c6b9ee090aa3f37 *src/igraph_adjlist.h
 75c807b296c812f666ab218a80b61d2e *src/igraph_arpack.h
-bf628a3f71f3dfa858178092e086a2b5 *src/igraph_arpack_internal.h
+d049469367b24df3aaa04a335e19ae1f *src/igraph_arpack_internal.h
 623fd0301b11d9b7e7d518410be151bc *src/igraph_array.h
 9001525eae9a131c06ec404e2027450e *src/igraph_array_pmt.h
 948849ae51927ddceb4c0a56f5ebffed *src/igraph_attributes.h
@@ -709,7 +710,7 @@ ac7d6b50989b7301538122646efd7d37 *src/igraph_vector_pmt.h
 96f1d5fc32edb2a947b2d991d1328af5 *src/igraph_vector_ptr.h
 e90fd11dced248ecbbe38eb14c523031 *src/igraph_version.h
 050ea429bcfd86ad679748fa9cbaa8b6 *src/igraph_visitor.h
-0a0429068c146e3aceba6323c79ef675 *src/infomap.cc
+3e2cbe01e247011fbb6d76fdac4a6bfb *src/infomap.cc
 d7095b8ca721c2507d81152d722308e8 *src/infomap_FlowGraph.cc
 bbf84d35c2016510d97be2b41be84017 *src/infomap_FlowGraph.h
 ae27bdbed0c54e5ca358ebb05ce908d7 *src/infomap_Greedy.cc

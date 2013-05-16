@@ -9,6 +9,9 @@
 /* Define to 1 if you have the `fmin' function. */
 #undef HAVE_FMIN
 
+/* Define to 1 if using the GNU fortran compiler */
+#undef HAVE_GFORTRAN
+
 /* Define to 1 if you have the GLPK library */
 #undef HAVE_GLPK
 
