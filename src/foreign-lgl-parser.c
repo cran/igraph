@@ -88,7 +88,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 23 "foreign-lgl-parser.y"
+#line 23 "igraph/src/foreign-lgl-parser.y"
 
 
 /* 
@@ -157,13 +157,13 @@ igraph_real_t igraph_lgl_get_number(const char *str, long int len);
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 80 "foreign-lgl-parser.y"
+#line 80 "igraph/src/foreign-lgl-parser.y"
 {
   long int edgenum;
   double weightnum;
 }
 /* Line 193 of yacc.c.  */
-#line 167 "foreign-lgl-parser.c"
+#line 167 "y.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -188,7 +188,7 @@ typedef struct YYLTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 192 "foreign-lgl-parser.c"
+#line 192 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -1409,46 +1409,46 @@ yyreduce:
   switch (yyn)
     {
         case 6:
-#line 101 "foreign-lgl-parser.y"
-    { context->actvertex=(yyvsp[(2) - (3)].edgenum); }
+#line 101 "igraph/src/foreign-lgl-parser.y"
+    { context->actvertex=(yyvsp[(2) - (3)].edgenum); ;}
     break;
 
   case 9:
-#line 105 "foreign-lgl-parser.y"
+#line 105 "igraph/src/foreign-lgl-parser.y"
     { 
              igraph_vector_push_back(context->vector, context->actvertex);
              igraph_vector_push_back(context->vector, (yyvsp[(1) - (2)].edgenum));
              igraph_vector_push_back(context->weights, 0);
-           }
+           ;}
     break;
 
   case 10:
-#line 110 "foreign-lgl-parser.y"
+#line 110 "igraph/src/foreign-lgl-parser.y"
     { 
 	     igraph_vector_push_back(context->vector, context->actvertex);
              igraph_vector_push_back(context->vector, (yyvsp[(1) - (3)].edgenum));
              igraph_vector_push_back(context->weights, (yyvsp[(2) - (3)].weightnum));
 	     context->has_weights = 1;
-           }
+           ;}
     break;
 
   case 11:
-#line 119 "foreign-lgl-parser.y"
+#line 119 "igraph/src/foreign-lgl-parser.y"
     { igraph_trie_get2(context->trie, 
 				   igraph_lgl_yyget_text(scanner), 
 				   igraph_lgl_yyget_leng(scanner), 
-				   &(yyval.edgenum)); }
+				   &(yyval.edgenum)); ;}
     break;
 
   case 12:
-#line 124 "foreign-lgl-parser.y"
+#line 124 "igraph/src/foreign-lgl-parser.y"
     { (yyval.weightnum)=igraph_lgl_get_number(igraph_lgl_yyget_text(scanner), 
-					   igraph_lgl_yyget_leng(scanner)); }
+					   igraph_lgl_yyget_leng(scanner)); ;}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1452 "foreign-lgl-parser.c"
+#line 1452 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1668,7 +1668,7 @@ yyreturn:
 }
 
 
-#line 127 "foreign-lgl-parser.y"
+#line 127 "igraph/src/foreign-lgl-parser.y"
 
 
 int igraph_lgl_yyerror(YYLTYPE* locp, igraph_i_lgl_parsedata_t *context, 

@@ -24,7 +24,7 @@
 #ifndef IGRAPH_VERSION_H
 #define IGRAPH_VERSION_H
 
-#define IGRAPH_VERSION "0.6.5"
+#define IGRAPH_VERSION "0.6.5.999-42"
 
 int igraph_version(const char **version_string,
 		   int *major,

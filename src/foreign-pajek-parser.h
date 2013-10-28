@@ -144,7 +144,7 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 118 "foreign-pajek-parser.y"
+#line 118 "igraph/src/foreign-pajek-parser.y"
 {
   long int intnum;
   double   realnum;  
@@ -154,7 +154,7 @@ typedef union YYSTYPE
   } string;  
 }
 /* Line 1529 of yacc.c.  */
-#line 158 "foreign-pajek-parser.h"
+#line 158 "y.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

@@ -1,6 +1,6 @@
-#line 2 "foreign-dl-lexer.c"
+#line 2 "lex.yy.c"
 
-#line 4 "foreign-dl-lexer.c"
+#line 4 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -47,6 +47,7 @@ typedef int16_t flex_int16_t;
 typedef uint16_t flex_uint16_t;
 typedef int32_t flex_int32_t;
 typedef uint32_t flex_uint32_t;
+typedef uint64_t flex_uint64_t;
 #else
 typedef signed char flex_int8_t;
 typedef short int flex_int16_t;
@@ -342,7 +343,7 @@ static void yy_fatal_error (yyconst char msg[] ,yyscan_t yyscanner );
  */
 #define YY_DO_BEFORE_ACTION \
 	yyg->yytext_ptr = yy_bp; \
-	yyleng = (size_t) (yy_cp - yy_bp); \
+	yyleng = (yy_size_t) (yy_cp - yy_bp); \
 	yyg->yy_hold_char = *yy_cp; \
 	*yy_cp = '\0'; \
 	yyg->yy_c_buf_p = yy_cp;
@@ -536,7 +537,7 @@ static yyconst flex_int16_t yy_chk[318] =
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-#line 1 "foreign-dl-lexer.l"
+#line 1 "igraph/src/foreign-dl-lexer.l"
 /* 
    IGraph library.
    Copyright (C) 2007-2012  Gabor Csardi <csardi.gabor@gmail.com>
@@ -558,7 +559,7 @@ static yyconst flex_int16_t yy_chk[318] =
    02110-1301 USA
 
 */
-#line 24 "foreign-dl-lexer.l"
+#line 24 "igraph/src/foreign-dl-lexer.l"
 
 /* 
    IGraph library.
@@ -600,7 +601,7 @@ static yyconst flex_int16_t yy_chk[318] =
 				__LINE__, IGRAPH_PARSEERROR);
 #define YY_NO_INPUT 1
 
-#line 604 "foreign-dl-lexer.c"
+#line 605 "lex.yy.c"
 
 #define INITIAL 0
 #define LABELM 1
@@ -843,10 +844,10 @@ YY_DECL
 	register int yy_act;
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
-#line 79 "foreign-dl-lexer.l"
+#line 79 "igraph/src/foreign-dl-lexer.l"
 
 
-#line 850 "foreign-dl-lexer.c"
+#line 851 "lex.yy.c"
 
     yylval = yylval_param;
 
@@ -936,28 +937,28 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 81 "foreign-dl-lexer.l"
+#line 81 "igraph/src/foreign-dl-lexer.l"
 { return NEWLINE; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 83 "foreign-dl-lexer.l"
+#line 83 "igraph/src/foreign-dl-lexer.l"
 { return DL; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 84 "foreign-dl-lexer.l"
+#line 84 "igraph/src/foreign-dl-lexer.l"
 {
   return NEQ; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 86 "foreign-dl-lexer.l"
+#line 86 "igraph/src/foreign-dl-lexer.l"
 { return NUM; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 88 "foreign-dl-lexer.l"
+#line 88 "igraph/src/foreign-dl-lexer.l"
 { 
   switch (yyextra->mode) { 
   case 0: BEGIN(FULLMATRIX); 
@@ -971,91 +972,91 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 99 "foreign-dl-lexer.l"
+#line 99 "igraph/src/foreign-dl-lexer.l"
 { BEGIN(LABELM); return LABELS; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 100 "foreign-dl-lexer.l"
+#line 100 "igraph/src/foreign-dl-lexer.l"
 {
   return LABELSEMBEDDED; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 102 "foreign-dl-lexer.l"
+#line 102 "igraph/src/foreign-dl-lexer.l"
 {
   yyextra->mode=0; return FORMATFULLMATRIX; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 104 "foreign-dl-lexer.l"
+#line 104 "igraph/src/foreign-dl-lexer.l"
 {
   yyextra->mode=1; return FORMATEDGELIST1; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 106 "foreign-dl-lexer.l"
+#line 106 "igraph/src/foreign-dl-lexer.l"
 {
   yyextra->mode=2; return FORMATNODELIST1; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 109 "foreign-dl-lexer.l"
+#line 109 "igraph/src/foreign-dl-lexer.l"
 { /* eaten up */ }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 110 "foreign-dl-lexer.l"
+#line 110 "igraph/src/foreign-dl-lexer.l"
 { return LABEL; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 112 "foreign-dl-lexer.l"
+#line 112 "igraph/src/foreign-dl-lexer.l"
 { return DIGIT; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 113 "foreign-dl-lexer.l"
+#line 113 "igraph/src/foreign-dl-lexer.l"
 { return LABEL; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 114 "foreign-dl-lexer.l"
+#line 114 "igraph/src/foreign-dl-lexer.l"
 { }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 116 "foreign-dl-lexer.l"
+#line 116 "igraph/src/foreign-dl-lexer.l"
 { return NUM; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 117 "foreign-dl-lexer.l"
+#line 117 "igraph/src/foreign-dl-lexer.l"
 { return LABEL; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 118 "foreign-dl-lexer.l"
+#line 118 "igraph/src/foreign-dl-lexer.l"
 { }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 120 "foreign-dl-lexer.l"
+#line 120 "igraph/src/foreign-dl-lexer.l"
 { return NUM; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 121 "foreign-dl-lexer.l"
+#line 121 "igraph/src/foreign-dl-lexer.l"
 { return LABEL; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 122 "foreign-dl-lexer.l"
+#line 122 "igraph/src/foreign-dl-lexer.l"
 { }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 124 "foreign-dl-lexer.l"
+#line 124 "igraph/src/foreign-dl-lexer.l"
 { /* eaten up */ }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
@@ -1063,7 +1064,7 @@ case YY_STATE_EOF(LABELM):
 case YY_STATE_EOF(FULLMATRIX):
 case YY_STATE_EOF(EDGELIST):
 case YY_STATE_EOF(NODELIST):
-#line 126 "foreign-dl-lexer.l"
+#line 126 "igraph/src/foreign-dl-lexer.l"
 { 
                           if (yyextra->eof) {
 			    yyterminate();
@@ -1076,15 +1077,15 @@ case YY_STATE_EOF(NODELIST):
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 136 "foreign-dl-lexer.l"
+#line 136 "igraph/src/foreign-dl-lexer.l"
 { return 0; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 138 "foreign-dl-lexer.l"
+#line 138 "igraph/src/foreign-dl-lexer.l"
 ECHO;
 	YY_BREAK
-#line 1088 "foreign-dl-lexer.c"
+#line 1089 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2222,4 +2223,4 @@ void igraph_dl_yyfree (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 138 "foreign-dl-lexer.l"
+#line 138 "igraph/src/foreign-dl-lexer.l"
