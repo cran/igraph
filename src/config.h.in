@@ -57,6 +57,9 @@
 /* Define to 1 if you have the `stpcpy' function. */
 #undef HAVE_STPCPY
 
+/* Define to 1 if the stpcpy function has a signature */
+#undef HAVE_STPCPY_SIGNATURE
+
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 

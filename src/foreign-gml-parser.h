@@ -60,7 +60,7 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 93 "igraph/src/foreign-gml-parser.y"
+#line 98 "foreign-gml-parser.y"
 {
    struct {
       char *s;
@@ -70,7 +70,7 @@ typedef union YYSTYPE
    double real;
 }
 /* Line 1529 of yacc.c.  */
-#line 74 "y.tab.h"
+#line 74 "foreign-gml-parser.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

@@ -493,6 +493,11 @@ static yyconst flex_int16_t yy_chk[58] =
 
 */
 
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wconversion"
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
+
 #include "config.h"
 #include <stdlib.h>
 #include "foreign-gml-header.h"
@@ -509,7 +514,7 @@ static yyconst flex_int16_t yy_chk[58] =
 #define exit(code) igraph_error("Fatal error in DL parser", __FILE__, \
 				__LINE__, IGRAPH_PARSEERROR);
 #define YY_NO_INPUT 1
-#line 513 "lex.yy.c"
+#line 518 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -751,10 +756,10 @@ YY_DECL
 	register int yy_act;
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
-#line 76 "igraph/src/foreign-gml-lexer.l"
+#line 81 "igraph/src/foreign-gml-lexer.l"
 
 
-#line 758 "lex.yy.c"
+#line 763 "lex.yy.c"
 
     yylval = yylval_param;
 
@@ -845,49 +850,49 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 78 "igraph/src/foreign-gml-lexer.l"
+#line 83 "igraph/src/foreign-gml-lexer.l"
 { /* comments ignored */ }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 80 "igraph/src/foreign-gml-lexer.l"
+#line 85 "igraph/src/foreign-gml-lexer.l"
 { return STRING; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 81 "igraph/src/foreign-gml-lexer.l"
+#line 86 "igraph/src/foreign-gml-lexer.l"
 { return NUM; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 82 "igraph/src/foreign-gml-lexer.l"
+#line 87 "igraph/src/foreign-gml-lexer.l"
 { return KEYWORD; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 83 "igraph/src/foreign-gml-lexer.l"
+#line 88 "igraph/src/foreign-gml-lexer.l"
 { return LISTOPEN; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 84 "igraph/src/foreign-gml-lexer.l"
+#line 89 "igraph/src/foreign-gml-lexer.l"
 { return LISTCLOSE; }
 	YY_BREAK
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 85 "igraph/src/foreign-gml-lexer.l"
+#line 90 "igraph/src/foreign-gml-lexer.l"
 { }
 	YY_BREAK
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 86 "igraph/src/foreign-gml-lexer.l"
+#line 91 "igraph/src/foreign-gml-lexer.l"
 { /* other whitespace ignored */ }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 88 "igraph/src/foreign-gml-lexer.l"
+#line 93 "igraph/src/foreign-gml-lexer.l"
 { 
                           if (yyextra->eof) {
 			    yyterminate();
@@ -899,10 +904,10 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 97 "igraph/src/foreign-gml-lexer.l"
+#line 102 "igraph/src/foreign-gml-lexer.l"
 ECHO;
 	YY_BREAK
-#line 906 "lex.yy.c"
+#line 911 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2043,7 +2048,7 @@ void igraph_gml_yyfree (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 97 "igraph/src/foreign-gml-lexer.l"
+#line 102 "igraph/src/foreign-gml-lexer.l"
 
 
 

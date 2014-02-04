@@ -111,6 +111,11 @@
 
 */
 
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wconversion"
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include "igraph_hacks_internal.h"
@@ -129,7 +134,7 @@ int igraph_ncol_yylex(YYSTYPE* lvalp, YYLTYPE* llocp,
 		      void* scanner);
 int igraph_ncol_yyerror(YYLTYPE* locp, 
 			igraph_i_ncol_parsedata_t *context, 
-			char *s);
+			const char *s);
 char *igraph_ncol_yyget_text (yyscan_t yyscanner );
 int igraph_ncol_yyget_leng (yyscan_t yyscanner );
 igraph_real_t igraph_ncol_get_number(const char *str, long int len);
@@ -157,13 +162,13 @@ igraph_real_t igraph_ncol_get_number(const char *str, long int len);
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 82 "igraph/src/foreign-ncol-parser.y"
+#line 87 "igraph/src/foreign-ncol-parser.y"
 {
   long int edgenum;
   double weightnum;
 }
 /* Line 193 of yacc.c.  */
-#line 167 "y.tab.c"
+#line 172 "y.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -188,7 +193,7 @@ typedef struct YYLTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 192 "y.tab.c"
+#line 197 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -473,7 +478,7 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    95,    95,    96,    97,   100,   105,   113,   118
+       0,   100,   100,   101,   102,   105,   110,   118,   123
 };
 #endif
 
@@ -1403,7 +1408,7 @@ yyreduce:
   switch (yyn)
     {
         case 5:
-#line 100 "igraph/src/foreign-ncol-parser.y"
+#line 105 "igraph/src/foreign-ncol-parser.y"
     { 
            igraph_vector_push_back(context->vector, (yyvsp[(1) - (3)].edgenum));
            igraph_vector_push_back(context->vector, (yyvsp[(2) - (3)].edgenum));
@@ -1412,7 +1417,7 @@ yyreduce:
     break;
 
   case 6:
-#line 105 "igraph/src/foreign-ncol-parser.y"
+#line 110 "igraph/src/foreign-ncol-parser.y"
     { 
            igraph_vector_push_back(context->vector, (yyvsp[(1) - (4)].edgenum));
            igraph_vector_push_back(context->vector, (yyvsp[(2) - (4)].edgenum));
@@ -1422,7 +1427,7 @@ yyreduce:
     break;
 
   case 7:
-#line 113 "igraph/src/foreign-ncol-parser.y"
+#line 118 "igraph/src/foreign-ncol-parser.y"
     { igraph_trie_get2(context->trie, 
 				   igraph_ncol_yyget_text(scanner),
 				   igraph_ncol_yyget_leng(scanner), 
@@ -1430,14 +1435,14 @@ yyreduce:
     break;
 
   case 8:
-#line 118 "igraph/src/foreign-ncol-parser.y"
+#line 123 "igraph/src/foreign-ncol-parser.y"
     { (yyval.weightnum)=igraph_ncol_get_number(igraph_ncol_yyget_text(scanner), 
 					    igraph_ncol_yyget_leng(scanner)); ;}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1441 "y.tab.c"
+#line 1446 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1657,12 +1662,12 @@ yyreturn:
 }
 
 
-#line 121 "igraph/src/foreign-ncol-parser.y"
+#line 126 "igraph/src/foreign-ncol-parser.y"
 
 
 int igraph_ncol_yyerror(YYLTYPE* locp, 
 			igraph_i_ncol_parsedata_t *context, 
-			char *s) {
+			const char *s) {
   snprintf(context->errmsg, sizeof(context->errmsg)/sizeof(char)-1, 
 	   "Parse error in NCOL file, line %i (%s)", 
 	   locp->first_line, s);

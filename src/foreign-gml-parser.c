@@ -119,6 +119,11 @@
 
 */
 
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wconversion"
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
+
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -176,7 +181,7 @@ igraph_gml_tree_t *igraph_i_gml_merge(igraph_gml_tree_t *t1, igraph_gml_tree_t* 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 93 "igraph/src/foreign-gml-parser.y"
+#line 98 "igraph/src/foreign-gml-parser.y"
 {
    struct {
       char *s;
@@ -186,7 +191,7 @@ typedef union YYSTYPE
    double real;
 }
 /* Line 193 of yacc.c.  */
-#line 190 "y.tab.c"
+#line 195 "y.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -211,7 +216,7 @@ typedef struct YYLTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 215 "y.tab.c"
+#line 220 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -499,8 +504,8 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   120,   120,   121,   124,   125,   127,   129,   131,   133,
-     137,   140,   143
+       0,   125,   125,   126,   129,   130,   132,   134,   136,   138,
+     142,   145,   148
 };
 #endif
 
@@ -1113,29 +1118,29 @@ yydestruct (yymsg, yytype, yyvaluep, yylocationp, context)
   switch (yytype)
     {
       case 5: /* "KEYWORD" */
-#line 115 "igraph/src/foreign-gml-parser.y"
+#line 120 "igraph/src/foreign-gml-parser.y"
 	{ igraph_Free((yyvaluep->str).s); };
-#line 1119 "y.tab.c"
-	break;
-      case 11: /* "list" */
-#line 116 "igraph/src/foreign-gml-parser.y"
-	{ igraph_gml_tree_destroy((yyvaluep->tree)); };
 #line 1124 "y.tab.c"
 	break;
-      case 12: /* "keyvalue" */
-#line 116 "igraph/src/foreign-gml-parser.y"
+      case 11: /* "list" */
+#line 121 "igraph/src/foreign-gml-parser.y"
 	{ igraph_gml_tree_destroy((yyvaluep->tree)); };
 #line 1129 "y.tab.c"
 	break;
-      case 13: /* "key" */
-#line 115 "igraph/src/foreign-gml-parser.y"
-	{ igraph_Free((yyvaluep->str).s); };
+      case 12: /* "keyvalue" */
+#line 121 "igraph/src/foreign-gml-parser.y"
+	{ igraph_gml_tree_destroy((yyvaluep->tree)); };
 #line 1134 "y.tab.c"
 	break;
-      case 15: /* "string" */
-#line 115 "igraph/src/foreign-gml-parser.y"
+      case 13: /* "key" */
+#line 120 "igraph/src/foreign-gml-parser.y"
 	{ igraph_Free((yyvaluep->str).s); };
 #line 1139 "y.tab.c"
+	break;
+      case 15: /* "string" */
+#line 120 "igraph/src/foreign-gml-parser.y"
+	{ igraph_Free((yyvaluep->str).s); };
+#line 1144 "y.tab.c"
 	break;
 
       default:
@@ -1458,60 +1463,60 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 120 "igraph/src/foreign-gml-parser.y"
+#line 125 "igraph/src/foreign-gml-parser.y"
     { context->tree=(yyvsp[(1) - (1)].tree); ;}
     break;
 
   case 3:
-#line 121 "igraph/src/foreign-gml-parser.y"
+#line 126 "igraph/src/foreign-gml-parser.y"
     { context->tree=(yyvsp[(1) - (2)].tree); ;}
     break;
 
   case 4:
-#line 124 "igraph/src/foreign-gml-parser.y"
+#line 129 "igraph/src/foreign-gml-parser.y"
     { (yyval.tree)=(yyvsp[(1) - (1)].tree); ;}
     break;
 
   case 5:
-#line 125 "igraph/src/foreign-gml-parser.y"
+#line 130 "igraph/src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_merge((yyvsp[(1) - (2)].tree), (yyvsp[(2) - (2)].tree)); ;}
     break;
 
   case 6:
-#line 128 "igraph/src/foreign-gml-parser.y"
+#line 133 "igraph/src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_numeric((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].real)); ;}
     break;
 
   case 7:
-#line 130 "igraph/src/foreign-gml-parser.y"
+#line 135 "igraph/src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_string((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].str).s, (yyvsp[(2) - (2)].str).len); ;}
     break;
 
   case 8:
-#line 132 "igraph/src/foreign-gml-parser.y"
+#line 137 "igraph/src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_list((yyvsp[(1) - (4)].str).s, (yyvsp[(1) - (4)].str).len, (yyvsp[(3) - (4)].tree)); ;}
     break;
 
   case 9:
-#line 134 "igraph/src/foreign-gml-parser.y"
+#line 139 "igraph/src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_numeric2((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].str).s, (yyvsp[(2) - (2)].str).len); ;}
     break;
 
   case 10:
-#line 137 "igraph/src/foreign-gml-parser.y"
+#line 142 "igraph/src/foreign-gml-parser.y"
     { igraph_i_gml_get_keyword(igraph_gml_yyget_text(scanner), 
 					igraph_gml_yyget_leng(scanner), 
 					&(yyval.str)); USE((yyvsp[(1) - (1)].str)) ;}
     break;
 
   case 11:
-#line 140 "igraph/src/foreign-gml-parser.y"
+#line 145 "igraph/src/foreign-gml-parser.y"
     { (yyval.real)=igraph_i_gml_get_real(igraph_gml_yyget_text(scanner), 
 				     igraph_gml_yyget_leng(scanner)); ;}
     break;
 
   case 12:
-#line 143 "igraph/src/foreign-gml-parser.y"
+#line 148 "igraph/src/foreign-gml-parser.y"
     { igraph_i_gml_get_string(igraph_gml_yyget_text(scanner), 
 					 igraph_gml_yyget_leng(scanner), 
 					 &(yyval.str)); ;}
@@ -1519,7 +1524,7 @@ yyreduce:
 
 
 /* Line 1267 of yacc.c.  */
-#line 1523 "y.tab.c"
+#line 1528 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1739,7 +1744,7 @@ yyreturn:
 }
 
 
-#line 147 "igraph/src/foreign-gml-parser.y"
+#line 152 "igraph/src/foreign-gml-parser.y"
 
 
 int igraph_gml_yyerror(YYLTYPE* locp, igraph_i_gml_parsedata_t *context, 

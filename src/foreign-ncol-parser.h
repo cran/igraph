@@ -52,13 +52,13 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 82 "igraph/src/foreign-ncol-parser.y"
+#line 87 "foreign-ncol-parser.y"
 {
   long int edgenum;
   double weightnum;
 }
 /* Line 1529 of yacc.c.  */
-#line 62 "y.tab.h"
+#line 62 "foreign-ncol-parser.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

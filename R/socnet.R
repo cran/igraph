@@ -2010,7 +2010,8 @@ tkigraph <- function() {
               inthis=NULL)
 {
     if (suppress.X11.warnings) { ## as in John Fox's Rcmdr package
-        messages.connection <- textConnection(NULL, open = "w", local = TRUE)
+        messages.connection <- textConnection(".messages", open = "w",
+                                              local = TRUE)
         sink(messages.connection, type = "message")
         on.exit({
             sink(type="message")
