@@ -74,13 +74,13 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 91 "foreign-dl-parser.y"
+#line 91 "igraph/src/foreign-dl-parser.y"
 {
   long int integer;
   igraph_real_t real;
 }
 /* Line 1529 of yacc.c.  */
-#line 84 "foreign-dl-parser.h"
+#line 84 "y.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

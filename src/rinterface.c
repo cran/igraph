@@ -132,6 +132,8 @@ SEXP R_igraph_get_attr_mode(SEXP graph, SEXP pwhich) {
       SET_STRING_ELT(result, i, mkChar("n"));
     } else if (IS_CHARACTER(obji)) {
       SET_STRING_ELT(result, i, mkChar("c"));
+    } else if (IS_LOGICAL(obji)) {
+      SET_STRING_ELT(result, i, mkChar("l"));
     } else {
       SET_STRING_ELT(result, i, mkChar("x"));
     }
@@ -2148,6 +2150,13 @@ SEXP R_igraph_finalizer() {
 	     ScalarString(mkChar("")), ScalarLogical(1)), rho);
   IGRAPH_FINALLY_FREE();
   UNPROTECT(1);
+  return R_NilValue;
+}
+
+SEXP R_igraph_check_finally_stack() {
+  if (!IGRAPH_FINALLY_STACK_EMPTY) {
+    error("igraph callbacks cannot call igraph functions");
+  }
   return R_NilValue;
 }
 
@@ -14385,9 +14394,9 @@ SEXP R_igraph_triad_census(SEXP graph) {
 }
 
 /*-------------------------------------------/
-/ igraph_adjacenct_triangles                 /
+/ igraph_adjacent_triangles                  /
 /-------------------------------------------*/
-SEXP R_igraph_adjacenct_triangles(SEXP graph, SEXP vids) {
+SEXP R_igraph_adjacent_triangles(SEXP graph, SEXP vids) {
                                         /* Declarations */
   igraph_t c_graph;
   igraph_vector_t c_res;
@@ -14403,7 +14412,7 @@ SEXP R_igraph_adjacenct_triangles(SEXP graph, SEXP vids) {
   IGRAPH_FINALLY(igraph_vector_destroy, &c_res);
   R_SEXP_to_igraph_vs(vids, &c_graph, &c_vids);
                                         /* Call igraph */
-  igraph_adjacenct_triangles(&c_graph, &c_res, c_vids);
+  igraph_adjacent_triangles(&c_graph, &c_res, c_vids);
 
                                         /* Convert output */
   PROTECT(res=R_igraph_vector_to_SEXP(&c_res)); 

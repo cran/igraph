@@ -1171,7 +1171,7 @@ adjacent.triangles <- function(graph, vids=V(graph)) {
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
-  res <- .Call("R_igraph_adjacenct_triangles", graph, vids-1,
+  res <- .Call("R_igraph_adjacent_triangles", graph, vids-1,
         PACKAGE="igraph")
 
   res

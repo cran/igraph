@@ -1,6 +1,6 @@
 Package: igraph
-Version: 0.7.0
-Date: 2014-02-04
+Version: 0.7.1
+Date: 2014-04-22
 Title: Network analysis and visualization
 Author: See AUTHORS file.
 Maintainer: Gabor Csardi <csardi.gabor@gmail.com>
@@ -14,7 +14,7 @@ License: GPL (>= 2)
 URL: http://igraph.org
 SystemRequirements: gmp, libxml2
 BugReports: https://github.com/igraph/igraph/issues
-Packaged: 2014-02-04 21:57:23 UTC; gaborcsardi
+Packaged: 2014-04-22 18:00:26 UTC; gaborcsardi
 NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2014-02-05 08:45:17
+Date/Publication: 2014-04-22 23:08:29
