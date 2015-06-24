@@ -144,7 +144,7 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 123 "igraph/src/foreign-pajek-parser.y"
+#line 123 "src/foreign-pajek-parser.y"
 {
   long int intnum;
   double   realnum;  

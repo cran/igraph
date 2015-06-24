@@ -86,7 +86,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 23 "igraph/src/foreign-ncol-parser.y"
+#line 23 "src/foreign-ncol-parser.y"
 
 
 /* 
@@ -162,7 +162,7 @@ igraph_real_t igraph_ncol_get_number(const char *str, long int len);
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 87 "igraph/src/foreign-ncol-parser.y"
+#line 87 "src/foreign-ncol-parser.y"
 {
   long int edgenum;
   double weightnum;
@@ -1408,7 +1408,7 @@ yyreduce:
   switch (yyn)
     {
         case 5:
-#line 105 "igraph/src/foreign-ncol-parser.y"
+#line 105 "src/foreign-ncol-parser.y"
     { 
            igraph_vector_push_back(context->vector, (yyvsp[(1) - (3)].edgenum));
            igraph_vector_push_back(context->vector, (yyvsp[(2) - (3)].edgenum));
@@ -1417,7 +1417,7 @@ yyreduce:
     break;
 
   case 6:
-#line 110 "igraph/src/foreign-ncol-parser.y"
+#line 110 "src/foreign-ncol-parser.y"
     { 
            igraph_vector_push_back(context->vector, (yyvsp[(1) - (4)].edgenum));
            igraph_vector_push_back(context->vector, (yyvsp[(2) - (4)].edgenum));
@@ -1427,7 +1427,7 @@ yyreduce:
     break;
 
   case 7:
-#line 118 "igraph/src/foreign-ncol-parser.y"
+#line 118 "src/foreign-ncol-parser.y"
     { igraph_trie_get2(context->trie, 
 				   igraph_ncol_yyget_text(scanner),
 				   igraph_ncol_yyget_leng(scanner), 
@@ -1435,7 +1435,7 @@ yyreduce:
     break;
 
   case 8:
-#line 123 "igraph/src/foreign-ncol-parser.y"
+#line 123 "src/foreign-ncol-parser.y"
     { (yyval.weightnum)=igraph_ncol_get_number(igraph_ncol_yyget_text(scanner), 
 					    igraph_ncol_yyget_leng(scanner)); ;}
     break;
@@ -1662,7 +1662,7 @@ yyreturn:
 }
 
 
-#line 126 "igraph/src/foreign-ncol-parser.y"
+#line 126 "src/foreign-ncol-parser.y"
 
 
 int igraph_ncol_yyerror(YYLTYPE* locp, 

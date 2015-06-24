@@ -5,11 +5,11 @@ test_that("constraint works", {
   library(igraph)
 
   constraint.orig <- function(graph, nodes=V(graph), attr=NULL) {
-    if (!is.igraph(graph)) {
+    if (!is_igraph(graph)) {
       stop("Not a graph object")
     }
     idx <- degree(graph) != 0
-    A <- get.adjacency(graph, attr=attr, sparse=FALSE)
+    A <- as_adj(graph, attr=attr, sparse=FALSE)
     A <- A[idx, idx]
     n <- sum(idx)
     
@@ -31,7 +31,7 @@ test_that("constraint works", {
     ci2[nodes]
   }
 
-  karate <- graph.famous("Zachary")
+  karate <- make_graph("Zachary")
 
   c1 <- constraint(karate)
   c2 <- constraint.orig(karate)

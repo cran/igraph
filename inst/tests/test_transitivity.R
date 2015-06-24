@@ -4,7 +4,7 @@ context("transitivity")
 test_that("transitivity works", {
   library(igraph)
   set.seed(42)
-  g <- erdos.renyi.game(100, p=10/100)
+  g <- sample_gnp(100, p=10/100)
 
   t1 <- transitivity(g, type="global")
   expect_that(t1, equals(0.10483870967741935887))
@@ -20,4 +20,14 @@ test_that("transitivity works", {
                     class = c("summaryDefault", "table"))
   expect_that(summary(t3), equals(est3))
   expect_that(summary(t33), equals(est3))
+})
+
+test_that("no integer overflow", {
+
+  library(igraph)
+  set.seed(42)
+  g <- graph.star(80000, mode="undirected") + edges(sample(2:1000), 100)
+  mtr <- min(transitivity(g, type="local"), na.rm=TRUE)
+  expect_true(mtr > 0)
+
 })

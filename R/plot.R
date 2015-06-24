@@ -1,4 +1,3 @@
-
 #   IGraph R package
 #   Copyright (C) 2003-2012  Gabor Csardi <csardi.gabor@gmail.com>
 #   334 Harvard street, Cambridge, MA 02139 USA
@@ -20,6 +19,63 @@
 #
 ###################################################################
 
+
+
+#' Plotting of graphs
+#' 
+#' \code{plot.igraph} is able to plot graphs to any R device. It is the
+#' non-interactive companion of the \code{tkplot} function.
+#' 
+#' One convenient way to plot graphs is to plot with \code{\link{tkplot}}
+#' first, handtune the placement of the vertices, query the coordinates by the
+#' \code{\link{tk_coords}} function and use them with \code{plot} to
+#' plot the graph to any R device.
+#'
+#' @aliases plot.graph
+#' @param x The graph to plot.
+#' @param axes Logical, whether to plot axes, defaults to FALSE.
+#' @param add Logical scalar, whether to add the plot to the current device, or
+#' delete the device's current contents first.
+#' @param xlim The limits for the horizontal axis, it is unlikely that you want
+#' to modify this.
+#' @param ylim The limits for the vertical axis, it is unlikely that you want
+#' to modify this.
+#' @param mark.groups A list of vertex id vectors. It is interpreted as a set
+#' of vertex groups. Each vertex group is highlighted, by plotting a colored
+#' smoothed polygon around and \dQuote{under} it. See the arguments below to
+#' control the look of the polygons.
+#' @param mark.shape A numeric scalar or vector. Controls the smoothness of the
+#' vertex group marking polygons. This is basically the \sQuote{shape}
+#' parameter of the \code{\link[graphics]{xspline}} function, its possible
+#' values are between -1 and 1. If it is a vector, then a different value is
+#' used for the different vertex groups.
+#' @param mark.col A scalar or vector giving the colors of marking the
+#' polygons, in any format accepted by \code{\link[graphics]{xspline}}; e.g.
+#' numeric color ids, symbolic color names, or colors in RGB.
+#' @param mark.border A scalar or vector giving the colors of the borders of
+#' the vertex group marking polygons. If it is \code{NA}, then no border is
+#' drawn.
+#' @param mark.expand A numeric scalar or vector, the size of the border around
+#' the marked vertex groups. It is in the same units as the vertex sizes. If a
+#' vector is given, then different values are used for the different vertex
+#' groups.
+#' @param \dots Additional plotting parameters. See \link{igraph.plotting} for
+#' the complete list.
+#' @return Returns \code{NULL}, invisibly.
+#' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
+#' @seealso \code{\link{layout}} for different layouts,
+#' \code{\link{igraph.plotting}} for the detailed description of the plotting
+#' parameters and \code{\link{tkplot}} and \code{\link{rglplot}} for other
+#' graph plotting functions.
+#' @method plot igraph
+#' @export
+#' @export plot.igraph
+#' @keywords graphs
+#' @examples
+#' 
+#' g <- ring(10)
+#' \dontrun{plot(g, layout=layout_with_kk, vertex.color="green")}
+#' 
 plot.igraph <- function(x, 
                        # SPECIFIC: #####################################
                        axes=FALSE, add=FALSE,
@@ -31,7 +87,7 @@ plot.igraph <- function(x,
                        ...) {
 
   graph <- x
-  if (!is.igraph(graph)) {
+  if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
 
@@ -76,6 +132,12 @@ plot.igraph <- function(x,
   xlab               <- params("plot", "xlab")
   ylab               <- params("plot", "ylab")
 
+  palette            <- params("plot", "palette")
+  if (!is.null(palette)) {
+    old_palette <- palette(palette)
+    on.exit(palette(old_palette), add = TRUE)
+  }
+
   # the new style parameters can't do this yet
   arrow.mode         <- i.get.arrow.mode(graph, arrow.mode)
 
@@ -84,7 +146,7 @@ plot.igraph <- function(x,
   maxv <- max(vertex.size)
   if (rescale) {
     # norm layout to (-1, 1)
-    layout <- layout.norm(layout, -1, 1, -1, 1)
+    layout <- norm_coords(layout, -1, 1, -1, 1)
     xlim <- c(xlim[1]-margin[2]-maxv, xlim[2]+margin[4]+maxv)
     ylim <- c(ylim[1]-margin[1]-maxv, ylim[2]+margin[3]+maxv)
   }
@@ -105,7 +167,7 @@ plot.igraph <- function(x,
   mark.expand <- rep(mark.expand, length=length(mark.groups))
   
   for (g in seq_along(mark.groups)) {
-    v <- mark.groups[[g]]
+    v <- V(graph)[mark.groups[[g]]]
     if (length(vertex.size)==1) {
       vs <- vertex.size
     } else {
@@ -121,7 +183,7 @@ plot.igraph <- function(x,
 
   ################################################################
   ## calculate position of arrow-heads
-  el <- get.edgelist(graph, names=FALSE)
+  el <- as_edgelist(graph, names=FALSE)
   loops.e <- which(el[,1] == el[,2])
   nonloops.e <- which(el[,1] != el[,2])
   loops.v <- el[,1] [loops.e]
@@ -341,15 +403,47 @@ plot.igraph <- function(x,
   invisible(NULL)
 }
 
+
+
+#' 3D plotting of graphs with OpenGL
+#' 
+#' Using the \code{rgl} package, \code{rglplot} plots a graph in 3D. The plot
+#' can be zoomed, rotated, shifted, etc. but the coordinates of the vertices is
+#' fixed.
+#' 
+#' Note that \code{rglplot} is considered to be highly experimental. It is not
+#' very useful either. See \code{\link{igraph.plotting}} for the possible
+#' arguments.
+#' 
+#' @aliases rglplot rglplot.igraph
+#' @param x The graph to plot.
+#' @param \dots Additional arguments, see \code{\link{igraph.plotting}} for the
+#' details
+#' @return \code{NULL}, invisibly.
+#' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
+#' @seealso \code{\link{igraph.plotting}}, \code{\link{plot.igraph}} for the 2D
+#' version, \code{\link{tkplot}} for interactive graph drawing in 2D.
+#' @export
+#' @keywords graphs
+#' @export
+#' @examples
+#' 
+#' \dontrun{
+#' g <- make_lattice( c(5,5,5) )
+#' coords <- layout_with_fr(g, dim=3)
+#' rglplot(g, layout=coords)
+#' }
+#' 
 rglplot        <- function(x, ...)
   UseMethod("rglplot", x)
 
+#' @method rglplot igraph
+#' @export
+
 rglplot.igraph <- function(x, ...) {
 
-  require(rgl)
-  
   graph <- x
-  if (!is.igraph(graph)) {
+  if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
 
@@ -361,12 +455,12 @@ rglplot.igraph <- function(x, ...) {
     dist <- sqrt(sum((v2-v1)^2))   # distance of the centers
 
     if (am==0) {
-      edge <- qmesh3d(c(-ew/2,-ew/2,dist,1, ew/2,-ew/2,dist,1, ew/2,ew/2,dist,1,
+      edge <- rgl::qmesh3d(c(-ew/2,-ew/2,dist,1, ew/2,-ew/2,dist,1, ew/2,ew/2,dist,1,
                         -ew/2,ew/2,dist,1,  -ew/2,-ew/2,0,1, ew/2,-ew/2,0,1,
                         ew/2,ew/2,0,1, -ew/2,ew/2,0,1),
                       c(1,2,3,4, 5,6,7,8, 1,2,6,5, 2,3,7,6, 3,4,8,7, 4,1,5,8))
     } else if (am==1) {
-      edge <- qmesh3d(c(-ew/2,-ew/2,dist,1, ew/2,-ew/2,dist,1,
+      edge <- rgl::qmesh3d(c(-ew/2,-ew/2,dist,1, ew/2,-ew/2,dist,1,
                         ew/2,ew/2,dist,1, -ew/2,ew/2,dist,1,
                         -ew/2,-ew/2,al+r1,1, ew/2,-ew/2,al+r1,1,
                         ew/2,ew/2,al+r1,1, -ew/2,ew/2,al+r1,1,
@@ -377,7 +471,7 @@ rglplot.igraph <- function(x, ...) {
                         11,12,13,13))
     } else if (am==2) {
       box <- dist-r2-al
-      edge <- qmesh3d(c(-ew/2,-ew/2,box,1, ew/2,-ew/2,box,1, ew/2,ew/2,box,1,
+      edge <- rgl::qmesh3d(c(-ew/2,-ew/2,box,1, ew/2,-ew/2,box,1, ew/2,ew/2,box,1,
                         -ew/2,ew/2,box,1,  -ew/2,-ew/2,0,1, ew/2,-ew/2,0,1,
                         ew/2,ew/2,0,1, -ew/2,ew/2,0,1,
                         -aw/2,-aw/2,box,1, aw/2,-aw/2,box,1, aw/2,aw/2,box,1,
@@ -386,7 +480,7 @@ rglplot.igraph <- function(x, ...) {
                         9,10,11,12, 9,12,13,13, 9,10,13,13, 10,11,13,13,
                         11,12,13,13))
     } else {
-      edge <- qmesh3d(c(-ew/2,-ew/2,dist-al-r2,1, ew/2,-ew/2,dist-al-r2,1,
+      edge <- rgl::qmesh3d(c(-ew/2,-ew/2,dist-al-r2,1, ew/2,-ew/2,dist-al-r2,1,
                         ew/2,ew/2,dist-al-r2,1, -ew/2,ew/2,dist-al-r2,1,
                         -ew/2,-ew/2,r1+al,1, ew/2,-ew/2,r1+al,1,
                         ew/2,ew/2,r1+al,1, -ew/2,ew/2,r1+al,1,
@@ -409,11 +503,11 @@ rglplot.igraph <- function(x, ...) {
     rot1 <- rbind(c(1,0,0),c(0,cos(psi),sin(psi)), c(0,-sin(psi),cos(psi)))
     rot2 <- rbind(c(cos(phi),sin(phi),0),c(-sin(phi),cos(phi),0), c(0,0,1))
     rot <- rot1 %*% rot2
-    edge <- transform3d(edge, rotationMatrix(matrix=rot))
-    edge <- transform3d(edge, translationMatrix(v1[1], v1[2], v1[3]))
+    edge <- rgl::transform3d(edge, rgl::rotationMatrix(matrix=rot))
+    edge <- rgl::transform3d(edge, rgl::translationMatrix(v1[1], v1[2], v1[3]))
 
     ## we are ready 
-    shade3d(edge, col=ec)
+    rgl::shade3d(edge, col=ec)
   }
   
   create.loop <- function(v, r, ec, ew, am, la, la2, as) {
@@ -425,7 +519,7 @@ rglplot.igraph <- function(x, ...) {
     gap <- wi-2*ew
 
     if (am==0) {
-      edge <- qmesh3d(c(-wi/2,-ew/2,0,1, -gap/2,-ew/2,0,1,
+      edge <- rgl::qmesh3d(c(-wi/2,-ew/2,0,1, -gap/2,-ew/2,0,1,
                         -gap/2,ew/2,0,1, -wi/2,ew/2,0,1,
                         -wi/2,-ew/2,hi-ew+r,1, -gap/2,-ew/2,hi-ew+r,1,
                         -gap/2,ew/2,hi-ew+r,1, -wi/2,ew/2,hi-ew+r,1,
@@ -443,7 +537,7 @@ rglplot.igraph <- function(x, ...) {
                         5,13,19,17, 17,18,20,19, 8,16,20,18, 6,7,15,14
                         ))
     } else if (am==1 || am==2) {
-      edge <- qmesh3d(c(-wi/2,-ew/2,r+al,1, -gap/2,-ew/2,r+al,1,
+      edge <- rgl::qmesh3d(c(-wi/2,-ew/2,r+al,1, -gap/2,-ew/2,r+al,1,
                         -gap/2,ew/2,r+al,1, -wi/2,ew/2,r+al,1,
                         -wi/2,-ew/2,hi-ew+r,1, -gap/2,-ew/2,hi-ew+r,1,
                         -gap/2,ew/2,hi-ew+r,1, -wi/2,ew/2,hi-ew+r,1,
@@ -468,7 +562,7 @@ rglplot.igraph <- function(x, ...) {
                         21,24,25,25
                         ))
     } else if (am==3) {
-      edge <- qmesh3d(c(-wi/2,-ew/2,r+al,1, -gap/2,-ew/2,r+al,1,
+      edge <- rgl::qmesh3d(c(-wi/2,-ew/2,r+al,1, -gap/2,-ew/2,r+al,1,
                         -gap/2,ew/2,r+al,1, -wi/2,ew/2,r+al,1,
                         -wi/2,-ew/2,hi-ew+r,1, -gap/2,-ew/2,hi-ew+r,1,
                         -gap/2,ew/2,hi-ew+r,1, -wi/2,ew/2,hi-ew+r,1,
@@ -503,11 +597,11 @@ rglplot.igraph <- function(x, ...) {
     rot1 <- rbind(c(1,0,0),c(0,cos(la2),sin(la2)), c(0,-sin(la2),cos(la2)))
     rot2 <- rbind(c(cos(la),sin(la),0),c(-sin(la),cos(la),0), c(0,0,1))
     rot <- rot1 %*% rot2
-    edge <- transform3d(edge, rotationMatrix(matrix=rot))
-    edge <- transform3d(edge, translationMatrix(v[1], v[2], v[3]))
+    edge <- rgl::transform3d(edge, rgl::rotationMatrix(matrix=rot))
+    edge <- rgl::transform3d(edge, rgl::translationMatrix(v[1], v[2], v[3]))
 
     ## we are ready
-    shade3d(edge, col=ec)
+    rgl::shade3d(edge, col=ec)
   }
   
   # Visual parameters
@@ -537,14 +631,14 @@ rglplot.igraph <- function(x, ...) {
   # norm layout to (-1, 1)
   if (ncol(layout)==2) { layout <- cbind(layout, 0) }
   if (rescale) {
-    layout <- layout.norm(layout, -1, 1, -1, 1, -1, 1)
+    layout <- norm_coords(layout, -1, 1, -1, 1, -1, 1)
   }
   
   # add the edges, the loops are handled separately
-  el <- get.edgelist(graph, names=FALSE)
+  el <- as_edgelist(graph, names=FALSE)
   
   # It is faster this way
-  par3d(skipRedraw=TRUE)
+  rgl::par3d(skipRedraw=TRUE)
 
   # edges first
   for (i in seq(length=nrow(el))) {
@@ -570,7 +664,7 @@ rglplot.igraph <- function(x, ...) {
       
   # add the vertices
   if (length(vertex.size)==1) { vertex.size <- rep(vertex.size, nrow(layout)) }
-  rgl.spheres(layout[,1], layout[,2], layout[,3], radius=vertex.size,
+  rgl::rgl.spheres(layout[,1], layout[,2], layout[,3], radius=vertex.size,
               col=vertex.color)
 
   # add the labels, 'l1' is a stupid workaround of a mysterious rgl bug
@@ -582,8 +676,8 @@ rglplot.igraph <- function(x, ...) {
   z <- layout[,3]
   l1 <- labels[1]
   labels[1] <- ""
-  rgl.texts(x,y,z, labels, col=label.color, adj=0)
-  rgl.texts(c(0,x[1]), c(0,y[1]), c(0,z[1]),
+  rgl::rgl.texts(x,y,z, labels, col=label.color, adj=0)
+  rgl::rgl.texts(c(0,x[1]), c(0,y[1]), c(0,z[1]),
             c("",l1), col=c(label.color[1],label.color[1]), adj=0)
 
   edge.labels[is.na(edge.labels)] <- ""
@@ -594,12 +688,12 @@ rglplot.igraph <- function(x, ...) {
     y1 <- layout[,2][el[,2]]
     z0 <- layout[,3][el[,1]]
     z1 <- layout[,4][el[,2]]
-    rgl.texts((x0+x1)/2, (y0+y1)/2, (z0+z1)/2, edge.labels,
+    rgl::rgl.texts((x0+x1)/2, (y0+y1)/2, (z0+z1)/2, edge.labels,
               col=label.color)
   }
 
   # draw everything
-  par3d(skipRedraw=FALSE)
+  rgl::par3d(skipRedraw=FALSE)
   
   invisible(NULL)
 }
@@ -751,7 +845,7 @@ igraph.polygon <- function(points, vertex.size=15/200, expand.by=15/200,
               cbind(points[,1], points[,2]-vertex.size-by),
               cbind(points[,1], points[,2]+vertex.size+by))
 
-  cl <- convex.hull(pp)
+  cl <- convex_hull(pp)
   xspline(cl$rescoords, shape=shape, open=FALSE, col=col, border=border)
 }
 

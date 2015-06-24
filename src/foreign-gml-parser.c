@@ -94,7 +94,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 23 "igraph/src/foreign-gml-parser.y"
+#line 23 "src/foreign-gml-parser.y"
 
 
 /* 
@@ -181,7 +181,7 @@ igraph_gml_tree_t *igraph_i_gml_merge(igraph_gml_tree_t *t1, igraph_gml_tree_t* 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 98 "igraph/src/foreign-gml-parser.y"
+#line 98 "src/foreign-gml-parser.y"
 {
    struct {
       char *s;
@@ -1118,27 +1118,27 @@ yydestruct (yymsg, yytype, yyvaluep, yylocationp, context)
   switch (yytype)
     {
       case 5: /* "KEYWORD" */
-#line 120 "igraph/src/foreign-gml-parser.y"
+#line 120 "src/foreign-gml-parser.y"
 	{ igraph_Free((yyvaluep->str).s); };
 #line 1124 "y.tab.c"
 	break;
       case 11: /* "list" */
-#line 121 "igraph/src/foreign-gml-parser.y"
+#line 121 "src/foreign-gml-parser.y"
 	{ igraph_gml_tree_destroy((yyvaluep->tree)); };
 #line 1129 "y.tab.c"
 	break;
       case 12: /* "keyvalue" */
-#line 121 "igraph/src/foreign-gml-parser.y"
+#line 121 "src/foreign-gml-parser.y"
 	{ igraph_gml_tree_destroy((yyvaluep->tree)); };
 #line 1134 "y.tab.c"
 	break;
       case 13: /* "key" */
-#line 120 "igraph/src/foreign-gml-parser.y"
+#line 120 "src/foreign-gml-parser.y"
 	{ igraph_Free((yyvaluep->str).s); };
 #line 1139 "y.tab.c"
 	break;
       case 15: /* "string" */
-#line 120 "igraph/src/foreign-gml-parser.y"
+#line 120 "src/foreign-gml-parser.y"
 	{ igraph_Free((yyvaluep->str).s); };
 #line 1144 "y.tab.c"
 	break;
@@ -1463,60 +1463,60 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 125 "igraph/src/foreign-gml-parser.y"
+#line 125 "src/foreign-gml-parser.y"
     { context->tree=(yyvsp[(1) - (1)].tree); ;}
     break;
 
   case 3:
-#line 126 "igraph/src/foreign-gml-parser.y"
+#line 126 "src/foreign-gml-parser.y"
     { context->tree=(yyvsp[(1) - (2)].tree); ;}
     break;
 
   case 4:
-#line 129 "igraph/src/foreign-gml-parser.y"
+#line 129 "src/foreign-gml-parser.y"
     { (yyval.tree)=(yyvsp[(1) - (1)].tree); ;}
     break;
 
   case 5:
-#line 130 "igraph/src/foreign-gml-parser.y"
+#line 130 "src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_merge((yyvsp[(1) - (2)].tree), (yyvsp[(2) - (2)].tree)); ;}
     break;
 
   case 6:
-#line 133 "igraph/src/foreign-gml-parser.y"
+#line 133 "src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_numeric((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].real)); ;}
     break;
 
   case 7:
-#line 135 "igraph/src/foreign-gml-parser.y"
+#line 135 "src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_string((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].str).s, (yyvsp[(2) - (2)].str).len); ;}
     break;
 
   case 8:
-#line 137 "igraph/src/foreign-gml-parser.y"
+#line 137 "src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_list((yyvsp[(1) - (4)].str).s, (yyvsp[(1) - (4)].str).len, (yyvsp[(3) - (4)].tree)); ;}
     break;
 
   case 9:
-#line 139 "igraph/src/foreign-gml-parser.y"
+#line 139 "src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_numeric2((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].str).s, (yyvsp[(2) - (2)].str).len); ;}
     break;
 
   case 10:
-#line 142 "igraph/src/foreign-gml-parser.y"
+#line 142 "src/foreign-gml-parser.y"
     { igraph_i_gml_get_keyword(igraph_gml_yyget_text(scanner), 
 					igraph_gml_yyget_leng(scanner), 
 					&(yyval.str)); USE((yyvsp[(1) - (1)].str)) ;}
     break;
 
   case 11:
-#line 145 "igraph/src/foreign-gml-parser.y"
+#line 145 "src/foreign-gml-parser.y"
     { (yyval.real)=igraph_i_gml_get_real(igraph_gml_yyget_text(scanner), 
 				     igraph_gml_yyget_leng(scanner)); ;}
     break;
 
   case 12:
-#line 148 "igraph/src/foreign-gml-parser.y"
+#line 148 "src/foreign-gml-parser.y"
     { igraph_i_gml_get_string(igraph_gml_yyget_text(scanner), 
 					 igraph_gml_yyget_leng(scanner), 
 					 &(yyval.str)); ;}
@@ -1744,7 +1744,7 @@ yyreturn:
 }
 
 
-#line 152 "igraph/src/foreign-gml-parser.y"
+#line 152 "src/foreign-gml-parser.y"
 
 
 int igraph_gml_yyerror(YYLTYPE* locp, igraph_i_gml_parsedata_t *context, 

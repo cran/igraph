@@ -1,4 +1,4 @@
-/* src/config.h.in.  Generated from configure.in by autoheader.  */
+/* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define to 1 if you have the `expm1' function. */
 #undef HAVE_EXPM1
@@ -36,6 +36,15 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the <netinet/in.h> header file. */
+#undef HAVE_NETINET_IN_H
+
+/* Define to 1 if you have the <net/if_dl.h> header file. */
+#undef HAVE_NET_IF_DL_H
+
+/* Define to 1 if you have the <net/if.h> header file. */
+#undef HAVE_NET_IF_H
+
 /* Define to 1 if you have the `rint' function. */
 #undef HAVE_RINT
 
@@ -44,6 +53,9 @@
 
 /* Define to 1 if you have the `round' function. */
 #undef HAVE_ROUND
+
+/* Define if struct sockaddr contains sa_len */
+#undef HAVE_SA_LEN
 
 /* Define to 1 if you have the `snprintf' function. */
 #undef HAVE_SNPRINTF
@@ -66,11 +78,29 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
+/* Define to 1 if you have the <sys/file.h> header file. */
+#undef HAVE_SYS_FILE_H
+
+/* Define to 1 if you have the <sys/ioctl.h> header file. */
+#undef HAVE_SYS_IOCTL_H
+
+/* Define to 1 if you have the <sys/socket.h> header file. */
+#undef HAVE_SYS_SOCKET_H
+
+/* Define to 1 if you have the <sys/sockio.h> header file. */
+#undef HAVE_SYS_SOCKIO_H
+
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
 
+/* Define to 1 if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
+
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <sys/un.h> header file. */
+#undef HAVE_SYS_UN_H
 
 /* Define to 1 if you have the sys/times.h header */
 #undef HAVE_TIMES_H

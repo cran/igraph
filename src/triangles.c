@@ -83,7 +83,7 @@ int igraph_transitivity_avglocal_undirected(const igraph_t *graph,
   igraph_adjlist_t allneis;
   igraph_vector_int_t *neis1, *neis2;
   long int neilen1, neilen2;
-  igraph_integer_t triples;
+  igraph_real_t triples;
   long int *neis;
   long int maxdegree;
 
@@ -126,7 +126,7 @@ int igraph_transitivity_avglocal_undirected(const igraph_t *graph,
     
     neis1=igraph_adjlist_get(&allneis, node);
     neilen1=igraph_vector_int_size(neis1);
-    triples = (igraph_integer_t) ((double)neilen1 * (neilen1-1) / 2);
+    triples = ((double)neilen1) * (neilen1 - 1) / 2.0;
     /* Mark the neighbors of 'node' */
     for (i=0; i<neilen1; i++) {
       neis[ (long int)VECTOR(*neis1)[i] ] = node+1;
@@ -517,6 +517,21 @@ int igraph_adjacent_triangles4(const igraph_t *graph,
   return 0;
 }
 
+/**
+ * \function igraph_adjacent_triangles
+ * Count the number of triangles a vertex is part of
+ *
+ * \param graph The input graph. Edge directions are ignored.
+ * \param res Initiliazed vector, the results are stored here.
+ * \param vids The vertices to perform the calculation for.
+ * \return Error mode.
+ *
+ * \sa \ref igraph_list_triangles() to list them.
+ *
+ * Time complexity: O(d^2 n), d is the average vertex degree of the
+ * queried vertices, n is their number.
+ */
+
 int igraph_adjacent_triangles(const igraph_t *graph,
 			      igraph_vector_t *res,
 			      const igraph_vs_t vids) {
@@ -528,6 +543,33 @@ int igraph_adjacent_triangles(const igraph_t *graph,
   
   return 0;
 
+}
+
+/**
+ * \function igraph_list_triangles
+ * Find all triangles in a graph
+ *
+ * \param graph The input graph, edge directions are ignored.
+ * \param res Pointer to an initialized integer vector, the result
+ *        is stored here, in a long list of triples of vertex ids.
+ *        Each triple is a triangle in the graph. Each triangle is
+ *        listed exactly once.
+ * \return Error code.
+ *
+ * \sa \ref igraph_transitivity_undirected() to count the triangles,
+ * \ref igraph_adjacent_triangles() to count the triangles a vertex
+ * participates in.
+ *
+ * Time complexity: O(d^2 n), d is the average degree, n is the number
+ * of vertices.
+ */
+
+int igraph_list_triangles(const igraph_t *graph,
+			  igraph_vector_int_t *res) {
+# define TRIANGLES
+# include "triangles_template.h"
+# undef TRIANGLES
+  return 0;
 }
 
 /**
@@ -773,7 +815,7 @@ int igraph_transitivity_barrat4(const igraph_t *graph,
   long int maxdegree;
   igraph_inclist_t incident;
   igraph_vector_long_t neis;
-  igraph_vector_t *adj1, *adj2;
+  igraph_vector_int_t *adj1, *adj2;
   igraph_vector_t actw;
   long int i, nn;
   
@@ -821,7 +863,7 @@ int igraph_transitivity_barrat4(const igraph_t *graph,
     IGRAPH_ALLOW_INTERRUPTION();
     
     adj1=igraph_inclist_get(&incident, node);
-    adjlen1=igraph_vector_size(adj1);
+    adjlen1=igraph_vector_int_size(adj1);
     triples = VECTOR(degree)[node] * (adjlen1-1) / 2.0;
     /* Mark the neighbors of the node */
     for (i=0; i<adjlen1; i++) {
@@ -838,7 +880,7 @@ int igraph_transitivity_barrat4(const igraph_t *graph,
       long int j;
       if (VECTOR(rank)[nei] > VECTOR(rank)[node]) {
 				adj2=igraph_inclist_get(&incident, nei);
-				adjlen2=igraph_vector_size(adj2);
+				adjlen2=igraph_vector_int_size(adj2);
 				for (j=0; j<adjlen2; j++) {
 					long int edge2=(long int) VECTOR(*adj2)[j];
 					igraph_real_t weight2=VECTOR(*weights)[edge2];

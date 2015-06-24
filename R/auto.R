@@ -1,19 +1,7 @@
-graph.empty <- function(n=0, directed=TRUE) {
+#' @export
+gorder <- function(graph) {
   # Argument checks
-  n <- as.integer(n)
-  directed <- as.logical(directed)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_empty", n, directed,
-        PACKAGE="igraph")
-
-  res
-}
-
-vcount <- function(graph) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
@@ -24,21 +12,8 @@ vcount <- function(graph) {
   res
 }
 
-graph.full.citation <- function(n, directed=TRUE) {
-  # Argument checks
-  n <- as.integer(n)
-  directed <- as.logical(directed)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_full_citation", n, directed,
-        PACKAGE="igraph")
-
-  res <- set.graph.attribute(res, 'name', 'Full citation graph')
-  res
-}
-
-graph.lcf <- function(n, shifts, repeats=1) {
+#' @export
+graph_from_lcf <- function(n, shifts, repeats=1) {
   # Argument checks
   n <- as.integer(n)
   shifts <- as.numeric(shifts)
@@ -53,7 +28,8 @@ graph.lcf <- function(n, shifts, repeats=1) {
   res
 }
 
-graph.adjlist <- function(adjlist, mode=c("out", "in", "all", "total"), duplicate=TRUE) {
+#' @export
+graph_from_adj_list <- function(adjlist, mode=c("out", "in", "all", "total"), duplicate=TRUE) {
   # Argument checks
   adjlist <- lapply(adjlist, function(x) as.integer(x)-1L)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
@@ -67,7 +43,8 @@ graph.adjlist <- function(adjlist, mode=c("out", "in", "all", "total"), duplicat
   res
 }
 
-forest.fire.game <- function(nodes, fw.prob, bw.factor=1, ambs=1, directed=TRUE) {
+#' @export
+sample_forestfire <- function(nodes, fw.prob, bw.factor=1, ambs=1, directed=TRUE) {
   # Argument checks
   nodes <- as.integer(nodes)
   fw.prob <- as.numeric(fw.prob)
@@ -87,7 +64,8 @@ forest.fire.game <- function(nodes, fw.prob, bw.factor=1, ambs=1, directed=TRUE)
   res
 }
 
-interconnected.islands.game <- function(islands.n, islands.size, islands.pin, n.inter) {
+#' @export
+sample_islands <- function(islands.n, islands.size, islands.pin, n.inter) {
   # Argument checks
   islands.n <- as.integer(islands.n)
   islands.size <- as.integer(islands.size)
@@ -107,7 +85,8 @@ interconnected.islands.game <- function(islands.n, islands.size, islands.pin, n.
   res
 }
 
-static.fitness.game <- function(no.of.edges, fitness.out, fitness.in=NULL, loops=FALSE, multiple=FALSE) {
+#' @export
+sample_fitness <- function(no.of.edges, fitness.out, fitness.in=NULL, loops=FALSE, multiple=FALSE) {
   # Argument checks
   no.of.edges <- as.integer(no.of.edges)
   fitness.out <- as.numeric(fitness.out)
@@ -126,7 +105,8 @@ static.fitness.game <- function(no.of.edges, fitness.out, fitness.in=NULL, loops
   res
 }
 
-static.power.law.game <- function(no.of.nodes, no.of.edges, exponent.out, exponent.in=-1, loops=FALSE, multiple=FALSE, finite.size.correction=TRUE) {
+#' @export
+sample_fitness_pl <- function(no.of.nodes, no.of.edges, exponent.out, exponent.in=-1, loops=FALSE, multiple=FALSE, finite.size.correction=TRUE) {
   # Argument checks
   no.of.nodes <- as.integer(no.of.nodes)
   no.of.edges <- as.integer(no.of.edges)
@@ -150,7 +130,8 @@ static.power.law.game <- function(no.of.nodes, no.of.edges, exponent.out, expone
   res
 }
 
-k.regular.game <- function(no.of.nodes, k, directed=FALSE, multiple=FALSE) {
+#' @export
+sample_k_regular <- function(no.of.nodes, k, directed=FALSE, multiple=FALSE) {
   # Argument checks
   no.of.nodes <- as.integer(no.of.nodes)
   k <- as.integer(k)
@@ -167,7 +148,8 @@ k.regular.game <- function(no.of.nodes, k, directed=FALSE, multiple=FALSE) {
   res
 }
 
-sbm.game <- function(n, pref.matrix, block.sizes, directed=FALSE, loops=FALSE) {
+#' @export
+sample_sbm <- function(n, pref.matrix, block.sizes, directed=FALSE, loops=FALSE) {
   # Argument checks
   n <- as.integer(n)
   pref.matrix <- as.matrix(structure(as.double(pref.matrix), dim=dim(pref.matrix)))
@@ -185,61 +167,144 @@ sbm.game <- function(n, pref.matrix, block.sizes, directed=FALSE, loops=FALSE) {
   res
 }
 
-closeness.estimate <- function(graph, vids=V(graph), mode=c("out", "in", "all", "total"), cutoff, weights=NULL, normalized=FALSE) {
+hsbm.1.game <- function(n, m, rho, C, p) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  vids <- as.igraph.vs(graph, vids)
-  mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
-  cutoff <- as.numeric(cutoff)
-  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
-  weights <- E(graph)$weight 
-  } 
-  if (!is.null(weights) && any(!is.na(weights))) { 
-  weights <- as.numeric(weights) 
-  } else { 
-  weights <- NULL 
-  }
-  normalized <- as.logical(normalized)
+  n <- as.integer(n)
+  m <- as.integer(m)
+  rho <- as.numeric(rho)
+  C <- as.matrix(structure(as.double(C), dim=dim(C)))
+  p <- as.numeric(p)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
-  res <- .Call("R_igraph_closeness_estimate", graph, vids-1, mode, cutoff, weights, normalized,
+  res <- .Call("R_igraph_hsbm_game", n, m, rho, C, p,
         PACKAGE="igraph")
-  if (getIgraphOpt("add.vertex.names") && is.named(graph)) { 
-  names(res) <- get.vertex.attribute(graph, "name", vids) 
-  }
+
+  res <- set.graph.attribute(res, 'name', 'Hierarchical stochastic block model')
+  res <- set.graph.attribute(res, 'm', m)
+  res <- set.graph.attribute(res, 'rho', rho)
+  res <- set.graph.attribute(res, 'C', C)
+  res <- set.graph.attribute(res, 'p', p)
   res
 }
 
-betweenness.estimate <- function(graph, vids=V(graph), directed=TRUE, cutoff, weights=NULL, nobigint=TRUE) {
+hsbm.list.game <- function(n, mlist, rholist, Clist, p) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  vids <- as.igraph.vs(graph, vids)
+  n <- as.integer(n)
+  mlist <- as.integer(mlist)
+  if (!all(sapply(Clist, is.matrix))) { stop("%I is not a list of matrices") }
+  p <- as.numeric(p)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_hsbm_list_game", n, mlist, rholist, Clist, p,
+        PACKAGE="igraph")
+
+  res <- set.graph.attribute(res, 'name', 'Hierarchical stochastic block model')
+  res <- set.graph.attribute(res, 'p', p)
+  res
+}
+
+#' @export
+sample_correlated_gnp <- function(old.graph, corr, p=old.graph$p, permutation=NULL) {
+  # Argument checks
+  if (!is_igraph(old.graph)) { stop("Not a graph object") }
+  corr <- as.numeric(corr)
+  p <- as.numeric(p)
+  if (!is.null(permutation)) permutation <- as.numeric(permutation)-1
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_correlated_game", old.graph, corr, p, permutation,
+        PACKAGE="igraph")
+
+  res <- set.graph.attribute(res, 'name', 'Correlated random graph')
+  res <- set.graph.attribute(res, 'corr', corr)
+  res <- set.graph.attribute(res, 'p', p)
+  res
+}
+
+#' @export
+sample_correlated_gnp_pair <- function(n, corr, p, directed=FALSE, permutation=NULL) {
+  # Argument checks
+  n <- as.integer(n)
+  corr <- as.numeric(corr)
+  p <- as.numeric(p)
   directed <- as.logical(directed)
-  cutoff <- as.numeric(cutoff)
-  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
-  weights <- E(graph)$weight 
-  } 
-  if (!is.null(weights) && any(!is.na(weights))) { 
-  weights <- as.numeric(weights) 
-  } else { 
-  weights <- NULL 
-  }
-  nobigint <- as.logical(nobigint)
+  if (!is.null(permutation)) permutation <- as.numeric(permutation)-1
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
-  res <- .Call("R_igraph_betweenness_estimate", graph, vids-1, directed, cutoff, weights, nobigint,
+  res <- .Call("R_igraph_correlated_pair_game", n, corr, p, directed, permutation,
         PACKAGE="igraph")
-  if (getIgraphOpt("add.vertex.names") && is.named(graph)) { 
-  names(res) <- get.vertex.attribute(graph, "name", vids) 
-  }
+
   res
 }
 
-page.rank.old <- function(graph, vids=V(graph), directed=TRUE, niter=1000, eps=0.001, damping=0.85, old=FALSE) {
+#' @export
+sample_dot_product <- function(vecs, directed=FALSE) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  vecs <- as.matrix(structure(as.double(vecs), dim=dim(vecs)))
+  directed <- as.logical(directed)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_dot_product_game", vecs, directed,
+        PACKAGE="igraph")
+
+  res
+}
+
+#' @export
+sample_sphere_surface <- function(dim, n=1, radius=1, positive=TRUE) {
+  # Argument checks
+  dim <- as.integer(dim)
+  n <- as.integer(n)
+  radius <- as.numeric(radius)
+  positive <- as.logical(positive)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_sample_sphere_surface", dim, n, radius, positive,
+        PACKAGE="igraph")
+
+  res
+}
+
+#' @export
+sample_sphere_volume <- function(dim, n=1, radius=1, positive=TRUE) {
+  # Argument checks
+  dim <- as.integer(dim)
+  n <- as.integer(n)
+  radius <- as.numeric(radius)
+  positive <- as.logical(positive)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_sample_sphere_volume", dim, n, radius, positive,
+        PACKAGE="igraph")
+
+  res
+}
+
+#' @export
+sample_dirichlet <- function(n, alpha) {
+  # Argument checks
+  n <- as.integer(n)
+  alpha <- as.numeric(alpha)
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_sample_dirichlet", n, alpha,
+        PACKAGE="igraph")
+
+  res
+}
+
+#' @export
+page_rank_old <- function(graph, vids=V(graph), directed=TRUE, niter=1000, eps=0.001, damping=0.85, old=FALSE) {
+  # Argument checks
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   vids <- as.igraph.vs(graph, vids)
   directed <- as.logical(directed)
   niter <- as.integer(niter)
@@ -251,22 +316,23 @@ page.rank.old <- function(graph, vids=V(graph), directed=TRUE, niter=1000, eps=0
   # Function call
   res <- .Call("R_igraph_pagerank_old", graph, vids-1, directed, niter, eps, damping, old,
         PACKAGE="igraph")
-  if (getIgraphOpt("add.vertex.names") && is.named(graph)) { 
-  names(res) <- get.vertex.attribute(graph, "name", vids) 
+  if (igraph_opt("add.vertex.names") && is_named(graph)) { 
+  names(res) <- vertex_attr(graph, "name", vids) 
   }
   res
 }
 
-page.rank <- function(graph, algo=c("prpack", "arpack", "power"), vids=V(graph), directed=TRUE, damping=0.85, personalized=NULL, weights=NULL, options=NULL) {
+#' @export
+page_rank <- function(graph, algo=c("prpack", "arpack", "power"), vids=V(graph), directed=TRUE, damping=0.85, personalized=NULL, weights=NULL, options=NULL) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   algo <- switch(igraph.match.arg(algo), "power"=0L, "arpack"=1L, 
   "prpack"=2L)
   vids <- as.igraph.vs(graph, vids)
   directed <- as.logical(directed)
   damping <- as.numeric(damping)
   if (!is.null(personalized)) personalized <- as.numeric(personalized)
-  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) { 
   weights <- E(graph)$weight 
   } 
   if (!is.null(weights) && any(!is.na(weights))) { 
@@ -278,7 +344,7 @@ page.rank <- function(graph, algo=c("prpack", "arpack", "power"), vids=V(graph),
   if (algo == 0L) {                         
   options <- list(niter=1000, eps=0.001)      
   } else if (algo == 1L) {                  
-  options <- igraph.arpack.default            
+  options <- arpack_defaults                  
   } else {                                  
   options <- NULL                             
   }                                         
@@ -288,43 +354,16 @@ page.rank <- function(graph, algo=c("prpack", "arpack", "power"), vids=V(graph),
   # Function call
   res <- .Call("R_igraph_personalized_pagerank", graph, algo, vids-1, directed, damping, personalized, weights, options,
         PACKAGE="igraph")
-  if (getIgraphOpt("add.vertex.names") && is.named(graph)) { 
-  names(res$vector) <- get.vertex.attribute(graph, "name", vids) 
+  if (igraph_opt("add.vertex.names") && is_named(graph)) { 
+  names(res$vector) <- vertex_attr(graph, "name", vids) 
   }
   res
 }
 
-induced.subgraph <- function(graph, vids, impl=c("auto", "copy_and_delete", "create_from_scratch")) {
+#' @export
+distance_table <- function(graph, directed=TRUE) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  vids <- as.igraph.vs(graph, vids)
-  impl <- switch(igraph.match.arg(impl), "auto"=0, "copy_and_delete"=1, "create_from_scratch"=2)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_induced_subgraph", graph, vids-1, impl,
-        PACKAGE="igraph")
-
-  res
-}
-
-subgraph.edges <- function(graph, eids, delete.vertices=TRUE) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  eids <- as.igraph.es(graph, eids)
-  delete.vertices <- as.logical(delete.vertices)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_subgraph_edges", graph, eids-1, delete.vertices,
-        PACKAGE="igraph")
-
-  res
-}
-
-path.length.hist <- function(graph, directed=TRUE) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   directed <- as.logical(directed)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
@@ -335,9 +374,10 @@ path.length.hist <- function(graph, directed=TRUE) {
   res
 }
 
-simplify <- function(graph, remove.multiple=TRUE, remove.loops=TRUE, edge.attr.comb=getIgraphOpt("edge.attr.comb")) {
+#' @export
+simplify <- function(graph, remove.multiple=TRUE, remove.loops=TRUE, edge.attr.comb=igraph_opt("edge.attr.comb")) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   remove.multiple <- as.logical(remove.multiple)
   remove.loops <- as.logical(remove.loops)
   edge.attr.comb <- igraph.i.attribute.combination(edge.attr.comb)
@@ -350,9 +390,10 @@ simplify <- function(graph, remove.multiple=TRUE, remove.loops=TRUE, edge.attr.c
   res
 }
 
-is.dag <- function(graph) {
+#' @export
+is_dag <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
@@ -362,9 +403,10 @@ is.dag <- function(graph) {
   res
 }
 
-is.simple <- function(graph) {
+#' @export
+is_simple <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
@@ -374,9 +416,10 @@ is.simple <- function(graph) {
   res
 }
 
-has.multiple <- function(graph) {
+#' @export
+any_multiple <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
@@ -386,12 +429,13 @@ has.multiple <- function(graph) {
   res
 }
 
-evcent <- function(graph, directed=FALSE, scale=TRUE, weights=NULL, options=igraph.arpack.default) {
+#' @export
+eigen_centrality <- function(graph, directed=FALSE, scale=TRUE, weights=NULL, options=arpack_defaults) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   directed <- as.logical(directed)
   scale <- as.logical(scale)
-  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) { 
   weights <- E(graph)$weight 
   } 
   if (!is.null(weights) && any(!is.na(weights))) { 
@@ -399,23 +443,24 @@ evcent <- function(graph, directed=FALSE, scale=TRUE, weights=NULL, options=igra
   } else { 
   weights <- NULL 
   }
-  options.tmp <- igraph.arpack.default; options.tmp[ names(options) ] <- options ; options <- options.tmp
+  options.tmp <- arpack_defaults; options.tmp[ names(options) ] <- options ; options <- options.tmp
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
   res <- .Call("R_igraph_eigenvector_centrality", graph, directed, scale, weights, options,
         PACKAGE="igraph")
-  if (getIgraphOpt("add.vertex.names") && is.named(graph)) { 
-  names(res$vector) <- get.vertex.attribute(graph, "name", ) 
+  if (igraph_opt("add.vertex.names") && is_named(graph)) { 
+  names(res$vector) <- vertex_attr(graph, "name", ) 
   }
   res
 }
 
-hub.score <- function(graph, scale=TRUE, weights=NULL, options=igraph.arpack.default) {
+#' @export
+hub_score <- function(graph, scale=TRUE, weights=NULL, options=arpack_defaults) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   scale <- as.logical(scale)
-  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) { 
   weights <- E(graph)$weight 
   } 
   if (!is.null(weights) && any(!is.na(weights))) { 
@@ -423,23 +468,24 @@ hub.score <- function(graph, scale=TRUE, weights=NULL, options=igraph.arpack.def
   } else { 
   weights <- NULL 
   }
-  options.tmp <- igraph.arpack.default; options.tmp[ names(options) ] <- options ; options <- options.tmp
+  options.tmp <- arpack_defaults; options.tmp[ names(options) ] <- options ; options <- options.tmp
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
   res <- .Call("R_igraph_hub_score", graph, scale, weights, options,
         PACKAGE="igraph")
-  if (getIgraphOpt("add.vertex.names") && is.named(graph)) { 
-  names(res$vector) <- get.vertex.attribute(graph, "name", ) 
+  if (igraph_opt("add.vertex.names") && is_named(graph)) { 
+  names(res$vector) <- vertex_attr(graph, "name", ) 
   }
   res
 }
 
-authority.score <- function(graph, scale=TRUE, weights=NULL, options=igraph.arpack.default) {
+#' @export
+authority_score <- function(graph, scale=TRUE, weights=NULL, options=arpack_defaults) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   scale <- as.logical(scale)
-  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) { 
   weights <- E(graph)$weight 
   } 
   if (!is.null(weights) && any(!is.na(weights))) { 
@@ -447,35 +493,22 @@ authority.score <- function(graph, scale=TRUE, weights=NULL, options=igraph.arpa
   } else { 
   weights <- NULL 
   }
-  options.tmp <- igraph.arpack.default; options.tmp[ names(options) ] <- options ; options <- options.tmp
+  options.tmp <- arpack_defaults; options.tmp[ names(options) ] <- options ; options <- options.tmp
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
   res <- .Call("R_igraph_authority_score", graph, scale, weights, options,
         PACKAGE="igraph")
-  if (getIgraphOpt("add.vertex.names") && is.named(graph)) { 
-  names(res$vector) <- get.vertex.attribute(graph, "name", ) 
+  if (igraph_opt("add.vertex.names") && is_named(graph)) { 
+  names(res$vector) <- vertex_attr(graph, "name", ) 
   }
   res
 }
 
-arpack.unpack.complex <- function(vectors, values, nev) {
+#' @export
+which_mutual <- function(graph, es=E(graph)) {
   # Argument checks
-  vectors <- as.matrix(structure(as.double(vectors), dim=dim(vectors)))
-  values <- as.matrix(structure(as.double(values), dim=dim(values)))
-  nev <- as.integer(nev)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_arpack_unpack_complex", vectors, values, nev,
-        PACKAGE="igraph")
-
-  res
-}
-
-is.mutual <- function(graph, es=E(graph)) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   es <- as.igraph.es(graph, es)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
@@ -486,23 +519,27 @@ is.mutual <- function(graph, es=E(graph)) {
   res
 }
 
-maximum.cardinality.search <- function(graph) {
+#' @export
+max_cardinality <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
   res <- .Call("R_igraph_maximum_cardinality_search", graph,
         PACKAGE="igraph")
-
+  if (igraph_opt("return.vs.es")) { 
+  res$alpha <- create_vs(graph, res$alpha) 
+  }
   res
 }
 
-graph.knn <- function(graph, vids=V(graph), weights=NULL) {
+#' @export
+knn <- function(graph, vids=V(graph), weights=NULL) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   vids <- as.igraph.vs(graph, vids)
-  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) { 
   weights <- E(graph)$weight 
   } 
   if (!is.null(weights) && any(!is.na(weights))) { 
@@ -515,19 +552,20 @@ graph.knn <- function(graph, vids=V(graph), weights=NULL) {
   # Function call
   res <- .Call("R_igraph_avg_nearest_neighbor_degree", graph, vids-1, weights,
         PACKAGE="igraph")
-  if (getIgraphOpt("add.vertex.names") && is.named(graph)) { 
-  names(res$knn) <- get.vertex.attribute(graph, "name", vids) 
+  if (igraph_opt("add.vertex.names") && is_named(graph)) { 
+  names(res$knn) <- vertex_attr(graph, "name", vids) 
   }
   res
 }
 
-graph.strength <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total"), loops=TRUE, weights=NULL) {
+#' @export
+strength <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total"), loops=TRUE, weights=NULL) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   vids <- as.igraph.vs(graph, vids)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
   loops <- as.logical(loops)
-  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) { 
   weights <- E(graph)$weight 
   } 
   if (!is.null(weights) && any(!is.na(weights))) { 
@@ -540,13 +578,14 @@ graph.strength <- function(graph, vids=V(graph), mode=c("all", "out", "in", "tot
   # Function call
   res <- .Call("R_igraph_strength", graph, vids-1, mode, loops, weights,
         PACKAGE="igraph")
-  if (getIgraphOpt("add.vertex.names") && is.named(graph)) { 
-  names(res) <- get.vertex.attribute(graph, "name", vids) 
+  if (igraph_opt("add.vertex.names") && is_named(graph)) { 
+  names(res) <- vertex_attr(graph, "name", vids) 
   }
   res
 }
 
-centralize.scores <- function(scores, theoretical.max=0, normalized=TRUE) {
+#' @export
+centralize <- function(scores, theoretical.max=0, normalized=TRUE) {
   # Argument checks
   scores <- as.numeric(scores)
   theoretical.max <- as.numeric(theoretical.max)
@@ -561,9 +600,10 @@ centralize.scores <- function(scores, theoretical.max=0, normalized=TRUE) {
   res
 }
 
-centralization.degree <- function(graph, mode=c("all", "out", "in", "total"), loops=TRUE, normalized=TRUE) {
+#' @export
+centr_degree <- function(graph, mode=c("all", "out", "in", "total"), loops=TRUE, normalized=TRUE) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
   loops <- as.logical(loops)
   normalized <- as.logical(normalized)
@@ -576,9 +616,10 @@ centralization.degree <- function(graph, mode=c("all", "out", "in", "total"), lo
   res
 }
 
-centralization.degree.tmax <- function(graph=NULL, nodes=0, mode=c("all", "out", "in", "total"), loops=FALSE) {
+#' @export
+centr_degree_tmax <- function(graph=NULL, nodes=0, mode=c("all", "out", "in", "total"), loops=FALSE) {
   # Argument checks
-  if (!is.null(graph) && !is.igraph(graph)) { stop("Not a graph object") }
+  if (!is.null(graph) && !is_igraph(graph)) { stop("Not a graph object") }
   nodes <- as.integer(nodes)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
   loops <- as.logical(loops)
@@ -591,9 +632,10 @@ centralization.degree.tmax <- function(graph=NULL, nodes=0, mode=c("all", "out",
   res
 }
 
-centralization.betweenness <- function(graph, directed=TRUE, nobigint=TRUE, normalized=TRUE) {
+#' @export
+centr_betw <- function(graph, directed=TRUE, nobigint=TRUE, normalized=TRUE) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   directed <- as.logical(directed)
   nobigint <- as.logical(nobigint)
   normalized <- as.logical(normalized)
@@ -606,9 +648,10 @@ centralization.betweenness <- function(graph, directed=TRUE, nobigint=TRUE, norm
   res
 }
 
-centralization.betweenness.tmax <- function(graph=NULL, nodes=0, directed=TRUE) {
+#' @export
+centr_betw_tmax <- function(graph=NULL, nodes=0, directed=TRUE) {
   # Argument checks
-  if (!is.null(graph) && !is.igraph(graph)) { stop("Not a graph object") }
+  if (!is.null(graph) && !is_igraph(graph)) { stop("Not a graph object") }
   nodes <- as.integer(nodes)
   directed <- as.logical(directed)
 
@@ -620,9 +663,10 @@ centralization.betweenness.tmax <- function(graph=NULL, nodes=0, directed=TRUE) 
   res
 }
 
-centralization.closeness <- function(graph, mode=c("out", "in", "all", "total"), normalized=TRUE) {
+#' @export
+centr_clo <- function(graph, mode=c("out", "in", "all", "total"), normalized=TRUE) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
   normalized <- as.logical(normalized)
 
@@ -634,9 +678,10 @@ centralization.closeness <- function(graph, mode=c("out", "in", "all", "total"),
   res
 }
 
-centralization.closeness.tmax <- function(graph=NULL, nodes=0, mode=c("out", "in", "all", "total")) {
+#' @export
+centr_clo_tmax <- function(graph=NULL, nodes=0, mode=c("out", "in", "all", "total")) {
   # Argument checks
-  if (!is.null(graph) && !is.igraph(graph)) { stop("Not a graph object") }
+  if (!is.null(graph) && !is_igraph(graph)) { stop("Not a graph object") }
   nodes <- as.integer(nodes)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
 
@@ -648,12 +693,13 @@ centralization.closeness.tmax <- function(graph=NULL, nodes=0, mode=c("out", "in
   res
 }
 
-centralization.evcent <- function(graph, directed=FALSE, scale=TRUE, options=igraph.arpack.default, normalized=TRUE) {
+#' @export
+centr_eigen <- function(graph, directed=FALSE, scale=TRUE, options=arpack_defaults, normalized=TRUE) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   directed <- as.logical(directed)
   scale <- as.logical(scale)
-  options.tmp <- igraph.arpack.default; options.tmp[ names(options) ] <- options ; options <- options.tmp
+  options.tmp <- arpack_defaults; options.tmp[ names(options) ] <- options ; options <- options.tmp
   normalized <- as.logical(normalized)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
@@ -664,9 +710,10 @@ centralization.evcent <- function(graph, directed=FALSE, scale=TRUE, options=igr
   res
 }
 
-centralization.evcent.tmax <- function(graph=NULL, nodes=0, directed=FALSE, scale=TRUE) {
+#' @export
+centr_eigen_tmax <- function(graph=NULL, nodes=0, directed=FALSE, scale=TRUE) {
   # Argument checks
-  if (!is.null(graph) && !is.igraph(graph)) { stop("Not a graph object") }
+  if (!is.null(graph) && !is_igraph(graph)) { stop("Not a graph object") }
   nodes <- as.integer(nodes)
   directed <- as.logical(directed)
   scale <- as.logical(scale)
@@ -679,9 +726,10 @@ centralization.evcent.tmax <- function(graph=NULL, nodes=0, directed=FALSE, scal
   res
 }
 
-assortativity.nominal <- function(graph, types, directed=TRUE) {
+#' @export
+assortativity_nominal <- function(graph, types, directed=TRUE) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   types <- as.numeric(types)-1
   directed <- as.logical(directed)
 
@@ -693,9 +741,10 @@ assortativity.nominal <- function(graph, types, directed=TRUE) {
   res
 }
 
+#' @export
 assortativity <- function(graph, types1, types2=NULL, directed=TRUE) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   types1 <- as.numeric(types1)
   if (!is.null(types2)) types2 <- as.numeric(types2)
   directed <- as.logical(directed)
@@ -708,9 +757,10 @@ assortativity <- function(graph, types1, types2=NULL, directed=TRUE) {
   res
 }
 
-assortativity.degree <- function(graph, directed=TRUE) {
+#' @export
+assortativity_degree <- function(graph, directed=TRUE) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   directed <- as.logical(directed)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
@@ -721,9 +771,10 @@ assortativity.degree <- function(graph, directed=TRUE) {
   res
 }
 
-contract.vertices <- function(graph, mapping, vertex.attr.comb=getIgraphOpt("vertex.attr.comb")) {
+#' @export
+contract <- function(graph, mapping, vertex.attr.comb=igraph_opt("vertex.attr.comb")) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   mapping <- as.numeric(mapping)-1
   vertex.attr.comb <- igraph.i.attribute.combination(vertex.attr.comb)
 
@@ -735,9 +786,10 @@ contract.vertices <- function(graph, mapping, vertex.attr.comb=getIgraphOpt("ver
   res
 }
 
+#' @export
 eccentricity <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total")) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   vids <- as.igraph.vs(graph, vids)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
 
@@ -745,15 +797,16 @@ eccentricity <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total
   # Function call
   res <- .Call("R_igraph_eccentricity", graph, vids-1, mode,
         PACKAGE="igraph")
-  if (getIgraphOpt("add.vertex.names") && is.named(graph)) { 
-  names(res) <- get.vertex.attribute(graph, "name", vids) 
+  if (igraph_opt("add.vertex.names") && is_named(graph)) { 
+  names(res) <- vertex_attr(graph, "name", vids) 
   }
   res
 }
 
+#' @export
 radius <- function(graph, mode=c("all", "out", "in", "total")) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
@@ -764,10 +817,11 @@ radius <- function(graph, mode=c("all", "out", "in", "total")) {
   res
 }
 
-graph.diversity <- function(graph, weights=NULL, vids=V(graph)) {
+#' @export
+diversity <- function(graph, weights=NULL, vids=V(graph)) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
+  if (!is_igraph(graph)) { stop("Not a graph object") }
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) { 
   weights <- E(graph)$weight 
   } 
   if (!is.null(weights) && any(!is.na(weights))) { 
@@ -781,13 +835,14 @@ graph.diversity <- function(graph, weights=NULL, vids=V(graph)) {
   # Function call
   res <- .Call("R_igraph_diversity", graph, weights, vids-1,
         PACKAGE="igraph")
-  if (getIgraphOpt("add.vertex.names") && is.named(graph)) { 
-  names(res) <- get.vertex.attribute(graph, "name", vids) 
+  if (igraph_opt("add.vertex.names") && is_named(graph)) { 
+  names(res) <- vertex_attr(graph, "name", vids) 
   }
   res
 }
 
-is.degree.sequence <- function(out.deg, in.deg=NULL) {
+#' @export
+is_degseq <- function(out.deg, in.deg=NULL) {
   # Argument checks
   out.deg <- as.numeric(out.deg)
   if (!is.null(in.deg)) in.deg <- as.numeric(in.deg)
@@ -800,7 +855,8 @@ is.degree.sequence <- function(out.deg, in.deg=NULL) {
   res
 }
 
-is.graphical.degree.sequence <- function(out.deg, in.deg=NULL) {
+#' @export
+is_graphical <- function(out.deg, in.deg=NULL) {
   # Argument checks
   out.deg <- as.numeric(out.deg)
   if (!is.null(in.deg)) in.deg <- as.numeric(in.deg)
@@ -813,10 +869,11 @@ is.graphical.degree.sequence <- function(out.deg, in.deg=NULL) {
   res
 }
 
-bipartite.projection.size <- function(graph, types=NULL) {
+#' @export
+bipartite_projection_size <- function(graph, types=NULL) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  if (is.null(types) && "type" %in% list.vertex.attributes(graph)) { 
+  if (!is_igraph(graph)) { stop("Not a graph object") }
+  if (is.null(types) && "type" %in% vertex_attr_names(graph)) { 
   types <- V(graph)$type 
   } 
   if (!is.null(types)) { 
@@ -839,9 +896,10 @@ bipartite.projection.size <- function(graph, types=NULL) {
   res
 }
 
-bipartite.mapping <- function(graph) {
+#' @export
+bipartite_mapping <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
@@ -851,103 +909,55 @@ bipartite.mapping <- function(graph) {
   res
 }
 
-articulation.points <- function(graph) {
+#' @export
+articulation_points <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
   res <- .Call("R_igraph_articulation_points", graph,
         PACKAGE="igraph")
-
+  if (igraph_opt("return.vs.es")) { 
+  res <- create_vs(graph, res) 
+  }
   res
 }
 
-biconnected.components <- function(graph) {
+#' @export
+biconnected_components <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
   res <- .Call("R_igraph_biconnected_components", graph,
         PACKAGE="igraph")
-
-  res
-}
-
-layout.star <- function(graph, center=V(graph)[1], order=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  center <- as.igraph.vs(graph, center)
-  if (!is.null(order)) order <- as.numeric(order)-1
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_layout_star", graph, center-1, order,
-        PACKAGE="igraph")
-
-  res
-}
-
-layout.grid <- function(graph, width=0) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  width <- as.integer(width)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_layout_grid", graph, width,
-        PACKAGE="igraph")
-
-  res
-}
-
-layout.grid.3d <- function(graph, width=0, height=0) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  width <- as.integer(width)
-  height <- as.integer(height)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_layout_grid_3d", graph, width, height,
-        PACKAGE="igraph")
-
-  res
-}
-
-layout.bipartite <- function(graph, types=NULL, hgap=1, vgap=1, maxiter=100) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  if (is.null(types) && "type" %in% list.vertex.attributes(graph)) { 
-  types <- V(graph)$type 
+  if (igraph_opt("return.vs.es")) { 
+  for (i_ in seq_along(res$tree_edges)) { 
+  res$tree_edges[[i_]] <- create_es(graph, res$tree_edges[[i_]]) 
   } 
-  if (!is.null(types)) { 
-  if (!is.logical(types)) { 
-  warning("vertex types converted to logical") 
-  } 
-  types <- as.logical(types) 
-  if (any(is.na(types))) { 
-  stop("`NA' is not allowed in vertex types") 
-  } 
-  } else { 
-  stop("Not a bipartite graph, supply `types' argument") 
   }
-  hgap <- as.numeric(hgap)
-  vgap <- as.numeric(vgap)
-  maxiter <- as.integer(maxiter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_layout_bipartite", graph, types, hgap, vgap, maxiter,
-        PACKAGE="igraph")
-
+  if (igraph_opt("return.vs.es")) { 
+  for (i_ in seq_along(res$component_edges)) { 
+  res$component_edges[[i_]] <- create_es(graph, res$component_edges[[i_]]) 
+  } 
+  }
+  if (igraph_opt("return.vs.es")) { 
+  for (i_ in seq_along(res$components)) { 
+  res$components[[i_]] <- create_vs(graph, res$components[[i_]]) 
+  } 
+  }
+  if (igraph_opt("return.vs.es")) { 
+  res$articulation_points <- create_vs(graph, res$articulation_points) 
+  }
   res
 }
 
+#' @export
 similarity.jaccard <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total"), loops=FALSE) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   vids <- as.igraph.vs(graph, vids)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
   loops <- as.logical(loops)
@@ -960,9 +970,10 @@ similarity.jaccard <- function(graph, vids=V(graph), mode=c("all", "out", "in", 
   res
 }
 
+#' @export
 similarity.dice <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total"), loops=FALSE) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   vids <- as.igraph.vs(graph, vids)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
   loops <- as.logical(loops)
@@ -975,9 +986,10 @@ similarity.dice <- function(graph, vids=V(graph), mode=c("all", "out", "in", "to
   res
 }
 
+#' @export
 similarity.invlogweighted <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total")) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   vids <- as.igraph.vs(graph, vids)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
 
@@ -989,54 +1001,8 @@ similarity.invlogweighted <- function(graph, vids=V(graph), mode=c("all", "out",
   res
 }
 
-community.le.to.membership <- function(merges, steps, membership) {
-  # Argument checks
-  merges <- as.matrix(structure(as.double(merges), dim=dim(merges)))
-  steps <- as.integer(steps)
-  membership <- as.numeric(membership)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_le_community_to_membership", merges, steps, membership,
-        PACKAGE="igraph")
-
-  res
-}
-
-mod.matrix <- function(graph, membership, weights=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  membership <- as.numeric(membership)-1
-  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
-  weights <- E(graph)$weight 
-  } 
-  if (!is.null(weights) && any(!is.na(weights))) { 
-  weights <- as.numeric(weights) 
-  } else { 
-  weights <- NULL 
-  }
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_modularity_matrix", graph, membership, weights,
-        PACKAGE="igraph")
-
-  res
-}
-
-reindex.membership <- function(membership) {
-  # Argument checks
-  membership <- as.numeric(membership)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_reindex_membership", membership,
-        PACKAGE="igraph")
-
-  res
-}
-
-hrg.game <- function(hrg) {
+#' @export
+sample_hrg <- function(hrg) {
   # Argument checks
   if (is.null(hrg)) { 
   hrg <- list(left=c(), right=c(), prob=c(), edges=c(), 
@@ -1054,7 +1020,8 @@ hrg.game <- function(hrg) {
   res
 }
 
-hrg.dendrogram <- function(hrg) {
+#' @export
+hrg_tree <- function(hrg) {
   # Argument checks
   if (is.null(hrg)) { 
   hrg <- list(left=c(), right=c(), prob=c(), edges=c(), 
@@ -1071,9 +1038,10 @@ hrg.dendrogram <- function(hrg) {
   res
 }
 
-hrg.consensus <- function(graph, hrg=NULL, start=FALSE, num.samples=10000) {
+#' @export
+consensus_tree <- function(graph, hrg=NULL, start=FALSE, num.samples=10000) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   if (is.null(hrg)) { 
   hrg <- list(left=c(), right=c(), prob=c(), edges=c(), 
   vertices=c()) 
@@ -1091,9 +1059,10 @@ hrg.consensus <- function(graph, hrg=NULL, start=FALSE, num.samples=10000) {
   res
 }
 
-hrg.create <- function(graph, prob) {
+#' @export
+hrg <- function(graph, prob) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   prob <- as.numeric(prob)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
@@ -1105,10 +1074,11 @@ hrg.create <- function(graph, prob) {
   res
 }
 
+#' @export
 graphlets <- function(graph, weights=NULL, niter=1000) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  if (is.null(weights) && "weight" %in% list.edge.attributes(graph)) { 
+  if (!is_igraph(graph)) { stop("Not a graph object") }
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) { 
   weights <- E(graph)$weight 
   } 
   if (!is.null(weights) && any(!is.na(weights))) { 
@@ -1122,27 +1092,18 @@ graphlets <- function(graph, weights=NULL, niter=1000) {
   # Function call
   res <- .Call("R_igraph_graphlets", graph, weights, niter,
         PACKAGE="igraph")
-
+  if (igraph_opt("return.vs.es")) { 
+  for (i_ in seq_along(res$cliques)) { 
+  res$cliques[[i_]] <- create_vs(graph, res$cliques[[i_]]) 
+  } 
+  }
   res
 }
 
-as.undirected <- function(graph, mode=c("collapse", "each", "mutual"), edge.attr.comb=getIgraphOpt("edge.attr.comb")) {
+#' @export
+dyad_census <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  mode <- switch(igraph.match.arg(mode), "collapse"=1, "each"=0, "mutual"=2)
-  edge.attr.comb <- igraph.i.attribute.combination(edge.attr.comb)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_to_undirected", graph, mode, edge.attr.comb,
-        PACKAGE="igraph")
-
-  res
-}
-
-dyad.census <- function(graph) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
@@ -1152,9 +1113,10 @@ dyad.census <- function(graph) {
   res
 }
 
-triad.census <- function(graph) {
+#' @export
+triad_census <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
@@ -1164,9 +1126,10 @@ triad.census <- function(graph) {
   res
 }
 
-adjacent.triangles <- function(graph, vids=V(graph)) {
+#' @export
+count_triangles <- function(graph, vids=V(graph)) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   vids <- as.igraph.vs(graph, vids)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
@@ -1177,12 +1140,28 @@ adjacent.triangles <- function(graph, vids=V(graph)) {
   res
 }
 
-graph.maxflow <- function(graph, source, target, capacity=NULL) {
+#' @export
+triangles <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_list_triangles", graph,
+        PACKAGE="igraph")
+  if (igraph_opt("return.vs.es")) { 
+  res <- create_vs(graph, res) 
+  }
+  res
+}
+
+#' @export
+max_flow <- function(graph, source, target, capacity=NULL) {
+  # Argument checks
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   source <- as.igraph.vs(graph, source)
   target <- as.igraph.vs(graph, target)
-  if (is.null(capacity) && "capacity" %in% list.edge.attributes(graph)) { 
+  if (is.null(capacity) && "capacity" %in% edge_attr_names(graph)) { 
   capacity <- E(graph)$capacity 
   } 
   if (!is.null(capacity) && any(!is.na(capacity))) { 
@@ -1195,13 +1174,19 @@ graph.maxflow <- function(graph, source, target, capacity=NULL) {
   # Function call
   res <- .Call("R_igraph_maxflow", graph, source-1, target-1, capacity,
         PACKAGE="igraph")
-
+  if (igraph_opt("return.vs.es")) { 
+  res$partition1 <- create_vs(graph, res$partition1) 
+  }
+  if (igraph_opt("return.vs.es")) { 
+  res$partition2 <- create_vs(graph, res$partition2) 
+  }
   res
 }
 
-dominator.tree <- function(graph, root, mode=c("out", "in")) {
+#' @export
+dominator_tree <- function(graph, root, mode=c("out", "in")) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   root <- as.igraph.vs(graph, root)
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2)
 
@@ -1209,13 +1194,19 @@ dominator.tree <- function(graph, root, mode=c("out", "in")) {
   # Function call
   res <- .Call("R_igraph_dominator_tree", graph, root-1, mode,
         PACKAGE="igraph")
-
+  if (igraph_opt("return.vs.es")) { 
+  res$dom <- create_vs(graph, res$dom) 
+  }
+  if (igraph_opt("return.vs.es")) { 
+  res$leftout <- create_vs(graph, res$leftout) 
+  }
   res
 }
 
-stCuts <- function(graph, source, target) {
+#' @export
+st_cuts <- function(graph, source, target) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   source <- as.igraph.vs(graph, source)
   target <- as.igraph.vs(graph, target)
 
@@ -1223,16 +1214,26 @@ stCuts <- function(graph, source, target) {
   # Function call
   res <- .Call("R_igraph_all_st_cuts", graph, source-1, target-1,
         PACKAGE="igraph")
-
+  if (igraph_opt("return.vs.es")) { 
+  for (i_ in seq_along(res$cuts)) { 
+  res$cuts[[i_]] <- create_es(graph, res$cuts[[i_]]) 
+  } 
+  }
+  if (igraph_opt("return.vs.es")) { 
+  for (i_ in seq_along(res$partition1s)) { 
+  res$partition1s[[i_]] <- create_vs(graph, res$partition1s[[i_]]) 
+  } 
+  }
   res
 }
 
-stMincuts <- function(graph, source, target, capacity=NULL) {
+#' @export
+st_min_cuts <- function(graph, source, target, capacity=NULL) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   source <- as.igraph.vs(graph, source)
   target <- as.igraph.vs(graph, target)
-  if (is.null(capacity) && "weight" %in% list.edge.attributes(graph)) { 
+  if (is.null(capacity) && "weight" %in% edge_attr_names(graph)) { 
   capacity <- E(graph)$weight 
   } 
   if (!is.null(capacity) && any(!is.na(capacity))) { 
@@ -1245,13 +1246,23 @@ stMincuts <- function(graph, source, target, capacity=NULL) {
   # Function call
   res <- .Call("R_igraph_all_st_mincuts", graph, source-1, target-1, capacity,
         PACKAGE="igraph")
-
+  if (igraph_opt("return.vs.es")) { 
+  for (i_ in seq_along(res$cuts)) { 
+  res$cuts[[i_]] <- create_es(graph, res$cuts[[i_]]) 
+  } 
+  }
+  if (igraph_opt("return.vs.es")) { 
+  for (i_ in seq_along(res$partition1s)) { 
+  res$partition1s[[i_]] <- create_vs(graph, res$partition1s[[i_]]) 
+  } 
+  }
   res
 }
 
-is.separator <- function(graph, candidate) {
+#' @export
+is_separator <- function(graph, candidate) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   candidate <- as.igraph.vs(graph, candidate)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
@@ -1262,9 +1273,10 @@ is.separator <- function(graph, candidate) {
   res
 }
 
-is.minimal.separator <- function(graph, candidate) {
+#' @export
+is_min_separator <- function(graph, candidate) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   candidate <- as.igraph.vs(graph, candidate)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
@@ -1275,33 +1287,44 @@ is.minimal.separator <- function(graph, candidate) {
   res
 }
 
-minimal.st.separators <- function(graph) {
+#' @export
+min_st_separators <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
   res <- .Call("R_igraph_all_minimal_st_separators", graph,
         PACKAGE="igraph")
-
+  if (igraph_opt("return.vs.es")) { 
+  for (i_ in seq_along(res)) { 
+  res[[i_]] <- create_vs(graph, res[[i_]]) 
+  } 
+  }
   res
 }
 
-minimum.size.separators <- function(graph) {
+#' @export
+min_separators <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
   res <- .Call("R_igraph_minimum_size_separators", graph,
         PACKAGE="igraph")
-
+  if (igraph_opt("return.vs.es")) { 
+  for (i_ in seq_along(res)) { 
+  res[[i_]] <- create_vs(graph, res[[i_]]) 
+  } 
+  }
   res
 }
 
+#' @export
 graph.isoclass <- function(graph) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
@@ -1311,10 +1334,11 @@ graph.isoclass <- function(graph) {
   res
 }
 
+#' @export
 graph.isomorphic <- function(graph1, graph2) {
   # Argument checks
-  if (!is.igraph(graph1)) { stop("Not a graph object") }
-  if (!is.igraph(graph2)) { stop("Not a graph object") }
+  if (!is_igraph(graph1)) { stop("Not a graph object") }
+  if (!is_igraph(graph2)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
@@ -1324,7 +1348,8 @@ graph.isomorphic <- function(graph1, graph2) {
   res
 }
 
-graph.isocreate <- function(size, number, directed=TRUE) {
+#' @export
+graph_from_isomorphism_class <- function(size, number, directed=TRUE) {
   # Argument checks
   size <- as.integer(size)
   number <- as.integer(number)
@@ -1338,12 +1363,13 @@ graph.isocreate <- function(size, number, directed=TRUE) {
   res
 }
 
+#' @export
 graph.isomorphic.vf2 <- function(graph1, graph2, vertex.color1, vertex.color2, edge.color1, edge.color2) {
   # Argument checks
-  if (!is.igraph(graph1)) { stop("Not a graph object") }
-  if (!is.igraph(graph2)) { stop("Not a graph object") }
+  if (!is_igraph(graph1)) { stop("Not a graph object") }
+  if (!is_igraph(graph2)) { stop("Not a graph object") }
   if (missing(vertex.color1)) { 
-  if ("color" %in% list.vertex.attributes(graph1)) { 
+  if ("color" %in% vertex_attr_names(graph1)) { 
   vertex.color1 <- V(graph1)$color 
   } else { 
   vertex.color1 <- NULL 
@@ -1353,7 +1379,7 @@ graph.isomorphic.vf2 <- function(graph1, graph2, vertex.color1, vertex.color2, e
   vertex.color1 <- as.integer(vertex.color1)-1L 
   }
   if (missing(vertex.color2)) { 
-  if ("color" %in% list.vertex.attributes(graph2)) { 
+  if ("color" %in% vertex_attr_names(graph2)) { 
   vertex.color2 <- V(graph2)$color 
   } else { 
   vertex.color2 <- NULL 
@@ -1363,7 +1389,7 @@ graph.isomorphic.vf2 <- function(graph1, graph2, vertex.color1, vertex.color2, e
   vertex.color2 <- as.integer(vertex.color2)-1L 
   }
   if (missing(edge.color1)) { 
-  if ("color" %in% list.edge.attributes(graph1)) { 
+  if ("color" %in% edge_attr_names(graph1)) { 
   edge.color1 <- E(graph1)$color 
   } else { 
   edge.color1 <- NULL 
@@ -1373,7 +1399,7 @@ graph.isomorphic.vf2 <- function(graph1, graph2, vertex.color1, vertex.color2, e
   edge.color1 <- as.integer(edge.color1)-1L 
   }
   if (missing(edge.color2)) { 
-  if ("color" %in% list.edge.attributes(graph2)) { 
+  if ("color" %in% edge_attr_names(graph2)) { 
   edge.color2 <- E(graph2)$color 
   } else { 
   edge.color2 <- NULL 
@@ -1391,12 +1417,13 @@ graph.isomorphic.vf2 <- function(graph1, graph2, vertex.color1, vertex.color2, e
   res
 }
 
+#' @export
 graph.count.isomorphisms.vf2 <- function(graph1, graph2, vertex.color1, vertex.color2, edge.color1, edge.color2) {
   # Argument checks
-  if (!is.igraph(graph1)) { stop("Not a graph object") }
-  if (!is.igraph(graph2)) { stop("Not a graph object") }
+  if (!is_igraph(graph1)) { stop("Not a graph object") }
+  if (!is_igraph(graph2)) { stop("Not a graph object") }
   if (missing(vertex.color1)) { 
-  if ("color" %in% list.vertex.attributes(graph1)) { 
+  if ("color" %in% vertex_attr_names(graph1)) { 
   vertex.color1 <- V(graph1)$color 
   } else { 
   vertex.color1 <- NULL 
@@ -1406,7 +1433,7 @@ graph.count.isomorphisms.vf2 <- function(graph1, graph2, vertex.color1, vertex.c
   vertex.color1 <- as.integer(vertex.color1)-1L 
   }
   if (missing(vertex.color2)) { 
-  if ("color" %in% list.vertex.attributes(graph2)) { 
+  if ("color" %in% vertex_attr_names(graph2)) { 
   vertex.color2 <- V(graph2)$color 
   } else { 
   vertex.color2 <- NULL 
@@ -1416,7 +1443,7 @@ graph.count.isomorphisms.vf2 <- function(graph1, graph2, vertex.color1, vertex.c
   vertex.color2 <- as.integer(vertex.color2)-1L 
   }
   if (missing(edge.color1)) { 
-  if ("color" %in% list.edge.attributes(graph1)) { 
+  if ("color" %in% edge_attr_names(graph1)) { 
   edge.color1 <- E(graph1)$color 
   } else { 
   edge.color1 <- NULL 
@@ -1426,7 +1453,7 @@ graph.count.isomorphisms.vf2 <- function(graph1, graph2, vertex.color1, vertex.c
   edge.color1 <- as.integer(edge.color1)-1L 
   }
   if (missing(edge.color2)) { 
-  if ("color" %in% list.edge.attributes(graph2)) { 
+  if ("color" %in% edge_attr_names(graph2)) { 
   edge.color2 <- E(graph2)$color 
   } else { 
   edge.color2 <- NULL 
@@ -1444,12 +1471,13 @@ graph.count.isomorphisms.vf2 <- function(graph1, graph2, vertex.color1, vertex.c
   res
 }
 
+#' @export
 graph.subisomorphic.vf2 <- function(graph1, graph2, vertex.color1, vertex.color2, edge.color1, edge.color2) {
   # Argument checks
-  if (!is.igraph(graph1)) { stop("Not a graph object") }
-  if (!is.igraph(graph2)) { stop("Not a graph object") }
+  if (!is_igraph(graph1)) { stop("Not a graph object") }
+  if (!is_igraph(graph2)) { stop("Not a graph object") }
   if (missing(vertex.color1)) { 
-  if ("color" %in% list.vertex.attributes(graph1)) { 
+  if ("color" %in% vertex_attr_names(graph1)) { 
   vertex.color1 <- V(graph1)$color 
   } else { 
   vertex.color1 <- NULL 
@@ -1459,7 +1487,7 @@ graph.subisomorphic.vf2 <- function(graph1, graph2, vertex.color1, vertex.color2
   vertex.color1 <- as.integer(vertex.color1)-1L 
   }
   if (missing(vertex.color2)) { 
-  if ("color" %in% list.vertex.attributes(graph2)) { 
+  if ("color" %in% vertex_attr_names(graph2)) { 
   vertex.color2 <- V(graph2)$color 
   } else { 
   vertex.color2 <- NULL 
@@ -1469,7 +1497,7 @@ graph.subisomorphic.vf2 <- function(graph1, graph2, vertex.color1, vertex.color2
   vertex.color2 <- as.integer(vertex.color2)-1L 
   }
   if (missing(edge.color1)) { 
-  if ("color" %in% list.edge.attributes(graph1)) { 
+  if ("color" %in% edge_attr_names(graph1)) { 
   edge.color1 <- E(graph1)$color 
   } else { 
   edge.color1 <- NULL 
@@ -1479,7 +1507,7 @@ graph.subisomorphic.vf2 <- function(graph1, graph2, vertex.color1, vertex.color2
   edge.color1 <- as.integer(edge.color1)-1L 
   }
   if (missing(edge.color2)) { 
-  if ("color" %in% list.edge.attributes(graph2)) { 
+  if ("color" %in% edge_attr_names(graph2)) { 
   edge.color2 <- E(graph2)$color 
   } else { 
   edge.color2 <- NULL 
@@ -1497,12 +1525,13 @@ graph.subisomorphic.vf2 <- function(graph1, graph2, vertex.color1, vertex.color2
   res
 }
 
+#' @export
 graph.count.subisomorphisms.vf2 <- function(graph1, graph2, vertex.color1, vertex.color2, edge.color1, edge.color2) {
   # Argument checks
-  if (!is.igraph(graph1)) { stop("Not a graph object") }
-  if (!is.igraph(graph2)) { stop("Not a graph object") }
+  if (!is_igraph(graph1)) { stop("Not a graph object") }
+  if (!is_igraph(graph2)) { stop("Not a graph object") }
   if (missing(vertex.color1)) { 
-  if ("color" %in% list.vertex.attributes(graph1)) { 
+  if ("color" %in% vertex_attr_names(graph1)) { 
   vertex.color1 <- V(graph1)$color 
   } else { 
   vertex.color1 <- NULL 
@@ -1512,7 +1541,7 @@ graph.count.subisomorphisms.vf2 <- function(graph1, graph2, vertex.color1, verte
   vertex.color1 <- as.integer(vertex.color1)-1L 
   }
   if (missing(vertex.color2)) { 
-  if ("color" %in% list.vertex.attributes(graph2)) { 
+  if ("color" %in% vertex_attr_names(graph2)) { 
   vertex.color2 <- V(graph2)$color 
   } else { 
   vertex.color2 <- NULL 
@@ -1522,7 +1551,7 @@ graph.count.subisomorphisms.vf2 <- function(graph1, graph2, vertex.color1, verte
   vertex.color2 <- as.integer(vertex.color2)-1L 
   }
   if (missing(edge.color1)) { 
-  if ("color" %in% list.edge.attributes(graph1)) { 
+  if ("color" %in% edge_attr_names(graph1)) { 
   edge.color1 <- E(graph1)$color 
   } else { 
   edge.color1 <- NULL 
@@ -1532,7 +1561,7 @@ graph.count.subisomorphisms.vf2 <- function(graph1, graph2, vertex.color1, verte
   edge.color1 <- as.integer(edge.color1)-1L 
   }
   if (missing(edge.color2)) { 
-  if ("color" %in% list.edge.attributes(graph2)) { 
+  if ("color" %in% edge_attr_names(graph2)) { 
   edge.color2 <- E(graph2)$color 
   } else { 
   edge.color2 <- NULL 
@@ -1550,10 +1579,11 @@ graph.count.subisomorphisms.vf2 <- function(graph1, graph2, vertex.color1, verte
   res
 }
 
+#' @export
 graph.isomorphic.34 <- function(graph1, graph2) {
   # Argument checks
-  if (!is.igraph(graph1)) { stop("Not a graph object") }
-  if (!is.igraph(graph2)) { stop("Not a graph object") }
+  if (!is_igraph(graph1)) { stop("Not a graph object") }
+  if (!is_igraph(graph2)) { stop("Not a graph object") }
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
@@ -1563,9 +1593,10 @@ graph.isomorphic.34 <- function(graph1, graph2) {
   res
 }
 
-canonical.permutation <- function(graph, sh="fm") {
+#' @export
+canonical_permutation <- function(graph, sh="fm") {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   sh <- switch(igraph.match.arg(sh), "f"=0, "fl"=1, "fs"=2, "fm"=3, "flm"=4, "fsm"=5)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
@@ -1576,9 +1607,10 @@ canonical.permutation <- function(graph, sh="fm") {
   res
 }
 
-permute.vertices <- function(graph, permutation) {
+#' @export
+permute <- function(graph, permutation) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   permutation <- as.numeric(permutation)-1
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
@@ -1589,10 +1621,11 @@ permute.vertices <- function(graph, permutation) {
   res
 }
 
+#' @export
 graph.isomorphic.bliss <- function(graph1, graph2, sh1="fm", sh2="fm") {
   # Argument checks
-  if (!is.igraph(graph1)) { stop("Not a graph object") }
-  if (!is.igraph(graph2)) { stop("Not a graph object") }
+  if (!is_igraph(graph1)) { stop("Not a graph object") }
+  if (!is_igraph(graph2)) { stop("Not a graph object") }
   sh1 <- switch(igraph.match.arg(sh1), "f"=0, "fl"=1, "fs"=2, "fm"=3, "flm"=4, "fsm"=5)
   sh2 <- switch(igraph.match.arg(sh2), "f"=0, "fl"=1, "fs"=2, "fm"=3, "flm"=4, "fsm"=5)
 
@@ -1604,9 +1637,10 @@ graph.isomorphic.bliss <- function(graph1, graph2, sh1="fm", sh2="fm") {
   res
 }
 
-graph.automorphisms <- function(graph, sh="fm") {
+#' @export
+automorphisms <- function(graph, sh="fm") {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   sh <- switch(igraph.match.arg(sh), "f"=0, "fl"=1, "fs"=2, "fm"=3, "flm"=4, "fsm"=5)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
@@ -1617,7 +1651,8 @@ graph.automorphisms <- function(graph, sh="fm") {
   res
 }
 
-scgNormEps <- function(V, groups, mtype=c("symmetric", "laplacian", "stochastic"), p=NULL, norm=c("row", "col")) {
+#' @export
+scg_eps <- function(V, groups, mtype=c("symmetric", "laplacian", "stochastic"), p=NULL, norm=c("row", "col")) {
   # Argument checks
   V <- as.matrix(structure(as.double(V), dim=dim(V)))
   groups <- as.numeric(groups)-1
@@ -1634,15 +1669,72 @@ scgNormEps <- function(V, groups, mtype=c("symmetric", "laplacian", "stochastic"
   res
 }
 
-graph.eigen <- function(graph, algorithm=c("arpack", "auto", "lapack", "comp_auto", "comp_lapack", "comp_arpack"), which=list(), options=igraph.arpack.default) {
+#' @export
+embed_adjacency_matrix <- function(graph, no, weights=NULL, which=c("lm", "la", "sa"), scaled=TRUE, cvec=graph.strength(graph, weights=weights)/(vcount(graph)-1), options=igraph.arpack.default) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
+  no <- as.integer(no)
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) { 
+  weights <- E(graph)$weight 
+  } 
+  if (!is.null(weights) && any(!is.na(weights))) { 
+  weights <- as.numeric(weights) 
+  } else { 
+  weights <- NULL 
+  }
+  which <- switch(igraph.match.arg(which), "lm"=0L, "la"=2L, "sa"=3L)
+  scaled <- as.logical(scaled)
+  cvec <- as.numeric(cvec)
+  options.tmp <- arpack_defaults; options.tmp[ names(options) ] <- options ; options <- options.tmp
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_adjacency_spectral_embedding", graph, no, weights, which, scaled, cvec, options,
+        PACKAGE="igraph")
+
+  res
+}
+
+#' @export
+embed_laplacian_matrix <- function(graph, no, weights=NULL, which=c("lm", "la", "sa"), degmode=c("out", "in", "all", "total"), type=c("default", "D-A", "DAD", "I-DAD", "OAP"), scaled=TRUE, options=igraph.arpack.default) {
+  # Argument checks
+  if (!is_igraph(graph)) { stop("Not a graph object") }
+  no <- as.integer(no)
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) { 
+  weights <- E(graph)$weight 
+  } 
+  if (!is.null(weights) && any(!is.na(weights))) { 
+  weights <- as.numeric(weights) 
+  } else { 
+  weights <- NULL 
+  }
+  which <- switch(igraph.match.arg(which), "lm"=0L, "la"=2L, "sa"=3L)
+  degmode <- switch(igraph.match.arg(degmode), "out"=1, "in"=2, "all"=3, "total"=3)
+  type <- switch(igraph.match.arg(type), 
+  "default"=if (is.directed(graph)) 3L else 0L, 
+  "da"=0L, "d-a"=0L, "idad"=1L, "i-dad"=1L, "dad"=2L, 
+  "oap"=3L)
+  scaled <- as.logical(scaled)
+  options.tmp <- arpack_defaults; options.tmp[ names(options) ] <- options ; options <- options.tmp
+
+  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  # Function call
+  res <- .Call("R_igraph_laplacian_spectral_embedding", graph, no, weights, which, degmode, type, scaled, options,
+        PACKAGE="igraph")
+
+  res
+}
+
+#' @export
+spectrum <- function(graph, algorithm=c("arpack", "auto", "lapack", "comp_auto", "comp_lapack", "comp_arpack"), which=list(), options=arpack_defaults) {
+  # Argument checks
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   algorithm <- switch(igraph.match.arg(algorithm), "auto"=0, "lapack"=1, 
   "arpack"=2, "comp_auto"=3, "comp_lapack"=4, 
   "comp_arpack"=5)
-  which.tmp <- igraph.eigen.default; 
+  which.tmp <- eigen_defaults; 
   which.tmp[ names(which) ] <- which ; which <- which.tmp
-  options.tmp <- igraph.arpack.default; options.tmp[ names(options) ] <- options ; options <- options.tmp
+  options.tmp <- arpack_defaults; options.tmp[ names(options) ] <- options ; options <- options.tmp
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
@@ -1652,23 +1744,10 @@ graph.eigen <- function(graph, algorithm=c("arpack", "auto", "lapack", "comp_aut
   res
 }
 
-power.law.fit.new <- function(data, xmin=-1, force.continuous=FALSE) {
-  # Argument checks
-  data <- as.numeric(data)
-  xmin <- as.numeric(xmin)
-  force.continuous <- as.logical(force.continuous)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_power_law_fit", data, xmin, force.continuous,
-        PACKAGE="igraph")
-
-  res
-}
-
+#' @export
 sir <- function(graph, beta, gamma, no.sim=100) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
+  if (!is_igraph(graph)) { stop("Not a graph object") }
   beta <- as.numeric(beta)
   gamma <- as.numeric(gamma)
   no.sim <- as.integer(no.sim)
@@ -1682,7 +1761,8 @@ sir <- function(graph, beta, gamma, no.sim=100) {
   res
 }
 
-convex.hull <- function(data) {
+#' @export
+convex_hull <- function(data) {
   # Argument checks
   data <- as.matrix(structure(as.double(data), dim=dim(data)))
 
@@ -1694,379 +1774,14 @@ convex.hull <- function(data) {
   res
 }
 
-revolver.ml.d <- function(graph, niter, delta=1e-10, filter=NULL) {
+#' @export
+dim_select <- function(sv) {
   # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  niter <- as.integer(niter)
-  delta <- as.numeric(delta)
-  if (!is.null(filter)) filter <- as.numeric(filter)
+  sv <- as.numeric(sv)
 
   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
   # Function call
-  res <- .Call("R_igraph_revolver_ml_d", graph, niter, delta, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.probs.d <- function(graph, kernel, ntk=FALSE) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  kernel <- as.numeric(kernel)
-  ntk <- as.logical(ntk)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_probs_d", graph, kernel, ntk,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.de <- function(graph, niter, cats, delta=1e-10, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  niter <- as.integer(niter)
-  cats <- as.numeric(cats)
-  delta <- as.numeric(delta)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_de", graph, niter, cats, delta, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.probs.de <- function(graph, kernel, cats) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  kernel <- as.matrix(structure(as.double(kernel), dim=dim(kernel)))
-  cats <- as.numeric(cats)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_probs_de", graph, kernel, cats,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.ade <- function(graph, niter, cats, agebins=300, delta=1e-10, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  niter <- as.integer(niter)
-  cats <- as.numeric(cats)
-  agebins <- as.integer(agebins)
-  delta <- as.numeric(delta)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_ade", graph, niter, cats, agebins, delta, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.probs.ade <- function(graph, kernel, cats) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  kernel <- structure(as.double(kernel), dim=dim(kernel))
-  cats <- as.numeric(cats)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_probs_ade", graph, kernel, cats,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.f <- function(graph, niter, delta=1e-10) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  niter <- as.integer(niter)
-  delta <- as.numeric(delta)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_f", graph, niter, delta,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.df <- function(graph, niter, delta=1e-10) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  niter <- as.integer(niter)
-  delta <- as.numeric(delta)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_df", graph, niter, delta,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.l <- function(graph, niter, agebins=300, delta=1e-10) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  niter <- as.integer(niter)
-  agebins <- as.integer(agebins)
-  delta <- as.numeric(delta)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_l", graph, niter, agebins, delta,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.ad <- function(graph, niter, agebins=300, delta=1e-10, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  niter <- as.integer(niter)
-  agebins <- as.integer(agebins)
-  delta <- as.numeric(delta)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_ad", graph, niter, agebins, delta, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.probs.ad <- function(graph, kernel, ntk=FALSE) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  kernel <- as.matrix(structure(as.double(kernel), dim=dim(kernel)))
-  ntk <- as.logical(ntk)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_probs_ad", graph, kernel, ntk,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.D.alpha <- function(graph, alpha, abstol=1e-8, reltol=1e-8, maxit=1000, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  alpha <- as.numeric(alpha)
-  abstol <- as.numeric(abstol)
-  reltol <- as.numeric(reltol)
-  maxit <- as.integer(maxit)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_D_alpha", graph, alpha, abstol, reltol, maxit, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.D.alpha.a <- function(graph, alpha, a, abstol=1e-8, reltol=1e-8, maxit=1000, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  alpha <- as.numeric(alpha)
-  a <- as.numeric(a)
-  abstol <- as.numeric(abstol)
-  reltol <- as.numeric(reltol)
-  maxit <- as.integer(maxit)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_D_alpha_a", graph, alpha, a, abstol, reltol, maxit, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.DE.alpha.a <- function(graph, cats, alpha, a, coeffs, abstol=1e-8, reltol=1e-8, maxit=1000, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  cats <- as.numeric(cats)
-  alpha <- as.numeric(alpha)
-  a <- as.numeric(a)
-  coeffs <- as.numeric(coeffs)
-  abstol <- as.numeric(abstol)
-  reltol <- as.numeric(reltol)
-  maxit <- as.integer(maxit)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_DE_alpha_a", graph, cats, alpha, a, coeffs, abstol, reltol, maxit, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.AD.alpha.a.beta <- function(graph, alpha, a, beta, abstol=1e-8, reltol=1e-8, maxit=1000, agebins=300, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  alpha <- as.numeric(alpha)
-  a <- as.numeric(a)
-  beta <- as.numeric(beta)
-  abstol <- as.numeric(abstol)
-  reltol <- as.numeric(reltol)
-  maxit <- as.integer(maxit)
-  agebins <- as.integer(agebins)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_AD_alpha_a_beta", graph, alpha, a, beta, abstol, reltol, maxit, agebins, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.AD.dpareto <- function(graph, alpha, a, paralpha, parbeta, parscale, abstol=1e-8, reltol=1e-8, maxit=1000, agebins=300, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  alpha <- as.numeric(alpha)
-  a <- as.numeric(a)
-  paralpha <- as.numeric(paralpha)
-  parbeta <- as.numeric(parbeta)
-  parscale <- as.numeric(parscale)
-  abstol <- as.numeric(abstol)
-  reltol <- as.numeric(reltol)
-  maxit <- as.integer(maxit)
-  agebins <- as.integer(agebins)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_AD_dpareto", graph, alpha, a, paralpha, parbeta, parscale, abstol, reltol, maxit, agebins, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.AD.dpareto.eval <- function(graph, alpha, a, paralpha, parbeta, parscale, agebins=300, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  alpha <- as.numeric(alpha)
-  a <- as.numeric(a)
-  paralpha <- as.numeric(paralpha)
-  parbeta <- as.numeric(parbeta)
-  parscale <- as.numeric(parscale)
-  agebins <- as.integer(agebins)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_AD_dpareto_eval", graph, alpha, a, paralpha, parbeta, parscale, agebins, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.ADE.alpha.a.beta <- function(graph, cats, alpha, a, beta, coeffs, abstol=1e-8, reltol=1e-8, maxit=1000, agebins=300, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  cats <- as.numeric(cats)
-  alpha <- as.numeric(alpha)
-  a <- as.numeric(a)
-  beta <- as.numeric(beta)
-  coeffs <- as.numeric(coeffs)
-  abstol <- as.numeric(abstol)
-  reltol <- as.numeric(reltol)
-  maxit <- as.integer(maxit)
-  agebins <- as.integer(agebins)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_ADE_alpha_a_beta", graph, cats, alpha, a, beta, coeffs, abstol, reltol, maxit, agebins, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.ADE.dpareto <- function(graph, cats, alpha, a, paralpha, parbeta, parscale, coeffs, abstol=1e-8, reltol=1e-8, maxit=1000, agebins=300, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  cats <- as.numeric(cats)
-  alpha <- as.numeric(alpha)
-  a <- as.numeric(a)
-  paralpha <- as.numeric(paralpha)
-  parbeta <- as.numeric(parbeta)
-  parscale <- as.numeric(parscale)
-  coeffs <- as.numeric(coeffs)
-  abstol <- as.numeric(abstol)
-  reltol <- as.numeric(reltol)
-  maxit <- as.integer(maxit)
-  agebins <- as.integer(agebins)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_ADE_dpareto", graph, cats, alpha, a, paralpha, parbeta, parscale, coeffs, abstol, reltol, maxit, agebins, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.ADE.dpareto.eval <- function(graph, cats, alpha, a, paralpha, parbeta, parscale, coeffs, agebins=300, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  cats <- as.numeric(cats)
-  alpha <- as.numeric(alpha)
-  a <- as.numeric(a)
-  paralpha <- as.numeric(paralpha)
-  parbeta <- as.numeric(parbeta)
-  parscale <- as.numeric(parscale)
-  coeffs <- as.numeric(coeffs)
-  agebins <- as.integer(agebins)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_ADE_dpareto_eval", graph, cats, alpha, a, paralpha, parbeta, parscale, coeffs, agebins, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.ml.ADE.dpareto.evalf <- function(graph, cats, par, agebins, filter=NULL) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  cats <- as.numeric(cats)
-  par <- as.matrix(structure(as.double(par), dim=dim(par)))
-  agebins <- as.integer(agebins)
-  if (!is.null(filter)) filter <- as.numeric(filter)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_ml_ADE_dpareto_evalf", graph, cats, par, agebins, filter,
-        PACKAGE="igraph")
-
-  res
-}
-
-revolver.probs.ADE.dpareto <- function(graph, par, cats, gcats, agebins) {
-  # Argument checks
-  if (!is.igraph(graph)) { stop("Not a graph object") }
-  par <- as.matrix(structure(as.double(par), dim=dim(par)))
-  cats <- as.numeric(cats)
-  gcats <- as.numeric(gcats)
-  agebins <- as.integer(agebins)
-
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  # Function call
-  res <- .Call("R_igraph_revolver_probs_ADE_dpareto", graph, par, cats, gcats, agebins,
+  res <- .Call("R_igraph_dim_select", sv,
         PACKAGE="igraph")
 
   res

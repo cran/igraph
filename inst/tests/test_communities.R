@@ -5,12 +5,12 @@ test_that("community detection functions work", {
   library(igraph)
   set.seed(42)
 
-  F <- list("edge.betweenness.community", "fastgreedy.community",
-            "label.propagation.community", "leading.eigenvector.community",
-            "multilevel.community", "optimal.community",
-            "spinglass.community", "walktrap.community")
+  F <- list("cluster_edge_betweenness", "cluster_fast_greedy",
+            "cluster_label_prop", "cluster_leading_eigen",
+            "cluster_louvain", "cluster_optimal",
+            "cluster_spinglass", "cluster_walktrap")
 
-  karate <- graph.famous("Zachary")
+  karate <- make_graph("Zachary")
 
   for (f in F) {
     f <- get(f)
@@ -26,11 +26,11 @@ test_that("community detection functions work", {
     expect_that(length(comm), equals(max(membership(comm))))
   }
 
-  fc <- fastgreedy.community(karate)
-  m1 <- modularity(karate, cutat(fc, no=1))
-  m2 <- modularity(karate, cutat(fc, no=2))
-  m3 <- modularity(karate, cutat(fc, no=3))
-  m4 <- modularity(karate, cutat(fc, no=4))
+  fc <- cluster_fast_greedy(karate)
+  m1 <- modularity(karate, cut_at(fc, no=1))
+  m2 <- modularity(karate, cut_at(fc, no=2))
+  m3 <- modularity(karate, cut_at(fc, no=3))
+  m4 <- modularity(karate, cut_at(fc, no=4))
   expect_that(m1, equals(0))
   expect_that(m2, equals(0.3717948718))
   expect_that(m3, equals(0.3806706114))
@@ -56,17 +56,37 @@ test_that("creating communities objects works", {
   library(igraph)
   set.seed(42)
 
-  karate <- graph.famous("Zachary")
+  karate <- make_graph("Zachary")
 
   membership <- sample(1:2, vcount(karate), replace=TRUE)
   mod <- modularity(karate, membership)
-  comm <- create.communities(algorithm="random", membership=membership,
-                             mod=mod, foo="bar")
-  print(comm)
+  comm <- make_clusters(algorithm="random", membership=membership,
+                             modularity = mod)
 
-  expect_that(membership(comm), equals(membership))
+  expect_that(as.vector(membership(comm)), equals(membership))
   expect_that(modularity(comm), equals(mod))
   expect_that(algorithm(comm), equals("random"))
-  expect_that(comm$foo, equals("bar"))
 
+})
+
+test_that("communities function works", {
+  library(igraph)
+  g <- make_graph("Zachary")
+  oc <- cluster_optimal(g)
+  gr <- communities(oc)
+  expect_that(gr, equals
+    (structure(list(`1` = c(1L, 2L, 3L, 4L, 8L, 12L, 13L, 14L, 18L,
+     20L, 22L), `2` = c(5L, 6L, 7L, 11L, 17L), `3` = c(9L, 10L, 15L,
+     16L, 19L, 21L, 23L, 27L, 30L, 31L, 33L, 34L), `4` = c(24L, 25L,
+     26L, 28L, 29L, 32L)), .Dim = 4L, .Dimnames = list(c("1", "2",
+     "3", "4")))))
+
+  g <- make_ring(5) + make_ring(5)
+  V(g)$name <- letters[1:10]
+  oc <- cluster_optimal(g)
+  gr <- communities(oc)
+  expect_that(gr, equals(structure(list(`1` = letters[1:5],
+                                        `2` = letters[6:10]),
+                                        .Dim = 2L,
+                                        .Dimnames = list(c("1", "2")))))
 })

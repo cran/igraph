@@ -8,6 +8,8 @@ mysort <- function(x) {
   x[order(xl, xc)]
 }
 
+unvs <- function(x) lapply(x, as.vector)
+
 bk4 <- function(graph, min=0, max=Inf) {
 
   Gamma <- function(v) { neighbors(graph, v) }
@@ -59,7 +61,7 @@ bk4 <- function(graph, min=0, max=Inf) {
   }
 
   res <- list()
-  cord <- order(graph.coreness(graph))
+  cord <- order(coreness(graph))
   for (v in seq_along(cord)) {
     if (v != length(cord)) {
       P <- intersect(Gamma(cord[v]), cord[(v+1):length(cord)])
@@ -75,7 +77,7 @@ bk4 <- function(graph, min=0, max=Inf) {
                XS=length(P)+1, XE=length(P)+length(X))
     res <- c(res, bkpivot(PX, cord[v]))
   }
-  res    
+  lapply(res, as.integer)
 }
 
 #################################################################
@@ -83,16 +85,16 @@ bk4 <- function(graph, min=0, max=Inf) {
 test_that("Maximal cliques work", {
   library(igraph)
   set.seed(42)
-  G <- erdos.renyi.game(1000, 1000, type="gnm")
-  cli <- graph.full(10)
+  G <- sample_gnm(1000, 1000)
+  cli <- make_full_graph(10)
   for (i in 1:10) {
-    G <- permute.vertices(G, sample(vcount(G)))
+    G <- permute(G, sample(vcount(G)))
     G <- G %u% cli
   }
   G <- simplify(G)
 
   cl1 <- mysort(bk4(G, min=3))
-  cl2 <- mysort(maximal.cliques(G, min=3))
+  cl2 <- mysort(unvs(max_cliques(G, min=3)))
 
   expect_that(cl1, is_identical_to(cl2))
 })
@@ -100,12 +102,12 @@ test_that("Maximal cliques work", {
 test_that("Maximal cliques work for subsets", {
   library(igraph)
   set.seed(42)
-  G <- erdos.renyi.game(100, .5)
+  G <- sample_gnp(100, .5)
 
-  cl1  <- mysort(maximal.cliques(G, min=8))
+  cl1  <- mysort(unvs(max_cliques(G, min=8)))
 
-  c1 <- maximal.cliques(G, min=8, subset=1:13)
-  c2 <- maximal.cliques(G, min=8, subset=14:100)
+  c1 <- unvs(max_cliques(G, min=8, subset=1:13))
+  c2 <- unvs(max_cliques(G, min=8, subset=14:100))
   cl2 <- mysort(c(c1, c2))
   
   expect_that(cl1, is_identical_to(cl2))
@@ -114,12 +116,12 @@ test_that("Maximal cliques work for subsets", {
 test_that("Counting maximal cliques works", {
   library(igraph)
   set.seed(42)
-  G <- erdos.renyi.game(100, .5)
+  G <- sample_gnp(100, .5)
 
-  cl1  <- maximal.cliques.count(G, min=8)
+  cl1  <- count_max_cliques(G, min=8)
           
-  c1 <- maximal.cliques.count(G, min=8, subset=1:13)
-  c2 <- maximal.cliques.count(G, min=8, subset=14:100)
+  c1 <- count_max_cliques(G, min=8, subset=1:13)
+  c2 <- count_max_cliques(G, min=8, subset=14:100)
   cl2 <- c1+c2
   
   expect_that(cl1, is_identical_to(cl2))

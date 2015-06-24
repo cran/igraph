@@ -28,7 +28,7 @@
   igraph_vector_int_t *neis1, *neis2;
   long int neilen1, neilen2, deg1;
 #ifdef TRIPLES
-  igraph_integer_t triples;
+  igraph_real_t triples;
 #endif
   long int *neis;
   long int maxdegree;
@@ -36,7 +36,7 @@
   igraph_vector_int_t order;
   igraph_vector_int_t rank;
   igraph_vector_t degree;
-  
+
 	igraph_vector_int_init(&order, no_of_nodes);
 	IGRAPH_FINALLY(igraph_vector_int_destroy, &order);
   IGRAPH_VECTOR_INIT_FINALLY(&degree, no_of_nodes);
@@ -61,9 +61,13 @@
   }
   IGRAPH_FINALLY(igraph_free, neis);
 
+#ifndef TRIANGLES
   IGRAPH_CHECK(igraph_vector_resize(res, no_of_nodes));
   igraph_vector_null(res);
-  
+#else
+  igraph_vector_int_clear(res);
+#endif
+
   for (nn=no_of_nodes-1; nn>=0; nn--) {
     node=VECTOR(order)[nn];
     
@@ -73,7 +77,7 @@
     neilen1=igraph_vector_int_size(neis1);
     deg1=(long int) VECTOR(degree)[node];
 #ifdef TRIPLES
-    triples=(igraph_integer_t) ((double)deg1*(deg1-1)/2);
+    triples= ((double)deg1*(deg1-1)/2);
 #endif
     /* Mark the neighbors of the node */
     for (i=0; i<neilen1; i++) {
@@ -87,9 +91,15 @@
       for (j=0; j<neilen2; j++) {
 	long int nei2=(long int) VECTOR(*neis2)[j];
 	if (neis[nei2] == node+1) {
+#ifndef TRIANGLES
 	  VECTOR(*res)[nei2] += 1;
 	  VECTOR(*res)[nei] += 1;
 	  VECTOR(*res)[node] += 1;
+#else
+	  IGRAPH_CHECK(igraph_vector_int_push_back(res, node));
+	  IGRAPH_CHECK(igraph_vector_int_push_back(res, nei));
+	  IGRAPH_CHECK(igraph_vector_int_push_back(res, nei2));
+#endif
 	}
       }
     }
@@ -99,6 +109,9 @@
       VECTOR(*res)[node] = 0.0;
     else
       VECTOR(*res)[node] /= triples;
+#endif
+#ifdef TRIEDGES
+		VECTOR(*res)[node] += deg1;
 #endif
   }
 

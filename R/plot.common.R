@@ -1,4 +1,3 @@
-
 #   IGraph R package
 #   Copyright (C) 2003-2012  Gabor Csardi <csardi.gabor@gmail.com>
 #   334 Harvard street, Cambridge, MA 02139 USA
@@ -44,21 +43,21 @@ i.parse.plot.params <- function(graph, params) {
 
   mis <- ! names(p[["vertex"]]) %in% names(i.default.values$vertex) &
          ! paste("vertex.", sep="", names(p[["vertex"]])) %in%
-           names(igraph.options())
+           names(igraph_options())
   if (any(mis)) {
     stop("Unknown vertex parameters: ",
          paste(sep=", ", collapse=", ", names(p[["vertex"]])[mis]))
   }
   mis <- ! names(p[["edge"]]) %in% names(i.default.values$edge) &
          ! paste("edge.", sep="", names(p[["edge"]])) %in%
-           names(igraph.options())
+           names(igraph_options())
   if (any(mis)) {
     stop("Unknown edge parameters: ",
          paste(sep=", ", collapse=", ", names(p[["edge"]])[mis]))
   }
   mis <- ! names(p[["plot"]]) %in% names(i.default.values$plot) &
          ! paste("plot.", sep="", names(p[["plot"]])) %in%
-           names(igraph.options())
+           names(igraph_options())
   if (any(mis)) {
     stop("Unknown plot parameters: ",
          paste(sep=", ", collapse=", ", names(p[["plot"]]) [ mis ]))
@@ -88,19 +87,19 @@ i.parse.plot.params <- function(graph, params) {
       return(ret())
     } else {
       ## we don't have the parameter, check attributes first
-      if (type=="vertex" && name %in% list.vertex.attributes(graph)) {
-        p[[type]][[name]] <- get.vertex.attribute(graph, name)
+      if (type=="vertex" && name %in% vertex_attr_names(graph)) {
+        p[[type]][[name]] <- vertex_attr(graph, name)
         return(ret())
-      } else if (type=="edge" && name %in% list.edge.attributes(graph)) {
-        p[[type]][[name]] <- get.edge.attribute(graph, name)
+      } else if (type=="edge" && name %in% edge_attr_names(graph)) {
+        p[[type]][[name]] <- edge_attr(graph, name)
         return(ret())
-      } else if (type=="plot" && name %in% list.graph.attributes(graph)) {
-        p[[type]][[name]] <- get.graph.attribute(graph, name)
+      } else if (type=="plot" && name %in% graph_attr_names(graph)) {
+        p[[type]][[name]] <- graph_attr(graph, name)
         return(ret())
       } else {
         ## no attributes either, check igraph parameters
         n <- paste(sep="", type, ".", name)
-        v <- getIgraphOpt(n)
+        v <- igraph_opt(n)
         if (!is.null(v)) {
           p[[type]][[name]] <- v
           return(ret())
@@ -128,8 +127,8 @@ i.get.edge.labels <- function(graph, edge.labels=NULL) {
 i.get.labels <- function(graph, labels=NULL) {
 
   if (is.null(labels)) {
-    if ("name" %in% list.vertex.attributes(graph)) {
-      labels <- get.vertex.attribute(graph, "name")
+    if ("name" %in% vertex_attr_names(graph)) {
+      labels <- vertex_attr(graph, "name")
     } else {
       labels <- seq_len(vcount(graph))
     }
@@ -141,7 +140,7 @@ i.get.arrow.mode <- function(graph, arrow.mode=NULL) {
 
   if (is.character(arrow.mode) &&
       length(arrow.mode)==1 && substr(arrow.mode, 1, 2)=="a:") {
-    arrow.mode <- get.vertex.attribute(graph, substring(arrow.mode,3))
+    arrow.mode <- vertex_attr(graph, substring(arrow.mode,3))
   }
 
   if (is.character(arrow.mode)) {
@@ -153,7 +152,7 @@ i.get.arrow.mode <- function(graph, arrow.mode=NULL) {
   }
 
   if (is.null(arrow.mode)) {
-    if (is.directed(graph)) {
+    if (is_directed(graph)) {
       arrow.mode <- 2
     } else {
       arrow.mode <- 0
@@ -164,7 +163,7 @@ i.get.arrow.mode <- function(graph, arrow.mode=NULL) {
 }
 
 i.get.main <- function(graph) {
-  if (getIgraphOpt("annotate.plot")) {
+  if (igraph_opt("annotate.plot")) {
     n <- graph$name[1]
     n
   } else {
@@ -173,7 +172,7 @@ i.get.main <- function(graph) {
 }
 
 i.get.xlab <- function(graph) {
-  if (getIgraphOpt("annotate.plot")) {
+  if (igraph_opt("annotate.plot")) {
     paste(vcount(graph), "vertices,", ecount(graph), "edges")
   } else {
     ""
@@ -190,9 +189,44 @@ igraph.check.shapes <- function(x) {
   x
 }
 
-autocurve.edges <- function(graph, start=0.5) {
-  cm <- count.multiple(graph)
-  el <- apply(get.edgelist(graph, names=FALSE), 1, paste, collapse=":")
+
+
+#' Optimal edge curvature when plotting graphs
+#' 
+#' If graphs have multiple edges, then drawing them as straight lines does not
+#' show them when plotting the graphs; they will be on top of each other. One
+#' solution is to bend the edges, with diffenent curvature, so that all of them
+#' are visible.
+#' 
+#' \code{curve_multiple} calculates the optimal \code{edge.curved} vector for
+#' plotting a graph with multiple edges, so that all edges are visible.
+#'
+#' @aliases autocurve.edges
+#' @param graph The input graph.
+#' @param start The curvature at the two extreme edges. All edges will have a
+#' curvature between \code{-start} and \code{start}, spaced equally.
+#' @return A numeric vector, its length is the number of edges in the graph.
+#' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
+#' @seealso \code{\link{igraph.plotting}} for all plotting parameters,
+#' \code{\link{plot.igraph}}, \code{\link{tkplot}} and \code{\link{rglplot}}
+#' for plotting functions.
+#' @export
+#' @keywords graphs
+#' @examples
+#' 
+#' g <- graph( c(0,1,1,0,1,2,1,3,1,3,1,3,
+#'               2,3,2,3,2,3,2,3,0,1)+1 )
+#' 
+#' curve_multiple(g)
+#' 
+#' \dontrun{
+#' set.seed(42)
+#' plot(g)
+#' }
+#' 
+curve_multiple <- function(graph, start=0.5) {
+  cm <- count_multiple(graph)
+  el <- apply(as_edgelist(graph, names=FALSE), 1, paste, collapse=":")
   ord <- order(el)
   res <- numeric(length(ord))
 
@@ -902,7 +936,9 @@ structure(c(16777215L, 16777215L, 16777215L, 16777215L, 16777215L,
 16777215L, 16777215L, 16777215L, 16777215L, 16777215L, 16777215L, 
 16777215L, 16777215L, 16777215L), .Dim = c(64L, 64L), class = "nativeRaster", channels = 4L)
 
-i.vertex.default <- list(color="SkyBlue2",
+#' @include palette.R
+
+i.vertex.default <- list(color=1,
                          size=15,
                          size2=15,
                          label=i.get.labels,
@@ -938,10 +974,11 @@ i.edge.default <- list(color="darkgrey",
                        label.y=NULL,
                        arrow.size=1,
                        arrow.mode=i.get.arrow.mode,
-                       curved=autocurve.edges,
+                       curved=curve_multiple,
                        arrow.width=1)
 
-i.plot.default <- list(layout=layout.auto,
+i.plot.default <- list(palette=categorical_pal(8),
+                       layout=layout_nicely,
                        margin=c(0,0,0,0),
                        rescale=TRUE,
                        asp=1,

@@ -1577,7 +1577,7 @@ int igraph_rewire(igraph_t *graph, igraph_integer_t n, igraph_rewiring_t mode) {
     if (num_swaps % 1000 == 0) {
       snprintf(message, sizeof(message),
           "Random rewiring (%.2f%% of the trials were successful)",
-          (100.0 * num_successful_swaps) / num_swaps);
+          num_swaps > 0 ? ((100.0 * num_successful_swaps) / num_swaps) : 0.0);
       IGRAPH_PROGRESS(message, (100.0 * num_swaps) / n, 0);
     }
     
@@ -2574,7 +2574,7 @@ int igraph_constraint(const igraph_t *graph, igraph_vector_t *res,
 
     /* add the indirect contributions, in-in, in-out, out-in, out-out */
     for (b=0; b<igraph_vector_size(&ineis_in); b++) {
-      edge=(igraph_integer_t) VECTOR(ineis_out)[b];
+      edge=(igraph_integer_t) VECTOR(ineis_in)[b];
       igraph_edge(graph, edge, &from, &to);
       if (to==i) { to=from; }
       j=to;
@@ -2826,6 +2826,9 @@ int igraph_density(const igraph_t *graph, igraph_real_t *res,
  *   all vertices from which the source vertex is reachable in at most
  *   \c order steps are counted. \c IGRAPH_ALL ignores the direction
  *   of the edges. This argument is ignored for undirected graphs.
+ * \param mindist The minimum distance to include a vertex in the counting.
+ *   If this is one, then the starting vertex is not counted. If this is
+ *   two, then its neighbors are not counted, either, etc.
  * \return Error code.
  * 
  * \sa \ref igraph_neighborhood() for calculating the actual neighborhood, 
@@ -2838,7 +2841,8 @@ int igraph_density(const igraph_t *graph, igraph_real_t *res,
 
 int igraph_neighborhood_size(const igraph_t *graph, igraph_vector_t *res,
 			     igraph_vs_t vids, igraph_integer_t order,
-			     igraph_neimode_t mode) {
+			     igraph_neimode_t mode,
+			     igraph_integer_t mindist) {
 
   long int no_of_nodes=igraph_vcount(graph);
   igraph_dqueue_t q;
@@ -2849,6 +2853,11 @@ int igraph_neighborhood_size(const igraph_t *graph, igraph_vector_t *res,
   
   if (order < 0) {
     IGRAPH_ERROR("Negative order in neighborhood size", IGRAPH_EINVAL);
+  }
+
+  if (mindist < 0 || mindist > order) {
+    IGRAPH_ERROR("Minimum distance should be between zero and order",
+		 IGRAPH_EINVAL);
   }
 
   added=igraph_Calloc(no_of_nodes, long int);
@@ -2864,7 +2873,7 @@ int igraph_neighborhood_size(const igraph_t *graph, igraph_vector_t *res,
   
   for (i=0; !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit), i++) {
     long int node=IGRAPH_VIT_GET(vit);
-    long int size=1;
+    long int size=mindist==0 ? 1 : 0;
     added[node]=i+1;
     igraph_dqueue_clear(&q);
     if (order > 0) {
@@ -2887,7 +2896,7 @@ int igraph_neighborhood_size(const igraph_t *graph, igraph_vector_t *res,
 	    added[nei]=i+1;
 	    IGRAPH_CHECK(igraph_dqueue_push(&q, nei));
 	    IGRAPH_CHECK(igraph_dqueue_push(&q, actdist+1));
-	    size++;
+	    if (actdist+1 >= mindist) { size++; }
 	  }
 	}
       } else {
@@ -2896,7 +2905,7 @@ int igraph_neighborhood_size(const igraph_t *graph, igraph_vector_t *res,
 	  long int nei=(long int) VECTOR(neis)[j];
 	  if (added[nei] != i+1) {
 	    added[nei]=i+1;
-	    size++;
+	    if (actdist+1 >= mindist) { size++; }
 	  }
 	}
       }
@@ -2941,6 +2950,9 @@ int igraph_neighborhood_size(const igraph_t *graph, igraph_vector_t *res,
  *   all vertices from which the source vertex is reachable in at most
  *   \c order steps are included. \c IGRAPH_ALL ignores the direction
  *   of the edges. This argument is ignored for undirected graphs.
+ * \param mindist The minimum distance to include a vertex in the counting.
+ *   If this is one, then the starting vertex is not counted. If this is
+ *   two, then its neighbors are not counted, either, etc.
  * \return Error code.
  * 
  * \sa \ref igraph_neighborhood_size() to calculate the size of the
@@ -2954,7 +2966,7 @@ int igraph_neighborhood_size(const igraph_t *graph, igraph_vector_t *res,
 
 int igraph_neighborhood(const igraph_t *graph, igraph_vector_ptr_t *res,
 			igraph_vs_t vids, igraph_integer_t order,
-			igraph_neimode_t mode) {
+			igraph_neimode_t mode, igraph_integer_t mindist) {
   
   long int no_of_nodes=igraph_vcount(graph);
   igraph_dqueue_t q;
@@ -2969,6 +2981,11 @@ int igraph_neighborhood(const igraph_t *graph, igraph_vector_ptr_t *res,
     IGRAPH_ERROR("Negative order in neighborhood size", IGRAPH_EINVAL);
   }
   
+  if (mindist < 0 || mindist > order) {
+    IGRAPH_ERROR("Minimum distance should be between zero and order",
+		 IGRAPH_EINVAL);
+  }
+
   added=igraph_Calloc(no_of_nodes, long int);
   if (added==0) {
     IGRAPH_ERROR("Cannot calculate neighborhood size", IGRAPH_ENOMEM);
@@ -2985,7 +3002,7 @@ int igraph_neighborhood(const igraph_t *graph, igraph_vector_ptr_t *res,
     long int node=IGRAPH_VIT_GET(vit);
     added[node]=i+1;
     igraph_vector_clear(&tmp);
-    IGRAPH_CHECK(igraph_vector_push_back(&tmp, node));
+    if (mindist == 0) { IGRAPH_CHECK(igraph_vector_push_back(&tmp, node)); }
     if (order > 0) {
       igraph_dqueue_push(&q, node);
       igraph_dqueue_push(&q, 0);
@@ -3006,7 +3023,9 @@ int igraph_neighborhood(const igraph_t *graph, igraph_vector_ptr_t *res,
 	    added[nei]=i+1;
 	    IGRAPH_CHECK(igraph_dqueue_push(&q, nei));
 	    IGRAPH_CHECK(igraph_dqueue_push(&q, actdist+1));
-	    IGRAPH_CHECK(igraph_vector_push_back(&tmp, nei));
+	    if (actdist+1 >= mindist) { 
+	      IGRAPH_CHECK(igraph_vector_push_back(&tmp, nei));
+	    }
 	  }
 	}
       } else {
@@ -3015,7 +3034,9 @@ int igraph_neighborhood(const igraph_t *graph, igraph_vector_ptr_t *res,
 	  long int nei=(long int) VECTOR(neis)[j];
 	  if (added[nei] != i+1) {
 	    added[nei]=i+1;
-	    IGRAPH_CHECK(igraph_vector_push_back(&tmp, nei));
+	    if (actdist+1 >= mindist) { 
+	      IGRAPH_CHECK(igraph_vector_push_back(&tmp, nei));
+	    }
 	  }
 	}
       }
@@ -3072,6 +3093,9 @@ int igraph_neighborhood(const igraph_t *graph, igraph_vector_ptr_t *res,
  *   all vertices from which the source vertex is reachable in at most
  *   \c order steps are counted. \c IGRAPH_ALL ignores the direction
  *   of the edges. This argument is ignored for undirected graphs.
+ * \param mindist The minimum distance to include a vertex in the counting.
+ *   If this is one, then the starting vertex is not counted. If this is
+ *   two, then its neighbors are not counted, either, etc.
  * \return Error code.
  * 
  * \sa \ref igraph_neighborhood_size() for calculating the neighborhood
@@ -3085,7 +3109,8 @@ int igraph_neighborhood(const igraph_t *graph, igraph_vector_ptr_t *res,
 
 int igraph_neighborhood_graphs(const igraph_t *graph, igraph_vector_ptr_t *res,
 			       igraph_vs_t vids, igraph_integer_t order,
-			       igraph_neimode_t mode) {
+			       igraph_neimode_t mode,
+			       igraph_integer_t mindist) {
   long int no_of_nodes=igraph_vcount(graph);
   igraph_dqueue_t q;
   igraph_vit_t vit;
@@ -3097,6 +3122,11 @@ int igraph_neighborhood_graphs(const igraph_t *graph, igraph_vector_ptr_t *res,
   
   if (order < 0) {
     IGRAPH_ERROR("Negative order in neighborhood size", IGRAPH_EINVAL);
+  }
+
+  if (mindist < 0 || mindist > order) {
+    IGRAPH_ERROR("Minimum distance should be between zero and order",
+		 IGRAPH_EINVAL);
   }
   
   added=igraph_Calloc(no_of_nodes, long int);
@@ -3115,7 +3145,7 @@ int igraph_neighborhood_graphs(const igraph_t *graph, igraph_vector_ptr_t *res,
     long int node=IGRAPH_VIT_GET(vit);
     added[node]=i+1;
     igraph_vector_clear(&tmp);
-    IGRAPH_CHECK(igraph_vector_push_back(&tmp, node));
+    if (mindist == 0) { IGRAPH_CHECK(igraph_vector_push_back(&tmp, node)); }
     if (order > 0) {
       igraph_dqueue_push(&q, node);
       igraph_dqueue_push(&q, 0);
@@ -3136,7 +3166,9 @@ int igraph_neighborhood_graphs(const igraph_t *graph, igraph_vector_ptr_t *res,
 	    added[nei]=i+1;
 	    IGRAPH_CHECK(igraph_dqueue_push(&q, nei));
 	    IGRAPH_CHECK(igraph_dqueue_push(&q, actdist+1));
-	    IGRAPH_CHECK(igraph_vector_push_back(&tmp, nei));
+	    if (actdist+1 >= mindist) {
+	      IGRAPH_CHECK(igraph_vector_push_back(&tmp, nei));
+	    }
 	  }
 	}
       } else {
@@ -3145,7 +3177,9 @@ int igraph_neighborhood_graphs(const igraph_t *graph, igraph_vector_ptr_t *res,
 	  long int nei=(long int) VECTOR(neis)[j];
 	  if (added[nei] != i+1) {
 	    added[nei]=i+1;
-	    IGRAPH_CHECK(igraph_vector_push_back(&tmp, nei));
+	    if (actdist+1 >= mindist) {
+	      IGRAPH_CHECK(igraph_vector_push_back(&tmp, nei));
+	    }
 	  }
 	}
       }
@@ -3980,7 +4014,8 @@ int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
   long int no_of_edges = igraph_ecount(graph);
   long int i, j, k, n;
   long int *geodist;
-  igraph_vector_t *eids, *ins_p, *outs_p, ins_v, outs_v;
+  igraph_vector_int_t *eids;
+  igraph_vector_t *ins_p, *outs_p, ins_v, outs_v;
   igraph_dqueue_t q;
   igraph_inclist_t inclist;
   igraph_bool_t directed = igraph_is_directed(graph);
@@ -4032,7 +4067,7 @@ int igraph_convergence_degree(const igraph_t *graph, igraph_vector_t *result,
         long int actdist=(long int) igraph_dqueue_pop(&q);
         IGRAPH_ALLOW_INTERRUPTION();
         eids=igraph_inclist_get(&inclist, actnode);
-        n=igraph_vector_size(eids);
+        n=igraph_vector_int_size(eids);
         for (j=0; j<n; j++) {
           long int neighbor = IGRAPH_OTHER(graph, VECTOR(*eids)[j], actnode);
           if (geodist[neighbor] != 0) {
@@ -6034,7 +6069,7 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
     while (!igraph_indheap_empty(&Q)) {
       long int minnei=igraph_indheap_max_index(&Q);
       igraph_real_t mindist=-igraph_indheap_delete_max(&Q);
-      igraph_vector_t *neis;
+      igraph_vector_int_t *neis;
       long int nlen, j;
       
       if (mindist > res) {
@@ -6043,7 +6078,7 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
       nodes_reached++;
 
       neis=igraph_inclist_get(&inclist, minnei);
-      nlen=igraph_vector_size(neis);
+      nlen=igraph_vector_int_size(neis);
       for (j=0; j<nlen; j++) {
 	long int edge=(long int) VECTOR(*neis)[j];
 	long int tto=IGRAPH_OTHER(graph, edge, minnei);

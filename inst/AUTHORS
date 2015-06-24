@@ -7,6 +7,7 @@ Adelchi Azzalini	igraph.options based on the sm package
 Tamas Badics		GLPK
 Gregory Benison		Minimum cut calculation
 Adrian Bowman		igraph.options based on the sm package
+Walter Böhm		LSAP
 Keith Briggs		Parts from the Very Nauty Graph Library
       			Geometric random graphs
 			Girth
@@ -41,6 +42,7 @@ Brian Gough		GSL random number generators (not used in R)
 Tom Gregorovic		Multilevel community detection
 M.Grigoriadis		GLPK
 Oscar Gustafsson	GLPK
+Kurt Hornik		LSAP
 Paul Hsieh		pstdint.h
 Ross Ihaka		Some random number generators (not used in R)
 Tommi Junttila		BLISS graph isomorphism library
@@ -90,6 +92,7 @@ James Theiler		GSL random number generators (not used in R)
 Samuel Thiriot		Interconnected islands graph generator
 Vincent A. Traag	spinglass community detection
 Magnus Torfason		R operators that work by name
+Theodore Y. Ts'o        libuuid
 Minh Van Nguyen		Microscopic update rules
      	 		Various test cases
      	 		Many documentation and other fixes
@@ -97,6 +100,7 @@ M. Vento		VF2 graph isomorphism algorithm
 Fabien Viger		gengraph graph generator
 Phuong Vu		ARPACK
 P.J. Weinberger		f2c
+Hadley Wickham          lazyeval
 Garrett A. Wollman	qsort
 B.N. Wylie 		DrL layout generator
 Chao Yang		ARPACK
@@ -110,6 +114,7 @@ The R Development Core Team 	Some random number generators (not used in R)
       		       		R: as.dendrogram from stats package
 The Regents of the University of California	qsort
 Xerox PARC		      	Sparse matrix column ordering
+R Studio                        lazyeval
 
 Other contributors
 ------------------

@@ -27,15 +27,6 @@
     invisible()
 }
 
-.onLoad <- function(libname, pkgname) {
-  library.dynam("igraph", pkgname, libname, local=FALSE);
-  .Call("R_igraph_init", FALSE, FALSE, PACKAGE="igraph")
-}
-
-.onUnload <- function(libpath) {
-  library.dynam.unload("igraph", libpath)
-}
-
 .Call <- function(.NAME, ...) {
   if (.NAME != "R_igraph_finalizer") {
     base::.Call("R_igraph_check_finally_stack", PACKAGE="igraph")

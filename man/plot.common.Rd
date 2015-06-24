@@ -55,12 +55,12 @@
   edge attributes are handy if you want to assign a given \sQuote{look}
   to a graph, attributes are saved with the graph is you save it with
   \code{\link[base]{save}} or in GraphML format with
-  \code{\link{write.graph}}, so the graph will have the same look after
+  \code{\link{write_graph}}, so the graph will have the same look after
   loading it again.
 
   If a parameter is not given in the command line, and the corresponding
   vertex/edge/graph attribute is also missing then the general igraph
-  parameters handled by \code{\link{igraph.options}} are also
+  parameters handled by \code{\link{igraph_options}} are also
   checked. Vertex parameters have prefix \sQuote{\code{vertex.}}, edge
   parameters are prefixed with \sQuote{\code{edge.}}, general parameters
   like \code{layout} are prefixed with \sQuote{\code{plot}}.
@@ -86,7 +86,7 @@
 \section{The list of parameters}{
   Vertex parameters first, note that the \sQuote{\code{vertex.}} prefix
   needs to be added if they are used as an argument or when setting via
-  \code{\link{igraph.options}}. The value of the parameter may be scalar
+  \code{\link{igraph_options}}. The value of the parameter may be scalar
   valid for every vertex or a vector with a separate value for each
   vertex. (Shorter vectors are recycled.)
   \describe{
@@ -109,11 +109,16 @@
     \item{color}{The fill color of the vertex. If it is numeric then
       the current palette is used, see
       \code{\link[grDevices]{palette}}. If it is a character vector then
-      it may either contain named colors or RGB specified colors with
-      three or four bytes. All strings starting with \sQuote{\code{#}}
-      are assumed to be RGB color specifications. It is possible to mix
-      named color and RGB colors. Note that \code{\link{tkplot}} ignores
-      the fourth byte (alpha channel) in the RGB color specification.
+      it may either contain integer values, named colors or RGB
+      specified colors with three or four bytes. All strings starting
+      with \sQuote{\code{#}} are assumed to be RGB color
+      specifications. It is possible to mix named color and RGB
+      colors. Note that \code{\link{tkplot}} ignores the fourth byte
+      (alpha channel) in the RGB color specification.
+
+      For \code{plot.igraph} and integer values, the default igraph
+      palette is used (see the \sQuote{palette} parameter below. Note
+      that this is different from the R palette.
 
       If you don't want (some) vertices to have any color, supply
       \code{NA} as the color name.
@@ -137,7 +142,7 @@
       and only by the \code{\link{plot.igraph}}
       command. \dQuote{\code{none}} does not draw the vertices at all,
       although vertex label are plotted (if given). See
-      \code{\link{igraph.vertex.shapes}} for details about vertex
+      \code{\link{shapes}} for details about vertex
       shapes and \code{\link{vertex.shape.pie}} for using pie charts as
       vertices.
 
@@ -239,7 +244,7 @@
   }
 
   Edge parameters require to add the \sQuote{\code{edge.}} prefix when
-  used as arguments or set by \code{\link{igraph.options}}. The edge
+  used as arguments or set by \code{\link{igraph_options}}. The edge
   parameters:
   \describe{
     \item{color}{The color of the edges, see the \code{color} vertex
@@ -316,7 +321,7 @@
       means curvature 0.5, \code{FALSE} means curvature zero.
 
       By default the vector specifying the curvatire is calculated via a
-      call to the \code{\link{autocurve.edges}} function. This function makes
+      call to the \code{\link{curve_multiple}} function. This function makes
       sure that multiple edges are curved and are all visible. This
       parameter is ignored for loop edges. 
       
@@ -382,8 +387,8 @@
       actual coordinates. The function should return a matrix with two
       or three columns. For the 2D plots the third column is ignored.
 
-      The default value is \code{layout.random}, ie. a function
-      returning with 2D random placement.}
+      The default value is \code{layout_nicely}, a smart function that
+      chooses a layouter based on the graph.}
     \item{margin}{The amount of empty space below, over, at the left and
       right of the plot, it is a numeric vector of length four. Usually
       values between 0 and 0.5 are meaningful, but negative values are
@@ -394,6 +399,12 @@
       zoom in and out the graph in a more flexible way.
       
       Its default value is 0.
+    }
+    \item{palette}{The color palette to use for vertex color.
+      The default is \code{\link{categorical_pal}}, which is a
+      color-blind friendly categorical palette. See its manual page
+      for details and other palettes. This parameters is only supported
+      by \code{plot}, and not by \code{tkplot} and \code{rglplot}.
     }
     \item{rescale}{Logical constant, whether to rescale the coordinates
       to the [-1,1]x[-1,1](x[-1,1]) interval. This parameter is not
@@ -429,42 +440,42 @@
 }
 \author{Gabor Csardi \email{csardi.gabor@gmail.com}}
 \seealso{ \code{\link{plot.igraph}}, \code{\link{tkplot}},
-  \code{\link{rglplot}}, \code{\link{igraph.options}}}
+  \code{\link{rglplot}}, \code{\link{igraph_options}}}
 \examples{
 \dontrun{
 
 # plotting a simple ring graph, all default parameters, except the layout
-g <- graph.ring(10)
-g$layout <- layout.circle
+g <- make_ring(10)
+g$layout <- layout_in_circle
 plot(g)
 tkplot(g)
 rglplot(g)
 
 # plotting a random graph, set the parameters in the command arguments
 g <- barabasi.game(100)
-plot(g, layout=layout.fruchterman.reingold, vertex.size=4,
+plot(g, layout=layout_with_fr, vertex.size=4,
      vertex.label.dist=0.5, vertex.color="red", edge.arrow.size=0.5)
 
 # plot a random graph, different color for each component
-g <- erdos.renyi.game(100, 1/100)
-comps <- clusters(g)$membership
+g <- sample_gnp(100, 1/100)
+comps <- components(g)$membership
 colbar <- rainbow(max(comps)+1)
 V(g)$color <- colbar[comps+1]
-plot(g, layout=layout.fruchterman.reingold, vertex.size=5, vertex.label=NA)
+plot(g, layout=layout_with_fr, vertex.size=5, vertex.label=NA)
 
 # plot communities in a graph
-g <- graph.full(5) \%du\% graph.full(5) \%du\% graph.full(5)
-g <- add.edges(g, c(1,6, 1,11, 6,11))
-com <- spinglass.community(g, spins=5)
+g <- make_full_graph(5) \%du\% make_full_graph(5) \%du\% make_full_graph(5)
+g <- add_edges(g, c(1,6, 1,11, 6,11))
+com <- cluster_spinglass(g, spins=5)
 V(g)$color <- com$membership+1
-g <- set.graph.attribute(g, "layout", layout.kamada.kawai(g))
+g <- set_graph_attr(g, "layout", layout_with_kk(g))
 plot(g, vertex.label.dist=1.5)
 
 # draw a bunch of trees, fix layout
-igraph.options(plot.layout=layout.reingold.tilford)
-plot(graph.tree(20, 2))
-plot(graph.tree(50, 3), vertex.size=3, vertex.label=NA)
-tkplot(graph.tree(50, 2, mode="undirected"), vertex.size=10,
+igraph_options(plot.layout=layout_as_tree)
+plot(make_tree(20, 2))
+plot(make_tree(50, 3), vertex.size=3, vertex.label=NA)
+tkplot(make_tree(50, 2, mode="undirected"), vertex.size=10,
 vertex.color="green")
 }
 }

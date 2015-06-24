@@ -108,7 +108,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 23 "igraph/src/foreign-dl-parser.y"
+#line 23 "src/foreign-dl-parser.y"
 
 
 /* 
@@ -188,7 +188,7 @@ extern igraph_real_t igraph_pajek_get_number(const char *str, long int len);
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 91 "igraph/src/foreign-dl-parser.y"
+#line 91 "src/foreign-dl-parser.y"
 {
   long int integer;
   igraph_real_t real;
@@ -1554,57 +1554,57 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 115 "igraph/src/foreign-dl-parser.y"
+#line 115 "src/foreign-dl-parser.y"
     { context->n=(yyvsp[(3) - (7)].integer); ;}
     break;
 
   case 7:
-#line 121 "igraph/src/foreign-dl-parser.y"
+#line 121 "src/foreign-dl-parser.y"
     { context->type=IGRAPH_DL_MATRIX; ;}
     break;
 
   case 8:
-#line 122 "igraph/src/foreign-dl-parser.y"
+#line 122 "src/foreign-dl-parser.y"
     { context->type=IGRAPH_DL_EDGELIST1; ;}
     break;
 
   case 9:
-#line 123 "igraph/src/foreign-dl-parser.y"
+#line 123 "src/foreign-dl-parser.y"
     { context->type=IGRAPH_DL_NODELIST1; ;}
     break;
 
   case 10:
-#line 126 "igraph/src/foreign-dl-parser.y"
+#line 126 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 11:
-#line 126 "igraph/src/foreign-dl-parser.y"
+#line 126 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 14:
-#line 130 "igraph/src/foreign-dl-parser.y"
+#line 130 "src/foreign-dl-parser.y"
     { ;}
     break;
 
   case 15:
-#line 131 "igraph/src/foreign-dl-parser.y"
+#line 131 "src/foreign-dl-parser.y"
     { ;}
     break;
 
   case 16:
-#line 132 "igraph/src/foreign-dl-parser.y"
+#line 132 "src/foreign-dl-parser.y"
     { ;}
     break;
 
   case 17:
-#line 135 "igraph/src/foreign-dl-parser.y"
+#line 135 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 18:
-#line 136 "igraph/src/foreign-dl-parser.y"
+#line 136 "src/foreign-dl-parser.y"
     { 
 	      igraph_i_dl_add_str(igraph_dl_yyget_text(scanner), 
                                   igraph_dl_yyget_leng(scanner), 
@@ -1612,12 +1612,12 @@ yyreduce:
     break;
 
   case 19:
-#line 142 "igraph/src/foreign-dl-parser.y"
+#line 142 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 20:
-#line 142 "igraph/src/foreign-dl-parser.y"
+#line 142 "src/foreign-dl-parser.y"
     {
   context->from += 1;
   context->to = 0;
@@ -1625,12 +1625,12 @@ yyreduce:
     break;
 
   case 22:
-#line 147 "igraph/src/foreign-dl-parser.y"
+#line 147 "src/foreign-dl-parser.y"
     { ;}
     break;
 
   case 23:
-#line 149 "igraph/src/foreign-dl-parser.y"
+#line 149 "src/foreign-dl-parser.y"
     {
   if (igraph_dl_yyget_text(scanner)[0]=='1') {
     IGRAPH_CHECK(igraph_vector_push_back(&context->edges, 
@@ -1643,24 +1643,24 @@ yyreduce:
     break;
 
   case 24:
-#line 159 "igraph/src/foreign-dl-parser.y"
+#line 159 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 25:
-#line 161 "igraph/src/foreign-dl-parser.y"
+#line 161 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 28:
-#line 165 "igraph/src/foreign-dl-parser.y"
+#line 165 "src/foreign-dl-parser.y"
     { igraph_i_dl_add_str(igraph_dl_yyget_text(scanner), 
                                    igraph_dl_yyget_leng(scanner), 
 				   context); ;}
     break;
 
   case 29:
-#line 169 "igraph/src/foreign-dl-parser.y"
+#line 169 "src/foreign-dl-parser.y"
     {
 	         context->from += 1; 
 		 context->to = 0;
@@ -1668,7 +1668,7 @@ yyreduce:
     break;
 
   case 30:
-#line 173 "igraph/src/foreign-dl-parser.y"
+#line 173 "src/foreign-dl-parser.y"
     { 
 	         context->from += 1; 
 		 context->to = 0;
@@ -1676,100 +1676,100 @@ yyreduce:
     break;
 
   case 31:
-#line 178 "igraph/src/foreign-dl-parser.y"
+#line 178 "src/foreign-dl-parser.y"
     { ;}
     break;
 
   case 32:
-#line 182 "igraph/src/foreign-dl-parser.y"
+#line 182 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 33:
-#line 184 "igraph/src/foreign-dl-parser.y"
+#line 184 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 34:
-#line 185 "igraph/src/foreign-dl-parser.y"
+#line 185 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 35:
-#line 186 "igraph/src/foreign-dl-parser.y"
+#line 186 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 36:
-#line 187 "igraph/src/foreign-dl-parser.y"
+#line 187 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 37:
-#line 188 "igraph/src/foreign-dl-parser.y"
+#line 188 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 38:
-#line 191 "igraph/src/foreign-dl-parser.y"
+#line 191 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 39:
-#line 192 "igraph/src/foreign-dl-parser.y"
+#line 192 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 40:
-#line 195 "igraph/src/foreign-dl-parser.y"
+#line 195 "src/foreign-dl-parser.y"
     {
                    igraph_i_dl_add_edge_w((yyvsp[(1) - (4)].integer)-1, (yyvsp[(2) - (4)].integer)-1, (yyvsp[(3) - (4)].real), context); ;}
     break;
 
   case 41:
-#line 197 "igraph/src/foreign-dl-parser.y"
+#line 197 "src/foreign-dl-parser.y"
     {
 		   igraph_i_dl_add_edge((yyvsp[(1) - (3)].integer)-1, (yyvsp[(2) - (3)].integer)-1, context);
 ;}
     break;
 
   case 42:
-#line 201 "igraph/src/foreign-dl-parser.y"
+#line 201 "src/foreign-dl-parser.y"
     { (yyval.integer)=igraph_pajek_get_number(igraph_dl_yyget_text(scanner), 
 					  igraph_dl_yyget_leng(scanner)); ;}
     break;
 
   case 43:
-#line 204 "igraph/src/foreign-dl-parser.y"
+#line 204 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 44:
-#line 205 "igraph/src/foreign-dl-parser.y"
+#line 205 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 45:
-#line 208 "igraph/src/foreign-dl-parser.y"
+#line 208 "src/foreign-dl-parser.y"
     {
                           igraph_i_dl_add_edge_w((yyvsp[(1) - (4)].integer), (yyvsp[(2) - (4)].integer), (yyvsp[(3) - (4)].real), context); ;}
     break;
 
   case 46:
-#line 210 "igraph/src/foreign-dl-parser.y"
+#line 210 "src/foreign-dl-parser.y"
     {
 			  igraph_i_dl_add_edge((yyvsp[(1) - (3)].integer), (yyvsp[(2) - (3)].integer), context);
  ;}
     break;
 
   case 47:
-#line 214 "igraph/src/foreign-dl-parser.y"
+#line 214 "src/foreign-dl-parser.y"
     { (yyval.real)=igraph_pajek_get_number(igraph_dl_yyget_text(scanner), 
 					 igraph_dl_yyget_leng(scanner)); ;}
     break;
 
   case 48:
-#line 217 "igraph/src/foreign-dl-parser.y"
+#line 217 "src/foreign-dl-parser.y"
     {
   /* Copy label list to trie, if needed */
   if (igraph_strvector_size(&context->labels) != 0) {
@@ -1786,63 +1786,63 @@ yyreduce:
     break;
 
   case 49:
-#line 233 "igraph/src/foreign-dl-parser.y"
+#line 233 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 50:
-#line 235 "igraph/src/foreign-dl-parser.y"
+#line 235 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 51:
-#line 236 "igraph/src/foreign-dl-parser.y"
+#line 236 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 52:
-#line 237 "igraph/src/foreign-dl-parser.y"
+#line 237 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 53:
-#line 238 "igraph/src/foreign-dl-parser.y"
+#line 238 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 54:
-#line 239 "igraph/src/foreign-dl-parser.y"
+#line 239 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 55:
-#line 242 "igraph/src/foreign-dl-parser.y"
+#line 242 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 56:
-#line 243 "igraph/src/foreign-dl-parser.y"
+#line 243 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 57:
-#line 246 "igraph/src/foreign-dl-parser.y"
+#line 246 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 58:
-#line 248 "igraph/src/foreign-dl-parser.y"
+#line 248 "src/foreign-dl-parser.y"
     { context->from=igraph_pajek_get_number(igraph_dl_yyget_text(scanner),
 							  igraph_dl_yyget_leng(scanner)); ;}
     break;
 
   case 59:
-#line 251 "igraph/src/foreign-dl-parser.y"
+#line 251 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 60:
-#line 251 "igraph/src/foreign-dl-parser.y"
+#line 251 "src/foreign-dl-parser.y"
     { 
   IGRAPH_CHECK(igraph_vector_push_back(&context->edges, 
 				       context->from-1)); 
@@ -1851,29 +1851,29 @@ yyreduce:
     break;
 
   case 61:
-#line 257 "igraph/src/foreign-dl-parser.y"
+#line 257 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 62:
-#line 258 "igraph/src/foreign-dl-parser.y"
+#line 258 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 63:
-#line 261 "igraph/src/foreign-dl-parser.y"
+#line 261 "src/foreign-dl-parser.y"
     { ;}
     break;
 
   case 64:
-#line 263 "igraph/src/foreign-dl-parser.y"
+#line 263 "src/foreign-dl-parser.y"
     {
   context->from=(yyvsp[(1) - (1)].integer);
  ;}
     break;
 
   case 66:
-#line 267 "igraph/src/foreign-dl-parser.y"
+#line 267 "src/foreign-dl-parser.y"
     {
   IGRAPH_CHECK(igraph_vector_push_back(&context->edges, 
 				       context->from));
@@ -2103,7 +2103,7 @@ yyreturn:
 }
 
 
-#line 273 "igraph/src/foreign-dl-parser.y"
+#line 273 "src/foreign-dl-parser.y"
 
 
 int igraph_dl_yyerror(YYLTYPE* locp, igraph_i_dl_parsedata_t* context, 

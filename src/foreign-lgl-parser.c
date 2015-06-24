@@ -88,7 +88,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 23 "igraph/src/foreign-lgl-parser.y"
+#line 23 "src/foreign-lgl-parser.y"
 
 
 /* 
@@ -163,7 +163,7 @@ igraph_real_t igraph_lgl_get_number(const char *str, long int len);
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 86 "igraph/src/foreign-lgl-parser.y"
+#line 86 "src/foreign-lgl-parser.y"
 {
   long int edgenum;
   double weightnum;
@@ -1415,12 +1415,12 @@ yyreduce:
   switch (yyn)
     {
         case 6:
-#line 107 "igraph/src/foreign-lgl-parser.y"
+#line 107 "src/foreign-lgl-parser.y"
     { context->actvertex=(yyvsp[(2) - (3)].edgenum); ;}
     break;
 
   case 9:
-#line 111 "igraph/src/foreign-lgl-parser.y"
+#line 111 "src/foreign-lgl-parser.y"
     { 
              igraph_vector_push_back(context->vector, context->actvertex);
              igraph_vector_push_back(context->vector, (yyvsp[(1) - (2)].edgenum));
@@ -1429,7 +1429,7 @@ yyreduce:
     break;
 
   case 10:
-#line 116 "igraph/src/foreign-lgl-parser.y"
+#line 116 "src/foreign-lgl-parser.y"
     { 
 	     igraph_vector_push_back(context->vector, context->actvertex);
              igraph_vector_push_back(context->vector, (yyvsp[(1) - (3)].edgenum));
@@ -1439,7 +1439,7 @@ yyreduce:
     break;
 
   case 11:
-#line 125 "igraph/src/foreign-lgl-parser.y"
+#line 125 "src/foreign-lgl-parser.y"
     { igraph_trie_get2(context->trie, 
 				   igraph_lgl_yyget_text(scanner), 
 				   igraph_lgl_yyget_leng(scanner), 
@@ -1447,7 +1447,7 @@ yyreduce:
     break;
 
   case 12:
-#line 130 "igraph/src/foreign-lgl-parser.y"
+#line 130 "src/foreign-lgl-parser.y"
     { (yyval.weightnum)=igraph_lgl_get_number(igraph_lgl_yyget_text(scanner), 
 					   igraph_lgl_yyget_leng(scanner)); ;}
     break;
@@ -1674,7 +1674,7 @@ yyreturn:
 }
 
 
-#line 133 "igraph/src/foreign-lgl-parser.y"
+#line 133 "src/foreign-lgl-parser.y"
 
 
 int igraph_lgl_yyerror(YYLTYPE* locp, igraph_i_lgl_parsedata_t *context, 

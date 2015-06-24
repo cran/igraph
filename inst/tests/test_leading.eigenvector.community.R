@@ -1,7 +1,7 @@
 
-context("leading.eigenvector.community")
+context("cluster_leading_eigen")
 
-test_that("leading.eigenvector.community works", {
+test_that("cluster_leading_eigen works", {
 
   library(igraph)
 
@@ -20,13 +20,14 @@ test_that("leading.eigenvector.community works", {
       ev$vectors <- -ev$vectors
     }
     expect_that(ev$vectors[,1], equals(vector))
+    0
   }
 
-  g <- graph.famous("Zachary")
-  lc <- leading.eigenvector.community(g, callback=f)
+  g <- make_graph("Zachary")
+  lc <- cluster_leading_eigen(g, callback=f)
   
   expect_that(lc$modularity, equals(modularity(g, lc$membership)))
-  expect_that(membership(lc),
+  expect_that(as.vector(membership(lc)),
               equals(c(1, 3, 3, 3, 1, 1, 1, 3, 2, 2, 1, 1, 3, 3, 2, 2,
                        1, 3, 2, 3, 2, 3, 2, 4, 4, 4, 2, 4, 4, 2, 2, 4,
                        2, 2)))
@@ -51,21 +52,23 @@ test_that("leading.eigenvector.community works", {
     BG <- B-diag(rowSums(B))
     
     expect_that(M, equals(BG))
+    0
   }
 
-  g <- graph.famous("Zachary")
-  A <- get.adjacency(g, sparse=FALSE)
+  g <- make_graph("Zachary")
+  A <- as_adj(g, sparse=FALSE)
   ec <- ecount(g)
   deg <- degree(g)
-  lc <- leading.eigenvector.community(g, callback=f)
+  lc <- cluster_leading_eigen(g, callback=f)
 
   ## Stress-test
 
   for (i in 1:100) {
-    g <- erdos.renyi.game(20, sample(5:40, 1), type="gnm")
-    lec1 <- leading.eigenvector.community(g)
-    lec2 <- leading.eigenvector.community(g)
-    expect_that(membership(lec1), equals(membership(lec2)))
+    g <- sample_gnm(20, sample(5:40, 1))
+    lec1 <- cluster_leading_eigen(g)
+    lec2 <- cluster_leading_eigen(g)
+    expect_that(as.vector(membership(lec1)),
+                equals(as.vector(membership(lec2))))
   }
 
 })

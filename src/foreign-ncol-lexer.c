@@ -433,7 +433,7 @@ static yyconst flex_int16_t yy_chk[15] =
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-#line 1 "igraph/src/foreign-ncol-lexer.l"
+#line 1 "src/foreign-ncol-lexer.l"
 /* 
    IGraph library.
    Copyright (C) 2006-2012  Gabor Csardi <csardi.gabor@gmail.com>
@@ -455,7 +455,7 @@ static yyconst flex_int16_t yy_chk[15] =
    02110-1301 USA
 
 */
-#line 24 "igraph/src/foreign-ncol-lexer.l"
+#line 24 "src/foreign-ncol-lexer.l"
 
 /* 
    IGraph library.
@@ -739,7 +739,7 @@ YY_DECL
 	register int yy_act;
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
-#line 80 "igraph/src/foreign-ncol-lexer.l"
+#line 80 "src/foreign-ncol-lexer.l"
 
 
  /* ------------------------------------------------whitespace------*/
@@ -832,24 +832,24 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 83 "igraph/src/foreign-ncol-lexer.l"
+#line 83 "src/foreign-ncol-lexer.l"
 { }
 	YY_BREAK
 /* ---------------------------------------------------newline------*/
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 86 "igraph/src/foreign-ncol-lexer.l"
+#line 86 "src/foreign-ncol-lexer.l"
 { return NEWLINE; }
 	YY_BREAK
 /* ----------------------------------------------alphanumeric------*/
 case 3:
 YY_RULE_SETUP
-#line 89 "igraph/src/foreign-ncol-lexer.l"
+#line 89 "src/foreign-ncol-lexer.l"
 { return ALNUM; }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 91 "igraph/src/foreign-ncol-lexer.l"
+#line 91 "src/foreign-ncol-lexer.l"
 { if (yyextra->eof) {
                        yyterminate();
                     } else {
@@ -860,7 +860,7 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 99 "igraph/src/foreign-ncol-lexer.l"
+#line 99 "src/foreign-ncol-lexer.l"
 ECHO;
 	YY_BREAK
 #line 867 "lex.yy.c"
@@ -2001,7 +2001,7 @@ void igraph_ncol_yyfree (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 99 "igraph/src/foreign-ncol-lexer.l"
+#line 99 "src/foreign-ncol-lexer.l"
 
 
 

@@ -5,11 +5,11 @@ test_that("neighbors works", {
 
   library(igraph)
 
-  g <- erdos.renyi.game(100, 20/100)
-  al <- get.adjlist(g, mode="all")
+  g <- sample_gnp(100, 20/100)
+  al <- as_adj_list(g, mode="all")
   for (i in 1:length(al)) {
     n <- neighbors(g, i, mode="out")
-    expect_that(sort(n), equals(al[[i]]))
+    expect_that(sort(n), is_equivalent_to(al[[i]]))
   }
 
 })
