@@ -1,13 +1,13 @@
-4ad048f73d5563f8858c7a00c4c0d64e *DESCRIPTION
+2c5e42dcbba6017e93ab51bf81b4f20a *DESCRIPTION
 50bafc0417326064ab29ea6a4644c220 *NAMESPACE
-1335d29fa4d7bd157df679521b38c4ae *R/adjacency.R
+55dd90c46ae68e431233c74c70817915 *R/adjacency.R
 ba96cdf262f284a91629bcc81958464a *R/assortativity.R
-064276b7f8ffc1ca16261207ddb8332c *R/attributes.R
+871276e16f6aeb7b9206f14d18706dbc *R/attributes.R
 7625f16ec000d67fba004b5527af4d0f *R/auto.R
 d41d8cd98f00b204e9800998ecf8427e *R/auto.R.in
 2aa7eb58f202fd133c29004b0f600615 *R/basic.R
 955c7998cfc2dd457548cbed16601a56 *R/bipartite.R
-5bcd4fdf183555f58381c57b646ff5c8 *R/centrality.R
+61c7fd410ddf9e53528a33b384d07de2 *R/centrality.R
 249b7f6fb9165564b81c3bf5df932290 *R/centralization.R
 535a949047902b37cf4f1b4b4659425d *R/cliques.R
 6c503afbcde5732d2070df77b7712f9f *R/cocitation.R
@@ -15,7 +15,7 @@ bc9b293f380e0a87c33775da13707e56 *R/cohesive.blocks.R
 9200a81d3cd06c4970779c3d01851ce2 *R/community.R
 4767ee8bfdeacb4dbd4acf70715f560b *R/components.R
 21dccc6b3725cb86825cbe4bcf9ecefc *R/console.R
-4329ea95d97d4302a15dbec15db5099d *R/conversion.R
+845e3474688180d66cb87de42e14d279 *R/conversion.R
 f60154d5c769713e6694ab0c8b287a43 *R/data_frame.R
 46360b04298b2abf673c195277e554f4 *R/decomposition.R
 d20ec0854628e7d0173998343b9d9271 *R/degseq.R
@@ -36,7 +36,7 @@ b3a77c85e9f5cad37d6c9a0d8899b0e8 *R/interface.R
 1045c427da4eb100b63b72eb9f734b92 *R/layout.R
 5ff011b96c1871c3d2736fef68a772b8 *R/layout_drl.R
 f011488c4fade0c2e917568dfbd3dbbf *R/lazyeval.R
-8b944df58042a7bb625e7ee686a561ab *R/make.R
+6228a94a52c828fe939bafba779a2987 *R/make.R
 4b1b30ee58dbfbbcf3e0b99d72d385ba *R/mgclust.R
 bfe6df5c0c275a6998e26c3e07b7f794 *R/minimum.spanning.tree.R
 a72970cff239d026a39a8d970e96adac *R/motifs.R
@@ -63,11 +63,11 @@ ba463b11d0c2f3b7cf1781cdeb34d5a3 *R/similarity.R
 db7f41f5186a1dd4561c2464b2acdc07 *R/sir.R
 43a3a2dccadcb247801102866e33dbc2 *R/socnet.R
 1ba5d03fdff8d5e714320cc47f332d1d *R/sparsedf.R
-d266936fc244585eafd2bc6bf5b37a67 *R/structural.properties.R
+24e25af5a04efb4d7d82176e6bbf009c *R/structural.properties.R
 d4a76d483bb8afa8716c1ce5340c8cd2 *R/structure.info.R
 441eea32a286eefc85a22e432c3d11b4 *R/test.R
 fe4ab338c2ee6498660eeef229a60106 *R/tkplot.R
-4f9a7beba35b1b0c4739fab80cc0e3a3 *R/topology.R
+738c84e875b277b2d82da30f5cd710ef *R/topology.R
 d1834d2fffb6a383c6f2ce7b216df3f6 *R/triangles.R
 09c6021900b34101393a17aaf640e920 *R/utils.R
 7cad85ba458be835fa73e70f548b2ee7 *R/uuid.R
@@ -271,9 +271,9 @@ b836ba1ad253b94013d430cf0ba3e7c2 *inst/tkigraph_help/index.html
 ed8b296fbab3bb09d4f8e1693fa18dfd *man/all_simple_paths.Rd
 3f115e30d70b57a85dd0bb86ee858e6f *man/alpha_centrality.Rd
 593e85eda7a2355a70bd13d3a9280260 *man/are_adjacent.Rd
-3574fd4e90e29b2aafc70c0c846a6180 *man/arpack.Rd
+c35a0ae551bc338162ed2365a1c44c32 *man/arpack.Rd
 6674c22d07aa391dedf759f6230c40a5 *man/articulation_points.Rd
-da52f65fa4f6cd78e9448caa54f0e67e *man/as.directed.Rd
+72e51eca9b31ed0802757b2ba90b43d8 *man/as.directed.Rd
 ce1904d04c4dea1fe6ca733be2f11c4b *man/as.igraph.Rd
 f50b14b832c15b59a92d0332bcc89ccf *man/as_adj_list.Rd
 c806cd2c9c54293c378cf3c60bad100b *man/as_adjacency_matrix.Rd
@@ -293,7 +293,7 @@ a6bfcf76e2146eccf273aab86500c5ee *man/bipartite_mapping.Rd
 1a068022bde7e4d489a528d86d0d723d *man/bipartite_projection.Rd
 e5faacfc659013aa966dd01b252338a2 *man/c.igraph.es.Rd
 1a84493af7864d878ba3dcdbd7cd6bcc *man/c.igraph.vs.Rd
-16f521d4fd940cc0a118ad5a7c9dd1c9 *man/canonical_permutation.Rd
+dfaf157b403f341ee0f7fff041c9fa3d *man/canonical_permutation.Rd
 618c5eca9051b733581259943ba4b896 *man/categorical_pal.Rd
 581113912e2e3f6d41cc30323f1d3c21 *man/centr_betw.Rd
 a030cd80299a5e65507dcf99f5a2ec4c *man/centr_betw_tmax.Rd
@@ -381,7 +381,7 @@ d5b7e02fa71cca864f78d9858dddc0ac *man/graph_attr-set.Rd
 87e28cc96a013b72b9e20e12a00f7a3b *man/graph_attr.Rd
 fe0d99ff560eb2cd8f3c60b04649e965 *man/graph_attr_names.Rd
 0bd6eab2c2f2a29d77db42d09547e081 *man/graph_from_adj_list.Rd
-e021db75766bbbb24011e58df0a01304 *man/graph_from_adjacency_matrix.Rd
+5fc78dbb1fa7a0dc9f635d30e08540ea *man/graph_from_adjacency_matrix.Rd
 f7a1dd6a5a341d4f9357a53b57add309 *man/graph_from_atlas.Rd
 06f3df86bad345b1c0b68442b4900f3e *man/graph_from_data_frame.Rd
 02c4641de052aa4d17ceb29485915bd9 *man/graph_from_edgelist.Rd
@@ -401,7 +401,7 @@ d7c3adc0ec9dbd8ea1c0f6a96bea225a *man/head_of.Rd
 4c644dc8799db286764bb278a0811191 *man/hrg_tree.Rd
 6c40bbe78748414c56fcb2dd9e5fd8ed *man/hub_score.Rd
 d47552e7d68be057350306b8381b6919 *man/identical_graphs.Rd
-baa0afc22cb45fb5539cf38588908187 *man/igraph-attribute-combination.Rd
+f5bfbeb9c8a3af8c136cd6aa72f108db *man/igraph-attribute-combination.Rd
 7f5da4ceaba7c96ef11d626f442c4ddf *man/igraph-dollar.Rd
 54acc64cc203f0661333e5257f7b51d1 *man/igraph-es-attributes.Rd
 5d2f8a7978b61bf8e1b1c6ba1cfdc011 *man/igraph-es-indexing.Rd
@@ -460,7 +460,7 @@ f65597ec9ae8da96bd50aff1c03df82e *man/layout_randomly.Rd
 2cb70129a7f35b5ef7a77ee5bfa8d8a1 *man/layout_with_mds.Rd
 feaa1135c7fc72bc1bda872584eded61 *man/layout_with_sugiyama.Rd
 578f44c6a20b7f2536d885e4c9a4e590 *man/local_scan.Rd
-054ab5a74839a87b3004d37ebf13f585 *man/make_.Rd
+20079a3b6002e90c4ca917df63a44b52 *man/make_.Rd
 16d14883b0678f2846dda3938fb68327 *man/make_bipartite_graph.Rd
 f0e5ea424809203ce113d256f9b9e20c *man/make_chordal_ring.Rd
 5db3d3730f04ae17efb279153118a9b9 *man/make_clusters.Rd
@@ -581,7 +581,7 @@ dd43518f1cb7fa06f74ff08cd73c3f5b *man/tail_of.Rd
 dcc36d6513810a05dc5aee4db1cf6d06 *man/tkigraph.Rd
 182d4ca047c072835f56925be5ae52c7 *man/tkplot.Rd
 dded70bc91fd4b32470d69c30c3c9288 *man/topo_sort.Rd
-6820441771139cdaa9e3380637220579 *man/transitivity.Rd
+40f46e1a4521ddcf3c933fa5a66f0f26 *man/transitivity.Rd
 650d83ad1f2e618ac55c77128357171a *man/triad_census.Rd
 3cb4abce82cc1b8875c0ddfe69cdf739 *man/unfold_tree.Rd
 f86491a5e94e80cce6a0de1b030e923f *man/union.Rd
@@ -732,8 +732,8 @@ e9746e10e53c52a8e9468e81ac0e9fe2 *src/DensityGrid.cpp
 11b90b027549d524c4e8af3cbbfcc307 *src/DensityGrid.h
 fc67113e1f6fbfdcda59cf39aab3ff00 *src/DensityGrid_3d.cpp
 5cfb53cff37ca7d43a52db4f8e44ba94 *src/DensityGrid_3d.h
-5e3c9e3fbf3879223321c2f5bd0e56e2 *src/Makevars.in
-5caf0032a516c3fc48ccdb88b0dd804a *src/Makevars.win
+196f552edb1ca1c8f9cf8a97a9e6f707 *src/Makevars.in
+3f6c3b45062c7e7e1bcc6f6e3695542c *src/Makevars.win
 47ce39714f6f9d6ec3bd7c91624d87f4 *src/NetDataTypes.cpp
 69166cb2f393e3ab50bebc72b16d3f7e *src/NetDataTypes.h
 19c564585ab9700eb4356ee8eeb32403 *src/NetRoutines.cpp
@@ -934,9 +934,9 @@ ffac9e0579529981e1c14cbfd6b9c69e *src/gengraph_box_list.h
 0792e2d1a7190e8d41e332e0ca92bab7 *src/gengraph_definitions.h
 669960a45a8d87d695aead1c4ff45263 *src/gengraph_degree_sequence.cpp
 e91725a3e6fc82814f0838607077462c *src/gengraph_degree_sequence.h
-ff6d04d06e0510300725a54ed0fb29cf *src/gengraph_graph_molloy_hash.cpp
+aa2548014952552b00703886669949eb *src/gengraph_graph_molloy_hash.cpp
 8cd957d8c81c41dfc84b9d3ab52d89a7 *src/gengraph_graph_molloy_hash.h
-891345d8b77c5907f5eb144d05e89bc8 *src/gengraph_graph_molloy_optimized.cpp
+7adabaf25556eb549602b1fd5452db30 *src/gengraph_graph_molloy_optimized.cpp
 1e029605529d2b30e0c51ce3f0118e28 *src/gengraph_graph_molloy_optimized.h
 4cd9c442c3d07a86cdd25c4f23532f3a *src/gengraph_hash.h
 ed698c541b7f649c44e0ad236a1c4889 *src/gengraph_header.h
@@ -1288,7 +1288,7 @@ b1c479ed32faf5a58f406615ce6f48bd *src/prpack/prpack_preprocessed_scc_graph.h
 f705b565d4dc23052d5ec58dc2f63d33 *src/prpack/prpack_preprocessed_schur_graph.h
 7dbb50744056002b707ae5232924d448 *src/prpack/prpack_result.cpp
 9a2d350363928141ef4785e6f0e2cfd5 *src/prpack/prpack_result.h
-c153b67ee7a80e1cc7b8ec3a5ed28652 *src/prpack/prpack_solver.cpp
+041cf12b9a1bf4bf64970211f15b1318 *src/prpack/prpack_solver.cpp
 aa69309ad88c68bd3aef2d3b9f78d8ac *src/prpack/prpack_solver.h
 3108bd08055e25c22b24cd7aee26f8c5 *src/prpack/prpack_utils.cpp
 d8e4562102dd19aa2b0ebb8b9ffc761a *src/prpack/prpack_utils.h
@@ -1358,7 +1358,7 @@ c733862ac29e8bbd01a49b5ac7d4a780 *src/uuid/Makevars.in
 d2b39a0b3d72632db235a9c6d36ef344 *src/uuid/compare.c
 76087d772af7d37cab53b1a56cf72ade *src/uuid/config.h.in
 d0026e30bb2f3feb7ac1db9827dd4820 *src/uuid/copy.c
-bc105070e6bfe36540318ad95e4fac03 *src/uuid/gen_uuid.c
+50e3c817e70104f83a75afb978071f5f *src/uuid/gen_uuid.c
 7374a713629b202c4fb82d650e510acb *src/uuid/isnull.c
 b671656493c2119636a4e981e9aad857 *src/uuid/pack.c
 dcc91eb622c08bf2fca11680c71b92cc *src/uuid/parse.c

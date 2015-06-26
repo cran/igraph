@@ -1,5 +1,5 @@
 Package: igraph
-Version: 1.0.0
+Version: 1.0.1
 Title: Network Analysis and Visualization
 Author: See AUTHORS file.
 Maintainer: Gabor Csardi <csardi.gabor@gmail.com>
@@ -31,6 +31,6 @@ Collate: 'adjacency.R' 'auto.R' 'assortativity.R' 'attributes.R'
         'triangles.R' 'utils.R' 'uuid.R' 'versions.R' 'weakref.R'
         'zzz-deprecate.R'
 NeedsCompilation: yes
-Packaged: 2015-06-24 15:29:44 UTC; gaborcsardi
+Packaged: 2015-06-26 01:04:44 UTC; gaborcsardi
 Repository: CRAN
-Date/Publication: 2015-06-24 18:47:19
+Date/Publication: 2015-06-26 11:13:24

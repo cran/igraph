@@ -93,11 +93,9 @@
 #include "uuidd.h"
 
 #ifdef USING_R
-#include <Rdefines.h>
 #include "igraph_random.h"
 #define srand(x) ;
 #define rand() RNG_INTEGER(0, RAND_MAX)
-int gettimeofday (struct timeval *tv, void *dummy);
 #endif
 
 #ifdef HAVE_TLS
@@ -124,6 +122,13 @@ static int gettimeofday (struct timeval *tv, void *dummy)
 	tv->tv_sec = n / 1000000;
 	tv->tv_usec = n % 1000000;
 }
+#endif
+
+#ifdef __MINGW32__
+int gettimeofday (struct timeval *tv, void *dummy);
+#endif
+#ifdef __MINGW64__
+int gettimeofday (struct timeval *tv, void *dummy);
 #endif
 
 static int getuid (void)
@@ -230,7 +235,7 @@ static int random_get_fd(void)
     int i, fd = -1;
     struct timeval  tv;
 
-    gettimeofday(&tv, 0);
+    gettimeofday(&tv, NULL);
 #ifndef _WIN32
     fd = open("/dev/urandom", O_RDONLY);
     if (fd == -1)
@@ -249,7 +254,7 @@ static int random_get_fd(void)
     ul_jrand_seed[2] = (tv.tv_sec ^ tv.tv_usec) >> 16;
 #endif
     /* Crank the random number generator a few times */
-    gettimeofday(&tv, 0);
+    gettimeofday(&tv, NULL);
     for (i = (tv.tv_sec ^ tv.tv_usec) & 0x1F; i > 0; i--)
 	rand();
     return fd;
@@ -327,6 +332,10 @@ static int flock(int fd, int op)
 }
 #endif
 
+#if !defined(HAVE_FLOCK) && !defined(__sun)
+# define HAVE_FLOCK 1
+#endif
+
 /* Assume that the gettimeofday() has microsecond granularity */
 #define MAX_ADJUSTMENT 10
 
@@ -367,6 +376,7 @@ static int get_clock(uint32_t *clock_high, uint32_t *clock_low,
 	}
 	if (state_fd >= 0) {
 		rewind(state_f);
+#ifdef HAVE_FLOCK
 		while (flock(state_fd, LOCK_EX) < 0) {
 			if ((errno == EAGAIN) || (errno == EINTR))
 				continue;
@@ -376,6 +386,7 @@ static int get_clock(uint32_t *clock_high, uint32_t *clock_low,
 			ret = -1;
 			break;
 		}
+#endif
 	}
 	if (state_fd >= 0) {
 		unsigned int cl;
@@ -394,12 +405,12 @@ static int get_clock(uint32_t *clock_high, uint32_t *clock_low,
 	if ((last.tv_sec == 0) && (last.tv_usec == 0)) {
 		random_get_bytes(&clock_seq, sizeof(clock_seq));
 		clock_seq &= 0x3FFF;
-		gettimeofday(&last, 0);
+		gettimeofday(&last, NULL);
 		last.tv_sec--;
 	}
 
 try_again:
-	gettimeofday(&tv, 0);
+	gettimeofday(&tv, NULL);
 	if ((tv.tv_sec < last.tv_sec) ||
 	    ((tv.tv_sec == last.tv_sec) &&
 	     (tv.tv_usec < last.tv_usec))) {
@@ -439,7 +450,9 @@ try_again:
 			fflush(state_f);
 		}
 		rewind(state_f);
+#ifdef HAVE_FLOCK
 		flock(state_fd, LOCK_UN);
+#endif
 	}
 
 	*clock_high = clock_reg >> 32;
