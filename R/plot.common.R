@@ -38,30 +38,6 @@ i.parse.plot.params <- function(graph, params) {
       p[["plot"]][[n]] <- params[[n]]
     }
   }
-
-  ## check that names are present
-
-  mis <- ! names(p[["vertex"]]) %in% names(i.default.values$vertex) &
-         ! paste("vertex.", sep="", names(p[["vertex"]])) %in%
-           names(igraph_options())
-  if (any(mis)) {
-    stop("Unknown vertex parameters: ",
-         paste(sep=", ", collapse=", ", names(p[["vertex"]])[mis]))
-  }
-  mis <- ! names(p[["edge"]]) %in% names(i.default.values$edge) &
-         ! paste("edge.", sep="", names(p[["edge"]])) %in%
-           names(igraph_options())
-  if (any(mis)) {
-    stop("Unknown edge parameters: ",
-         paste(sep=", ", collapse=", ", names(p[["edge"]])[mis]))
-  }
-  mis <- ! names(p[["plot"]]) %in% names(i.default.values$plot) &
-         ! paste("plot.", sep="", names(p[["plot"]])) %in%
-           names(igraph_options())
-  if (any(mis)) {
-    stop("Unknown plot parameters: ",
-         paste(sep=", ", collapse=", ", names(p[["plot"]]) [ mis ]))
-  }
   
   func <- function(type, name, range=NULL, dontcall=FALSE) {
     if (! type %in% names(p)) {
@@ -211,6 +187,7 @@ igraph.check.shapes <- function(x) {
 #' \code{\link{plot.igraph}}, \code{\link{tkplot}} and \code{\link{rglplot}}
 #' for plotting functions.
 #' @export
+#' @importFrom stats ave
 #' @keywords graphs
 #' @examples
 #' 
@@ -225,25 +202,14 @@ igraph.check.shapes <- function(x) {
 #' }
 #' 
 curve_multiple <- function(graph, start=0.5) {
-  cm <- count_multiple(graph)
   el <- apply(as_edgelist(graph, names=FALSE), 1, paste, collapse=":")
-  ord <- order(el)
-  res <- numeric(length(ord))
-
-  p <- 1
-  while (p <= length(res)) {
-    m <- cm[ord[p]]
-    idx <- p:(p+m-1)
-    if (m==1) {
-      r <- 0
+  ave(rep(NA, length(el)), el, FUN=function(x) {
+    if (length(x) == 1) {
+      return(0)
     } else {
-      r <- seq(-start, start, length=m)
+      return(seq(-start, start, length=length(x)))
     }
-    res[ord[idx]] <- r
-    p <- p + m
-  }
-
-  res
+  })
 }
 
 .igraph.logo.raster <-

@@ -49,9 +49,10 @@
 #' spectral embedding. Should be smaller than the number of vertices. The
 #' largest \code{no}-dimensional non-zero singular values are used for the
 #' spectral embedding.
-#' @param weights Optional positive weight vector for calculating weighted
-#' closeness. If the graph has a \code{weight} edge attribute, then this is
-#' used by default.
+#' @param weights Optional positive weight vector for calculating a weighted
+#' embedding. If the graph has a \code{weight} edge attribute, then this is
+#' used by default. In a weighted embedding, the edge weights are used instead
+#' of the binary adjacencny matrix.
 #' @param which Which eigenvalues (or singular values, for directed graphs) to
 #' use. \sQuote{lm} means the ones with the largest magnitude, \sQuote{la} is
 #' the ones (algebraic) largest, and \sQuote{sa} is the (algebraic) smallest
@@ -166,9 +167,11 @@ dim_select <- dim_select
 #' spectral embedding. Should be smaller than the number of vertices. The
 #' largest \code{no}-dimensional non-zero singular values are used for the
 #' spectral embedding.
-#' @param weights Optional positive weight vector for calculating weighted
-#' closeness. If the graph has a \code{weight} edge attribute, then this is
-#' used by default.
+#' @param weights Optional positive weight vector for calculating a weighted
+#' embedding. If the graph has a \code{weight} edge attribute, then this is
+#' used by default. For weighted embedding, edge weights are used instead
+#' of the binary adjacency matrix, and vertex stregth (see
+#' \code{\link{strength}}) is used instead of the degrees.
 #' @param which Which eigenvalues (or singular values, for directed graphs) to
 #' use. \sQuote{lm} means the ones with the largest magnitude, \sQuote{la} is
 #' the ones (algebraic) largest, and \sQuote{sa} is the (algebraic) smallest
@@ -259,10 +262,9 @@ sample_sphere_surface <- function(dim, n=1, radius=1, positive=TRUE) {
   radius <- as.numeric(radius)
   positive <- as.logical(positive)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_sample_sphere_surface", dim, n, radius, positive,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_sample_sphere_surface, dim, n, radius, positive)
 
   res
 }
@@ -301,10 +303,9 @@ sample_sphere_volume <- function(dim, n=1, radius=1, positive=TRUE) {
   radius <- as.numeric(radius)
   positive <- as.logical(positive)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_sample_sphere_volume", dim, n, radius, positive,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_sample_sphere_volume, dim, n, radius, positive)
 
   res
 }
@@ -338,10 +339,9 @@ sample_dirichlet <- function(n, alpha) {
   n <- as.integer(n)
   alpha <- as.numeric(alpha)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_sample_dirichlet", n, alpha,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_sample_dirichlet, n, alpha)
 
   res
 }

@@ -309,11 +309,10 @@ layout_as_bipartite <- function(graph, types = NULL, hgap = 1, vgap = 1,
   vgap <- as.numeric(vgap)
   maxiter <- as.integer(maxiter)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit(.Call(C_R_igraph_finalizer) )
 
   ## Function call
-  res <- .Call("R_igraph_layout_bipartite", graph, types, hgap, vgap, maxiter,
-               PACKAGE="igraph")
+  res <- .Call(C_R_igraph_layout_bipartite, graph, types, hgap, vgap, maxiter)
 
   res
 }
@@ -366,10 +365,9 @@ layout_as_star <- function(graph, center=V(graph)[1], order=NULL) {
   center <- as.igraph.vs(graph, center)
   if (!is.null(order)) order <- as.numeric(order)-1
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit(.Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_layout_star", graph, center-1, order,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_layout_star, graph, center-1, order)
 
   res
 }
@@ -441,8 +439,8 @@ as_star <- function(...) layout_spec(layout_as_star, ...)
 #'                                            rootlevel=c(2,1)))
 
 layout_as_tree <- function(graph, root=numeric(), circular=FALSE,
-                                    rootlevel=numeric(), mode="out",
-                                    flip.y=TRUE) {
+                           rootlevel=numeric(), mode=c("out", "in", "all"),
+                           flip.y=TRUE) {
 
   if (!is_igraph(graph)) {
     stop("Not a graph object")
@@ -454,9 +452,9 @@ layout_as_tree <- function(graph, root=numeric(), circular=FALSE,
                  "total"=3)
   flip.y <- as.logical(flip.y)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_layout_reingold_tilford", graph, root, mode,
-               rootlevel, circular, PACKAGE="igraph")
+  on.exit(.Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_layout_reingold_tilford, graph, root, mode,
+               rootlevel, circular)
   if (flip.y) { res[,2] <- max(res[,2])-res[,2] }
   res
 }
@@ -515,9 +513,8 @@ layout_in_circle <- function(graph, order=V(graph)) {
     stop("Not a graph object")
   }
   order <- as.igraph.vs(graph, order) - 1L
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_layout_circle", graph, order,
-        PACKAGE="igraph")
+  on.exit(.Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_layout_circle, graph, order)
 }
 
 #' @rdname layout_in_circle
@@ -655,14 +652,12 @@ layout_on_grid <- function(graph, width = 0, height = 0, dim = 2) {
   stopifnot(dim == 2 || dim == 3)
   if (dim == 3) { height <- as.integer(height) }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit(.Call(C_R_igraph_finalizer) )
   # Function call
   if (dim == 2) {
-    res <- .Call("R_igraph_layout_grid", graph, width,
-                 PACKAGE="igraph")
+    res <- .Call(C_R_igraph_layout_grid, graph, width)
   } else {
-    res <- .Call("R_igraph_layout_grid_3d", graph, width, height,
-                 PACKAGE="igraph")
+    res <- .Call(C_R_igraph_layout_grid_3d, graph, width, height)
   }
 
   res
@@ -687,10 +682,9 @@ layout.grid.3d <- function(graph, width=0, height=0) {
   width <- as.integer(width)
   height <- as.integer(height)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit(.Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_layout_grid_3d", graph, width, height,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_layout_grid_3d, graph, width, height)
 
   res
 }
@@ -721,9 +715,8 @@ layout_on_sphere <- function(graph) {
   if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_layout_sphere", graph,
-        PACKAGE="igraph")
+  on.exit(.Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_layout_sphere, graph)
 }
 
 
@@ -766,13 +759,11 @@ layout_randomly <- function(graph, dim=2) {
     stop("Not a graph object")
   }
   if (dim==2) {
-    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-    .Call("R_igraph_layout_random", graph,
-          PACKAGE="igraph")
+    on.exit(.Call(C_R_igraph_finalizer) )
+    .Call(C_R_igraph_layout_random, graph)
   } else if (dim==3) {
-    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-    .Call("R_igraph_layout_random_3d", graph,
-          PACKAGE="igraph")
+    on.exit(.Call(C_R_igraph_finalizer) )
+    .Call(C_R_igraph_layout_random_3d, graph)
   } else {
     stop("Invalid `dim' value");
   }
@@ -917,7 +908,7 @@ layout_with_dh <- function(graph, coords=NULL, maxiter=10,
     coords <- as.matrix(structure(as.double(coords), dim=dim(coords)))
     use.seed <- TRUE
   } else {
-    coords <- matrix(ncol=2, nrow=0)
+    coords <- matrix(NA_real_, ncol=2, nrow=0)
     use.seed <- FALSE
   }
   maxiter <- as.integer(maxiter)
@@ -929,12 +920,12 @@ layout_with_dh <- function(graph, coords=NULL, maxiter=10,
   weight.edge.crossings <- as.numeric(weight.edge.crossings)
   weight.node.edge.dist <- as.numeric(weight.node.edge.dist)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit(.Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_layout_davidson_harel", graph, coords, use.seed,
+  res <- .Call(C_R_igraph_layout_davidson_harel, graph, coords, use.seed,
                maxiter, fineiter, cool.fact, weight.node.dist,
                weight.border, weight.edge.lengths, weight.edge.crossings,
-               weight.node.edge.dist, PACKAGE="igraph")
+               weight.node.edge.dist)
 
   res
 }
@@ -978,6 +969,8 @@ with_dh <- function(...) layout_spec(layout_with_dh, ...)
 #' @param weights A vector giving edge weights. The \code{weight} edge
 #' attribute is used by default, if present. If weights are given, then the
 #' attraction along the edges will be multiplied by the given edge weights.
+#' This places vertices connected with a highly weighted edge closer to
+#' each other.
 #' @param minx If not \code{NULL}, then it must be a numeric vector that gives
 #' lower boundaries for the \sQuote{x} coordinates of the vertices. The length
 #' of the vector must match the number of vertices in the graph.
@@ -1074,15 +1067,14 @@ layout_with_fr <- function(graph, coords=NULL, dim=2,
     warning("Argument `repulserad' is deprecated and has no effect")
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit(.Call(C_R_igraph_finalizer) )
   if (dim==2) {
-    res <- .Call("R_igraph_layout_fruchterman_reingold", graph, coords,
-                 niter, start.temp, weights, minx, maxx, miny, maxy, grid,
-                 PACKAGE="igraph")
+    res <- .Call(C_R_igraph_layout_fruchterman_reingold, graph, coords,
+                 niter, start.temp, weights, minx, maxx, miny, maxy, grid)
   } else {
-    res <- .Call("R_igraph_layout_fruchterman_reingold_3d", graph, coords,
+    res <- .Call(C_R_igraph_layout_fruchterman_reingold_3d, graph, coords,
                  niter, start.temp, weights, minx, maxx, miny, maxy,
-                 minz, maxz, PACKAGE="igraph")
+                 minz, maxz)
   }
   res
 }
@@ -1153,7 +1145,7 @@ layout_with_gem <- function(graph, coords=NULL, maxiter=40*vcount(graph)^2,
     coords <- as.matrix(structure(as.double(coords), dim=dim(coords)))
     use.seed <- TRUE
   } else {
-    coords <- matrix(ncol=2, nrow=0)
+    coords <- matrix(NA_real_, ncol=2, nrow=0)
     use.seed <- FALSE
   }
 
@@ -1162,11 +1154,10 @@ layout_with_gem <- function(graph, coords=NULL, maxiter=40*vcount(graph)^2,
   temp.min <- as.numeric(temp.min)
   temp.init <- as.numeric(temp.init)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit(.Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_layout_gem", graph, coords, use.seed, maxiter,
-               temp.max, temp.min, temp.init,
-               PACKAGE="igraph")
+  res <- .Call(C_R_igraph_layout_gem, graph, coords, use.seed, maxiter,
+               temp.max, temp.min, temp.init)
 
   res
 }
@@ -1243,10 +1234,9 @@ layout_with_graphopt <- function(graph, start=NULL, niter=500, charge=0.001,
   spring.constant <- as.double(spring.constant)
   max.sa.movement <- as.double(max.sa.movement)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_layout_graphopt", graph, niter, charge, mass,
-        spring.length, spring.constant, max.sa.movement, start,
-        PACKAGE="igraph")
+  on.exit(.Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_layout_graphopt, graph, niter, charge, mass,
+        spring.length, spring.constant, max.sa.movement, start)
 }
 
 
@@ -1286,6 +1276,7 @@ with_graphopt <- function(...) layout_spec(layout_with_graphopt, ...)
 #' @param kkconst Numeric scalar, the Kamada-Kawai vertex attraction constant.
 #' Typical (and default) value is the number of vertices.
 #' @param weights Edge weights, larger values will result longer edges.
+#' Note that this is opposite to \code{\link{layout_with_fr}}.
 #' @param minx If not \code{NULL}, then it must be a numeric vector that gives
 #' lower boundaries for the \sQuote{x} coordinates of the vertices. The length
 #' of the vector must match the number of vertices in the graph.
@@ -1370,16 +1361,15 @@ layout_with_kk <- function(graph, coords=NULL, dim=2,
     warning("Argument `coolexp' is deprecated and has no effect")
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit(.Call(C_R_igraph_finalizer) )
   # Function call
   if (dim == 2) {
-    res <- .Call("R_igraph_layout_kamada_kawai", graph, coords, maxiter,
-                 epsilon, kkconst, weights, minx, maxx, miny, maxy,
-                 PACKAGE="igraph")
+    res <- .Call(C_R_igraph_layout_kamada_kawai, graph, coords, maxiter,
+                 epsilon, kkconst, weights, minx, maxx, miny, maxy)
   } else {
-    res <- .Call("R_igraph_layout_kamada_kawai_3d", graph, coords, maxiter,
+    res <- .Call(C_R_igraph_layout_kamada_kawai_3d, graph, coords, maxiter,
                  epsilon, kkconst, weights, minx, maxx, miny, maxy, minz,
-                 maxz, PACKAGE="igraph")
+                 maxz)
   }
 
   res
@@ -1445,11 +1435,10 @@ layout_with_lgl <- function(graph, maxiter=150, maxdelta=vcount(graph),
     root <- as.igraph.vs(graph, root)-1
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_layout_lgl", graph, as.double(maxiter),
+  on.exit(.Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_layout_lgl, graph, as.double(maxiter),
         as.double(maxdelta), as.double(area), as.double(coolexp),
-        as.double(repulserad), as.double(cellsize), root,
-        PACKAGE="igraph")
+        as.double(repulserad), as.double(cellsize), root)
 }
 
 
@@ -1519,10 +1508,9 @@ layout_with_mds <- function(graph, dist=NULL, dim=2,
   if (!is.null(dist)) dist <- structure(as.double(dist), dim=dim(dist))
   dim <- as.integer(dim)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit(.Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_layout_mds", graph, dist, dim,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_layout_mds, graph, dist, dim)
 
   res
 }
@@ -1576,7 +1564,9 @@ with_mds <- function(...) layout_spec(layout_with_mds, ...)
 #' you have too many edge crossings, increase this.
 #' @param weights Optional edge weight vector. If \code{NULL}, then the
 #' 'weight' edge attribute is used, if there is one. Supply \code{NA} here and
-#' igraph ignores the edge weights.
+#' igraph ignores the edge weights. These are used only if the graph
+#' contains cycles; igraph will tend to reverse edges with smaller weights
+#' when breaking the cycles.
 #' @param attributes Which graph/vertex/edge attributes to keep in the extended
 #' graph. \sQuote{default} keeps the \sQuote{size}, \sQuote{size2},
 #' \sQuote{shape}, \sQuote{label} and \sQuote{color} vertex attributes and the
@@ -1595,6 +1585,7 @@ with_mds <- function(...) layout_spec(layout_with_mds, ...)
 #' Understanding of Hierarchical Systems". IEEE Transactions on Systems, Man
 #' and Cybernetics 11(2):109-125, 1981.
 #' @export
+#' @importFrom utils head
 #' @family graph layouts
 #' @keywords graphs
 #' @examples
@@ -1736,10 +1727,10 @@ with_mds <- function(...) layout_spec(layout_with_mds, ...)
   }
   attributes <- igraph.match.arg(attributes)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit(.Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_layout_sugiyama", graph, layers, hgap,
-               vgap, maxiter, weights, PACKAGE="igraph")
+  res <- .Call(C_R_igraph_layout_sugiyama, graph, layers, hgap,
+               vgap, maxiter, weights)
 
   # Flip the y coordinates, more natural this way
   res$res[,2] <- max(res$res[,2]) - res$res[,2] + 1
@@ -1748,7 +1739,7 @@ with_mds <- function(...) layout_spec(layout_with_mds, ...)
   vc <- vcount(graph)
   res$layout <- res$res[seq_len(vc),]
   if (nrow(res$res)==vc) {
-    res$layout.dummy <- matrix(nrow=0, ncol=2)
+    res$layout.dummy <- matrix(NA_real_, nrow=0, ncol=2)
   } else {
     res$layout.dummy <- res$res[(vc+1):nrow(res$res),]
   }
@@ -1888,10 +1879,9 @@ merge_coords <- function(graphs, layouts, method="dla") {
     stop("Not a graph object")
   }
   if (method == "dla") {
-    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-    res <- .Call("R_igraph_layout_merge_dla",
-                 graphs, layouts,
-                 PACKAGE="igraph")
+    on.exit(.Call(C_R_igraph_finalizer) )
+    res <- .Call(C_R_igraph_layout_merge_dla,
+                 graphs, layouts)
   } else {
     stop("Invalid `method'.")
   }

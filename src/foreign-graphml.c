@@ -1043,6 +1043,7 @@ void igraph_i_graphml_sax_handler_start_element_ns(
       }
       state->st=INSIDE_EDGE;
     } else if (xmlStrEqual(localname, toXmlChar("node"))) {
+      id1=-1;
       for (i=0, it=(xmlChar**)attributes; i < nb_attributes; i++, it+=5) {
 	if (XML_ATTR_URI(it) != 0 &&
 	    !xmlStrEqual(toXmlChar(GRAPHML_NAMESPACE_URI), XML_ATTR_URI(it))) {
@@ -1056,8 +1057,14 @@ void igraph_i_graphml_sax_handler_start_element_ns(
 	  break;
 	}
       }
+      if (id1 >= 0) {
+	state->act_node = id1;
+      } else {
+	state->act_node = -1;
+	igraph_i_graphml_sax_handler_error(state, "Node with missing id encountered");
+	return;
+      }
       state->st=INSIDE_NODE;
-      state->act_node = id1;
     } else if (xmlStrEqual(localname, toXmlChar("data"))) {
       igraph_i_graphml_attribute_data_setup(state, attributes, nb_attributes,
 	  IGRAPH_ATTRIBUTE_GRAPH);
@@ -1398,13 +1405,13 @@ int igraph_write_graph_graphml(const igraph_t *graph, FILE *outstream,
   
   ret=fprintf(outstream, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
   if (ret<0) IGRAPH_ERROR("Write failed", IGRAPH_EFILE);
-  ret=fprintf(outstream, "<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"\n");
+  ret=fprintf(outstream, "<graphml xmlns=\"" GRAPHML_NAMESPACE_URI "\"\n");
   if (ret<0) IGRAPH_ERROR("Write failed", IGRAPH_EFILE);
   ret=fprintf(outstream, "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n");
   if (ret<0) IGRAPH_ERROR("Write failed", IGRAPH_EFILE);
-  ret=fprintf(outstream, "         xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns\n");
+  ret=fprintf(outstream, "         xsi:schemaLocation=\"" GRAPHML_NAMESPACE_URI "\n");
   if (ret<0) IGRAPH_ERROR("Write failed", IGRAPH_EFILE);
-  ret=fprintf(outstream, "         http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd\">\n");
+  ret=fprintf(outstream, "         " GRAPHML_NAMESPACE_URI "/1.0/graphml.xsd\">\n");
   if (ret<0) IGRAPH_ERROR("Write failed", IGRAPH_EFILE);
   ret=fprintf(outstream, "<!-- Created by igraph -->\n");
   if (ret<0) IGRAPH_ERROR("Write failed", IGRAPH_EFILE);

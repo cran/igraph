@@ -43,6 +43,7 @@
 #include "igraph_topology.h"
 #include "igraph_qsort.h"
 #include "config.h"
+#include "structural_properties_internal.h"
 
 #include <assert.h>
 #include <string.h>
@@ -197,19 +198,18 @@ int igraph_diameter(const igraph_t *graph, igraph_integer_t *pres,
 /**
  * \ingroup structural
  * \function igraph_average_path_length
- * \brief Calculates the average geodesic length in a graph.
+ * \brief Calculates the average shortest path length between all vertex pairs.
  *
  * \param graph The graph object.
  * \param res Pointer to a real number, this will contain the result.
  * \param directed Boolean, whether to consider directed
  *        paths. Ignored for undirected graphs.
  * \param unconn What to do if the graph is not connected. If
- *        \c TRUE the average of the geodesics
- *        within the components 
- *        will be returned, otherwise the number of vertices is
- *        used for the length of non-existing geodesics. (The rationale
- *        behind this is that this is always longer than the longest
- *        possible geodesic in a graph.) 
+ *        \c TRUE, only those vertex pairs will be included in the calculation
+ *        between which there is a path. If \c FALSE, the number of vertices is
+ *        used as the distance between vertices unreachable from each other. 
+ *        The rationale behind this is that this is always longer than the longest
+ *        possible geodesic in a graph.
  * \return Error code:
  *         \c IGRAPH_ENOMEM, not enough memory for
  *         data structures 
@@ -1499,69 +1499,40 @@ int igraph_pagerank_old(const igraph_t *graph, igraph_vector_t *res,
   return 0;
 }
 
-/**
- * \ingroup structural
- * \function igraph_rewire
- * \brief Randomly rewires a graph while preserving the degree distribution.
- * 
- * </para><para>
- * This function generates a new graph based on the original one by randomly
- * rewiring edges while preserving the original graph's degree distribution.
- * Please note that the rewiring is done "in place", so no new graph will
- * be allocated. If you would like to keep the original graph intact, use
- * \ref igraph_copy() beforehand.
- * 
- * \param graph The graph object to be rewired.
- * \param n Number of rewiring trials to perform.
- * \param mode The rewiring algorithm to be used. It can be one of the following:
- *         \clist
- *           \cli IGRAPH_REWIRING_SIMPLE
- *                Simple rewiring algorithm which chooses two arbitrary edges
- *                in each step (namely (a,b) and (c,d)) and substitutes them
- *                with (a,d) and (c,b) if they don't exist.  The method will
- *                neither destroy nor create self-loops.
- *           \cli IGRAPH_REWIRING_SIMPLE_LOOPS
- *                Same as \c IGRAPH_REWIRING_SIMPLE but allows the creation or
- *                destruction of self-loops.
- *         \endclist
- *
- * \return Error code:
- *         \clist
- *           \cli IGRAPH_EINVMODE
- *                Invalid rewiring mode.
- *           \cli IGRAPH_EINVAL
- *                Graph unsuitable for rewiring (e.g. it has
- *                less than 4 nodes in case of \c IGRAPH_REWIRING_SIMPLE)
- *           \cli IGRAPH_ENOMEM
- *                Not enough memory for temporary data.
- *         \endclist
- *
- * Time complexity: TODO.
- * 
- * \example examples/simple/igraph_rewire.c
- */
-
-int igraph_rewire(igraph_t *graph, igraph_integer_t n, igraph_rewiring_t mode) {
+// Not declared static so that the testsuite can use it, but not part of the public API.
+int igraph_rewire_core(igraph_t *graph, igraph_integer_t n, igraph_rewiring_t mode, igraph_bool_t use_adjlist) {
   long int no_of_nodes=igraph_vcount(graph);
   long int no_of_edges=igraph_ecount(graph);
   char message[256];
   igraph_integer_t a, b, c, d, dummy, num_swaps, num_successful_swaps;
-  igraph_vector_t eids, edgevec;
+  igraph_vector_t eids, edgevec, alledges;
   igraph_bool_t directed, loops, ok;
   igraph_es_t es;
+  igraph_adjlist_t al;
   
-  if ((mode == IGRAPH_REWIRING_SIMPLE || mode == IGRAPH_REWIRING_SIMPLE_LOOPS) &&
-      no_of_nodes<4)
+  if (no_of_nodes<4)
     IGRAPH_ERROR("graph unsuitable for rewiring", IGRAPH_EINVAL);
   
   directed = igraph_is_directed(graph);
-  loops = (mode == IGRAPH_REWIRING_SIMPLE_LOOPS);
+  loops = (mode & IGRAPH_REWIRING_SIMPLE_LOOPS);
   
   RNG_BEGIN();
 
-  IGRAPH_VECTOR_INIT_FINALLY(&edgevec, 4);
   IGRAPH_VECTOR_INIT_FINALLY(&eids, 2);
-  es = igraph_ess_vector(&eids);
+
+  if(use_adjlist) {
+    /* As well as the sorted adjacency list, we maintain an unordered
+     * list of edges for picking a random edge in constant time.
+     */
+    IGRAPH_CHECK(igraph_adjlist_init(graph, &al, IGRAPH_OUT));
+    IGRAPH_FINALLY(igraph_adjlist_destroy, &al);
+    IGRAPH_VECTOR_INIT_FINALLY(&alledges, no_of_edges * 2);
+    igraph_get_edgelist(graph, &alledges, /*bycol=*/ 0);
+  }
+  else {
+    IGRAPH_VECTOR_INIT_FINALLY(&edgevec, 4);
+    es = igraph_ess_vector(&eids);
+  }
 
   /* We don't want the algorithm to get stuck in an infinite loop when
    * it can't choose two edges satisfying the conditions. Instead of
@@ -1593,16 +1564,30 @@ int igraph_rewire(igraph_t *graph, igraph_integer_t n, igraph_rewiring_t mode) {
       } while (VECTOR(eids)[0] == VECTOR(eids)[1]);
 
       /* Get the endpoints */
-      IGRAPH_CHECK(igraph_edge(graph, (igraph_integer_t) VECTOR(eids)[0], 
-			       &a, &b));
-      IGRAPH_CHECK(igraph_edge(graph, (igraph_integer_t) VECTOR(eids)[1],
-			       &c, &d));
+      if(use_adjlist) {
+	a = VECTOR(alledges)[((igraph_integer_t)VECTOR(eids)[0]) * 2];
+	b = VECTOR(alledges)[(((igraph_integer_t)VECTOR(eids)[0]) * 2) + 1];
+	c = VECTOR(alledges)[((igraph_integer_t)VECTOR(eids)[1]) * 2];
+	d = VECTOR(alledges)[(((igraph_integer_t)VECTOR(eids)[1]) * 2) + 1];
+      }
+      else {
+	IGRAPH_CHECK(igraph_edge(graph, (igraph_integer_t) VECTOR(eids)[0], 
+				 &a, &b));
+	IGRAPH_CHECK(igraph_edge(graph, (igraph_integer_t) VECTOR(eids)[1],
+				 &c, &d));
+      }
 
       /* For an undirected graph, we have two "variants" of each edge, i.e.
        * a -- b and b -- a. Since some rewirings can be performed only when we
        * "swap" the endpoints, we do it now with probability 0.5 */
       if (!directed && RNG_UNIF01() < 0.5) {
         dummy = c; c = d; d = dummy;
+	if(use_adjlist) {
+	  /* Flip the edge in the unordered edge-list, so the update later on
+	   * hits the correct end. */
+	  VECTOR(alledges)[((igraph_integer_t)VECTOR(eids)[1]) * 2] = c;
+	  VECTOR(alledges)[(((igraph_integer_t)VECTOR(eids)[1]) * 2) + 1] = d;
+	}
       }
 
       /* If we do not touch loops, check whether a == b or c == d and disallow
@@ -1628,24 +1613,46 @@ int igraph_rewire(igraph_t *graph, igraph_integer_t n, igraph_rewiring_t mode) {
       /* All good so far. Now check for the existence of a --> d and c --> b to
        * disallow the creation of multiple edges */
       if (ok) {
-        IGRAPH_CHECK(igraph_are_connected(graph, a, d, &ok));
-        ok = !ok;
+	if(use_adjlist) {
+	  if(igraph_adjlist_has_edge(&al, a, d, directed))
+	    ok = 0;
+	}
+	else {
+	  IGRAPH_CHECK(igraph_are_connected(graph, a, d, &ok));
+	  ok = !ok;
+	}
       }
       if (ok) {
-        IGRAPH_CHECK(igraph_are_connected(graph, c, b, &ok));
-        ok = !ok;
+	if(use_adjlist) {
+	  if(igraph_adjlist_has_edge(&al, c, b, directed))
+	    ok = 0;
+	}
+	else {
+	  IGRAPH_CHECK(igraph_are_connected(graph, c, b, &ok));
+	  ok = !ok;
+	}
       }
 
       /* If we are still okay, we can perform the rewiring */
       if (ok) {
 	/* printf("Deleting: %ld -> %ld, %ld -> %ld\n",
                   (long)a, (long)b, (long)c, (long)d); */
-	IGRAPH_CHECK(igraph_delete_edges(graph, es));	
-	VECTOR(edgevec)[0]=a; VECTOR(edgevec)[1]=d;
-	VECTOR(edgevec)[2]=c; VECTOR(edgevec)[3]=b;
-	/* printf("Adding: %ld -> %ld, %ld -> %ld\n",
+	if(use_adjlist) {
+	  // Replace entry in sorted adjlist:
+	  IGRAPH_CHECK(igraph_adjlist_replace_edge(&al, a, b, d, directed));
+	  IGRAPH_CHECK(igraph_adjlist_replace_edge(&al, c, d, b, directed));
+	  // Also replace in unsorted edgelist:
+	  VECTOR(alledges)[(((igraph_integer_t)VECTOR(eids)[0]) * 2) + 1] = d;
+	  VECTOR(alledges)[(((igraph_integer_t)VECTOR(eids)[1]) * 2) + 1] = b;
+	}
+	else {
+	  IGRAPH_CHECK(igraph_delete_edges(graph, es));	
+	  VECTOR(edgevec)[0]=a; VECTOR(edgevec)[1]=d;
+	  VECTOR(edgevec)[2]=c; VECTOR(edgevec)[3]=b;
+	  /* printf("Adding: %ld -> %ld, %ld -> %ld\n",
                   (long)a, (long)d, (long)c, (long)b); */
-	igraph_add_edges(graph, &edgevec, 0);
+	  igraph_add_edges(graph, &edgevec, 0);
+	}
         num_successful_swaps++;
       }
       break;
@@ -1655,28 +1662,81 @@ int igraph_rewire(igraph_t *graph, igraph_integer_t n, igraph_rewiring_t mode) {
     }
     num_swaps++;
   }
+
+  if(use_adjlist) {
+    /* Replace graph edges with the adjlist current state */
+    IGRAPH_CHECK(igraph_delete_edges(graph, igraph_ess_all(IGRAPH_EDGEORDER_ID)));
+    IGRAPH_CHECK(igraph_add_edges(graph, &alledges, 0));
+  }
   
   IGRAPH_PROGRESS("Random rewiring: ", 100.0, 0);
 
+  if(use_adjlist) {
+    igraph_vector_destroy(&alledges);
+    igraph_adjlist_destroy(&al);
+  }
+  else {
+    igraph_vector_destroy(&edgevec);
+  }
+
   igraph_vector_destroy(&eids);
-  igraph_vector_destroy(&edgevec);
-  IGRAPH_FINALLY_CLEAN(2);
+  IGRAPH_FINALLY_CLEAN(use_adjlist ? 3 : 2);
   
   RNG_END();
   
   return 0;
 }
 
-int igraph_i_subgraph_copy_and_delete(const igraph_t *graph, igraph_t *res,
-				      const igraph_vs_t vids, 
-				      igraph_vector_t *map,
-				      igraph_vector_t *invmap);
+/**
+ * \ingroup structural
+ * \function igraph_rewire
+ * \brief Randomly rewires a graph while preserving the degree distribution.
+ * 
+ * </para><para>
+ * This function generates a new graph based on the original one by randomly
+ * rewiring edges while preserving the original graph's degree distribution.
+ * Please note that the rewiring is done "in place", so no new graph will
+ * be allocated. If you would like to keep the original graph intact, use
+ * \ref igraph_copy() beforehand.
+ * 
+ * \param graph The graph object to be rewired.
+ * \param n Number of rewiring trials to perform.
+ * \param mode The rewiring algorithm to be used. It can be one of the following flags:
+ *         \clist
+ *           \cli IGRAPH_REWIRING_SIMPLE
+ *                Simple rewiring algorithm which chooses two arbitrary edges
+ *                in each step (namely (a,b) and (c,d)) and substitutes them
+ *                with (a,d) and (c,b) if they don't exist.  The method will
+ *                neither destroy nor create self-loops.
+ *           \cli IGRAPH_REWIRING_SIMPLE_LOOPS
+ *                Same as \c IGRAPH_REWIRING_SIMPLE but allows the creation or
+ *                destruction of self-loops.
+ *         \endclist
+ *
+ * \return Error code:
+ *         \clist
+ *           \cli IGRAPH_EINVMODE
+ *                Invalid rewiring mode.
+ *           \cli IGRAPH_EINVAL
+ *                Graph unsuitable for rewiring (e.g. it has
+ *                less than 4 nodes in case of \c IGRAPH_REWIRING_SIMPLE)
+ *           \cli IGRAPH_ENOMEM
+ *                Not enough memory for temporary data.
+ *         \endclist
+ *
+ * Time complexity: TODO.
+ * 
+ * \example examples/simple/igraph_rewire.c
+ */
 
-int igraph_i_subgraph_create_from_scratch(const igraph_t *graph, 
-					  igraph_t *res,
-					  const igraph_vs_t vids,
-					  igraph_vector_t *map,
-					  igraph_vector_t *invmap);
+#define REWIRE_ADJLIST_THRESHOLD 10
+
+int igraph_rewire(igraph_t *graph, igraph_integer_t n, igraph_rewiring_t mode) {
+
+  igraph_bool_t use_adjlist = n >= REWIRE_ADJLIST_THRESHOLD;
+  return igraph_rewire_core(graph, n, mode, use_adjlist);
+
+}
 
 /**
  * Subgraph creation, old version: it copies the graph and then deletes
@@ -1744,8 +1804,9 @@ int igraph_i_subgraph_create_from_scratch(const igraph_t *graph,
   igraph_bool_t directed = igraph_is_directed(graph);
   long int no_of_nodes = igraph_vcount(graph);
   long int no_of_new_nodes = 0;
-  char* seen_edges = 0;
   long int i, j, n;
+  long int to;
+	igraph_integer_t eid;
   igraph_vector_t vids_old2new, vids_new2old;
   igraph_vector_t eids_new2old;
   igraph_vector_t nei_edges;
@@ -1758,7 +1819,7 @@ int igraph_i_subgraph_create_from_scratch(const igraph_t *graph,
    * opposite order */
   IGRAPH_VECTOR_INIT_FINALLY(&eids_new2old, 0);
   if (invmap) {
-    my_vids_new2old=invmap;
+    my_vids_new2old = invmap;
     igraph_vector_clear(my_vids_new2old);
   } else {
     IGRAPH_VECTOR_INIT_FINALLY(&vids_new2old, 0);
@@ -1766,7 +1827,7 @@ int igraph_i_subgraph_create_from_scratch(const igraph_t *graph,
   IGRAPH_VECTOR_INIT_FINALLY(&new_edges, 0);
   IGRAPH_VECTOR_INIT_FINALLY(&nei_edges, 0);
   if (map) {
-    my_vids_old2new=map;
+    my_vids_old2new = map;
     IGRAPH_CHECK(igraph_vector_resize(map, no_of_nodes));
     igraph_vector_null(map);
   } else {
@@ -1793,65 +1854,42 @@ int igraph_i_subgraph_create_from_scratch(const igraph_t *graph,
   for (i = 0; i < n; i++) {
     long int vid = (long int) VECTOR(nei_edges)[i];
     if (VECTOR(*my_vids_old2new)[vid] == 0) {
-      VECTOR(*my_vids_old2new)[vid] = ++no_of_new_nodes;
+			IGRAPH_CHECK(igraph_vector_push_back(my_vids_new2old, vid));
+			no_of_new_nodes++;
+      VECTOR(*my_vids_old2new)[vid] = no_of_new_nodes;
     }
   }
 
-  /* Allocate some memory for the seen_edges array that avoids processing edges
-   * twice for undirected graphs */
-  if (!directed) {
-    seen_edges = igraph_Calloc(igraph_ecount(graph), char);
-    if (seen_edges == 0)
-      IGRAPH_ERROR("cannot calculate subgraph", IGRAPH_ENOMEM);
-    IGRAPH_FINALLY(igraph_free, seen_edges);
-  }
+  /* Create the new edge list */
+  for (i = 0; i < no_of_new_nodes; i++) {
+		long int old_vid = (long int) VECTOR(*my_vids_new2old)[i];
+    long int new_vid = i;
 
-  /* Calculate the mapping from the new node IDs to the new ones
-   * and also create the new edge list */
-  IGRAPH_CHECK(igraph_vector_resize(my_vids_new2old, no_of_new_nodes));
-  for (i = 0; i < no_of_nodes; i++) {
-    long int new_vid = (long int) VECTOR(*my_vids_old2new)[i] - 1;
-    if (new_vid < 0)
-      continue;
-
-    VECTOR(*my_vids_new2old)[new_vid] = i;
-
-    IGRAPH_CHECK(igraph_incident(graph, &nei_edges, (igraph_integer_t) i,
-				 IGRAPH_OUT));
+    IGRAPH_CHECK(igraph_incident(graph, &nei_edges, old_vid, IGRAPH_OUT));
     n = igraph_vector_size(&nei_edges);
 
     if (directed) {
       for (j = 0; j < n; j++) {
-        igraph_integer_t eid  = (igraph_integer_t) VECTOR(nei_edges)[j];
-        long int from, to;
+				eid = (igraph_integer_t) VECTOR(nei_edges)[j];
 
-        from = (long int) VECTOR(*my_vids_old2new)[
-				(long int)IGRAPH_FROM(graph, eid) ];
-        if (!from) continue;
-        to = (long int) VECTOR(*my_vids_old2new)[
-				(long int)IGRAPH_TO(graph, eid)];
+        to = (long int) VECTOR(*my_vids_old2new)[ (long int)IGRAPH_TO(graph, eid) ];
         if (!to) continue;
 
-        IGRAPH_CHECK(igraph_vector_push_back(&new_edges, from-1));
+        IGRAPH_CHECK(igraph_vector_push_back(&new_edges, new_vid));
         IGRAPH_CHECK(igraph_vector_push_back(&new_edges, to-1));
         IGRAPH_CHECK(igraph_vector_push_back(&eids_new2old, eid));
       }
     } else {
       for (j = 0; j < n; j++) {
-        igraph_integer_t eid  = (igraph_integer_t) VECTOR(nei_edges)[j];
-        long int from, to;
+				eid = (igraph_integer_t) VECTOR(nei_edges)[j];
 
-        from = (long int) VECTOR(*my_vids_old2new)[
-				(long int)IGRAPH_FROM(graph, eid)];
-        if (!from) continue;
-        to = (long int) VECTOR(*my_vids_old2new)[
-			        (long int)IGRAPH_TO(graph, eid)];
-        if (!to) continue;
-        if (seen_edges[(long int)eid])
+        if (IGRAPH_FROM(graph, eid) != old_vid)   /* avoid processing edges twice */
           continue;
 
-        seen_edges[(long int)eid] = 1;
-        IGRAPH_CHECK(igraph_vector_push_back(&new_edges, from-1));
+        to = (long int) VECTOR(*my_vids_old2new)[ (long int)IGRAPH_TO(graph, eid) ];
+        if (!to) continue;
+
+        IGRAPH_CHECK(igraph_vector_push_back(&new_edges, new_vid));
         IGRAPH_CHECK(igraph_vector_push_back(&new_edges, to-1));
         IGRAPH_CHECK(igraph_vector_push_back(&eids_new2old, eid));
       }
@@ -1859,10 +1897,6 @@ int igraph_i_subgraph_create_from_scratch(const igraph_t *graph,
   }
 
   /* Get rid of some vectors that are not needed anymore */
-  if (!directed) {
-    igraph_free(seen_edges);
-    IGRAPH_FINALLY_CLEAN(1);
-  }
   if (!map) {
     igraph_vector_destroy(&vids_old2new);
     IGRAPH_FINALLY_CLEAN(1);
@@ -1996,6 +2030,26 @@ int igraph_induced_subgraph(const igraph_t *graph, igraph_t *res,
 				     /* invmap= */ 0);
 }
 
+igraph_subgraph_implementation_t igraph_i_induced_subgraph_suggest_implementation(
+    const igraph_t *graph, const igraph_vs_t vids) {
+  double ratio;
+  igraph_integer_t num_vs;
+
+  if (igraph_vs_is_all(&vids)) {
+    ratio = 1.0;
+  } else {
+    IGRAPH_CHECK(igraph_vs_size(graph, &vids, &num_vs));
+    ratio = (igraph_real_t) num_vs / igraph_vcount(graph);
+  }
+
+  /* TODO: needs benchmarking; threshold was chosen totally arbitrarily */
+  if (ratio > 0.5) {
+    return IGRAPH_SUBGRAPH_COPY_AND_DELETE;
+  } else {
+    return IGRAPH_SUBGRAPH_CREATE_FROM_SCRATCH;
+  }
+}
+
 int igraph_induced_subgraph_map(const igraph_t *graph, igraph_t *res,
 				const igraph_vs_t vids, 
 				igraph_subgraph_implementation_t impl,
@@ -2003,20 +2057,7 @@ int igraph_induced_subgraph_map(const igraph_t *graph, igraph_t *res,
 				igraph_vector_t *invmap) {
 
   if (impl == IGRAPH_SUBGRAPH_AUTO) {
-    double ratio;
-
-    if (igraph_vs_is_all(&vids))
-      ratio = 1.0;
-    else {
-      igraph_integer_t num_vs;
-      IGRAPH_CHECK(igraph_vs_size(graph, &vids, &num_vs));
-      ratio = (igraph_real_t) num_vs / igraph_vcount(graph);
-    }
-
-    if (ratio > 0.5)
-      impl = IGRAPH_SUBGRAPH_COPY_AND_DELETE;
-    else
-      impl = IGRAPH_SUBGRAPH_CREATE_FROM_SCRATCH;
+    impl = igraph_i_induced_subgraph_suggest_implementation(graph, vids);
   }
 
   switch (impl) {
@@ -3433,6 +3474,37 @@ int igraph_is_simple(const igraph_t *graph, igraph_bool_t *res) {
 }
 
 /**
+ * \function igraph_has_loop
+ * \brief Returns whether the graph has at least one loop edge.
+ * 
+ * </para><para>
+ * A loop edge is an edge from a vertex to itself.
+ * \param graph The input graph.
+ * \param res Pointer to an initialized boolean vector for storing the result.
+ * 
+ * \sa \ref igraph_simplify() to get rid of loop edges.
+ *
+ * Time complexity: O(e), the number of edges to check.
+ * 
+ * \example examples/simple/igraph_has_loop.c
+ */
+
+int igraph_has_loop(const igraph_t *graph, igraph_bool_t *res) {
+  long int i, m = igraph_ecount(graph);
+
+  *res = 0;
+
+  for (i = 0; i < m; i++) {
+    if (IGRAPH_FROM(graph, i) == IGRAPH_TO(graph, i)) {
+      *res = 1;
+      break;
+    }
+  }
+  
+  return 0;
+}
+
+/**
  * \function igraph_is_loop
  * \brief Find the loop edges in a graph.
  * 
@@ -4553,6 +4625,7 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
   if (vertices || edges) {
     for (IGRAPH_VIT_RESET(vit), i=0; !IGRAPH_VIT_END(vit); IGRAPH_VIT_NEXT(vit), i++) {
       long int node=IGRAPH_VIT_GET(vit);
+      long int size, act, edge;
       igraph_vector_t *vvec=0, *evec=0;
       if (vertices) {
 	vvec=VECTOR(*vertices)[i];
@@ -4565,30 +4638,27 @@ int igraph_get_shortest_paths_dijkstra(const igraph_t *graph,
       
       IGRAPH_ALLOW_INTERRUPTION();
       
-      if (parents[node]>0) {
-	long int size=0;
-	long int act=node;
-	long int edge;
-	while (parents[act]) {
-	  size++;
-	  edge=parents[act]-1;
-	  act=IGRAPH_OTHER(graph, edge, act);
-	}
-	if (vvec) { 
-	  IGRAPH_CHECK(igraph_vector_resize(vvec, size+1)); 
-	  VECTOR(*vvec)[size]=node;
-	}
-	if (evec) {
-	  IGRAPH_CHECK(igraph_vector_resize(evec, size));
-	}
-	act=node;
-	while (parents[act]) {
-	  edge=parents[act]-1;
-	  act=IGRAPH_OTHER(graph, edge, act);
-	  size--;
-	  if (vvec) { VECTOR(*vvec)[size]=act; }
-	  if (evec) { VECTOR(*evec)[size]=edge; }
-	}
+      size=0;
+      act=node;
+      while (parents[act]) {
+	size++;
+	edge=parents[act]-1;
+	act=IGRAPH_OTHER(graph, edge, act);
+      }
+      if (vvec) { 
+	IGRAPH_CHECK(igraph_vector_resize(vvec, size+1)); 
+	VECTOR(*vvec)[size]=node;
+      }
+      if (evec) {
+	IGRAPH_CHECK(igraph_vector_resize(evec, size));
+      }
+      act=node;
+      while (parents[act]) {
+	edge=parents[act]-1;
+	act=IGRAPH_OTHER(graph, edge, act);
+	size--;
+	if (vvec) { VECTOR(*vvec)[size]=act; }
+	if (evec) { VECTOR(*evec)[size]=edge; }
       }
     }
   }
@@ -6019,14 +6089,27 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
 			     igraph_bool_t directed,
 			     igraph_bool_t unconn) {
 
+  /* Implementation details. This is the basic Dijkstra algorithm, 
+     with a binary heap. The heap is indexed, i.e. it stores not only
+     the distances, but also which vertex they belong to.
+
+     From now on we use a 2-way heap, so the distances can be queried
+     directly from the heap.
+
+     Dirty tricks:
+     - the opposite of the distance is stored in the heap, as it is a
+       maximum heap and we need a minimum heap.
+     - we don't use IGRAPH_INFINITY during the computation, as IGRAPH_FINITE()
+       might involve a function call and we want to spare that. -1 will denote
+       infinity instead.
+  */
+  
   long int no_of_nodes=igraph_vcount(graph);
   long int no_of_edges=igraph_ecount(graph);
 
-  igraph_vector_t dist;
-  igraph_indheap_t Q;
+  igraph_2wheap_t Q;
   igraph_inclist_t inclist;
-  igraph_vector_long_t already_added;
-  long int source;
+  long int source, j;
   igraph_neimode_t dirmode = directed ? IGRAPH_OUT : IGRAPH_ALL;
 
   long int from=-1, to=-1;
@@ -6036,7 +6119,9 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
   if (!weights) {
     igraph_integer_t diameter;
     IGRAPH_CHECK(igraph_diameter(graph, &diameter, pfrom, pto, path, directed, unconn));
-    *pres = diameter;
+    if (pres) {
+      *pres = diameter;
+    }
     return IGRAPH_SUCCESS;
   }
 
@@ -6048,11 +6133,8 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
     IGRAPH_ERROR("Weight vector must be non-negative", IGRAPH_EINVAL);
   }
   
-  IGRAPH_CHECK(igraph_vector_long_init(&already_added, no_of_nodes));
-  IGRAPH_FINALLY(igraph_vector_long_destroy, &already_added);
-  IGRAPH_VECTOR_INIT_FINALLY(&dist, no_of_nodes);
-  IGRAPH_CHECK(igraph_indheap_init(&Q, no_of_nodes));
-  IGRAPH_FINALLY(igraph_indheap_destroy, &Q);
+  IGRAPH_CHECK(igraph_2wheap_init(&Q, no_of_nodes));
+  IGRAPH_FINALLY(igraph_2wheap_destroy, &Q);
   IGRAPH_CHECK(igraph_inclist_init(graph, &inclist, dirmode));
   IGRAPH_FINALLY(igraph_inclist_destroy, &inclist);
   
@@ -6061,44 +6143,43 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
     IGRAPH_PROGRESS("Weighted diameter: ", source*100.0/no_of_nodes, NULL);
     IGRAPH_ALLOW_INTERRUPTION();
 
-    igraph_indheap_push_with_index(&Q, source, -0);
-    VECTOR(already_added)[source] = source+1;
-    VECTOR(dist)[source] = 1.0;
+    igraph_2wheap_clear(&Q);
+    igraph_2wheap_push_with_index(&Q, source, -1.0);
+
     nodes_reached = 0.0;
 
-    while (!igraph_indheap_empty(&Q)) {
-      long int minnei=igraph_indheap_max_index(&Q);
-      igraph_real_t mindist=-igraph_indheap_delete_max(&Q);
+    while (!igraph_2wheap_empty(&Q)) {
+      long int minnei=igraph_2wheap_max_index(&Q);
+      igraph_real_t mindist=-igraph_2wheap_deactivate_max(&Q);
       igraph_vector_int_t *neis;
-      long int nlen, j;
+      long int nlen;
       
       if (mindist > res) {
 	res=mindist; from=source; to=minnei;
       }
       nodes_reached++;
 
+      /* Now check all neighbors of 'minnei' for a shorter path */
       neis=igraph_inclist_get(&inclist, minnei);
       nlen=igraph_vector_int_size(neis);
       for (j=0; j<nlen; j++) {
 	long int edge=(long int) VECTOR(*neis)[j];
 	long int tto=IGRAPH_OTHER(graph, edge, minnei);
-	igraph_real_t altdist=mindist + VECTOR(*weights)[edge];
-	igraph_real_t curdist= (VECTOR(already_added)[tto]==source+1) ? 
-	  VECTOR(dist)[tto] : 0;
+	igraph_real_t altdist = mindist + VECTOR(*weights)[edge];
+        igraph_bool_t active = igraph_2wheap_has_active(&Q, tto);
+        igraph_bool_t has = igraph_2wheap_has_elem(&Q, tto);
+	igraph_real_t curdist = active ? -igraph_2wheap_get(&Q, tto) : 0.0;
 	
-	if (curdist==0) {
-	  /* First non-finite distance */
-	  VECTOR(already_added)[tto] = source+1;
-	  VECTOR(dist)[tto] = altdist+1.0;
-	  IGRAPH_CHECK(igraph_indheap_push_with_index(&Q, tto, -altdist));
-	} else if (altdist < curdist-1) {
+	if (!has) {
+	  /* First finite distance */
+	  IGRAPH_CHECK(igraph_2wheap_push_with_index(&Q, tto, -altdist));
+	} else if (altdist < curdist) {
 	  /* A shorter path */
-	  VECTOR(dist)[tto] = altdist+1.0;
-	  IGRAPH_CHECK(igraph_indheap_modify(&Q, tto, -altdist));
+	  IGRAPH_CHECK(igraph_2wheap_modify(&Q, tto, -altdist));
 	}
       }
       
-    } /* !igraph_indheap_empty(&Q) */
+    } /* !igraph_2wheap_empty(&Q) */
 
     /* not connected, return infinity */
     if (nodes_reached != no_of_nodes && !unconn) {
@@ -6108,12 +6189,13 @@ int igraph_diameter_dijkstra(const igraph_t *graph,
     }
     
   } /* source < no_of_nodes */
-  
+
+  /* Compensate for the +1 that we have added to distances */
+  res -= 1;
+
   igraph_inclist_destroy(&inclist);
-  igraph_indheap_destroy(&Q);
-  igraph_vector_destroy(&dist);
-  igraph_vector_long_destroy(&already_added);
-  IGRAPH_FINALLY_CLEAN(4);
+  igraph_2wheap_destroy(&Q);
+  IGRAPH_FINALLY_CLEAN(2);
 
   IGRAPH_PROGRESS("Weighted diameter: ", 100.0, NULL);
   
@@ -6752,8 +6834,12 @@ int igraph_i_is_graphical_degree_sequence_directed(
 		/* Is the degree larger than the number of vertices with nonzero in-degree?
 		 * (Make sure that u is excluded from the vertices with nonzero in-degree).
 		 */
-		if (degree > nonzero_indegree_count - (VECTOR(work_in)[u] > 0 ? 1 : 0))
+		if (degree > nonzero_indegree_count - (VECTOR(work_in)[u] > 0 ? 1 : 0)) {
+      /* Put u back into the queue to detect the failure even if u was the
+       * last vertex. See Github bug #851 */
+      IGRAPH_CHECK(igraph_vector_long_push_back(&out_vertices, u));
 			break;
+    }
 
 		/* Find the prefix of index_array that consists solely of vertices with
 		 * zero indegree. We don't need to sort these */

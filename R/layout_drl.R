@@ -54,7 +54,8 @@
 #' below.
 #' @param weights Optional edge weights. Supply \code{NULL} here if you want to
 #' weight edges equally. By default the \code{weight} edge attribute is used if
-#' the graph has one.
+#' the graph has one. Larger weights correspond to stronger connections,
+#' and the vertices will be placed closer to each other.
 #' @param fixed Logical vector, it can be used to fix some vertices. All
 #' vertices for which it is \code{TRUE} are kept at the coordinates supplied in
 #' the \code{seed} matrix. It is ignored it \code{NULL} or if \code{use.seed}
@@ -72,6 +73,7 @@
 #' Klavans, R., Boyack, K.W., DrL: Distributed Recursive (Graph) Layout. SAND
 #' Reports, 2008. 2936: p. 1-10.
 #' @export
+#' @importFrom stats runif
 #' @keywords graphs
 #' @examples
 #' 
@@ -105,13 +107,13 @@ layout_with_drl <- function(graph, use.seed = FALSE,
     if (!is.null(fixed)) {
       fixed <- as.logical(fixed)
     }
-    on.exit(.Call("R_igraph_finalizer", PACKAGE = "igraph"))
+    on.exit(.Call(C_R_igraph_finalizer))
     if (dim==2) {
-      res <- .Call("R_igraph_layout_drl", graph, seed, use.seed, options, 
-                   weights, fixed, PACKAGE = "igraph")
+      res <- .Call(C_R_igraph_layout_drl, graph, seed, use.seed, options, 
+                   weights, fixed)
     } else {
-      res <- .Call("R_igraph_layout_drl_3d", graph, seed, use.seed, options, 
-                   weights, fixed, PACKAGE = "igraph")
+      res <- .Call(C_R_igraph_layout_drl_3d, graph, seed, use.seed, options, 
+                   weights, fixed)
     }      
     res
 }

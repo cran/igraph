@@ -48,7 +48,8 @@
 #' \sQuote{\code{type}} vertex attribute. You must supply this argument if the
 #' graph has no \sQuote{\code{type}} vertex attribute.
 #' @param multiplicity If \code{TRUE}, then igraph keeps the multiplicity of
-#' the edges as an edge attribute. E.g. if there is an A-C-B and also an A-D-B
+#' the edges as an edge attribute called \sQuote{weight}.
+#' E.g. if there is an A-C-B and also an A-D-B
 #' triple in the bipartite graph (but no more X, such that A-X-B is also in the
 #' graph), then the multiplicity of the A-B edge in the projection will be 2.
 #' @param probe1 This argument can be used to specify the order of the
@@ -118,10 +119,10 @@ bipartite_projection <- function(graph, types=NULL,
     warning("`probe1' ignored if only one projection is requested")
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_bipartite_projection", graph, types,
-               as.integer(probe1), which, PACKAGE="igraph")
+  res <- .Call(C_R_igraph_bipartite_projection, graph, types,
+               as.integer(probe1), which)
   if (remove.type) {
     if (is_igraph(res[[1]])) {
       res[[1]] <- delete_vertex_attr(res[[1]], "type")

@@ -31,19 +31,19 @@
   gal <- graph_attr_names(object)
   if (length(gal) != 0) {
     ga <- paste(sep="", gal, " (g/",
-                .Call("R_igraph_get_attr_mode", object, 2L, PACKAGE="igraph"),
+                .Call(C_R_igraph_get_attr_mode, object, 2L),
                 ")")
   }
   val <- vertex_attr_names(object)
   if (length(val) != 0) {
     va <- paste(sep="", val, " (v/",
-                .Call("R_igraph_get_attr_mode", object, 3L, PACKAGE="igraph"),
+                .Call(C_R_igraph_get_attr_mode, object, 3L),
                 ")")
   }
   eal <- edge_attr_names(object)
   if (length(eal) != 0) {
     ea <- paste(sep="", edge_attr_names(object), " (e/",
-                .Call("R_igraph_get_attr_mode", object, 4L, PACKAGE="igraph"),
+                .Call(C_R_igraph_get_attr_mode, object, 4L),
                 ")")
   }
   c(ga, va, ea)
@@ -55,7 +55,7 @@
     stop("Not a graph object")
   }
 
-  title <- paste(sep="", "IGRAPH ",
+  title <- paste(sep="", "IGRAPH ", substr(graph_id(object), 1, 7), " ",
                  c("U","D")[is_directed(object)+1],
                  c("-","N")[is_named(object)+1],
                  c("-","W")[is_weighted(object)+1],
@@ -78,7 +78,7 @@
   1 + if (length(atxt) == 1 && atxt == "") 0 else length(atxt)
 }
 
-indent_print <- printr$indent_print
+#' @importFrom utils capture.output
 
 .print.graph.attributes <- function(x, full, max.lines) {
   list <- graph_attr_names(x)
@@ -234,21 +234,18 @@ indent_print <- printr$indent_print
   }    
 }
 
-#' @include printr.R
-
-head_print <- printr$head_print
-printer_callback <- printr$printer_callback
-
 .print.edges.compressed <- function(x, edges = E(x), names, num = FALSE,
                                       max.lines = igraph_opt("auto.print.lines")) {
 
   len <- length(edges)
+  id <- graph_id(edges)
 
   title <- "+" %+%
     (if (num) " " %+% chr(len) %+% "/" %+%
        (if (is.null(x)) "?" else chr(gsize(x))) else "") %+%
     (if (len == 1) " edge" else " edges") %+%
-    (if (is.null(x)) ", unknown graph" else "") %+%
+    (if (!is.na(id)) paste(" from", substr(id, 1, 7)) else " unknown") %+%
+    (if (is.null(x)) " (deleted)" else "") %+%
     (if (is.null(attr(edges, "vnames"))) "" else " (vertex names)") %+%
     ":\n"
   cat(title)
@@ -304,6 +301,8 @@ printer_callback <- printr$printer_callback
   }
 
 }
+
+#' @importFrom utils capture.output
 
 .print.edges.compressed.limit <- function(x, edges, names, max.lines) {
 
@@ -402,10 +401,9 @@ printer_callback <- printr$printer_callback
   cat(alstr, sep="\n")
 }
 
-#' @method str igraph
 #' @export
 
-str.igraph <- function(object, ...) {
+print_all <- function(object, ...) {
   print.igraph(object, full=TRUE, ...)
 }
 
@@ -419,22 +417,24 @@ str.igraph <- function(object, ...) {
 #' \code{summary.igraph} prints the number of vertices, edges and whether the
 #' graph is directed.
 #' 
-#' \code{str.igraph} prints the same information, and also lists the edges, and
+#' \code{print_all} prints the same information, and also lists the edges, and
 #' optionally graph, vertex and/or edge attributes.
 #' 
 #' \code{print.igraph} behaves either as \code{summary.igraph} or
-#' \code{str.igraph} depending on the \code{full} argument. See also the
+#' \code{print_all} depending on the \code{full} argument. See also the
 #' \sQuote{print.full} igraph option and \code{\link{igraph_opt}}.
 #' 
 #' The graph summary printed by \code{summary.igraph} (and \code{print.igraph}
-#' and \code{str.igraph}) consists one or more lines. The first line contains
+#' and \code{print_all}) consists one or more lines. The first line contains
 #' the basic properties of the graph, and the rest contains its attributes.
 #' Here is an example, a small star graph with weighed directed edges and named
-#' vertices: \preformatted{    IGRAPH DNW- 10 9 -- In-star
+#' vertices: \preformatted{    IGRAPH badcafe DNW- 10 9 -- In-star
 #'     + attr: name (g/c), mode (g/c), center (g/n), name (v/c),
 #'       weight (e/n) }
 #' The first line always
 #' starts with \code{IGRAPH}, showing you that the object is an igraph graph.
+#' Then a seven character code is printed, this the first seven characters
+#' of the unique id of the graph. See \code{\link{graph_id}} for more.
 #' Then a four letter long code string is printed. The first letter
 #' distinguishes between directed (\sQuote{\code{D}}) and undirected
 #' (\sQuote{\code{U}}) graphs. The second letter is \sQuote{\code{N}} for named
@@ -453,10 +453,13 @@ str.igraph <- function(object, ...) {
 #' (\sQuote{\code{c}}), numeric (\sQuote{\code{n}}), logical
 #' (\sQuote{\code{l}}), or other (\sQuote{\code{x}}).
 #' 
-#' As of igraph 0.4 \code{str.igraph} and \code{print.igraph} use the
+#' As of igraph 0.4 \code{print_all} and \code{print.igraph} use the
 #' \code{max.print} option, see \code{\link[base]{options}} for details.
-#' 
-#' @aliases print.igraph str.igraph summary.igraph
+#'
+#' As of igraph 1.1.1, the \code{str.igraph} function is defunct, use
+#' \code{print_all()}.
+#'
+#' @aliases print.igraph print_all summary.igraph str.igraph
 #' @param x The graph to print.
 #' @param full Logical scalar, whether to print the graph structure itself as
 #' well.

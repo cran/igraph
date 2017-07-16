@@ -31,7 +31,7 @@ update_es_ref <- update_vs_ref <- function(graph) {
 
 get_es_ref <- get_vs_ref <- function(graph) {
   if (is_igraph(graph) && !warn_version(graph)) {
-    base::.Call("R_igraph_mybracket", graph, 10L, PACKAGE = "igraph")
+    .Call(C_R_igraph_mybracket, graph, 10L)
   } else {
     NULL
   }
@@ -75,7 +75,7 @@ get_es_graph_id <- get_vs_graph_id <- function(seq) {
 
 identical_graphs <- function(g1, g2) {
   stopifnot(is_igraph(g1), is_igraph(g2))
-  base::.Call("R_igraph_identical_graphs", g1, g2, PACKAGE = "igraph");
+  .Call(C_R_igraph_identical_graphs, g1, g2)
 }
 
 add_vses_graph_ref <- function(vses, graph) {
@@ -90,6 +90,52 @@ add_vses_graph_ref <- function(vses, graph) {
   }
 
   vses
+}
+
+#' Get the id of a graph
+#'
+#' Graph ids are used to check that a vertex or edge sequence
+#' belongs to a graph. If you create a new graph by changing the
+#' structure of a graph, the new graph will have a new id.
+#' Changing the attributes will not change the id.
+#'
+#' @param x A graph or a vertex sequence or an edge sequence.
+#' @param ... Not used currently.
+#' @return The id of the graph, a character scalar. For
+#' vertex and edge sequences the id of the graph they were created from.
+#'
+#' @export
+#' @examples
+#' g <- make_ring(10)
+#' graph_id(g)
+#' graph_id(V(g))
+#' graph_id(E(g))
+#'
+#' g2 <- g + 1
+#' graph_id(g2)
+
+graph_id <- function(x, ...)
+  UseMethod("graph_id")
+
+#' @method graph_id igraph
+#' @export
+
+graph_id.igraph <- function(x, ...) {
+  get_graph_id(x)
+}
+
+#' @method graph_id igraph.vs
+#' @export
+
+graph_id.igraph.vs <- function(x, ...) {
+  get_vs_graph_id(x) %||% NA_character_
+}
+
+#' @method graph_id igraph.es
+#' @export
+
+graph_id.igraph.es <- function(x, ...) {
+  get_es_graph_id(x) %||% NA_character_
 }
 
 #' Vertices of a graph
@@ -232,15 +278,13 @@ E <- function(graph, P=NULL, path=NULL, directed=TRUE) {
     ec <- ecount(graph)
     res <- seq_len(ec)
   } else if (!is.null(P)) {
-    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-    res <- .Call("R_igraph_es_pairs", graph, as.igraph.vs(graph, P)-1,
-                 as.logical(directed),
-                 PACKAGE="igraph")+1
+    on.exit( .Call(C_R_igraph_finalizer) )
+    res <- .Call(C_R_igraph_es_pairs, graph, as.igraph.vs(graph, P)-1,
+                 as.logical(directed)) + 1
   } else {
-    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-    res <- .Call("R_igraph_es_path", graph, as.igraph.vs(graph, path)-1,
-                 as.logical(directed),
-                 PACKAGE="igraph")+1
+    on.exit(.Call(C_R_igraph_finalizer) )
+    res <- .Call(C_R_igraph_es_path, graph, as.igraph.vs(graph, path)-1,
+                 as.logical(directed)) + 1
   }
 
   if ("name" %in% edge_attr_names(graph)) {
@@ -282,8 +326,8 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
 #' When using multiple indices within the bracket, all of them
 #' are evaluated independently, and then the results are concatenated
 #' using the \code{c()} function (except for the \code{na_ok} argument,
-#' which is special an must be named. E.g. \code{V(g)[1, 2, nei(1)]}
-#' is equivalent to \code{c(V(g)[1], V(g)[2], V(g)[nei(1)])}.
+#' which is special an must be named. E.g. \code{V(g)[1, 2, .nei(1)]}
+#' is equivalent to \code{c(V(g)[1], V(g)[2], V(g)[.nei(1)])}.
 #'
 #' @section Index types:
 #' Vertex sequences can be indexed with positive numeric vectors,
@@ -311,20 +355,20 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
 #' @section Special functions:
 #' There are some special igraph functions that can be used only
 #' in expressions indexing vertex sequences: \describe{
-#'   \item{\code{nei}}{takes a vertex sequence as its argument
+#'   \item{\code{.nei}}{takes a vertex sequence as its argument
 #'     and selects neighbors of these vertices. An optional \code{mode}
 #'     argument can be used to select successors (\code{mode="out"}), or
 #'     precedessors (\code{mode="in"}) in directed graphs.}
-#'   \item{\code{inc}}{Takes an edge sequence as an argument, and
+#'   \item{\code{.inc}}{Takes an edge sequence as an argument, and
 #'     selects vertices that have at least one incident edge in this
 #'     edge sequence.}
-#'   \item{\code{from}}{Similar to \code{inc}, but only considers the
+#'   \item{\code{.from}}{Similar to \code{.inc}, but only considers the
 #'     tails of the edges.}
-#'   \item{\code{to}}{Similar to \code{inc}, but only considers the
+#'   \item{\code{.to}}{Similar to \code{.inc}, but only considers the
 #'     heads of the edges.}
-#'   \item{\code{innei}, \code{outnei}}{\code{innei(v)} is a shorthand for
-#'     \code{nei(v, mode = "in")}, and \code{outnei(v)} is a shorthand for
-#'     \code{nei(v, mode = "out")}.
+#'   \item{\code{.innei}, \code{.outnei}}{\code{.innei(v)} is a shorthand for
+#'     \code{.nei(v, mode = "in")}, and \code{.outnei(v)} is a shorthand for
+#'     \code{.nei(v, mode = "out")}.
 #'   }
 #' }
 #' Note that multiple special functions can be used together, or with
@@ -362,31 +406,48 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
 #' # -----------------------------------------------------------------
 #' # nei() special function
 #' g <- graph( c(1,2, 2,3, 2,4, 4,2) )
-#' V(g)[ nei( c(2,4) ) ]
-#' V(g)[ nei( c(2,4), "in") ]
-#' V(g)[ nei( c(2,4), "out") ]
+#' V(g)[ .nei( c(2,4) ) ]
+#' V(g)[ .nei( c(2,4), "in") ]
+#' V(g)[ .nei( c(2,4), "out") ]
 #'
 #' # -----------------------------------------------------------------
 #' # The same with vertex names
 #' g <- graph(~ A -+ B, B -+ C:D, D -+ B)
-#' V(g)[ nei( c('B', 'D') ) ]
-#' V(g)[ nei( c('B', 'D'), "in" ) ]
-#' V(g)[ nei( c('B', 'D'), "out" ) ]
+#' V(g)[ .nei( c('B', 'D') ) ]
+#' V(g)[ .nei( c('B', 'D'), "in" ) ]
+#' V(g)[ .nei( c('B', 'D'), "out" ) ]
 
 `[.igraph.vs` <- function(x, ..., na_ok = FALSE) {
 
   args <- lazy_dots(..., .follow_symbols = FALSE)
 
   ## If indexing has no argument at all, then we still get one,
-  ## but it is "empty", a name that is ""
+  ## but it is "empty", a name that is  ""
 
+  ## Special case, no argument (but we might get an artificial
+  ## empty one
   if (length(args) < 1 ||
       (length(args) == 1 && class(args[[1]]$expr) == "name" &&
          as.character(args[[1]]$expr) == "")) {
     return(x)
   }
 
-  nei <- function(v, mode=c("all", "in", "out", "total")) {
+  ## Special case: single numeric argument
+  if (length(args) == 1 && class(args[[1]]$expr) == "numeric") {
+    res <- simple_vs_index(x, args[[1]]$expr)
+    return (add_vses_graph_ref(res, get_vs_graph(x)))
+  }
+
+  ## Special case: single symbol argument, no such attribute
+  if (length(args) == 1 && class(args[[1]]$expr) == "name") {
+    graph <- get_vs_graph(x)
+    if (! (as.character(args[[1]]$expr) %in% vertex_attr_names(graph))) {
+      res <- simple_vs_index(x, lazy_eval(args[[1]]))
+      return (add_vses_graph_ref(res, graph))
+    }
+  }
+
+  .nei <- function(v, mode=c("all", "in", "out", "total")) {
     ## TRUE iff the vertex is a neighbor (any type)
     ## of at least one vertex in v
     mode <- igraph.match.arg(mode)
@@ -395,52 +456,55 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
     if (is.logical(v)) {
       v <- which(v)
     }
-    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-    tmp <- .Call("R_igraph_vs_nei", graph, x, as.igraph.vs(graph, v)-1,
-                 as.numeric(mode),
-                 PACKAGE="igraph")
+    on.exit(.Call(C_R_igraph_finalizer) )
+    tmp <- .Call(C_R_igraph_vs_nei, graph, x, as.igraph.vs(graph, v)-1,
+                 as.numeric(mode))
     tmp[as.numeric(x)]
   }
-  innei <- function(v, mode=c("in", "all", "out", "total")) {
-    nei(v, mode)
+  nei <- function(...) { .nei(...) }
+  .innei <- function(v, mode=c("in", "all", "out", "total")) {
+    .nei(v, mode = mode[1])
   }
-  outnei <- function(v, mode=c("out", "all", "in", "total")) {
-    nei(v, mode)
+  innei <- function(...) { .innei(...) }
+  .outnei <- function(v, mode=c("out", "all", "in", "total")) {
+    .nei(v, mode = mode[1])
   }
-  inc <- adj <- function(e) {
+  outnei <- function(...) { .outnei(...) }
+  .inc <- function(e) {
     ## TRUE iff the vertex (in the vs) is incident
     ## to at least one edge in e
     if (is.logical(e)) {
       e <- which(e)
     }
-    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-    tmp <- .Call("R_igraph_vs_adj", graph, x, as.igraph.es(graph, e)-1,
-                 as.numeric(3),
-                 PACKAGE="igraph")
+    on.exit(.Call(C_R_igraph_finalizer) )
+    tmp <- .Call(C_R_igraph_vs_adj, graph, x, as.igraph.es(graph, e)-1,
+                 as.numeric(3))
     tmp[as.numeric(x)]
   }
-  from <- function(e) {
+  inc <- function(...) { .inc(...) }
+  adj <- function(...) { .inc(...) }
+  .from <- function(e) {
     ## TRUE iff the vertex is the source of at least one edge in e
     if (is.logical(e)) {
       e <- which(e)
     }
-    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-    tmp <- .Call("R_igraph_vs_adj", graph, x, as.igraph.es(graph, e)-1,
-                 as.numeric(1),
-                 PACKAGE="igraph")
+    on.exit(.Call(C_R_igraph_finalizer) )
+    tmp <- .Call(C_R_igraph_vs_adj, graph, x, as.igraph.es(graph, e)-1,
+                 as.numeric(1))
     tmp[as.numeric(x)]
   }
-  to <- function(e) {
+  from <- function(...) { .from(...) }
+  .to <- function(e) {
     ## TRUE iff the vertex is the target of at least one edge in e
     if (is.logical(e)) {
       e <- which(e)
     }
-    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-    tmp <- .Call("R_igraph_vs_adj", graph, x, as.igraph.es(graph, e)-1,
-                 as.numeric(2),
-                 PACKAGE="igraph")
+    on.exit(.Call(C_R_igraph_finalizer) )
+    tmp <- .Call(C_R_igraph_vs_adj, graph, x, as.igraph.es(graph, e)-1,
+                 as.numeric(2))
     tmp[as.numeric(x)]
   }
+  to <- function(...) { .to(...) }
 
   graph <- get_vs_graph(x)
 
@@ -455,8 +519,10 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
 
     res <- lazy_eval(
       args,
-      data =  c(attrs, nei = nei, innei = innei,
-        outnei = outnei, adj = adj, inc = inc, from = from, to = to)
+      data =  c(attrs, .nei = .nei, nei = nei, .innei = .innei,
+        innei = innei, .outnei = .outnei,  outnei = outnei, adj = adj,
+        .inc = .inc, inc = inc, .from = .from, from = from, .to = .to,
+        to = to)
     )
     res <- lapply(res, function(ii) {
       if (is.null(ii)) return(NULL)
@@ -543,7 +609,7 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
 #'   with_edge_(weight = 1:10, color = "green"))
 #' E(g)
 #' E(g)[[]]
-#' E(g)[[inc('A')]]
+#' E(g)[[.inc('A')]]
 
 `[[.igraph.es` <- function(x, ...) {
   res <- x[...]
@@ -562,7 +628,7 @@ simple_es_index <- function(x, i) {
   } else {
     res <- unclass(x)[i]
   }
-  if (anyNA(res)) stop('Unknown edge selected')
+  if (any(is.na(res))) stop('Unknown edge selected')
 
   attr(res, "env") <- attr(x, "env")
   attr(res, "graph") <- attr(x, "graph")
@@ -578,8 +644,8 @@ simple_es_index <- function(x, i) {
 #' @section Multiple indices:
 #' When using multiple indices within the bracket, all of them
 #' are evaluated independently, and then the results are concatenated
-#' using the \code{c()} function. E.g. \code{E(g)[1, 2, inc(1)]}
-#' is equivalent to \code{c(E(g)[1], E(g)[2], E(g)[inc(1)])}.
+#' using the \code{c()} function. E.g. \code{E(g)[1, 2, .inc(1)]}
+#' is equivalent to \code{c(E(g)[1], E(g)[2], E(g)[.inc(1)])}.
 #'
 #' @section Index types:
 #' Edge sequences can be indexed with positive numeric vectors,
@@ -613,12 +679,12 @@ simple_es_index <- function(x, i) {
 #' @section Special functions:
 #' There are some special igraph functions that can be used
 #' only in expressions indexing edge sequences: \describe{
-#'   \item{\code{inc}}{takes a vertex sequence, and selects
+#'   \item{\code{.inc}}{takes a vertex sequence, and selects
 #'     all edges that have at least one incident vertex in the vertex
 #'     sequence.}
-#'   \item{\code{from}}{similar to \code{inc()}, but only
+#'   \item{\code{.from}}{similar to \code{.inc()}, but only
 #'     the tails of the edges are considered.}
-#'   \item{\code{to}}{is similar to \code{inc()}, but only
+#'   \item{\code{.to}}{is similar to \code{.inc()}, but only
 #'     the heads of the edges are considered.}
 #'   \item{\code{\%--\%}}{a special operator that can be
 #'     used to select all edges between two sets of vertices. It ignores
@@ -677,30 +743,31 @@ simple_es_index <- function(x, i) {
     return(x)
   }
 
-  inc <- adj <- function(v) {
+  .inc <- function(v) {
     ## TRUE iff the edge is incident to at least one vertex in v
-    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-    tmp <- .Call("R_igraph_es_adj", graph, x, as.igraph.vs(graph, v)-1,
-                 as.numeric(3),
-                 PACKAGE="igraph")
+    on.exit(.Call(C_R_igraph_finalizer) )
+    tmp <- .Call(C_R_igraph_es_adj, graph, x, as.igraph.vs(graph, v)-1,
+                 as.numeric(3))
     tmp[ as.numeric(x) ]
   }
-  from <- function(v) {
+  adj <- function(...) { .inc(...) }
+  inc <- function(...) { .inc(...) }
+  .from <- function(v) {
     ## TRUE iff the edge originates from at least one vertex in v
-    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-    tmp <- .Call("R_igraph_es_adj", graph, x, as.igraph.vs(graph, v)-1,
-                 as.numeric(1),
-                 PACKAGE="igraph")
+    on.exit(.Call(C_R_igraph_finalizer) )
+    tmp <- .Call(C_R_igraph_es_adj, graph, x, as.igraph.vs(graph, v)-1,
+                 as.numeric(1))
     tmp[ as.numeric(x) ]
   }
-  to <- function(v) {
+  from <- function(...) { .from(...) }
+  .to <- function(v) {
     ## TRUE iff the edge points to at least one vertex in v
-    on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-    tmp <- .Call("R_igraph_es_adj", graph, x, as.igraph.vs(graph, v)-1,
-                 as.numeric(2),
-                 PACKAGE="igraph")
+    on.exit(.Call(C_R_igraph_finalizer) )
+    tmp <- .Call(C_R_igraph_es_adj, graph, x, as.igraph.vs(graph, v)-1,
+                 as.numeric(2))
     tmp[ as.numeric(x) ]
   }
+  to <- function(...) { .to(...) }
 
   graph <- get_es_graph(x)
 
@@ -715,13 +782,14 @@ simple_es_index <- function(x, i) {
 
     res <- lazy_eval(
         args,
-        data = c(attrs, inc = inc, adj = adj, from = from, to = to,
-          .igraph.from = list(.Call("R_igraph_mybracket",
-            graph, 3L, PACKAGE = "igraph")[ as.numeric(x) ]),
-          .igraph.to = list(.Call("R_igraph_mybracket",
-            graph, 4L, PACKAGE = "igraph")[as.numeric(x)]),
-          .igraph.graph = list(graph),
-          `%--%`=`%--%`, `%->%`=`%->%`, `%<-%`=`%<-%`)
+      data = c(attrs, .inc = .inc, inc = inc, adj = adj, .from = .from,
+        from = from, .to = .to, to = to,
+        .igraph.from = list(.Call(C_R_igraph_mybracket,
+          graph, 3L)[ as.numeric(x) ]),
+        .igraph.to = list(.Call(C_R_igraph_mybracket,
+          graph, 4L)[as.numeric(x)]),
+        .igraph.graph = list(graph),
+        `%--%`=`%--%`, `%->%`=`%->%`, `%<-%`=`%<-%`)
     )
     res <- lapply(res, function(ii) {
       if (is.null(ii)) return(NULL)
@@ -1002,10 +1070,6 @@ simple_es_index <- function(x, i) {
                   value=attr(value, "value"), check = FALSE)
 }
 
-#' @include printr.R
-
-head_print <- printr$head_print
-
 #' Show a vertex sequence on the screen
 #'
 #' For long vertex sequences, the printing is truncated to fit to the 
@@ -1051,11 +1115,15 @@ print.igraph.vs <- function(x, full = igraph_opt("print.full"), ...) {
 
   graph <- get_vs_graph(x)
   len <- length(x)
+  id <- graph_id(x)
 
   title <- "+ " %+% chr(len) %+% "/" %+%
     (if (is.null(graph)) "?" else chr(vcount(graph))) %+%
     (if (len == 1) " vertex" else " vertices") %+%
-    (if (!is.null(names(x))) ", named" else "") %+% ":\n"
+    (if (!is.null(names(x))) ", named" else "") %+%
+    (if (!is.na(id)) paste(", from", substr(id, 1, 7)) else "") %+%
+    (if (is.null(graph)) " (deleted)" else "") %+%
+    ":\n"
   cat(title)
 
   if (!is.null(attr(x, "single")) && attr(x, "single") &&

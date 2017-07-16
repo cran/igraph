@@ -202,11 +202,12 @@ arpack_defaults <- list(bmat="I", n=0, which="XX", nev=1, tol=0.0,
 #' ## First three eigenvalues of the adjacency matrix of a graph
 #' ## We need the 'Matrix' package for this
 #' if (require(Matrix)) {
+#'   set.seed(42)
 #'   g <- sample_gnp(1000, 5/1000)
 #'   M <- as_adj(g, sparse=TRUE)
 #'   f2 <- function(x, extra=NULL) { cat("."); as.vector(M %*% x) }
 #'   baev <- arpack(f2, sym=TRUE, options=list(n=vcount(g), nev=3, ncv=8,
-#'                                   which="LM", maxiter=200))
+#'                                   which="LM", maxiter=2000))
 #' }
 #' @export
 
@@ -235,9 +236,8 @@ arpack <- function(func, extra=NULL, sym=FALSE, options=arpack_defaults,
     warning("Symmetric matrix, setting `complex' to FALSE")
   }
   
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_arpack", func, extra, options, env, sym,
-               PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_arpack, func, extra, options, env, sym)
 
   if (complex) {
     rew <- arpack.unpack.complex(res$vectors, res$values,
@@ -270,10 +270,9 @@ arpack.unpack.complex <- function(vectors, values, nev) {
   values <- as.matrix(structure(as.double(values), dim=dim(values)))
   nev <- as.integer(nev)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_arpack_unpack_complex", vectors, values, nev,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_arpack_unpack_complex, vectors, values, nev)
 
   res
 }
@@ -431,6 +430,8 @@ eigen_defaults <- list(pos="LM", howmany=1L, il=-1L, iu=-1L,
 #' \code{weight} edge attribute. Note that if there are negative edge weights
 #' and the direction of the edges is considered, then the eigenvector might be
 #' complex. In this case only the real part is reported.
+#' This function interprets weights as connection strength. Higher
+#' weights spread the centrality better.
 #' @param options A named list, to override some ARPACK options. See
 #' \code{\link{arpack}} for details.
 #' @return A named list with components: \item{vector}{A vector containing the
@@ -559,6 +560,9 @@ diversity <- diversity
 #' @param weights Optional positive weight vector for calculating weighted
 #' scores. If the graph has a \code{weight} edge attribute, then this is used
 #' by default.
+#' This function interprets edge weights as connection strengths. In the
+#' random surfer model, an edge with a larger weight is more likely to be
+#' selected by the surfer.
 #' @param options A named list, to override some ARPACK options. See
 #' \code{\link{arpack}} for details.
 #' @return A named list with members:
@@ -606,6 +610,9 @@ hub_score <- hub_score
 #' @param weights Optional positive weight vector for calculating weighted
 #' scores. If the graph has a \code{weight} edge attribute, then this is used
 #' by default.
+#' This function interprets edge weights as connection strengths. In the
+#' random surfer model, an edge with a larger weight is more likely to be
+#' selected by the surfer.
 #' @param options A named list, to override some ARPACK options. See
 #' \code{\link{arpack}} for details.
 #' @return A named list with members:
@@ -703,6 +710,9 @@ authority_score <- authority_score
 #' that is used. If \code{weights} is a numerical vector then it used, even if
 #' the graph has a \code{weights} edge attribute. If this is \code{NA}, then no
 #' edge weights are used (even if the graph has a \code{weight} edge attribute.
+#' This function interprets edge weights as connection strengths. In the
+#' random surfer model, an edge with a larger weight is more likely to be
+#' selected by the surfer.
 #' @param options Either a named list, to override some ARPACK options. See
 #' \code{\link{arpack}} for details; or a named list to override the default
 #' options for the power method (if \code{algo="power"}).  The default options

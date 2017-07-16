@@ -1,4 +1,67 @@
 
+# igraph 1.1.1
+
+Jul 13, 2017
+
+- Graph id is printed in the header, and a `graph_id` function was added
+- Fix `edge_attr` for some index values
+- Fix a `bfs()` bug, `restricted` argument was zero-based
+- `match_vertices` is exported now
+- `%>%` is re-exported in a better way, to avoid interference with other
+  packages
+- `ego_` functions default to `order = 1` now
+- New function `igraph_with_opt` to run code with temporary igraph 
+  options settings
+- Fix broken `sample_asym_pref` function
+- Fix `curve_multiple` to avoid warnings for graphs with self-loops.
+- The `NMF` package is only suggested now, it is not a hard 
+  dependency
+- Fix gen_uid.c _SVID_SOURCE issues
+- Avoid drawing straight lines as Bezier curves
+- Use the `pkgconfig` package for options. This allows setting options
+  on a per-package basis. E.g. a package using igraph can set `return.vs.es`
+  to `FALSE` in its `.onLoad()` function, and then igraph will return
+  plain numeric vectors instead of vertex/edge sequences
+  *if called from this package*.
+- `igraph_options()` returns the *old* values of the updated options,
+  this is actually useful, returning the new values was not.
+- `with_igraph_opt()` function to temporarily change values of
+  igraph options.
+- `get.edge()` is deprecated, use `ends()` instead. (This was already the case
+  for igraph 1.0.0, but we forgot to add a NEWS point for it.)
+- Do not redefine `.Call()`, to make native calls faster.
+- Speed up special cases of indexing vertex sequences.
+- Removed an `anyNA()` call, to be compatible with older R versions.
+- Fixed a fast-greedy community finding bug,
+  https://github.com/igraph/igraph/issues/836
+- Fixed `head_of()` and `tail_of()`, they were mixed up.
+- Plot: make `label.dist` independent of label lengths, fixes #63.
+- Plot: no error for unknown graphical parameters.
+- Import functions from base packages, to eliminate
+  `R CMD check` `NOTE`s.
+- Readd support for edge weights in Fruchterman-Reingold layout
+- Check membershiph vector in `modularity()`.
+- Rename `str.igraph()` to `print_all()`.
+- Use the igraph version in exported graphs, instread of @VERSION@ #75.
+- Functions that can be used inside a `V()` or `E()` indexing
+  now begin with a dot. Old names are deprecated.
+  New names: `.nei()`, `.innei()`, `.outnei()`, `.inc()`, `.from()`,
+  `.to()`. #22
+- Fix packages that convert graphs to graph::graphNEL: they
+  don't need to attach 'graph' manually any more.
+- Fix a bugs in `layout_with_dh`, `layout_with_gem` and
+  `layout_with_sugiyama`. They crashed in some cases.
+
+# igraph 1.0.1
+
+June 26, 2015
+
+Some minor updates:
+
+- Documentation fixes.
+- Do not require a C++-11 compiler any more.
+- Fedora, Solaris and Windows compilation fixes.
+
 # igraph 1.0.0
 
 June 21, 2015

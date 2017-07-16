@@ -22,6 +22,7 @@
 */
 
 #include "igraph_constructors.h"
+#include "igraph_structural.h"
 #include "igraph_memory.h"
 #include "igraph_interface.h"
 #include "igraph_attributes.h"
@@ -955,7 +956,7 @@ int igraph_tree(igraph_t *graph, igraph_integer_t n, igraph_integer_t children,
     }
   }
       
-  IGRAPH_CHECK(igraph_create(graph, &edges, 0, type!=IGRAPH_TREE_UNDIRECTED));
+  IGRAPH_CHECK(igraph_create(graph, &edges, n, type!=IGRAPH_TREE_UNDIRECTED));
   
   igraph_vector_destroy(&edges);
   IGRAPH_FINALLY_CLEAN(1);
@@ -1235,12 +1236,13 @@ int igraph_extended_chordal_ring(igraph_t *graph, igraph_integer_t nodes,
  * \function igraph_connect_neighborhood
  * \brief Connects every vertex to its neighborhood
  * 
- * This function adds new edges to the input graph. For each vertex 
- * vertices reachable by at most \p order steps and not yet connected
- * to the vertex a new edge is created.
+ * This function adds new edges to the input graph. Each vertex is connected
+ * to all vertices reachable by at most \p order steps from it
+ * (unless a connection already existed).  In other words, the \p order power of
+ * the graph is computed.
  * 
  * </para><para> Note that the input graph is modified in place, no
- * new graph is created, call \ref igraph_copy() if you want to keep
+ * new graph is created. Call \ref igraph_copy() if you want to keep
  * the original graph as well.
  * 
  * </para><para> For undirected graphs reachability is always
@@ -1260,8 +1262,8 @@ int igraph_extended_chordal_ring(igraph_t *graph, igraph_integer_t nodes,
  * \sa \ref igraph_lattice() uses this function to connect the
  * neighborhood of the vertices.
  * 
- * Time complexity: O(|V|*d^o), |V| is the number of vertices in the
- * graph, d is the average degree and o is the \p order argument.
+ * Time complexity: O(|V|*d^k), |V| is the number of vertices in the
+ * graph, d is the average degree and k is the \p order argument.
  */
 
 int igraph_connect_neighborhood(igraph_t *graph, igraph_integer_t order,
@@ -1621,32 +1623,33 @@ int igraph_lcf_vector(igraph_t *graph, igraph_integer_t n,
   long int no_of_shifts=igraph_vector_size(shifts);
   long int ptr=0, i, sptr=0;
   long int no_of_nodes=n;
-  long int no_of_edges=n+no_of_shifts*repeats/2;
+  long int no_of_edges=n+no_of_shifts*repeats;
 
-	if (repeats<0) IGRAPH_ERROR("number of repeats must be positive", IGRAPH_EINVAL);
+  if (repeats<0) IGRAPH_ERROR("number of repeats must be positive", IGRAPH_EINVAL);
   IGRAPH_VECTOR_INIT_FINALLY(&edges, 2*no_of_edges);
 
-  /* Create a ring first */
-  for (i=0; i<no_of_nodes; i++) {
-    VECTOR(edges)[ptr++]=i;
-    VECTOR(edges)[ptr++]=i+1;
+  if (no_of_nodes > 0) {
+    /* Create a ring first */
+    for (i=0; i<no_of_nodes; i++) {
+      VECTOR(edges)[ptr++]=i;
+      VECTOR(edges)[ptr++]=i+1;
+    }
+    VECTOR(edges)[ptr-1]=0;
   }
-  VECTOR(edges)[ptr-1]=0;
-  
+
   /* Then add the rest */
   while (ptr<2*no_of_edges) {
     long int sh=(long int) VECTOR(*shifts)[sptr % no_of_shifts];
     long int from=sptr % no_of_nodes;
     long int to=(no_of_nodes+sptr+sh) % no_of_nodes;
-    if (from < to) {
-      VECTOR(edges)[ptr++]=from;
-      VECTOR(edges)[ptr++]=to;
-    }
+    VECTOR(edges)[ptr++]=from;
+    VECTOR(edges)[ptr++]=to;
     sptr++;
   }
   
   IGRAPH_CHECK(igraph_create(graph, &edges, (igraph_integer_t) no_of_nodes, 
 			     IGRAPH_UNDIRECTED));
+  IGRAPH_CHECK(igraph_simplify(graph, 1 /* true */, 1 /* true */, NULL));
   igraph_vector_destroy(&edges);
   IGRAPH_FINALLY_CLEAN(1);
   

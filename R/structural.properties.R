@@ -54,7 +54,7 @@
 #' \code{get_diameter}. \code{farthest_vertices} returns a list with two
 #' entries: \itemize{
 #'   \item \code{vertices} The two vertices that are the farthest.
-#'   \item \code{distnace} Their distance.
+#'   \item \code{distance} Their distance.
 #' }
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
 #' @seealso \code{\link{distances}}
@@ -91,10 +91,9 @@ diameter <- function(graph, directed=TRUE, unconnected=TRUE, weights=NULL) {
     weights <- NULL
   }
   
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_diameter", graph, as.logical(directed),
-        as.logical(unconnected), weights,
-        PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_diameter, graph, as.logical(directed),
+        as.logical(unconnected), weights)
 }
 
 #' @export
@@ -115,10 +114,9 @@ get_diameter <- function(graph, directed=TRUE, unconnected=TRUE,
     weights <- NULL
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_get_diameter", graph, as.logical(directed),
-               as.logical(unconnected), weights,
-               PACKAGE="igraph") + 1L
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_get_diameter, graph, as.logical(directed),
+               as.logical(unconnected), weights) + 1L
 
   if (igraph_opt("return.vs.es")) {
     res <- create_vs(graph, res)
@@ -145,10 +143,9 @@ farthest_vertices <- function(graph, directed=TRUE, unconnected=TRUE,
     weights <- NULL
   }
   
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_farthest_points", graph, as.logical(directed),
-               as.logical(unconnected), weights,
-               PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_farthest_points, graph, as.logical(directed),
+               as.logical(unconnected), weights)
   res <- list(vertices = res[1:2] + 1L, distance = res[3])
 
   if (igraph_opt("return.vs.es")) {
@@ -166,10 +163,9 @@ mean_distance <- function(graph, directed=TRUE, unconnected=TRUE) {
   if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_average_path_length", graph, as.logical(directed),
-        as.logical(unconnected),
-        PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_average_path_length, graph, as.logical(directed),
+        as.logical(unconnected))
 }
 
 
@@ -219,9 +215,9 @@ degree <- function(graph, v=V(graph),
   mode <- igraph.match.arg(mode)
   mode <- switch(mode, "out"=1, "in"=2, "all"=3, "total"=3)
   
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_degree", graph, v-1,
-               as.numeric(mode), as.logical(loops), PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_degree, graph, v-1,
+               as.numeric(mode), as.logical(loops))
   if (normalized) { res <- res / (vcount(graph)-1) }
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     names(res) <- V(graph)$name[v]
@@ -233,6 +229,7 @@ degree <- function(graph, v=V(graph),
 #' @param cumulative Logical; whether the cumulative degree distribution is to
 #' be calculated.
 #' @export
+#' @importFrom graphics hist
 
 degree_distribution <- function(graph, cumulative=FALSE, ...) {
   
@@ -265,7 +262,7 @@ degree_distribution <- function(graph, cumulative=FALSE, ...) {
 #' 
 #' \code{distances} calculates the lengths of pairwise shortest paths from
 #' a set of vertices (\code{from}) to another set of vertices (\code{to}). It
-#' uses different algorithms, depending on the \code{argorithm} argument and
+#' uses different algorithms, depending on the \code{algorithm} argument and
 #' the \code{weight} edge attribute of the graph. The implemented algorithms
 #' are breadth-first search (\sQuote{\code{unweighted}}), this only works for
 #' unweighted graphs; the Dijkstra algorithm (\sQuote{\code{dijkstra}}), this
@@ -419,10 +416,10 @@ distances <- function(graph, v=V(graph), to=V(graph),
     warning("Unweighted algorithm chosen, weights ignored")
   }
   
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_shortest_paths", graph, v-1, to-1,
-               as.numeric(mode), weights, as.numeric(algorithm),
-               PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_shortest_paths, graph, v-1, to-1,
+               as.numeric(mode), weights, as.numeric(algorithm))
+
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     rownames(res) <- V(graph)$name[v]
     colnames(res) <- V(graph)$name[to]
@@ -481,12 +478,11 @@ shortest_paths <- function(graph, from, to=V(graph),
   }
   
   to <- as.igraph.vs(graph, to)-1
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_get_shortest_paths", graph,
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_get_shortest_paths, graph,
                as.igraph.vs(graph, from)-1, to, as.numeric(mode),
                as.numeric(length(to)), weights, as.numeric(output),
-               as.logical(predecessors), as.logical(inbound.edges), 
-               PACKAGE="igraph")
+               as.logical(predecessors), as.logical(inbound.edges))
 
   if (!is.null(res$vpath)) {
     res$vpath <- lapply(res$vpath, function(x) x+1)
@@ -547,15 +543,15 @@ all_shortest_paths <- function(graph, from,
     }
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   if (is.null(weights)) {
-    res <- .Call("R_igraph_get_all_shortest_paths", graph,
+    res <- .Call(C_R_igraph_get_all_shortest_paths, graph,
                  as.igraph.vs(graph, from)-1, as.igraph.vs(graph, to)-1,
-                 as.numeric(mode), PACKAGE="igraph")
+                 as.numeric(mode))
   } else {
-    res <- .Call("R_igraph_get_all_shortest_paths_dijkstra", graph, 
+    res <- .Call(C_R_igraph_get_all_shortest_paths_dijkstra, graph, 
                  as.igraph.vs(graph, from)-1, as.igraph.vs(graph, to)-1,
-                 weights, as.numeric(mode), PACKAGE="igraph")
+                 weights, as.numeric(mode))
   }       
 
   if (igraph_opt("return.vs.es")) {
@@ -601,10 +597,9 @@ subcomponent <- function(graph, v, mode=c("all", "out", "in")) {
   mode <- igraph.match.arg(mode)
   mode <- switch(mode, "out"=1, "in"=2, "all"=3)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_subcomponent", graph, as.igraph.vs(graph, v)-1,
-               as.numeric(mode),
-               PACKAGE="igraph") + 1L
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_subcomponent, graph, as.igraph.vs(graph, v)-1,
+               as.numeric(mode)) + 1L
 
   if (igraph_opt("return.vs.es")) res <- create_vs(graph, res)
 
@@ -620,7 +615,7 @@ subcomponent <- function(graph, v, mode=c("all", "out", "in")) {
 #' 
 #' \code{induced_subgraph} calculates the induced subgraph of a set of vertices
 #' in a graph. This means that exactly the specified vertices and all the edges
-#' between then will be kept in the result graph.
+#' between them will be kept in the result graph.
 #' 
 #' \code{subgraph.edges} calculates the subgraph of a graph. For this function
 #' one can specify the vertices and edges to keep. This function will be
@@ -649,9 +644,8 @@ subgraph <- function(graph, v) {
   if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_subgraph", graph, as.igraph.vs(graph, v)-1,
-        PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_subgraph, graph, as.igraph.vs(graph, v)-1)
 }
 
 #' @rdname subgraph
@@ -673,10 +667,9 @@ induced_subgraph <- function(graph, vids, impl=c("auto", "copy_and_delete", "cre
   vids <- as.igraph.vs(graph, vids)
   impl <- switch(igraph.match.arg(impl), "auto"=0, "copy_and_delete"=1, "create_from_scratch"=2)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_induced_subgraph", graph, vids-1, impl,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_induced_subgraph, graph, vids-1, impl)
 
   res
 }
@@ -693,10 +686,9 @@ subgraph.edges <- function(graph, eids, delete.vertices=TRUE) {
   eids <- as.igraph.es(graph, eids)
   delete.vertices <- as.logical(delete.vertices)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_subgraph_edges", graph, eids-1, delete.vertices,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_subgraph_edges, graph, eids-1, delete.vertices)
 
   res
 }
@@ -724,10 +716,9 @@ estimate_betweenness <- function(graph, vids=V(graph), directed=TRUE, cutoff, we
   }
   nobigint <- as.logical(nobigint)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_betweenness_estimate", graph, vids-1, directed, cutoff, weights, nobigint,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_betweenness_estimate, graph, vids-1, directed, cutoff, weights, nobigint)
   if (igraph_opt("add.vertex.names") && is_named(graph)) { 
   names(res) <- vertex_attr(graph, "name", vids) 
   }
@@ -772,7 +763,8 @@ estimate_betweenness <- function(graph, vids=V(graph), directed=TRUE, cutoff, we
 #' determining the shortest paths.
 #' @param weights Optional positive weight vector for calculating weighted
 #' betweenness. If the graph has a \code{weight} edge attribute, then this is
-#' used by default.
+#' used by default. Weights are used to calculate weighted shortest paths,
+#' so they are interpreted as distances.
 #' @param nobigint Logical scalar, whether to use big integers during the
 #' calculation. This is only required for lattice-like graphs that have very
 #' many shortest paths between a pair of vertices. If \code{TRUE} (the
@@ -823,10 +815,9 @@ betweenness <- function(graph, v=V(graph), directed=TRUE, weights=NULL,
   } else {
     weights <- NULL
   }
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_betweenness", graph, v-1,
-               as.logical(directed), weights, as.logical(nobigint),
-               PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_betweenness, graph, v-1,
+               as.logical(directed), weights, as.logical(nobigint))
   if (normalized) {
     vc <- vcount(graph)
     if (is_directed(graph) && directed) {
@@ -963,31 +954,28 @@ transitivity <- function(graph, type=c("undirected", "global", "globalundirected
   isolates <- igraph.match.arg(isolates)
   isolates <- as.double(switch(isolates, "nan"=0, "zero"=1))
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   if (type==0) {
-    .Call("R_igraph_transitivity_undirected", graph, isolates,
-          PACKAGE="igraph")
+    .Call(C_R_igraph_transitivity_undirected, graph, isolates)
   } else if (type==1) {
     if (is.null(vids)) {
-      .Call("R_igraph_transitivity_local_undirected_all", graph, isolates,
-            PACKAGE="igraph")
+      .Call(C_R_igraph_transitivity_local_undirected_all, graph, isolates)
     } else {
       vids <- as.igraph.vs(graph, vids)-1
-      .Call("R_igraph_transitivity_local_undirected", graph, vids,
-            isolates, PACKAGE="igraph")
+      .Call(C_R_igraph_transitivity_local_undirected, graph, vids,
+            isolates)
     }
   } else if (type==2) {
-    .Call("R_igraph_transitivity_avglocal_undirected", graph, isolates,
-          PACKAGE="igraph")
+    .Call(C_R_igraph_transitivity_avglocal_undirected, graph, isolates)
   } else if (type==3) {
     if (is.null(vids)) { vids <- V(graph) }
     vids <- as.igraph.vs(graph, vids)-1
     if (is.null(weights)) {
-      .Call("R_igraph_transitivity_local_undirected", graph, vids,
-            isolates, PACKAGE="igraph")
+      .Call(C_R_igraph_transitivity_local_undirected, graph, vids,
+            isolates)
     } else { 
-      .Call("R_igraph_transitivity_barrat", graph, vids, weights,
-            isolates, PACKAGE="igraph")
+      .Call(C_R_igraph_transitivity_barrat, graph, vids, weights,
+            isolates)
     }
   }
 }
@@ -999,9 +987,8 @@ transitivity <- function(graph, type=c("undirected", "global", "globalundirected
 ##     stop("Not a graph object")
 ##   }
   
-##   on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-##   .Call("R_igraph_laplacian", graph, as.logical(normalized),
-##         PACKAGE="igraph")
+##   on.exit( .Call(C_R_igraph_finalizer) )
+##   .Call(C_R_igraph_laplacian, graph, as.logical(normalized))
 ## }
   
 ## OLD implementation
@@ -1161,9 +1148,8 @@ constraint <- function(graph, nodes=V(graph), weights=NULL) {
     }
   }
   
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_constraint", graph, nodes-1, as.numeric(weights),
-               PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_constraint, graph, nodes-1, as.numeric(weights))
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     names(res) <- V(graph)$name[nodes]
   }
@@ -1213,9 +1199,9 @@ reciprocity <- function(graph, ignore.loops=TRUE,
   }
   mode <- switch(igraph.match.arg(mode), 'default'=0, 'ratio'=1)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_reciprocity", graph, as.logical(ignore.loops),
-        as.numeric(mode), PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_reciprocity, graph, as.logical(ignore.loops),
+        as.numeric(mode))
 }
 
 
@@ -1532,7 +1518,7 @@ alpha.centrality.sparse <- function(graph, nodes=V(graph), alpha=1,
 #' algorithm, the routine may fail is certain cases.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
 #' @seealso \code{\link{eigen_centrality}} and \code{\link{power_centrality}}
-#' @references Bonacich, P. and Paulette, L. (2001). ``Eigenvector-like
+#' @references Bonacich, P. and Lloyd, P. (2001). ``Eigenvector-like
 #' measures of centrality for asymmetric relations'' \emph{Social Networks},
 #' 23, 191-201.
 #' @export
@@ -1609,14 +1595,14 @@ edge_density <- function(graph, loops=FALSE) {
     stop("Not a graph object")
   }  
   
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_density", graph, as.logical(loops),
-        PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_density, graph, as.logical(loops))
 }
 
+#' @rdname ego
 #' @export
 
-ego_size <- function(graph, order, nodes=V(graph),
+ego_size <- function(graph, order = 1, nodes=V(graph),
                               mode=c("all", "out", "in"), mindist=0) {
 
   if (!is_igraph(graph)) {
@@ -1626,10 +1612,10 @@ ego_size <- function(graph, order, nodes=V(graph),
   mode <- switch(mode, "out"=1, "in"=2, "all"=3)
   mindist <- as.integer(mindist)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_neighborhood_size", graph, 
+  on.exit( .Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_neighborhood_size, graph, 
         as.igraph.vs(graph, nodes)-1, as.numeric(order), as.numeric(mode),
-        mindist, PACKAGE="igraph")
+        mindist)
 }
 
 
@@ -1662,7 +1648,7 @@ ego_size <- function(graph, order, nodes=V(graph),
 #' @param graph The input graph.
 #' @param order Integer giving the order of the neighborhood.
 #' @param nodes The vertices for which the calculation is performed.
-#' @param mode Character constatnt, it specifies how to use the direction of
+#' @param mode Character constant, it specifies how to use the direction of
 #' the edges if a directed graph is analyzed. For \sQuote{out} only the
 #' outgoing edges are followed, so all vertices reachable from the source
 #' vertex in at most \code{order} steps are counted. For \sQuote{"in"} all
@@ -1684,22 +1670,22 @@ ego_size <- function(graph, order, nodes=V(graph),
 #' @examples
 #' 
 #' g <- make_ring(10)
-#' ego_size(g, 0, 1:3)
-#' ego_size(g, 1, 1:3)
-#' ego_size(g, 2, 1:3)
-#' ego(g, 0, 1:3)
-#' ego(g, 1, 1:3)
-#' ego(g, 2, 1:3)
+#' ego_size(g, order = 0, 1:3)
+#' ego_size(g, order = 1, 1:3)
+#' ego_size(g, order = 2, 1:3)
+#' ego(g, order = 0, 1:3)
+#' ego(g, order = 1, 1:3)
+#' ego(g, order = 2, 1:3)
 #' 
 #' # attributes are preserved
 #' V(g)$name <- c("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")
-#' make_ego_graph(g, 2, 1:3)
+#' make_ego_graph(g, order = 2, 1:3)
 #' 
 #' # connecting to the neighborhood
 #' g <- make_ring(10)
 #' g <- connect(g, 2)
 #' 
-ego <- function(graph, order, nodes=V(graph),
+ego <- function(graph, order = 1, nodes=V(graph),
                          mode=c("all", "out", "in"), mindist=0) {
   
   if (!is_igraph(graph)) {
@@ -1709,11 +1695,10 @@ ego <- function(graph, order, nodes=V(graph),
   mode <- switch(mode, "out"=1, "in"=2, "all"=3)
   mindist <- as.integer(mindist)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_neighborhood", graph, 
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_neighborhood, graph, 
                as.igraph.vs(graph, nodes)-1, as.numeric(order),
-               as.numeric(mode), mindist,
-               PACKAGE="igraph")
+               as.numeric(mode), mindist)
   res <- lapply(res, function(x) x+1)
 
   if (igraph_opt("return.vs.es")) {
@@ -1726,7 +1711,7 @@ ego <- function(graph, order, nodes=V(graph),
 #' @rdname ego
 #' @export
 
-make_ego_graph <- function(graph, order, nodes=V(graph),
+make_ego_graph <- function(graph, order = 1, nodes=V(graph),
                   mode=c("all", "out", "in"), mindist=0) {
 
   if (!is_igraph(graph)) {
@@ -1736,11 +1721,10 @@ make_ego_graph <- function(graph, order, nodes=V(graph),
   mode <- switch(mode, "out"=1, "in"=2, "all"=3)
   mindist <- as.integer(mindist)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_neighborhood_graphs", graph, 
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_neighborhood_graphs, graph, 
                as.igraph.vs(graph, nodes)-1, as.numeric(order),
-               as.numeric(mode), mindist,
-               PACKAGE="igraph")
+               as.numeric(mode), mindist)
   res
 }
 
@@ -1789,9 +1773,8 @@ coreness <- function(graph, mode=c("all", "out", "in")) {
   mode <- igraph.match.arg(mode)
   mode <- switch(mode, "out"=1, "in"=2, "all"=3)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_coreness", graph, as.numeric(mode),
-               PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_coreness, graph, as.numeric(mode))
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     names(res) <- vertex_attr(graph, "name")
   }
@@ -1817,8 +1800,9 @@ coreness <- function(graph, mode=c("all", "out", "in")) {
 #' all nodes to which it has edges, so nodes with no incoming edges go first.
 #' For \dQuote{\code{in}}, it is quite the opposite: each node comes before all
 #' nodes from which it receives edges. Nodes with no outgoing edges go first.
-#' @return A numeric vector containing vertex ids in topologically sorted
-#' order.
+#' @return A vertex sequence (by default, but see the \code{return.vs.es}
+#' option of \code{\link{igraph_options}}) containing vertices in
+#' topologically sorted order.
 #' @author Tamas Nepusz \email{ntamas@@gmail.com} and Gabor Csardi
 #' \email{csardi.gabor@@gmail.com} for the R interface
 #' @keywords graphs
@@ -1836,9 +1820,8 @@ topo_sort <- function(graph, mode=c("out", "all", "in")) {
   mode <- igraph.match.arg(mode)
   mode <- switch(mode, "out"=1, "in"=2, "all"=3)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_topological_sorting", graph, as.numeric(mode),
-               PACKAGE="igraph") + 1L
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_topological_sorting, graph, as.numeric(mode)) + 1L
 
   if (igraph_opt("return.vs.es")) res <- create_vs(graph, res)
 
@@ -1891,9 +1874,8 @@ girth <- function(graph, circle=TRUE) {
   if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_girth", graph, as.logical(circle),
-               PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_girth, graph, as.logical(circle))
   if (igraph_opt("return.vs.es") && circle) {
     res$circle <- create_vs(graph, res$circle)
   }
@@ -1907,9 +1889,8 @@ which_loop <- function(graph, eids=E(graph)) {
   if (!is_igraph(graph)) {
     stop("Not a graph object");
   }
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_is_loop", graph, as.igraph.es(graph, eids)-1,
-        PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_is_loop, graph, as.igraph.es(graph, eids)-1)
 }
 
 
@@ -1980,9 +1961,8 @@ which_multiple <- function(graph, eids=E(graph)) {
   if (!is_igraph(graph)) {
     stop("Not a graph object");
   }
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_is_multiple", graph, as.igraph.es(graph, eids)-1,
-        PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_is_multiple, graph, as.igraph.es(graph, eids)-1)
 }
 
 #' @export
@@ -1992,9 +1972,8 @@ count_multiple <- function(graph, eids=E(graph)) {
   if (!is_igraph(graph)) {
     stop("Not a graph object");
   }
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  .Call("R_igraph_count_multiple", graph, as.igraph.es(graph, eids)-1,
-        PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  .Call(C_R_igraph_count_multiple, graph, as.igraph.es(graph, eids)-1)
 }
 
 
@@ -2106,16 +2085,15 @@ bfs <- function(graph, root, neimode=c("out", "in", "all", "total"),
   neimode <- switch(igraph.match.arg(neimode),
                     "out"=1, "in"=2, "all"=3, "total"=3)
   unreachable <- as.logical(unreachable)
-  if (!is.null(restricted)) { restricted <- as.igraph.vs(graph, restricted) }
+  if (!is.null(restricted)) { restricted <- as.igraph.vs(graph, restricted) - 1 }
   if (!is.null(callback)) { callback <- as.function(callback) }
   
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_bfs", graph, root, roots, neimode, unreachable,
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_bfs, graph, root, roots, neimode, unreachable,
                restricted,
                as.logical(order), as.logical(rank), as.logical(father),
                as.logical(pred), as.logical(succ), as.logical(dist),
-               callback, extra, rho,
-               PACKAGE="igraph")
+               callback, extra, rho)
   
   if (order)  res$order  <- res$order+1
   if (rank)   res$rank   <- res$rank+1
@@ -2241,11 +2219,10 @@ dfs <- function(graph, root, neimode=c("out", "in", "all", "total"),
   if (!is.null(in.callback)) { in.callback <- as.function(in.callback) }
   if (!is.null(out.callback)) { out.callback <- as.function(out.callback) }
   
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_dfs", graph, root, neimode, unreachable,
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_dfs, graph, root, neimode, unreachable,
                as.logical(order), as.logical(order.out), as.logical(father),
-               as.logical(dist), in.callback, out.callback, extra, rho,
-               PACKAGE="igraph")
+               as.logical(dist), in.callback, out.callback, extra, rho)
   
   if (order)     res$order     <- res$order+1
   if (order.out) res$order.out <- res$order.out+1
@@ -2284,10 +2261,9 @@ edge_betweenness <- function(graph, e=E(graph),
   weights <- NULL 
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_edge_betweenness", graph, directed, weights,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_edge_betweenness, graph, directed, weights)
   res[as.numeric(e)]
 }
 
@@ -2309,10 +2285,9 @@ estimate_edge_betweenness <- function(graph, e=E(graph),
   weights <- NULL 
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_edge_betweenness_estimate", graph, directed, cutoff, weights,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_edge_betweenness_estimate, graph, directed, cutoff, weights)
   res[as.numeric(e)]
 }
 
@@ -2374,10 +2349,9 @@ components <- function(graph, mode=c("weak", "strong")) {
   if (!is_igraph(graph)) { stop("Not a graph object") }
   mode <- switch(igraph.match.arg(mode), "weak"=1, "strong"=2)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_clusters", graph, mode,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_clusters, graph, mode)
   res$membership <- res$membership + 1
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     names(res$membership) <- V(graph)$name
@@ -2427,10 +2401,9 @@ unfold_tree <- function(graph, mode=c("all", "out", "in", "total"), roots) {
   mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
   roots <- as.igraph.vs(graph, roots)-1
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_unfold_tree", graph, mode, roots,
-                PACKAGE="igraph")
+  res <- .Call(C_R_igraph_unfold_tree, graph, mode, roots)
   res
 }
 
@@ -2469,7 +2442,8 @@ unfold_tree <- function(graph, mode=c("all", "out", "in", "total"), roots) {
 #' \eqn{n-1}, where \eqn{n} is the number of vertices in the graph.
 #' @param weights Optional positive weight vector for calculating weighted
 #' closeness. If the graph has a \code{weight} edge attribute, then this is
-#' used by default.
+#' used by default. Weights are used for calculating weighted shortest
+#' paths, so they are interpreted as distances.
 #' @return Numeric vector with the closeness values of all the vertices in
 #' \code{v}.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
@@ -2504,10 +2478,10 @@ closeness <- function(graph, vids=V(graph),
   }
   normalized <- as.logical(normalized)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_closeness", graph, vids-1, mode, weights,
-               normalized, PACKAGE="igraph")
+  res <- .Call(C_R_igraph_closeness, graph, vids-1, mode, weights,
+               normalized)
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     names(res) <- V(graph)$name[vids]
   }
@@ -2535,10 +2509,9 @@ estimate_closeness <- function(graph, vids=V(graph), mode=c("out", "in", "all", 
   }
   normalized <- as.logical(normalized)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_closeness_estimate", graph, vids-1, mode, cutoff, weights, normalized,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_closeness_estimate, graph, vids-1, mode, cutoff, weights, normalized)
   if (igraph_opt("add.vertex.names") && is_named(graph)) { 
   names(res) <- vertex_attr(graph, "name", vids) 
   }
@@ -2602,10 +2575,9 @@ laplacian_matrix <- function(graph, normalized=FALSE, weights=NULL,
   }
   sparse <- as.logical(sparse)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_laplacian", graph, normalized, weights, sparse,
-               PACKAGE="igraph")
+  res <- .Call(C_R_igraph_laplacian, graph, normalized, weights, sparse)
   if (sparse) {
     res <- igraph.i.spMatrix(res)
   }
@@ -2660,6 +2632,8 @@ laplacian_matrix <- function(graph, normalized=FALSE, weights=NULL,
 #' @param weights Potential edge weights. If the graph has an edge
 #' attribute called \sQuote{\code{weight}}, and this argument is
 #' \code{NULL}, then the edge attribute is used automatically.
+#' In weighed matching, the weights of the edges must match as
+#' much as possible.
 #' @param eps A small real number used in equality tests in the weighted
 #' bipartite matching algorithm. Two real numbers are considered equal in
 #' the algorithm if their difference is smaller than \code{eps}. This is
@@ -2693,12 +2667,12 @@ laplacian_matrix <- function(graph, normalized=FALSE, weights=NULL,
 #' is_max_matching(g, m3)
 #' 
 #' V(g)$type <- c(FALSE,TRUE)
-#' str(g, v=TRUE)
+#' print_all(g, v=TRUE)
 #' max_bipartite_match(g)
 #' 
 #' g2 <- graph_from_literal( a-b-c-d-e-f-g )
 #' V(g2)$type <- rep(c(FALSE,TRUE), length=vcount(g2))
-#' str(g2, v=TRUE)
+#' print_all(g2, v=TRUE)
 #' max_bipartite_match(g2)
 #' #' @keywords graphs
 #' @export
@@ -2715,10 +2689,9 @@ is_matching <- function(graph, matching, types=NULL) {
   matching <- as.igraph.vs(graph, matching, na.ok=TRUE)-1
   matching[ is.na(matching) ] <- -1
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_is_matching", graph, types, matching,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_is_matching, graph, types, matching)
 
   res
 }
@@ -2738,10 +2711,9 @@ is_max_matching <- function(graph, matching, types=NULL) {
   matching <- as.igraph.vs(graph, matching, na.ok=TRUE)-1
   matching[ is.na(matching) ] <- -1
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_is_maximal_matching", graph, types, matching,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_is_maximal_matching, graph, types, matching)
 
   res
 }
@@ -2769,11 +2741,10 @@ max_bipartite_match <- function(graph, types=NULL, weights=NULL,
   }
   eps <- as.numeric(eps)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_maximum_bipartite_matching", graph, types, weights,
-               eps,
-               PACKAGE="igraph")
+  res <- .Call(C_R_igraph_maximum_bipartite_matching, graph, types,
+               weights, eps)
 
   res$matching[ res$matching==0 ] <- NA
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
@@ -2839,6 +2810,8 @@ which_mutual <- which_mutual
 #' vertex strength (see \code{\link{strength}}) is used instead of vertex
 #' degree. But note that \code{knnk} is still given in the function of the
 #' normal vertex degree.
+#' Weights are are used to calculate a weighted degree (also called
+#' \code{\link{strength}}) instead of the degree.
 #' @return A list with two members: \item{knn}{A numeric vector giving the
 #' average nearest neighbor degree for all vertices in \code{vids}.}
 #' \item{knnk}{A numeric vector, its length is the maximum (total) vertex

@@ -70,6 +70,8 @@
 #' @method plot igraph
 #' @export
 #' @export plot.igraph
+#' @importFrom grDevices rainbow
+#' @importFrom graphics plot polygon text par
 #' @keywords graphs
 #' @examples
 #' 
@@ -385,9 +387,9 @@ plot.igraph <- function(x,
   # add the labels
   par(xpd=TRUE)
   x <- layout[,1]+label.dist*cos(-label.degree)* 
-    (vertex.size+6*8*log10(nchar(labels)+1))/200
+    (vertex.size+6*8*log10(2))/200
   y <- layout[,2]+label.dist*sin(-label.degree)*
-    (vertex.size+6*8*log10(nchar(labels)+1))/200
+    (vertex.size+6*8*log10(2))/200
   if (length(label.family)==1) {
     text(x, y, labels=labels, col=label.color, family=label.family,
          font=label.font, cex=label.cex)
@@ -670,9 +672,9 @@ rglplot.igraph <- function(x, ...) {
   # add the labels, 'l1' is a stupid workaround of a mysterious rgl bug
   labels[is.na(labels)] <- ""
   x <- layout[,1]+label.dist*cos(-label.degree)* 
-    (vertex.size+6*10*log10(nchar(labels)+1))/200
+    (vertex.size+6*10*log10(2))/200
   y <- layout[,2]+label.dist*sin(-label.degree)*
-    (vertex.size+6*10*log10(nchar(labels)+1))/200
+    (vertex.size+6*10*log10(2))/200
   z <- layout[,3]
   l1 <- labels[1]
   labels[1] <- ""
@@ -700,6 +702,8 @@ rglplot.igraph <- function(x, ...) {
 
 # This is taken from the IDPmisc package,
 # slightly modified: code argument added
+
+#' @importFrom graphics par xyinch segments xspline lines polygon
 
 igraph.Arrows <-
 function (x1, y1, x2, y2,
@@ -751,7 +755,9 @@ function (x1, y1, x2, y2,
     x1d <- r.seg*cos(th.seg1)/uin[1]
     y1d <- r.seg*sin(th.seg1)/uin[2]
   }
-  if (is.logical(curved) && all(!curved)) {
+  if (is.logical(curved) && all(!curved) ||
+      is.numeric(curved) && all(!curved)) {
+
     segments(x1+x1d, y1+y1d, x2+x2d, y2+y2d, lwd=sh.lwd, col=sh.col, lty=sh.lty)
     phi <- atan2(y1-y2, x1-x2)
     r <- sqrt( (x1-x2)^2 + (y1-y2)^2 )
@@ -764,6 +770,7 @@ function (x1, y1, x2, y2,
     } else {
       lambda <- as.logical(curved) * 0.5
     }
+    lambda <- rep(lambda, length.out = length(x1))
     c.x1 <- x1+x1d
     c.y1 <- y1+y1d
     c.x2 <- x2+x2d
@@ -777,20 +784,32 @@ function (x1, y1, x2, y2,
     sh.lty <- rep(sh.lty, length=length(c.x1))
     sh.lwd <- rep(sh.lwd, length=length(c.x1))
     lc.x <- lc.y <- numeric(length(c.x1))
+
     for (i in seq_len(length(c.x1))) {
-      spl <- xspline(x=c(c.x1[i],spx[i],c.x2[i]),
-                     y=c(c.y1[i],spy[i],c.y2[i]), shape=1, draw=FALSE)
-      lines(spl, lwd=sh.lwd[i], col=sh.col[i], lty=sh.lty[i])
-      if (code %in% c(2,3)) {
-        x1[i] <- spl$x[3*length(spl$x)/4]
-        y1[i] <- spl$y[3*length(spl$y)/4]
+      ## Straight line?
+      if (lambda[i] == 0) {
+        segments(c.x1[i], c.y1[i], c.x2[i], c.y2[i],
+                 lwd = sh.lwd[i], col = sh.col[i], lty = sh.lty[i])
+        phi <- atan2(y1[i] - y2[i], x1[i] - x2[i])
+        r <- sqrt( (x1[i] - x2[i])^2 + (y1[i] - y2[i])^2 )
+        lc.x[i] <- x2[i] + 2/3*r*cos(phi)
+        lc.y[i] <- y2[i] + 2/3*r*sin(phi)
+
+      } else {
+        spl <- xspline(x=c(c.x1[i],spx[i],c.x2[i]),
+                       y=c(c.y1[i],spy[i],c.y2[i]), shape=1, draw=FALSE)
+        lines(spl, lwd=sh.lwd[i], col=sh.col[i], lty=sh.lty[i])
+        if (code %in% c(2,3)) {
+          x1[i] <- spl$x[3*length(spl$x)/4]
+          y1[i] <- spl$y[3*length(spl$y)/4]
+        }
+        if (code %in% c(1,3)) {
+          x2[i] <- spl$x[length(spl$x)/4]
+          y2[i] <- spl$y[length(spl$y)/4]
+        }
+        lc.x[i] <- spl$x[2/3 * length(spl$x)]
+        lc.y[i] <- spl$y[2/3 * length(spl$y)]
       }
-      if (code %in% c(1,3)) {
-        x2[i] <- spl$x[length(spl$x)/4]
-        y2[i] <- spl$y[length(spl$y)/4]
-      }
-      lc.x[i] <- spl$x[2/3 * length(spl$x)]
-      lc.y[i] <- spl$y[2/3 * length(spl$y)]
     }
   }
 
@@ -834,6 +853,8 @@ function (x1, y1, x2, y2,
   list(lab.x=lc.x, lab.y=lc.y)
 
 } # Arrows
+
+#' @importFrom graphics xspline
 
 igraph.polygon <- function(points, vertex.size=15/200, expand.by=15/200,
                            shape=1/2, col="#ff000033", border=NA) {

@@ -26,11 +26,12 @@
 
 #include "config.h"
 
-#define USE_RINTERNALS
 #include <R.h>
 #include <Rinternals.h>
 #include <Rdefines.h>
 #include "rinterface.h"
+
+#include "init.c"		/* registration table */
 
 #include <stdio.h>
 
@@ -1726,7 +1727,7 @@ int R_igraph_attribute_combine_vertices(const igraph_t *graph,
   SEXP res;
   int keepno=0;
   int *TODO;
-  void **funcs;
+  igraph_function_pointer_t *funcs;
   
   /* Create the TODO list first */
   PROTECT(names=GET_NAMES(val));
@@ -1736,7 +1737,7 @@ int R_igraph_attribute_combine_vertices(const igraph_t *graph,
 		 IGRAPH_ENOMEM);
   }
   IGRAPH_FINALLY(igraph_free, TODO);
-  funcs=igraph_Calloc(valno, void*);
+  funcs=igraph_Calloc(valno, igraph_function_pointer_t);
   if (!funcs) {
     IGRAPH_ERROR("Cannot combine edge attributes",
 		 IGRAPH_ENOMEM);
@@ -1745,7 +1746,7 @@ int R_igraph_attribute_combine_vertices(const igraph_t *graph,
   for (i=0; i<valno; i++) {
     const char *name=CHAR(STRING_ELT(names, i));
     igraph_attribute_combination_type_t todo;
-    void *voidfunc;
+    igraph_function_pointer_t voidfunc;
     igraph_attribute_combination_query(comb, name, &todo, &voidfunc);
     TODO[i]=todo;
     funcs[i]=voidfunc;
@@ -1891,7 +1892,7 @@ int R_igraph_attribute_combine_edges(const igraph_t *graph,
   SEXP res;
   int keepno=0;
   int *TODO;
-  void **funcs;
+  igraph_function_pointer_t *funcs;
 
   /* Create the TODO list first */
   PROTECT(names=GET_NAMES(eal));
@@ -1901,7 +1902,7 @@ int R_igraph_attribute_combine_edges(const igraph_t *graph,
 		 IGRAPH_ENOMEM);
   }
   IGRAPH_FINALLY(igraph_free, TODO);
-  funcs=igraph_Calloc(ealno, void*);
+  funcs=igraph_Calloc(ealno, igraph_function_pointer_t);
   if (!funcs) {
     IGRAPH_ERROR("Cannot combine edge attributes",
 		 IGRAPH_ENOMEM);
@@ -1910,7 +1911,7 @@ int R_igraph_attribute_combine_edges(const igraph_t *graph,
   for (i=0; i<ealno; i++) {
     const char *name=CHAR(STRING_ELT(names, i));
     igraph_attribute_combination_type_t todo;
-    void *voidfunc;
+    igraph_function_pointer_t voidfunc;
     igraph_attribute_combination_query(comb, name, &todo, &voidfunc);
     TODO[i]=todo;
     funcs[i]=voidfunc;
@@ -2124,12 +2125,15 @@ int R_igraph_status_handler(const char *message, void *data) {
   return 0;
 }
 
-SEXP R_init_igraph() {
+void R_init_igraph(DllInfo *dll) {
+  R_registerRoutines(dll, CEntries, CallEntries, NULL, NULL);
+  R_useDynamicSymbols(dll, FALSE);
+  R_forceSymbols(dll, TRUE);
+
   igraph_set_error_handler(R_igraph_myhandler);
   igraph_set_warning_handler(R_igraph_warning_handler);
   igraph_set_interruption_handler(R_igraph_interrupt_handler);
   igraph_i_set_attribute_table(&R_igraph_attribute_table);
-  return R_NilValue;
 }
 
 SEXP R_igraph_set_verbose(SEXP verbose) {
@@ -3911,7 +3915,7 @@ SEXP R_igraph_barabasi_game(SEXP pn, SEXP ppower, SEXP pm, SEXP poutseq,
   igraph_t g;
   igraph_integer_t n=(igraph_integer_t) REAL(pn)[0];
   igraph_real_t power=REAL(ppower)[0];
-  igraph_integer_t m=(igraph_integer_t) REAL(pm)[0]; 
+  igraph_integer_t m=isNull(pm) ? 0 : (igraph_integer_t) REAL(pm)[0];
   igraph_vector_t outseq, *myoutseq=0;
   igraph_bool_t outpref=LOGICAL(poutpref)[0];
   igraph_real_t A=REAL(pA)[0];
@@ -3930,7 +3934,7 @@ SEXP R_igraph_barabasi_game(SEXP pn, SEXP ppower, SEXP pm, SEXP poutseq,
     ppstart=&start;
   }
   
-  igraph_barabasi_game(&g, n, power, m, &outseq, outpref, 
+  igraph_barabasi_game(&g, n, power, m, myoutseq, outpref,
 		       A, directed, algo, ppstart);
   PROTECT(result=R_igraph_to_SEXP(&g));
   igraph_destroy(&g);
@@ -4088,7 +4092,6 @@ SEXP R_igraph_layout_kamada_kawai(SEXP graph, SEXP coords, SEXP maxiter,
   /* Declarations */
   igraph_t c_graph;
   igraph_matrix_t c_coords;
-  igraph_bool_t c_use_seed;
   igraph_integer_t c_maxiter;
   igraph_real_t c_epsilon;
   igraph_real_t c_kkconst;
@@ -4146,7 +4149,6 @@ SEXP R_igraph_layout_kamada_kawai_3d(SEXP graph, SEXP coords, SEXP maxiter,
   /* Declarations */
   igraph_t c_graph;
   igraph_matrix_t c_coords;
-  igraph_bool_t c_use_seed;
   igraph_integer_t c_maxiter;
   igraph_real_t c_epsilon;
   igraph_real_t c_kkconst;
@@ -6832,7 +6834,6 @@ SEXP R_igraph_maximal_cliques(SEXP graph, SEXP psubset,
 SEXP R_igraph_maximal_cliques_file(SEXP graph, SEXP psubset, SEXP file, 
 				   SEXP pminsize, SEXP pmaxsize) {
   igraph_t g;
-  long int i;
   igraph_integer_t minsize=(igraph_integer_t) REAL(pminsize)[0];
   igraph_integer_t maxsize=(igraph_integer_t) REAL(pmaxsize)[0];
   igraph_vector_int_t subset;
@@ -7993,9 +7994,13 @@ SEXP R_igraph_cohesive_blocks(SEXP graph) {
   return result;
 }
 
+typedef struct {
+  igraph_arpack_function_t *fun;
+} R_igraph_i_function_container_t;
+
 SEXP R_igraph_i_levc_arp(SEXP extP, SEXP extE, SEXP pv) {
-  igraph_arpack_function_t *fun=
-    (igraph_arpack_function_t *) R_ExternalPtrAddr(extP);
+  R_igraph_i_function_container_t *cont = R_ExternalPtrAddr(extP);
+  igraph_arpack_function_t *fun= cont->fun;
   void *extra=R_ExternalPtrAddr(extE);
   SEXP res;
   
@@ -8026,6 +8031,7 @@ int R_igraph_i_levc_callback(const igraph_vector_t *membership,
   SEXP res;
   int result;
   R_igraph_i_levc_data_t *data=extra;
+  R_igraph_i_function_container_t cont = { arpack_multiplier };
 
   PROTECT(s_memb=R_igraph_vector_to_SEXP(membership));
   PROTECT(s_comm=NEW_NUMERIC(1)); REAL(s_comm)[0]=comm;
@@ -8033,8 +8039,7 @@ int R_igraph_i_levc_callback(const igraph_vector_t *membership,
   PROTECT(s_evector=R_igraph_vector_to_SEXP(eigenvector));
   PROTECT(R_multip_call =
 	  lang3(install("igraph.i.levc.arp"), 
-		R_MakeExternalPtr((void*) arpack_multiplier, R_NilValue, 
-				  R_NilValue),
+		R_MakeExternalPtr((void*) &cont, R_NilValue, R_NilValue),
 		R_MakeExternalPtr(arpack_extra, R_NilValue, R_NilValue)));
   PROTECT(s_multip = eval(R_multip_call, data->rho2));
 
@@ -9319,62 +9324,6 @@ SEXP R_igraph_simple_interconnected_islands_game(SEXP islands_n, SEXP islands_si
   
   UNPROTECT(1);
   return result;
-}
-
-SEXP R_igraph_subclique_next(SEXP pgraph, SEXP pweights, SEXP pids,
-                             SEXP pcliques) {
-  igraph_t graph;
-  igraph_vector_t weights;
-  igraph_vector_int_t ids;
-  igraph_vector_ptr_t cliques;
-  int nc=GET_LENGTH(pcliques);
-  igraph_vector_ptr_t result, resultids, resultweights;
-  igraph_vector_t clique_thr, next_thr;
-  SEXP Rresult, Rnames;
-
-  R_SEXP_to_igraph(pgraph, &graph);
-  R_SEXP_to_vector(pweights, &weights);
-  R_SEXP_to_vector_int(pids, &ids);
-  R_igraph_SEXP_to_vectorlist(pcliques, &cliques);
-
-  igraph_vector_ptr_init(&result, nc);
-  IGRAPH_FINALLY(igraph_vector_ptr_destroy, &result);
-  igraph_vector_ptr_init(&resultweights, nc);
-  IGRAPH_FINALLY(igraph_vector_ptr_destroy, &resultweights);
-  igraph_vector_ptr_init(&resultids, nc);
-  IGRAPH_FINALLY(igraph_vector_ptr_destroy, &resultids);
-  igraph_vector_init(&clique_thr, nc);
-  IGRAPH_FINALLY(igraph_vector_destroy, &clique_thr);
-  igraph_vector_init(&next_thr, nc);
-  IGRAPH_FINALLY(igraph_vector_destroy, &next_thr);
-
-  igraph_subclique_next(&graph, &weights, &ids, &cliques,
-                        &result, &resultweights, &resultids,
-                        &clique_thr, &next_thr);
-
-  PROTECT(Rresult=NEW_LIST(5));
-  SET_VECTOR_ELT(Rresult, 0, R_igraph_graphlist_to_SEXP(&result));
-  R_igraph_graphlist_destroy(&result);
-  SET_VECTOR_ELT(Rresult, 1, R_igraph_vectorlist_int_to_SEXP(&resultids));
-  R_igraph_vectorlist_int_destroy2(&resultids);
-  SET_VECTOR_ELT(Rresult, 2, R_igraph_vectorlist_to_SEXP(&resultweights));
-  R_igraph_vectorlist2_destroy(&resultweights);
-  SET_VECTOR_ELT(Rresult, 3, R_igraph_vector_to_SEXP(&clique_thr));
-  igraph_vector_destroy(&clique_thr);
-  SET_VECTOR_ELT(Rresult, 4, R_igraph_vector_to_SEXP(&next_thr));
-  igraph_vector_destroy(&next_thr);
-
-  PROTECT(Rnames=NEW_CHARACTER(5));
-  SET_STRING_ELT(Rnames, 0, mkChar("graphs"));
-  SET_STRING_ELT(Rnames, 1, mkChar("ids"));
-  SET_STRING_ELT(Rnames, 2, mkChar("weights"));
-  SET_STRING_ELT(Rnames, 3, mkChar("thr"));
-  SET_STRING_ELT(Rnames, 4, mkChar("next_thr"));
-  SET_NAMES(Rresult, Rnames);
-
-  IGRAPH_FINALLY_CLEAN(5);
-  UNPROTECT(2);
-  return Rresult;
 }
 
 SEXP R_igraph_version() {
@@ -14706,6 +14655,7 @@ SEXP R_igraph_isomorphic_34(SEXP graph1, SEXP graph2) {
 SEXP R_igraph_canonical_permutation(SEXP graph, SEXP sh) {
                                         /* Declarations */
   igraph_t c_graph;
+
   igraph_vector_t c_labeling;
   igraph_bliss_sh_t c_sh;
   igraph_bliss_info_t c_info;
@@ -14721,7 +14671,7 @@ SEXP R_igraph_canonical_permutation(SEXP graph, SEXP sh) {
   IGRAPH_FINALLY(igraph_vector_destroy, &c_labeling);
   c_sh=REAL(sh)[0];
                                         /* Call igraph */
-  igraph_canonical_permutation(&c_graph, &c_labeling, c_sh, &c_info);
+  igraph_canonical_permutation(&c_graph, 0, &c_labeling, c_sh, &c_info);
 
                                         /* Convert output */
   PROTECT(result=NEW_LIST(2));
@@ -14773,15 +14723,16 @@ SEXP R_igraph_permute_vertices(SEXP graph, SEXP permutation) {
 /*-------------------------------------------/
 / igraph_isomorphic_bliss                    /
 /-------------------------------------------*/
-SEXP R_igraph_isomorphic_bliss(SEXP graph1, SEXP graph2, SEXP sh1, SEXP sh2) {
+SEXP R_igraph_isomorphic_bliss(SEXP graph1, SEXP graph2, SEXP sh) {
                                         /* Declarations */
   igraph_t c_graph1;
   igraph_t c_graph2;
+
+
   igraph_bool_t c_iso;
   igraph_vector_t c_map12;
   igraph_vector_t c_map21;
-  igraph_bliss_sh_t c_sh1;
-  igraph_bliss_sh_t c_sh2;
+  igraph_bliss_sh_t c_sh;
   igraph_bliss_info_t c_info1;
   igraph_bliss_info_t c_info2;
   SEXP iso;
@@ -14804,10 +14755,9 @@ SEXP R_igraph_isomorphic_bliss(SEXP graph1, SEXP graph2, SEXP sh1, SEXP sh2) {
   } 
   IGRAPH_FINALLY(igraph_vector_destroy, &c_map21); 
   map21=NEW_NUMERIC(0); /* hack to have a non-NULL value */
-  c_sh1=REAL(sh1)[0];
-  c_sh2=REAL(sh2)[0];
+  c_sh=REAL(sh)[0];
                                         /* Call igraph */
-  igraph_isomorphic_bliss(&c_graph1, &c_graph2, &c_iso, (isNull(map12) ? 0 : &c_map12), (isNull(map21) ? 0 : &c_map21), c_sh1, c_sh2, &c_info1, &c_info2);
+  igraph_isomorphic_bliss(&c_graph1, &c_graph2, 0, 0, &c_iso, (isNull(map12) ? 0 : &c_map12), (isNull(map21) ? 0 : &c_map21), c_sh, &c_info1, &c_info2);
 
                                         /* Convert output */
   PROTECT(result=NEW_LIST(5));
@@ -14847,6 +14797,7 @@ SEXP R_igraph_isomorphic_bliss(SEXP graph1, SEXP graph2, SEXP sh1, SEXP sh2) {
 SEXP R_igraph_automorphisms(SEXP graph, SEXP sh) {
                                         /* Declarations */
   igraph_t c_graph;
+
   igraph_bliss_sh_t c_sh;
   igraph_bliss_info_t c_info;
   SEXP info;
@@ -14856,7 +14807,7 @@ SEXP R_igraph_automorphisms(SEXP graph, SEXP sh) {
   R_SEXP_to_igraph(graph, &c_graph);
   c_sh=REAL(sh)[0];
                                         /* Call igraph */
-  igraph_automorphisms(&c_graph, c_sh, &c_info);
+  igraph_automorphisms(&c_graph, 0, c_sh, &c_info);
 
                                         /* Convert output */
   PROTECT(info=R_igraph_bliss_info_to_SEXP(&c_info)); 

@@ -241,10 +241,9 @@ cohesive_blocks <- function(graph, labels=TRUE) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_cohesive_blocks", graph,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_cohesive_blocks, graph)
   class(res) <- "cohesiveBlocks"
   if (labels && "name" %in% vertex_attr_names(graph)) {
     res$labels <- V(graph)$name
@@ -365,6 +364,8 @@ summary.cohesiveBlocks <- function(object, ...) {
 #' @rdname cohesive_blocks
 #' @method plot cohesiveBlocks
 #' @export
+#' @importFrom grDevices rainbow
+#' @importFrom graphics plot
  
 plot.cohesiveBlocks <- function(x, y,
                                 colbar=rainbow(max(cohesion(x))+1),
@@ -377,6 +378,7 @@ plot.cohesiveBlocks <- function(x, y,
 
 #' @rdname cohesive_blocks
 #' @export
+#' @importFrom graphics plot
 
 plot_hierarchy <- function(blocks,
                           layout=layout_as_tree(hierarchy(blocks),

@@ -1,6 +1,4 @@
 
-printr <- (function() {
-
 #' Create a printer callback function
 #'
 #' A printer callback fucntion is a function can performs the actual
@@ -100,6 +98,8 @@ head_print_object <- function(x, max_lines, header, footer, omitted_footer,
   invisible(c(lines = length(cout), printed = cout_no))
 }
 
+#' @importFrom utils tail
+
 head_print_callback <- function(x, max_lines, header, footer,
                                 omitted_footer, ...) {
 
@@ -184,6 +184,3 @@ add_class <- function(x, class) {
   }
   x
 }
-environment()
-})()
-

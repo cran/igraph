@@ -24,7 +24,11 @@
 #ifndef IGRAPH_VERSION_H
 #define IGRAPH_VERSION_H
 
-#define IGRAPH_VERSION "1.0.0"
+#include "igraph_decls.h"
+
+__BEGIN_DECLS
+
+#define IGRAPH_VERSION "1.1.1"
 #define IGRAPH_VERSION_MAJOR @PACKAGE_VERSION_MAJOR@
 #define IGRAPH_VERSION_MINOR @PACKAGE_VERSION_MINOR@
 #define IGRAPH_VERSION_PATCH @PACKAGE_VERSION_PATCH@
@@ -34,6 +38,8 @@ int igraph_version(const char **version_string,
 		   int *major,
 		   int *minor,
 		   int *subminor);
+
+__END_DECLS
 
 #endif
 

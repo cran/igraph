@@ -261,11 +261,6 @@ print.membership <- function(x, ...) print(unclass(x), ...)
 
 as_membership <- function(x) add_class(x, "membership")
 
-
-#' @include printr.R
-
-head_print <- printr$head_print
-
 #' @rdname communities
 #' @method print communities
 #' @export
@@ -430,10 +425,9 @@ modularity.igraph <- function(x, membership, weights=NULL, ...) {
   membership <- as.numeric(membership)
   if (!is.null(weights)) weights <- as.numeric(weights)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_modularity", x, membership-1, weights,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_modularity, x, membership-1, weights)
   res
 }
 
@@ -466,10 +460,9 @@ modularity_matrix <- function(graph, membership, weights=NULL) {
   weights <- NULL 
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_modularity_matrix", graph, membership, weights,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_modularity_matrix, graph, membership, weights)
 
   res
 }
@@ -716,7 +709,7 @@ as_phylo.communities <- function(x, use.modularity=FALSE, ...) {
   obj <- list(edge=edge, edge.length=edge.length/2, tip.label=labels,
               Nnode=N)
   class(obj) <- "phylo"
-  reorder(obj)
+  ape::reorder.phylo(obj)
 }
 
 #' @rdname communities
@@ -798,9 +791,8 @@ community.to.membership2 <- function(merges, vcount, steps) {
   mode(merges) <- "numeric"
   mode(vcount) <- "numeric"
   mode(steps)  <- "numeric"
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_community_to_membership2", merges-1, vcount, steps,
-               PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_community_to_membership2, merges-1, vcount, steps)
   res+1
 }
 
@@ -839,7 +831,8 @@ community.to.membership2 <- function(merges, vcount, steps) {
 #' attribute then that will be used. If \code{NULL} and no such attribute is
 #' present then the edges will have equal weights. Set this to \code{NA} if the
 #' graph was a \sQuote{weight} edge attribute, but you don't want to use it for
-#' community detection.
+#' community detection. A larger edge weight means a stronger connection
+#' for this function.
 #' @param vertex This parameter can be used to calculate the community of a
 #' given vertex without calculating all communities. Note that if this argument
 #' is present then some other arguments are ignored.
@@ -948,15 +941,14 @@ cluster_spinglass <- function(graph, weights=NULL, vertex=NULL, spins=25,
   implementation <- switch(igraph.match.arg(implementation),
                                             "orig"=0, "neg"=1)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   if (is.null(vertex)) {    
-    res <- .Call("R_igraph_spinglass_community", graph, weights,
+    res <- .Call(C_R_igraph_spinglass_community, graph, weights,
                  as.numeric(spins), as.logical(parupdate),
                  as.numeric(start.temp),
                  as.numeric(stop.temp), as.numeric(cool.fact),
                  as.numeric(update.rule), as.numeric(gamma),
-                 as.numeric(implementation), as.numeric(gamma.minus),
-                 PACKAGE="igraph")
+                 as.numeric(implementation), as.numeric(gamma.minus))
     res$algorithm  <- "spinglass"
     res$vcount     <- vcount(graph)
     res$membership <- res$membership + 1
@@ -965,10 +957,9 @@ cluster_spinglass <- function(graph, weights=NULL, vertex=NULL, spins=25,
     }
     class(res) <- "communities"
   } else {
-    res <- .Call("R_igraph_spinglass_my_community", graph, weights,
+    res <- .Call(C_R_igraph_spinglass_my_community, graph, weights,
                  as.igraph.vs(graph, vertex)-1, as.numeric(spins), 
-                 as.numeric(update.rule), as.numeric(gamma),
-                 PACKAGE="igraph")
+                 as.numeric(update.rule), as.numeric(gamma))
     res$community <- res$community + 1
   }
   res
@@ -989,7 +980,9 @@ cluster_spinglass <- function(graph, weights=NULL, vertex=NULL, spins=25,
 #' @aliases walktrap.community
 #' @param graph The input graph, edge directions are ignored in directed
 #' graphs.
-#' @param weights The edge weights.
+#' @param weights The edge weights. Larger edge weights increase the
+#' probability that an edge is selected by the random walker. In other
+#' words, larger edge weights correspond to stronger connections.
 #' @param steps The length of the random walks to perform.
 #' @param merges Logical scalar, whether to include the merge matrix in the
 #' result.
@@ -1035,10 +1028,9 @@ cluster_walktrap <- function(graph, weights=E(graph)$weight, steps=4,
     weights <- as.numeric(weights)
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_walktrap_community", graph, weights, as.numeric(steps),
-        as.logical(merges), as.logical(modularity), as.logical(membership),
-        PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_walktrap_community, graph, weights, as.numeric(steps),
+        as.logical(merges), as.logical(modularity), as.logical(membership))
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     res$names <- V(graph)$name
   }
@@ -1080,6 +1072,8 @@ cluster_walktrap <- function(graph, weights=E(graph)$weight, steps=4,
 #' @param graph The graph to analyze.
 #' @param weights The edge weights. Supply \code{NULL} to omit edge weights. By
 #' default the \sQuote{\code{weight}} edge attribute is used, if it is present.
+#' Edge weights are used to calculate weighted edge betweenness. This means
+#' that edges are interpreted as distances, not as connection strengths.
 #' @param directed Logical constant, whether to calculate directed edge
 #' betweenness for directed graphs. It is ignored for undirected graphs.
 #' @param edge.betweenness Logical constant, whether to return the edge
@@ -1121,7 +1115,7 @@ cluster_walktrap <- function(graph, weights=E(graph)$weight, steps=4,
 #' @keywords graphs
 #' @examples
 #' 
-#' g <- barabasi.game(100,m=2)
+#' g <- sample_pa(100, m = 2, directed = FALSE)
 #' eb <- cluster_edge_betweenness(g)
 #' 
 #' g <- make_full_graph(10) %du% make_full_graph(10)
@@ -1143,13 +1137,12 @@ cluster_edge_betweenness <- function(graph, weights=E(graph)$weight,
     weights <- as.numeric(weights)
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_community_edge_betweenness", graph, weights,
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_community_edge_betweenness, graph, weights,
                as.logical(directed),
                as.logical(edge.betweenness),
                as.logical(merges), as.logical(bridges),
-               as.logical(modularity), as.logical(membership),
-               PACKAGE="igraph")
+               as.logical(modularity), as.logical(membership))
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     res$names <- V(graph)$name
   }
@@ -1185,6 +1178,7 @@ cluster_edge_betweenness <- function(graph, weights=E(graph)$weight,
 #' The length must match the number of edges in the graph.  By default the
 #' \sQuote{\code{weight}} edge attribute is used as weights. If it is not
 #' present, then all edges are considered to have the same weight.
+#' Larger edge weights correspond to stronger connections.
 #' @return \code{cluster_fast_greedy} returns a \code{\link{communities}}
 #' object, please see the \code{\link{communities}} manual page for details.
 #' @author Tamas Nepusz \email{ntamas@@gmail.com} and Gabor Csardi
@@ -1218,10 +1212,9 @@ cluster_fast_greedy <- function(graph, merges=TRUE, modularity=TRUE,
     weights <- as.numeric(weights)
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
-  res <- .Call("R_igraph_community_fastgreedy", graph, as.logical(merges),
-               as.logical(modularity), as.logical(membership), weights,
-               PACKAGE="igraph")
+  on.exit( .Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_community_fastgreedy, graph, as.logical(merges),
+               as.logical(modularity), as.logical(membership), weights)
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     res$names <- V(graph)$name
   }
@@ -1236,8 +1229,7 @@ cluster_fast_greedy <- function(graph, merges=TRUE, modularity=TRUE,
 igraph.i.levc.arp <- function(externalP, externalE) {
   f <- function(v) {
     v <- as.numeric(v)
-    base::.Call("R_igraph_i_levc_arp", externalP, externalE, v,
-                PACKAGE="igraph");
+    .Call(C_R_igraph_i_levc_arp, externalP, externalE, v)
   }
   f
 }
@@ -1275,9 +1267,10 @@ igraph.i.levc.arp <- function(externalP, externalE) {
 #' symmetric matrix.
 #' @param steps The number of steps to take, this is actually the number of
 #' tries to make a step. It is not a particularly useful parameter.
-#' #' @param weights An optional weight vector. The \sQuote{weight} edge attribute
+#' @param weights An optional weight vector. The \sQuote{weight} edge attribute
 #' is used if present. Supply \sQuote{\code{NA}} here if you want to ignore the
-#' \sQuote{weight} edge attribute.
+#' \sQuote{weight} edge attribute. Larger edge weights correspond to stronger
+#' connections between vertices.
 #' @param start \code{NULL}, or a numeric membership vector, giving the start
 #' configuration of the algorithm.
 #' @param options A named list to override some ARPACK options.
@@ -1351,12 +1344,11 @@ cluster_leading_eigen <- function(graph, steps=-1, weights=NULL,
   if (!is.null(start)) { start <- as.numeric(start)-1 }
   options.tmp <- arpack_defaults; options.tmp[ names(options) ] <- options ; options <- options.tmp
   
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_community_leading_eigenvector", graph, steps,
+  res <- .Call(C_R_igraph_community_leading_eigenvector, graph, steps,
                weights, options, start, callback, extra, env,
-               environment(igraph.i.levc.arp),
-               PACKAGE="igraph")
+               environment(igraph.i.levc.arp))
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     res$names <- V(graph)$name
   }
@@ -1393,7 +1385,8 @@ cluster_leading_eigen <- function(graph, steps=-1, weights=NULL,
 #' @param weights An optional weight vector. It should contain a positive
 #' weight for all the edges. The \sQuote{weight} edge attribute is used if
 #' present. Supply \sQuote{\code{NA}} here if you want to ignore the
-#' \sQuote{weight} edge attribute.
+#' \sQuote{weight} edge attribute. Larger edge weights correspond to
+#' stronger connections.
 #' @param initial The initial state. If \code{NULL}, every vertex will have a
 #' different label at the beginning. Otherwise it must be a vector with an
 #' entry for each vertex. Non-negative values denote different labels, negative
@@ -1436,10 +1429,9 @@ cluster_label_prop <- function(graph, weights=NULL, initial=NULL,
   if (!is.null(initial)) initial <- as.numeric(initial)
   if (!is.null(fixed)) fixed <- as.logical(fixed)
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_community_label_propagation", graph, weights, initial, fixed,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_community_label_propagation, graph, weights, initial, fixed)
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     res$names <- V(graph)$name
   }
@@ -1479,7 +1471,7 @@ cluster_label_prop <- function(graph, weights=NULL, initial=NULL,
 #' @param weights Optional positive weight vector.  If the graph has a
 #' \code{weight} edge attribute, then this is used by default. Supply \code{NA}
 #' here if the graph has a \code{weight} edge attribute, but you want to ignore
-#' it.
+#' it. Larger edge weights correspond to stronger connections.
 #' @return \code{cluster_louvain} returns a \code{\link{communities}}
 #' object, please see the \code{\link{communities}} manual page for details.
 #' @author Tom Gregorovic, Tamas Nepusz \email{ntamas@@gmail.com}
@@ -1516,10 +1508,9 @@ cluster_louvain <- function(graph, weights=NULL) {
   weights <- NULL 
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_community_multilevel", graph, weights,
-        PACKAGE="igraph")
+  res <- .Call(C_R_igraph_community_multilevel, graph, weights)
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     res$names <- V(graph)$name
   }
@@ -1557,6 +1548,7 @@ cluster_louvain <- function(graph, weights=NULL) {
 #' @param weights Optional positive weight vector for optimizing weighted
 #' modularity. If the graph has a \code{weight} edge attribute, then this is
 #' used by default. Supply \code{NA} to ignore the weights of a weighted graph.
+#' Larger edge weights correspond to stronger connections.
 #' @return \code{cluster_optimal} returns a \code{\link{communities}} object,
 #' please see the \code{\link{communities}} manual page for details.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
@@ -1602,10 +1594,9 @@ cluster_optimal <- function(graph, weights=NULL) {
     weights <- NULL
   }
 
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_community_optimal_modularity", graph, weights,
-               PACKAGE="igraph")
+  res <- .Call(C_R_igraph_community_optimal_modularity, graph, weights)
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     res$names <- V(graph)$name
   }
@@ -1631,10 +1622,13 @@ cluster_optimal <- function(graph, weights=NULL) {
 #' The length must match the number of edges in the graph.  By default the
 #' \sQuote{\code{weight}} edge attribute is used as weights. If it is not
 #' present, then all edges are considered to have the same weight.
+#' Larger edge weights correspond to stronger connections.
 #' @param v.weights If not \code{NULL}, then a numeric vector of vertex
 #' weights. The length must match the number of vertices in the graph.  By
 #' default the \sQuote{\code{weight}} vertex attribute is used as weights. If
 #' it is not present, then all vertices are considered to have the same weight.
+#' A larger vertex weight means a larger probability that the random surfer
+#' jumps to that vertex.
 #' @param nb.trials The number of attempts to partition the network (can be any
 #' integer value equal or larger than 1).
 #' @param modularity Logical scalar, whether to calculate the modularity score
@@ -1689,11 +1683,10 @@ cluster_infomap <- function(graph, e.weights=NULL, v.weights=NULL,
   }
   nb.trials <- as.integer(nb.trials)
   
-  on.exit( .Call("R_igraph_finalizer", PACKAGE="igraph") )
+  on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call("R_igraph_community_infomap", graph, e.weights,
-               v.weights, nb.trials,
-               PACKAGE="igraph")
+  res <- .Call(C_R_igraph_community_infomap, graph, e.weights,
+               v.weights, nb.trials)
 
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     res$names <- V(graph)$name
@@ -1711,6 +1704,7 @@ cluster_infomap <- function(graph, e.weights=NULL, v.weights=NULL,
 #' @rdname communities
 #' @method plot communities
 #' @export
+#' @importFrom graphics plot
 
 plot.communities <- function(x, y,
                              col=membership(x),
@@ -1836,6 +1830,10 @@ plot_dendrogram.communities <- function(x,
   }
 }
 
+#' @importFrom grDevices palette
+#' @importFrom graphics plot
+#' @importFrom stats rect.hclust
+
 dendPlotHclust <- function(communities, rect=length(communities),
                            colbar=palette(), hang=-1, ann=FALSE,
                            main="", sub="", xlab="", ylab="", ...,
@@ -1849,11 +1847,16 @@ dendPlotHclust <- function(communities, rect=length(communities),
   invisible(ret)
 }
 
+#' @importFrom graphics plot
+
 dendPlotDendrogram <- function(communities, hang=-1, ...,
                                use.modularity=FALSE) {
   plot(as.dendrogram(communities, hang=hang, use.modularity=use.modularity),
        ...)
 }
+
+#' @importFrom grDevices palette
+#' @importFrom graphics plot
 
 dendPlotPhylo <- function(communities, colbar=palette(),
                           col=colbar[membership(communities)],
@@ -1991,9 +1994,8 @@ i_compare <- function (comm1, comm2, method=c("vi", "nmi", "split.join",
   }
   method <- switch(igraph.match.arg(method), vi = 0, nmi = 1, 
                    split.join = 2, rand = 3, adjusted.rand = 4)
-  on.exit(.Call("R_igraph_finalizer", PACKAGE = "igraph"))
-  res <- .Call("R_igraph_compare_communities", comm1, comm2, 
-               method, PACKAGE = "igraph")
+  on.exit(.Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_compare_communities, comm1, comm2, method)
   res  
 }
 
@@ -2041,9 +2043,8 @@ split_join_distance <- function(comm1, comm2) {
   } else {
     as.numeric(comm2)
   }
-  on.exit(.Call("R_igraph_finalizer", PACKAGE = "igraph"))
-  res <- .Call("R_igraph_split_join_distance", comm1, comm2,
-               PACKAGE = "igraph")
+  on.exit(.Call(C_R_igraph_finalizer) )
+  res <- .Call(C_R_igraph_split_join_distance, comm1, comm2)
   unlist(res)
 }
 

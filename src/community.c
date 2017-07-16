@@ -45,6 +45,10 @@
 #include <string.h>
 #include <math.h>
 
+#ifdef USING_R
+#include <R.h>
+#endif
+
 int igraph_i_rewrite_membership_vector(igraph_vector_t *membership) {
   long int no=(long int) igraph_vector_max(membership)+1;
   igraph_vector_t idx;
@@ -858,7 +862,8 @@ int igraph_community_to_membership(const igraph_matrix_t *merges,
  * See also Clauset, A.; Newman, M. E. J.; Moore, C. Finding
  * community structure in very large networks, Physical Review E,
  * 2004, 70, 066111.
- * \param graph The input graph.
+ * \param graph The input graph. It must be undirected; directed graphs are
+ *     not supported yet.
  * \param membership Numeric vector which gives the type of each
  *     vertex, ie. the component to which it belongs.
  *     It does not have to be consecutive, i.e. empty communities are
@@ -885,9 +890,20 @@ int igraph_modularity(const igraph_t *graph,
   igraph_real_t m;
   long int c1, c2;
 
+  if (igraph_is_directed(graph)) {
+#ifndef USING_R
+    IGRAPH_ERROR("modularity is implemented for undirected graphs", IGRAPH_EINVAL);
+#else
+    REprintf("Modularity is implemented for undirected graphs only.\n");
+#endif
+  }
+
   if (igraph_vector_size(membership) < igraph_vcount(graph)) {
     IGRAPH_ERROR("cannot calculate modularity, membership vector too short",
       IGRAPH_EINVAL);
+  }
+  if (igraph_vector_min(membership) < 0) {
+    IGRAPH_ERROR("Invalid membership vector", IGRAPH_EINVAL);
   }
 
   IGRAPH_VECTOR_INIT_FINALLY(&e, types);
@@ -2194,7 +2210,7 @@ int igraph_community_label_propagation(const igraph_t *graph,
     }
   } else {
     for (i=0; i<no_of_nodes; i++) {
-      VECTOR(*membership)[i] = i;
+      VECTOR(*membership)[i] = i+1;
     }
   }
 

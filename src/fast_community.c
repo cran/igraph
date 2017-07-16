@@ -112,22 +112,32 @@ typedef struct {
 int igraph_i_fastgreedy_community_rescan_max(
   igraph_i_fastgreedy_community* comm) {
   long int i, n;
-  igraph_i_fastgreedy_commpair *p, *oldmax;
+  igraph_i_fastgreedy_commpair *p, *best;
+  igraph_real_t bestdq, currdq;
 
   n = igraph_vector_ptr_size(&comm->neis);
-  if (n==0) {
+  if (n == 0) {
     comm->maxdq = 0;
     return 1;
   }
-  
-  oldmax = comm->maxdq;
-  comm->maxdq = (igraph_i_fastgreedy_commpair*)VECTOR(comm->neis)[0];
-  for (i=1; i<n; i++) {
+
+  best = (igraph_i_fastgreedy_commpair*)VECTOR(comm->neis)[0];
+  bestdq = *best->dq;
+  for (i = 1; i < n; i++) {
 	p = (igraph_i_fastgreedy_commpair*)VECTOR(comm->neis)[i];
-	if (*p->dq > *comm->maxdq->dq) comm->maxdq=p;
+    currdq = *p->dq;
+	if (currdq > bestdq) {
+      best = p;
+      bestdq = currdq;
+    }
   }
-  if (oldmax == comm->maxdq) return 0;
-  return 1;
+
+  if (best != comm->maxdq) {
+    comm->maxdq = best;
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 /* Destroys the global community list object */
@@ -148,24 +158,26 @@ void igraph_i_fastgreedy_community_list_sift_down(
   long int root, child, c1, c2;
   igraph_i_fastgreedy_community* dummy;
   igraph_integer_t dummy2;
+  igraph_i_fastgreedy_community** heap = list->heap;
+  igraph_integer_t* heapindex = list->heapindex;
 
   root = idx;
   while (root*2+1 < list->no_of_communities) {
     child = root*2+1;
 	if (child+1 < list->no_of_communities &&
-		*list->heap[child]->maxdq->dq < *list->heap[child+1]->maxdq->dq)
+		*heap[child]->maxdq->dq < *heap[child+1]->maxdq->dq)
 	  child++;
-	if (*list->heap[root]->maxdq->dq < *list->heap[child]->maxdq->dq) {
-	  c1 = list->heap[root]->maxdq->first;
-	  c2 = list->heap[child]->maxdq->first;
+	if (*heap[root]->maxdq->dq < *heap[child]->maxdq->dq) {
+	  c1 = heap[root]->maxdq->first;
+	  c2 = heap[child]->maxdq->first;
 
-	  dummy = list->heap[root];
-	  list->heap[root] = list->heap[child];
-	  list->heap[child] = dummy;
+	  dummy = heap[root];
+	  heap[root] = heap[child];
+	  heap[child] = dummy;
 	  
-	  dummy2 = list->heapindex[c1];
-	  list->heapindex[c1] = list->heapindex[c2];
-	  list->heapindex[c2] = dummy2;
+	  dummy2 = heapindex[c1];
+	  heapindex[c1] = heapindex[c2];
+	  heapindex[c2] = dummy2;
 
 	  root = child;
 	} else break;
@@ -178,21 +190,23 @@ void igraph_i_fastgreedy_community_list_sift_up(
   long int root, parent, c1, c2;
   igraph_i_fastgreedy_community* dummy;
   igraph_integer_t dummy2;
+  igraph_i_fastgreedy_community** heap = list->heap;
+  igraph_integer_t* heapindex = list->heapindex;
 
   root = idx;
   while (root>0) {
     parent = (root-1)/2;
-	if (*list->heap[parent]->maxdq->dq < *list->heap[root]->maxdq->dq) {
-	  c1 = list->heap[root]->maxdq->first;
-	  c2 = list->heap[parent]->maxdq->first;
+	if (*heap[parent]->maxdq->dq < *heap[root]->maxdq->dq) {
+	  c1 = heap[root]->maxdq->first;
+	  c2 = heap[parent]->maxdq->first;
 	  
-	  dummy = list->heap[parent];
-	  list->heap[parent] = list->heap[root];
-	  list->heap[root] = dummy;
+	  dummy = heap[parent];
+	  heap[parent] = heap[root];
+	  heap[root] = dummy;
 	  
-	  dummy2 = list->heapindex[c1];
-	  list->heapindex[c1] = list->heapindex[c2];
-	  list->heapindex[c2] = dummy2;
+	  dummy2 = heapindex[c1];
+	  heapindex[c1] = heapindex[c2];
+	  heapindex[c2] = dummy2;
 
 	  root = parent;
 	} else break;
@@ -338,6 +352,86 @@ void igraph_i_fastgreedy_community_remove_nei(
   }
 }
 
+/* Auxiliary function to sort a community pair list with respect to the
+ * `second` field */
+int igraph_i_fastgreedy_commpair_cmp(const void* p1, const void* p2) {
+  igraph_i_fastgreedy_commpair *cp1, *cp2;
+  cp1=*(igraph_i_fastgreedy_commpair**)p1;
+  cp2=*(igraph_i_fastgreedy_commpair**)p2;
+  return (int) (cp1->second - cp2->second);
+}
+
+/* Sorts the neighbor list of the community with the given index, optionally
+ * optimizing the process if we know that the list is nearly sorted and only
+ * a given pair is in the wrong place. */
+void igraph_i_fastgreedy_community_sort_neighbors_of(
+  igraph_i_fastgreedy_community_list* list, long int index,
+  igraph_i_fastgreedy_commpair* changed_pair) {
+  igraph_vector_ptr_t* vec;
+  long int i, n;
+  igraph_bool_t can_skip_sort = 0;
+  igraph_i_fastgreedy_commpair *other_pair;
+
+  vec = &list->e[index].neis;
+  if (changed_pair != 0) {
+    /* Optimized sorting */
+
+    /* First we look for changed_pair in vec */
+    n = igraph_vector_ptr_size(vec);
+    for (i = 0; i < n; i++) {
+      if (VECTOR(*vec)[i] == changed_pair) {
+        break;
+      }
+    }
+
+    /* Did we find it? We should have -- otherwise it's a bug */
+    if (i >= n) {
+      IGRAPH_WARNING("changed_pair not found in neighbor vector while re-sorting "
+          "the neighbors of a community; this is probably a bug. Falling back to "
+          "full sort instead."
+      );
+    } else {
+      /* Okay, the pair that changed is at index i. We need to figure out where
+       * its new place should be. We can simply try moving the item all the way
+       * to the left as long as the comparison function tells so (since the
+       * rest of the vector is sorted), and then move all the way to the right
+       * as long as the comparison function tells so, and we will be okay. */
+
+      /* Shifting to the left */
+      while (i > 0) {
+        other_pair = VECTOR(*vec)[i-1];
+        if (other_pair->second > changed_pair->second) {
+          VECTOR(*vec)[i] = other_pair;
+          i--;
+        } else {
+          break;
+        }
+      }
+      VECTOR(*vec)[i] = changed_pair;
+
+      /* Shifting to the right */
+      while (i < n-1) {
+        other_pair = VECTOR(*vec)[i+1];
+        if (other_pair->second < changed_pair->second) {
+          VECTOR(*vec)[i] = other_pair;
+          i++;
+        } else {
+          break;
+        }
+      }
+      VECTOR(*vec)[i] = changed_pair;
+
+      /* Mark that we don't need a full sort */
+      can_skip_sort = 1;
+    }
+  }
+
+  if (!can_skip_sort) {
+    /* Fallback to full sorting */
+    igraph_vector_ptr_sort(vec, igraph_i_fastgreedy_commpair_cmp);
+  }
+}
+
 /* Updates the dq value of community pair p in the community with index p->first
  * of the community list clist to newdq and restores the heap property
  * in community c if necessary. Returns 1 if the maximum in the row had
@@ -454,15 +548,6 @@ int igraph_i_fastgreedy_community_update_dq(
   return 1;
 }
 
-/* Auxiliary function to sort a community pair list with respect to the
- * `second` field */
-int igraph_i_fastgreedy_commpair_cmp(const void* p1, const void* p2) {
-  igraph_i_fastgreedy_commpair *cp1, *cp2;
-  cp1=*(igraph_i_fastgreedy_commpair**)p1;
-  cp2=*(igraph_i_fastgreedy_commpair**)p2;
-  return (int) (cp1->second - cp2->second);
-}
-
 /**
  * \function igraph_community_fastgreedy
  * \brief Finding community structure by greedy optimization of modularity
@@ -519,14 +604,15 @@ int igraph_community_fastgreedy(const igraph_t *graph,
 				igraph_vector_t *modularity, 
 				igraph_vector_t *membership) {
   long int no_of_edges, no_of_nodes, no_of_joins, total_joins;
-  long int i, j, k, n, m, from, to, dummy;
+  long int i, j, k, n, m, from, to, dummy, best_no_of_joins;
   igraph_integer_t ffrom, fto;
   igraph_eit_t edgeit;
   igraph_i_fastgreedy_commpair *pairs, *p1, *p2;
   igraph_i_fastgreedy_community_list communities;
   igraph_vector_t a;
-  igraph_real_t q, *dq, weight_sum, loop_weight_sum;
+  igraph_real_t q, *dq, bestq, weight_sum, loop_weight_sum;
   igraph_bool_t has_multiple;
+  igraph_matrix_t merges_local;
 
   /*long int join_order[] = { 16,5, 5,6, 6,0, 4,0, 10,0, 26,29, 29,33, 23,33, 27,33, 25,24, 24,31, 12,3, 21,1, 30,8, 8,32, 9,2, 17,1, 11,0, 7,3, 3,2, 13,2, 1,2, 28,31, 31,33, 22,32, 18,32, 20,32, 32,33, 15,33, 14,33, 0,19, 19,2, -1,-1 };*/
   /*long int join_order[] = { 43,42, 42,41, 44,41, 41,36, 35,36, 37,36, 36,29, 38,29, 34,29, 39,29, 33,29, 40,29, 32,29, 14,29, 30,29, 31,29, 6,18, 18,4, 23,4, 21,4, 19,4, 27,4, 20,4, 22,4, 26,4, 25,4, 24,4, 17,4, 0,13, 13,2, 1,2, 11,2, 8,2, 5,2, 3,2, 10,2, 9,2, 7,2, 2,28, 28,15, 12,15, 29,16, 4,15, -1,-1 };*/
@@ -553,10 +639,19 @@ int igraph_community_fastgreedy(const igraph_t *graph,
     IGRAPH_ERROR("fast-greedy community finding works only on graphs without multiple edges", IGRAPH_EINVAL);
   }
 
+  if (membership != 0 && merges == 0) {
+	/* We need the merge matrix because the user wants the membership
+	 * vector, so we allocate one on our own */
+	IGRAPH_CHECK(igraph_matrix_init(&merges_local, total_joins, 2));
+	IGRAPH_FINALLY(igraph_matrix_destroy, &merges_local);
+	merges = &merges_local;
+  }
+
   if (merges != 0) {
 	IGRAPH_CHECK(igraph_matrix_resize(merges, total_joins, 2));
 	igraph_matrix_null(merges);
   }
+
   if (modularity != 0) {
 	IGRAPH_CHECK(igraph_vector_resize(modularity, total_joins+1));
   }
@@ -658,7 +753,7 @@ int igraph_community_fastgreedy(const igraph_t *graph,
   /* Sorting community neighbor lists by community IDs */
   debug("Sorting community neighbor lists\n");
   for (i=0, j=0; i<no_of_nodes; i++) {
-	igraph_vector_ptr_sort(&communities.e[i].neis, igraph_i_fastgreedy_commpair_cmp);
+    igraph_i_fastgreedy_community_sort_neighbors_of(&communities, i, 0);
     /* Isolated vertices and vertices with loop edges only won't be stored in
      * the heap (to avoid maxdq == 0) */
     if (communities.e[i].maxdq != 0) {
@@ -682,6 +777,10 @@ int igraph_community_fastgreedy(const igraph_t *graph,
 	  q -= VECTOR(a)[i]*VECTOR(a)[i];
   }
 
+  /* Initialize "best modularity" value and best merge counter */
+  bestq = q;
+  best_no_of_joins = 0;
+
   /* Initializing community heap */
   debug("Initializing community heap\n");
   igraph_i_fastgreedy_community_list_build_heap(&communities);
@@ -698,6 +797,12 @@ int igraph_community_fastgreedy(const igraph_t *graph,
 	if (modularity)
       VECTOR(*modularity)[no_of_joins] = q;
     
+    /* Update best modularity if needed */
+	if (q >= bestq) {
+      bestq = q;
+      best_no_of_joins = no_of_joins;
+    }
+
 	/* Some debug info if needed */
 	/* igraph_i_fastgreedy_community_list_check_heap(&communities); */
 #ifdef DEBUG
@@ -785,11 +890,15 @@ int igraph_community_fastgreedy(const igraph_t *graph,
 		  debug("    CHAIN(2): %ld %ld-%ld, newdq(%ld,%ld)=%.7f\n",
 		    to, p2->second, from, to, p2->second, *p2->dq-2*VECTOR(a)[to]*VECTOR(a)[p2->second]);
 		  p2->opposite->second=to;
-	      /* need to re-sort community nei list `p2->second` */
-	      /* TODO: quicksort is O(n*logn), although we could do a deletion and
-	       * insertion which can be done in O(logn) if deletion is O(1) */
-	      debug("    Re-sorting community %ld\n", p2->second);
-	      igraph_vector_ptr_sort(&communities.e[p2->second].neis, igraph_i_fastgreedy_commpair_cmp);
+		  /* p2->opposite->second changed, so it means that
+		   * communities.e[p2->second].neis (which contains p2->opposite) is
+		   * not sorted any more. We have to find the index of p2->opposite in
+		   * this vector and move it to the correct place. Moving should be an
+		   * O(n) operation; re-sorting would be O(n*logn) or even worse,
+		   * depending on the pivoting strategy used by qsort() since the
+		   * vector is nearly sorted */
+		  igraph_i_fastgreedy_community_sort_neighbors_of(
+				  &communities, p2->second, p2->opposite);
 		  /* link from.neis[j] to the current place in to.neis if
 		   * from.neis[j] != to */
 		  p2->first=to;
@@ -826,10 +935,7 @@ int igraph_community_fastgreedy(const igraph_t *graph,
 	    to, p2->second, from, p1->first, p2->second, *p2->dq-2*VECTOR(a)[to]*VECTOR(a)[p2->second]);
 	  p2->opposite->second=to;
 	  /* need to re-sort community nei list `p2->second` */
-	  /* TODO: quicksort is O(n*logn), although we could do a deletion and
-	   * insertion which can be done in O(logn) if deletion is O(1) */
-	  debug("    Re-sorting community %ld\n", p2->second);
-	  igraph_vector_ptr_sort(&communities.e[p2->second].neis, igraph_i_fastgreedy_commpair_cmp);
+      igraph_i_fastgreedy_community_sort_neighbors_of(&communities, p2->second, p2->opposite);
 	  /* link from.neis[j] to the current place in to.neis if
 	   * from.neis[j] != to */
 	  p2->first=to;
@@ -903,12 +1009,16 @@ int igraph_community_fastgreedy(const igraph_t *graph,
   IGRAPH_FINALLY_CLEAN(4);
 
   if (membership) {
-    long int m=igraph_vector_which_max(modularity);
     IGRAPH_CHECK(igraph_community_to_membership(merges,
 						(igraph_integer_t) no_of_nodes, 
-						/*steps=*/ (igraph_integer_t) m,
+						/*steps=*/ (igraph_integer_t) best_no_of_joins,
 						membership, 
 						/*csize=*/ 0));
+  }
+
+  if (merges == &merges_local) {
+	igraph_matrix_destroy(&merges_local);
+	IGRAPH_FINALLY_CLEAN(1);
   }
 
   return 0;

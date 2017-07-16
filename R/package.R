@@ -22,14 +22,7 @@
 
 .onAttach <- function(library, pkg) {
     ## we can't do this in .onLoad
-    unlockBinding(".igraph.pars", asNamespace("igraph"))
     unlockBinding(".igraph.pb", asNamespace("igraph"))
     invisible()
 }
 
-.Call <- function(.NAME, ...) {
-  if (.NAME != "R_igraph_finalizer") {
-    base::.Call("R_igraph_check_finally_stack", PACKAGE="igraph")
-  }
-  base::.Call(.NAME, ...)
-}
