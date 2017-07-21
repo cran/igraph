@@ -1,4 +1,4 @@
-e27882f20e6685035e537490f7f7d382 *DESCRIPTION
+3ec4922447c7ea18478bbb5b1a5d407c *DESCRIPTION
 a94031b4ea3e06c36f2397baf40b0498 *NAMESPACE
 638a4ff2bbdff1f6ba877d42da9f8da7 *R/adjacency.R
 ba96cdf262f284a91629bcc81958464a *R/assortativity.R
@@ -86,7 +86,7 @@ faf3ffd01e590fd13b34efb775f173eb *demo/hrg.R
 771ca356197ee2b54c40ceccb4c2419c *demo/smallworld.R
 63f74b06a17d02a00dac03fb54a07b54 *inst/AUTHORS
 5cc5f3e2c4239fe9a47bfefdbb923dd0 *inst/CITATION
-6c5af3d16602f97352eae57102d23133 *inst/NEWS.md
+f122c2727feffcec4c3c3e3d923304f0 *inst/NEWS.md
 27e30ac7130f81f5207760f3ef59161c *inst/README.md
 9318bc2aeb60f4f79eac2357da0d9b84 *inst/benchmarks/correlated.R
 4f938e92ca259e3259a5223e87e51bb0 *inst/benchmarks/local.scan.R
@@ -603,7 +603,7 @@ cd9fc819a7108d5bd6e3df27bc574f8f *src/arpack.c
 28757abe7ee47a2a3752132e6521dbe7 *src/array.pmt
 267926cfbc6903038bb8c7569fe853ed *src/atlas-edges.h
 f94137db5d049089a48e8542b40679c8 *src/atlas.c
-415f1daf75b00094d4359df843b5cd8c *src/attributes.c
+a7bf705fa703ed691200ff83438d6e4f *src/attributes.c
 7f8eedd101f3f975de419df961bc789d *src/basic_query.c
 8cdb18f2170bd6eb311cb7ac9b12944f *src/bfgs.c
 e0fb18ecf621c13a45bfd435b1638fce *src/bigint.c
@@ -630,7 +630,7 @@ cb75c3b12e2091449199f2620618b9d3 *src/bliss/kqueue.hh
 1149a90b4858ef576be632eca8e94c0e *src/bliss/uintseqhash.cc
 270d32bee429d455348c9722111b2284 *src/bliss/uintseqhash.hh
 1dfd7ce22d1ad9ac0a334cd88340c352 *src/bliss/utils.cc
-ddc9b0b0a69c13eba58ee144dbe9d8b3 *src/bliss/utils.hh
+585195404db8ae1959a36fc182500f4c *src/bliss/utils.hh
 b6fd9917844e2e249f85b28b4738fe06 *src/cattributes.c
 3d9225ea1e88dca1b84f565e42fdc42c *src/centrality.c
 c7b8351063a81705746396607cc7c350 *src/cliquer/README
@@ -1175,7 +1175,7 @@ f02cb493011fc03a7afd0f73429e7444 *src/scg_headers.h
 026c19e5e315a61afa720d1a1a02b2b2 *src/scg_kmeans.c
 689526007c1e806566487866a1507dfd *src/scg_optimal_method.c
 bd4eee538520a213640c06c511215412 *src/scg_utils.c
-fe76b21dffc13a149499515906044064 *src/second.f
+86e001901ddbd58540c49d9e1440358e *src/second.f
 8d56d35bdce5f2672a17d82fbd9a66f2 *src/separators.c
 af447f07a45af2b4f7edaee5d0a877a7 *src/simpleraytracer/Color.cpp
 be39147aa9a658a401d5d8e304bfbb68 *src/simpleraytracer/Color.h
@@ -1353,7 +1353,7 @@ e2efb24c4db5b274ac18017ed480d2d9 *tests/testthat/test_graph.isoclass.R
 1159c879ec2285bbaa08209a1d2c5add *tests/testthat/test_graph.mincut.R
 530fba9e8d790c38aca699b1a568de00 *tests/testthat/test_graph.subisomorphic.lad.R
 eb55c1cd65d26a7530d9460ec396dfb2 *tests/testthat/test_graph.subisomorphic.vf2.R
-ae031d23ec08cade48a2d03721dac0c7 *tests/testthat/test_graphNEL.R
+eba8e06baddc6b0a8ddfbe7e48cebac2 *tests/testthat/test_graphNEL.R
 23d6a1e8db6602fd9b120b24b39725f1 *tests/testthat/test_graphlets.R
 3e58a33bfda76293340465d7aac08c86 *tests/testthat/test_hrg.R
 a570ca5f125efa4d98d030585f2004d2 *tests/testthat/test_hsbm.R
@@ -1369,7 +1369,7 @@ d501b567e3e573c4d999ac1ace4bb665 *tests/testthat/test_is.chordal.R
 c8c475e2e86016609574169e78c716ea *tests/testthat/test_laplacian.spectral.embedding.R
 418d9fcc91a880b0fb839eb0fe002a41 *tests/testthat/test_largest.cliques.R
 fce5463a31d7da19e21761e1d3bfbe9d *tests/testthat/test_largest.independent.vertex.sets.R
-3f461a4ed6ed74da672f44761a2de349 *tests/testthat/test_layout.fr.R
+76c4bcfe67ae3b21a0aef80ef6db25be *tests/testthat/test_layout.fr.R
 bfeeecbfd9aeea87ba0c0b2cae9f627c *tests/testthat/test_layout.kk.R
 6a2aed874635751a944a0f28f08f2c9a *tests/testthat/test_layout.mds.R
 7e921347ce3b1b198f167e574067d1db *tests/testthat/test_layout.merge.R
@@ -1394,7 +1394,7 @@ c16adef7ce46505194e165e819a6ee7f *tests/testthat/test_sample.R
 5996191f90b8e86be20a5840a2089aa1 *tests/testthat/test_scan.R
 9274bc5af61b2058a08fe4d377aedab0 *tests/testthat/test_sdf.R
 307c4bdb58bd0229816f4363a5b12186 *tests/testthat/test_sgm.R
-7078a546e96ccb8b0dab099b9b451487 *tests/testthat/test_sir.R
+5ececc4dc384fa67819917344078e366 *tests/testthat/test_sir.R
 802bc718931dca81b4750a5e028fc945 *tests/testthat/test_sphere.R
 f7f321f4b3ae913bf5ff88ee468b21af *tests/testthat/test_transitivity.R
 59b470781b4cbb8184b85b2f292cc9a0 *tests/testthat/test_triangles.R
