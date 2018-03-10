@@ -56,7 +56,6 @@ GNEL2 <- as_graphnel(g3)
 g4 <- graph_from_graphnel(GNEL2)
 g4
 }
-#' @export
 }
 \seealso{
 \code{\link{as_graphnel}} for the other direction,

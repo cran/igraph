@@ -38,7 +38,9 @@ probably don't want to run this function on larger graphs. Graphs with up to
 fifty vertices should be fine, graphs with a couple of hundred vertices
 might be possible.
 }
-\examples{
+\section{Examples}{
+
+\preformatted{
 
 ## Zachary's karate club
 g <- make_graph("Zachary")
@@ -46,20 +48,19 @@ g <- make_graph("Zachary")
 ## We put everything into a big 'try' block, in case 
 ## igraph was compiled without GLPK support
 
-try({
-  ## The calculation only takes a couple of seconds
-  oc <- cluster_optimal(g)
+## The calculation only takes a couple of seconds
+oc <- cluster_optimal(g)
 
-  ## Double check the result
-  print(modularity(oc))
-  print(modularity(g, membership(oc)))
+## Double check the result
+print(modularity(oc))
+print(modularity(g, membership(oc)))
 
-  ## Compare to the greedy optimizer
-  fc <- cluster_fast_greedy(g)
-  print(modularity(fc))
-}, silent=TRUE)
-
+## Compare to the greedy optimizer
+fc <- cluster_fast_greedy(g)
+print(modularity(fc))
 }
+}
+
 \references{
 Ulrik Brandes, Daniel Delling, Marco Gaertler, Robert Gorke,
 Martin Hoefer, Zoran Nikoloski, Dorothea Wagner: On Modularity Clustering,

@@ -44,7 +44,8 @@
      KEYWORD = 260,
      LISTOPEN = 261,
      LISTCLOSE = 262,
-     EOFF = 263
+     EOFF = 263,
+     ERROR = 264
    };
 #endif
 /* Tokens.  */
@@ -54,13 +55,14 @@
 #define LISTOPEN 261
 #define LISTCLOSE 262
 #define EOFF 263
+#define ERROR 264
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 98 "src/foreign-gml-parser.y"
+#line 93 "src/foreign-gml-parser.y"
 {
    struct {
       char *s;
@@ -70,7 +72,7 @@ typedef union YYSTYPE
    double real;
 }
 /* Line 1529 of yacc.c.  */
-#line 74 "y.tab.h"
+#line 76 "y.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

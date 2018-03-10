@@ -79,7 +79,8 @@
      KEYWORD = 260,
      LISTOPEN = 261,
      LISTCLOSE = 262,
-     EOFF = 263
+     EOFF = 263,
+     ERROR = 264
    };
 #endif
 /* Tokens.  */
@@ -89,6 +90,7 @@
 #define LISTOPEN 261
 #define LISTCLOSE 262
 #define EOFF 263
+#define ERROR 264
 
 
 
@@ -119,11 +121,6 @@
 
 */
 
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wconversion"
-#pragma clang diagnostic ignored "-Wsign-conversion"
-#endif
-
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -141,7 +138,7 @@
 
 int igraph_gml_yylex(YYSTYPE* lvalp, YYLTYPE* llocp, void *scanner);
 int igraph_gml_yyerror(YYLTYPE* locp, igraph_i_gml_parsedata_t *context, 
-		       char *s);
+		       const char *s);
 char *igraph_gml_yyget_text (yyscan_t yyscanner );
 int igraph_gml_yyget_leng (yyscan_t yyscanner );
 void igraph_i_gml_get_keyword(char *s, int len, void *res);
@@ -181,7 +178,7 @@ igraph_gml_tree_t *igraph_i_gml_merge(igraph_gml_tree_t *t1, igraph_gml_tree_t* 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 98 "src/foreign-gml-parser.y"
+#line 93 "src/foreign-gml-parser.y"
 {
    struct {
       char *s;
@@ -191,7 +188,7 @@ typedef union YYSTYPE
    double real;
 }
 /* Line 193 of yacc.c.  */
-#line 195 "y.tab.c"
+#line 192 "y.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -216,7 +213,7 @@ typedef struct YYLTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 220 "y.tab.c"
+#line 217 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -436,7 +433,7 @@ union yyalloc
 #define YYLAST   14
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  9
+#define YYNTOKENS  10
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  7
 /* YYNRULES -- Number of rules.  */
@@ -446,7 +443,7 @@ union yyalloc
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   263
+#define YYMAXUTOK   264
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -480,7 +477,7 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8
+       5,     6,     7,     8,     9
 };
 
 #if YYDEBUG
@@ -495,17 +492,17 @@ static const yytype_uint8 yyprhs[] =
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-      10,     0,    -1,    11,    -1,    11,     8,    -1,    12,    -1,
-      11,    12,    -1,    13,    14,    -1,    13,    15,    -1,    13,
-       6,    11,     7,    -1,    13,    13,    -1,     5,    -1,     4,
+      11,     0,    -1,    12,    -1,    12,     8,    -1,    13,    -1,
+      12,    13,    -1,    14,    15,    -1,    14,    16,    -1,    14,
+       6,    12,     7,    -1,    14,    14,    -1,     5,    -1,     4,
       -1,     3,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   125,   125,   126,   129,   130,   132,   134,   136,   138,
-     142,   145,   148
+       0,   121,   121,   122,   125,   126,   128,   130,   132,   134,
+     138,   141,   144
 };
 #endif
 
@@ -515,8 +512,8 @@ static const yytype_uint8 yyrline[] =
 static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "STRING", "NUM", "KEYWORD", "LISTOPEN",
-  "LISTCLOSE", "EOFF", "$accept", "input", "list", "keyvalue", "key",
-  "num", "string", 0
+  "LISTCLOSE", "EOFF", "ERROR", "$accept", "input", "list", "keyvalue",
+  "key", "num", "string", 0
 };
 #endif
 
@@ -525,15 +522,15 @@ static const char *const yytname[] =
    token YYLEX-NUM.  */
 static const yytype_uint16 yytoknum[] =
 {
-       0,   256,   257,   258,   259,   260,   261,   262,   263
+       0,   256,   257,   258,   259,   260,   261,   262,   263,   264
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,     9,    10,    10,    11,    11,    12,    12,    12,    12,
-      13,    14,    15
+       0,    10,    11,    11,    12,    12,    13,    13,    13,    13,
+      14,    15,    16
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
@@ -594,8 +591,8 @@ static const yytype_int8 yycheck[] =
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     5,    10,    11,    12,    13,     0,     8,    12,     3,
-       4,     6,    13,    14,    15,    11,     7
+       0,     5,    11,    12,    13,    14,     0,     8,    13,     3,
+       4,     6,    14,    15,    16,    12,     7
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1118,29 +1115,29 @@ yydestruct (yymsg, yytype, yyvaluep, yylocationp, context)
   switch (yytype)
     {
       case 5: /* "KEYWORD" */
-#line 120 "src/foreign-gml-parser.y"
+#line 116 "src/foreign-gml-parser.y"
 	{ igraph_Free((yyvaluep->str).s); };
-#line 1124 "y.tab.c"
+#line 1121 "y.tab.c"
 	break;
-      case 11: /* "list" */
-#line 121 "src/foreign-gml-parser.y"
+      case 12: /* "list" */
+#line 117 "src/foreign-gml-parser.y"
 	{ igraph_gml_tree_destroy((yyvaluep->tree)); };
-#line 1129 "y.tab.c"
+#line 1126 "y.tab.c"
 	break;
-      case 12: /* "keyvalue" */
-#line 121 "src/foreign-gml-parser.y"
+      case 13: /* "keyvalue" */
+#line 117 "src/foreign-gml-parser.y"
 	{ igraph_gml_tree_destroy((yyvaluep->tree)); };
-#line 1134 "y.tab.c"
+#line 1131 "y.tab.c"
 	break;
-      case 13: /* "key" */
-#line 120 "src/foreign-gml-parser.y"
+      case 14: /* "key" */
+#line 116 "src/foreign-gml-parser.y"
 	{ igraph_Free((yyvaluep->str).s); };
-#line 1139 "y.tab.c"
+#line 1136 "y.tab.c"
 	break;
-      case 15: /* "string" */
-#line 120 "src/foreign-gml-parser.y"
+      case 16: /* "string" */
+#line 116 "src/foreign-gml-parser.y"
 	{ igraph_Free((yyvaluep->str).s); };
-#line 1144 "y.tab.c"
+#line 1141 "y.tab.c"
 	break;
 
       default:
@@ -1463,60 +1460,60 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 125 "src/foreign-gml-parser.y"
+#line 121 "src/foreign-gml-parser.y"
     { context->tree=(yyvsp[(1) - (1)].tree); ;}
     break;
 
   case 3:
-#line 126 "src/foreign-gml-parser.y"
+#line 122 "src/foreign-gml-parser.y"
     { context->tree=(yyvsp[(1) - (2)].tree); ;}
     break;
 
   case 4:
-#line 129 "src/foreign-gml-parser.y"
+#line 125 "src/foreign-gml-parser.y"
     { (yyval.tree)=(yyvsp[(1) - (1)].tree); ;}
     break;
 
   case 5:
-#line 130 "src/foreign-gml-parser.y"
+#line 126 "src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_merge((yyvsp[(1) - (2)].tree), (yyvsp[(2) - (2)].tree)); ;}
     break;
 
   case 6:
-#line 133 "src/foreign-gml-parser.y"
+#line 129 "src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_numeric((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].real)); ;}
     break;
 
   case 7:
-#line 135 "src/foreign-gml-parser.y"
+#line 131 "src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_string((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].str).s, (yyvsp[(2) - (2)].str).len); ;}
     break;
 
   case 8:
-#line 137 "src/foreign-gml-parser.y"
+#line 133 "src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_list((yyvsp[(1) - (4)].str).s, (yyvsp[(1) - (4)].str).len, (yyvsp[(3) - (4)].tree)); ;}
     break;
 
   case 9:
-#line 139 "src/foreign-gml-parser.y"
+#line 135 "src/foreign-gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_numeric2((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].str).s, (yyvsp[(2) - (2)].str).len); ;}
     break;
 
   case 10:
-#line 142 "src/foreign-gml-parser.y"
+#line 138 "src/foreign-gml-parser.y"
     { igraph_i_gml_get_keyword(igraph_gml_yyget_text(scanner), 
 					igraph_gml_yyget_leng(scanner), 
 					&(yyval.str)); USE((yyvsp[(1) - (1)].str)) ;}
     break;
 
   case 11:
-#line 145 "src/foreign-gml-parser.y"
+#line 141 "src/foreign-gml-parser.y"
     { (yyval.real)=igraph_i_gml_get_real(igraph_gml_yyget_text(scanner), 
 				     igraph_gml_yyget_leng(scanner)); ;}
     break;
 
   case 12:
-#line 148 "src/foreign-gml-parser.y"
+#line 144 "src/foreign-gml-parser.y"
     { igraph_i_gml_get_string(igraph_gml_yyget_text(scanner), 
 					 igraph_gml_yyget_leng(scanner), 
 					 &(yyval.str)); ;}
@@ -1524,7 +1521,7 @@ yyreduce:
 
 
 /* Line 1267 of yacc.c.  */
-#line 1528 "y.tab.c"
+#line 1525 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1744,11 +1741,11 @@ yyreturn:
 }
 
 
-#line 152 "src/foreign-gml-parser.y"
+#line 148 "src/foreign-gml-parser.y"
 
 
 int igraph_gml_yyerror(YYLTYPE* locp, igraph_i_gml_parsedata_t *context, 
-		       char *s) {
+		       const char *s) {
   snprintf(context->errmsg, sizeof(context->errmsg)/sizeof(char)-1, 
 	   "Parse error in GML file, line %i (%s)", 
 	   locp->first_line, s);

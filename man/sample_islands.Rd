@@ -24,12 +24,15 @@ An igraph graph.
 Create a number of Erdos-Renyi random graphs with identical parameters, and
 connect them with the specified number of edges.
 }
-\examples{
+\section{Examples}{
 
+\preformatted{
 g <- sample_islands(3, 10, 5/10, 1)
 oc <- cluster_optimal(g)
 oc
 }
+}
+
 \seealso{
 \code{\link{sample_gnp}}
 }

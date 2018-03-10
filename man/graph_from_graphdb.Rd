@@ -65,9 +65,9 @@ its old version at
 \url{http://web.archive.org/web/20090215182331/http://amalfi.dis.unina.it/graph/db/doc/graphdbat.html}
 for the actual format of a graph database file and other information.
 }
-\examples{
+\section{Examples}{
 
-\dontrun{
+\preformatted{
 g <- graph_from_graphdb(prefix="iso", type="r001", nodes=20, pair="A",
   which=10, compressed=TRUE)
 g2 <- graph_from_graphdb(prefix="iso", type="r001", nodes=20, pair="B",
@@ -79,6 +79,7 @@ g3 <- graph_from_graphdb(url=paste(sep="/",
                               "iso_b06m_m200.A09.gz"))
 }
 }
+
 \references{
 M. De Santo, P. Foggia, C. Sansone, M. Vento: A large database
 of graphs and its use for benchmarking graph isomorphism algorithms,

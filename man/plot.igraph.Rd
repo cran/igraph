@@ -67,8 +67,8 @@ plot the graph to any R device.
 }
 \examples{
 
-g <- ring(10)
-\dontrun{plot(g, layout=layout_with_kk, vertex.color="green")}
+g <- make_ring(10)
+plot(g, layout=layout_with_kk, vertex.color="green")
 
 }
 \seealso{

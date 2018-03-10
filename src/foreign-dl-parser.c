@@ -86,7 +86,8 @@
      FORMATNODELIST1 = 267,
      DIGIT = 268,
      LABEL = 269,
-     EOFF = 270
+     EOFF = 270,
+     ERROR = 271
    };
 #endif
 /* Tokens.  */
@@ -103,6 +104,7 @@
 #define DIGIT 268
 #define LABEL 269
 #define EOFF 270
+#define ERROR 271
 
 
 
@@ -132,11 +134,6 @@
    02110-1301 USA
 
 */
-
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wconversion"
-#pragma clang diagnostic ignored "-Wsign-conversion"
-#endif
 
 #include "config.h"
 #include "igraph_hacks_internal.h"
@@ -188,13 +185,13 @@ extern igraph_real_t igraph_pajek_get_number(const char *str, long int len);
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 91 "src/foreign-dl-parser.y"
+#line 86 "src/foreign-dl-parser.y"
 {
   long int integer;
   igraph_real_t real;
 }
 /* Line 193 of yacc.c.  */
-#line 198 "y.tab.c"
+#line 195 "y.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -219,7 +216,7 @@ typedef struct YYLTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 223 "y.tab.c"
+#line 220 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -439,7 +436,7 @@ union yyalloc
 #define YYLAST   118
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  16
+#define YYNTOKENS  17
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  37
 /* YYNRULES -- Number of rules.  */
@@ -449,7 +446,7 @@ union yyalloc
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   270
+#define YYMAXUTOK   271
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -484,7 +481,7 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
-      15
+      15,    16
 };
 
 #if YYDEBUG
@@ -504,42 +501,42 @@ static const yytype_uint8 yyprhs[] =
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-      17,     0,    -1,     5,     6,    38,     4,    20,    18,    19,
-      -1,    -1,    18,    22,    -1,    -1,    15,    -1,    21,    -1,
-      34,    -1,    43,    -1,    10,    22,    23,    -1,    23,    -1,
-      -1,     4,    -1,     7,    22,    25,    -1,     8,    22,    24,
-      22,     7,    22,    25,    -1,     9,    22,     7,    22,    28,
-      -1,    -1,    24,    22,    14,    -1,    -1,    25,    26,     4,
-      -1,    -1,    26,    27,    -1,    13,    -1,    29,    -1,    30,
-       4,    32,    -1,    -1,    30,    22,    31,    -1,    14,    -1,
-      33,    -1,    32,    33,    -1,    14,    26,     4,    -1,    11,
-      22,    35,    -1,     7,    22,    36,    -1,     8,    22,    24,
-      22,     7,    22,    36,    -1,     9,    22,     7,    22,    39,
-      -1,     8,    22,    24,    22,     9,    22,     7,    22,    39,
-      -1,     9,    22,     8,    22,    24,    22,     7,    22,    39,
-      -1,    -1,    36,    37,    -1,    38,    38,    41,     4,    -1,
-      38,    38,     4,    -1,     3,    -1,    -1,    39,    40,    -1,
-      42,    42,    41,     4,    -1,    42,    42,     4,    -1,     3,
-      -1,    14,    -1,    12,    22,    44,    -1,     7,    45,    -1,
-       8,    22,    24,    22,     7,    22,    45,    -1,     9,    22,
-       7,    22,    49,    -1,     8,    22,    24,    22,     9,    22,
-       7,    22,    49,    -1,     9,    22,     8,    22,    24,    22,
-       7,    22,    49,    -1,    -1,    45,    46,    -1,    47,    48,
-       4,    -1,     3,    -1,    -1,    48,    38,    -1,    -1,    49,
-      50,    -1,    51,    52,     4,    -1,    42,    -1,    -1,    52,
-      42,    -1
+      18,     0,    -1,     5,     6,    39,     4,    21,    19,    20,
+      -1,    -1,    19,    23,    -1,    -1,    15,    -1,    22,    -1,
+      35,    -1,    44,    -1,    10,    23,    24,    -1,    24,    -1,
+      -1,     4,    -1,     7,    23,    26,    -1,     8,    23,    25,
+      23,     7,    23,    26,    -1,     9,    23,     7,    23,    29,
+      -1,    -1,    25,    23,    14,    -1,    -1,    26,    27,     4,
+      -1,    -1,    27,    28,    -1,    13,    -1,    30,    -1,    31,
+       4,    33,    -1,    -1,    31,    23,    32,    -1,    14,    -1,
+      34,    -1,    33,    34,    -1,    14,    27,     4,    -1,    11,
+      23,    36,    -1,     7,    23,    37,    -1,     8,    23,    25,
+      23,     7,    23,    37,    -1,     9,    23,     7,    23,    40,
+      -1,     8,    23,    25,    23,     9,    23,     7,    23,    40,
+      -1,     9,    23,     8,    23,    25,    23,     7,    23,    40,
+      -1,    -1,    37,    38,    -1,    39,    39,    42,     4,    -1,
+      39,    39,     4,    -1,     3,    -1,    -1,    40,    41,    -1,
+      43,    43,    42,     4,    -1,    43,    43,     4,    -1,     3,
+      -1,    14,    -1,    12,    23,    45,    -1,     7,    46,    -1,
+       8,    23,    25,    23,     7,    23,    46,    -1,     9,    23,
+       7,    23,    50,    -1,     8,    23,    25,    23,     9,    23,
+       7,    23,    50,    -1,     9,    23,     8,    23,    25,    23,
+       7,    23,    50,    -1,    -1,    46,    47,    -1,    48,    49,
+       4,    -1,     3,    -1,    -1,    49,    39,    -1,    -1,    50,
+      51,    -1,    52,    53,     4,    -1,    43,    -1,    -1,    53,
+      43,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   115,   115,   117,   117,   119,   119,   121,   122,   123,
-     126,   126,   128,   128,   130,   131,   132,   135,   136,   142,
-     142,   147,   147,   149,   159,   161,   163,   163,   165,   169,
-     173,   178,   182,   184,   185,   186,   187,   188,   191,   192,
-     195,   197,   201,   204,   205,   208,   210,   214,   217,   233,
-     235,   236,   237,   238,   239,   242,   243,   246,   248,   251,
-     251,   257,   258,   261,   263,   267,   267
+       0,   111,   111,   113,   113,   115,   115,   117,   118,   119,
+     122,   122,   124,   124,   126,   127,   128,   131,   132,   138,
+     138,   143,   143,   145,   155,   157,   159,   159,   161,   165,
+     169,   174,   178,   180,   181,   182,   183,   184,   187,   188,
+     191,   193,   197,   200,   201,   204,   206,   210,   213,   229,
+     231,   232,   233,   234,   235,   238,   239,   242,   244,   247,
+     247,   253,   254,   257,   259,   263,   263
 };
 #endif
 
@@ -550,16 +547,16 @@ static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "NUM", "NEWLINE", "DL", "NEQ", "DATA",
   "LABELS", "LABELSEMBEDDED", "FORMATFULLMATRIX", "FORMATEDGELIST1",
-  "FORMATNODELIST1", "DIGIT", "LABEL", "EOFF", "$accept", "input", "trail",
-  "eof", "rest", "formfullmatrix", "newline", "fullmatrix", "labels",
-  "fullmatrixdata", "zerooneseq", "zeroone", "labeledfullmatrixdata",
-  "reallabeledfullmatrixdata", "labelseq", "label", "labeledmatrixlines",
-  "labeledmatrixline", "edgelist1", "edgelist1rest", "edgelist1data",
-  "edgelist1dataline", "integer", "labelededgelist1data",
-  "labelededgelist1dataline", "weight", "elabel", "nodelist1",
-  "nodelist1rest", "nodelist1data", "nodelist1dataline", "from", "tolist",
-  "labelednodelist1data", "labelednodelist1dataline", "fromelabel",
-  "labeltolist", 0
+  "FORMATNODELIST1", "DIGIT", "LABEL", "EOFF", "ERROR", "$accept", "input",
+  "trail", "eof", "rest", "formfullmatrix", "newline", "fullmatrix",
+  "labels", "fullmatrixdata", "zerooneseq", "zeroone",
+  "labeledfullmatrixdata", "reallabeledfullmatrixdata", "labelseq",
+  "label", "labeledmatrixlines", "labeledmatrixline", "edgelist1",
+  "edgelist1rest", "edgelist1data", "edgelist1dataline", "integer",
+  "labelededgelist1data", "labelededgelist1dataline", "weight", "elabel",
+  "nodelist1", "nodelist1rest", "nodelist1data", "nodelist1dataline",
+  "from", "tolist", "labelednodelist1data", "labelednodelist1dataline",
+  "fromelabel", "labeltolist", 0
 };
 #endif
 
@@ -569,20 +566,20 @@ static const char *const yytname[] =
 static const yytype_uint16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
-     265,   266,   267,   268,   269,   270
+     265,   266,   267,   268,   269,   270,   271
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    16,    17,    18,    18,    19,    19,    20,    20,    20,
-      21,    21,    22,    22,    23,    23,    23,    24,    24,    25,
-      25,    26,    26,    27,    28,    29,    30,    30,    31,    32,
-      32,    33,    34,    35,    35,    35,    35,    35,    36,    36,
-      37,    37,    38,    39,    39,    40,    40,    41,    42,    43,
-      44,    44,    44,    44,    44,    45,    45,    46,    47,    48,
-      48,    49,    49,    50,    51,    52,    52
+       0,    17,    18,    19,    19,    20,    20,    21,    21,    21,
+      22,    22,    23,    23,    24,    24,    24,    25,    25,    26,
+      26,    27,    27,    28,    29,    30,    31,    31,    32,    33,
+      33,    34,    35,    36,    36,    36,    36,    36,    37,    37,
+      38,    38,    39,    40,    40,    41,    41,    42,    43,    44,
+      45,    45,    45,    45,    45,    46,    46,    47,    48,    49,
+      49,    50,    50,    51,    52,    53,    53
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
@@ -698,20 +695,20 @@ static const yytype_int16 yycheck[] =
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     5,    17,     6,     0,     3,    38,     4,     7,     8,
-       9,    10,    11,    12,    20,    21,    23,    34,    43,     4,
-      22,    22,    22,    22,    22,    22,    18,    25,    24,     7,
-      23,     7,     8,     9,    35,     7,     8,     9,    44,    15,
-      19,    22,    26,    22,    22,    22,    22,    22,    45,    22,
-      22,     4,    13,    27,     7,    14,    28,    29,    30,    36,
-      24,     7,     8,     3,    46,    47,    24,     7,     8,    22,
-       4,    22,    37,    38,    22,    22,    22,    48,    22,    22,
-      22,    25,    14,    32,    33,    14,    31,    38,     7,     9,
-      39,    24,     4,    38,     7,     9,    49,    24,    26,    33,
-       3,     4,    41,    22,    22,    14,    40,    42,    22,    22,
-      22,    42,    50,    51,    22,     4,     4,    36,     7,    42,
-       7,    45,     7,    52,     7,    22,     4,    41,    22,    22,
-       4,    42,    22,    39,     4,    39,    49,    49
+       0,     5,    18,     6,     0,     3,    39,     4,     7,     8,
+       9,    10,    11,    12,    21,    22,    24,    35,    44,     4,
+      23,    23,    23,    23,    23,    23,    19,    26,    25,     7,
+      24,     7,     8,     9,    36,     7,     8,     9,    45,    15,
+      20,    23,    27,    23,    23,    23,    23,    23,    46,    23,
+      23,     4,    13,    28,     7,    14,    29,    30,    31,    37,
+      25,     7,     8,     3,    47,    48,    25,     7,     8,    23,
+       4,    23,    38,    39,    23,    23,    23,    49,    23,    23,
+      23,    26,    14,    33,    34,    14,    32,    39,     7,     9,
+      40,    25,     4,    39,     7,     9,    50,    25,    27,    34,
+       3,     4,    42,    23,    23,    14,    41,    43,    23,    23,
+      23,    43,    51,    52,    23,     4,     4,    37,     7,    43,
+       7,    46,     7,    53,     7,    23,     4,    42,    23,    23,
+       4,    43,    23,    40,     4,    40,    50,    50
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1554,57 +1551,57 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 115 "src/foreign-dl-parser.y"
+#line 111 "src/foreign-dl-parser.y"
     { context->n=(yyvsp[(3) - (7)].integer); ;}
     break;
 
   case 7:
-#line 121 "src/foreign-dl-parser.y"
+#line 117 "src/foreign-dl-parser.y"
     { context->type=IGRAPH_DL_MATRIX; ;}
     break;
 
   case 8:
-#line 122 "src/foreign-dl-parser.y"
+#line 118 "src/foreign-dl-parser.y"
     { context->type=IGRAPH_DL_EDGELIST1; ;}
     break;
 
   case 9:
-#line 123 "src/foreign-dl-parser.y"
+#line 119 "src/foreign-dl-parser.y"
     { context->type=IGRAPH_DL_NODELIST1; ;}
     break;
 
   case 10:
-#line 126 "src/foreign-dl-parser.y"
+#line 122 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 11:
-#line 126 "src/foreign-dl-parser.y"
+#line 122 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 14:
-#line 130 "src/foreign-dl-parser.y"
+#line 126 "src/foreign-dl-parser.y"
     { ;}
     break;
 
   case 15:
-#line 131 "src/foreign-dl-parser.y"
+#line 127 "src/foreign-dl-parser.y"
     { ;}
     break;
 
   case 16:
-#line 132 "src/foreign-dl-parser.y"
+#line 128 "src/foreign-dl-parser.y"
     { ;}
     break;
 
   case 17:
-#line 135 "src/foreign-dl-parser.y"
+#line 131 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 18:
-#line 136 "src/foreign-dl-parser.y"
+#line 132 "src/foreign-dl-parser.y"
     { 
 	      igraph_i_dl_add_str(igraph_dl_yyget_text(scanner), 
                                   igraph_dl_yyget_leng(scanner), 
@@ -1612,12 +1609,12 @@ yyreduce:
     break;
 
   case 19:
-#line 142 "src/foreign-dl-parser.y"
+#line 138 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 20:
-#line 142 "src/foreign-dl-parser.y"
+#line 138 "src/foreign-dl-parser.y"
     {
   context->from += 1;
   context->to = 0;
@@ -1625,12 +1622,12 @@ yyreduce:
     break;
 
   case 22:
-#line 147 "src/foreign-dl-parser.y"
+#line 143 "src/foreign-dl-parser.y"
     { ;}
     break;
 
   case 23:
-#line 149 "src/foreign-dl-parser.y"
+#line 145 "src/foreign-dl-parser.y"
     {
   if (igraph_dl_yyget_text(scanner)[0]=='1') {
     IGRAPH_CHECK(igraph_vector_push_back(&context->edges, 
@@ -1643,24 +1640,24 @@ yyreduce:
     break;
 
   case 24:
-#line 159 "src/foreign-dl-parser.y"
+#line 155 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 25:
-#line 161 "src/foreign-dl-parser.y"
+#line 157 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 28:
-#line 165 "src/foreign-dl-parser.y"
+#line 161 "src/foreign-dl-parser.y"
     { igraph_i_dl_add_str(igraph_dl_yyget_text(scanner), 
                                    igraph_dl_yyget_leng(scanner), 
 				   context); ;}
     break;
 
   case 29:
-#line 169 "src/foreign-dl-parser.y"
+#line 165 "src/foreign-dl-parser.y"
     {
 	         context->from += 1; 
 		 context->to = 0;
@@ -1668,7 +1665,7 @@ yyreduce:
     break;
 
   case 30:
-#line 173 "src/foreign-dl-parser.y"
+#line 169 "src/foreign-dl-parser.y"
     { 
 	         context->from += 1; 
 		 context->to = 0;
@@ -1676,100 +1673,100 @@ yyreduce:
     break;
 
   case 31:
-#line 178 "src/foreign-dl-parser.y"
+#line 174 "src/foreign-dl-parser.y"
     { ;}
     break;
 
   case 32:
-#line 182 "src/foreign-dl-parser.y"
+#line 178 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 33:
-#line 184 "src/foreign-dl-parser.y"
+#line 180 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 34:
-#line 185 "src/foreign-dl-parser.y"
+#line 181 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 35:
-#line 186 "src/foreign-dl-parser.y"
+#line 182 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 36:
-#line 187 "src/foreign-dl-parser.y"
+#line 183 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 37:
-#line 188 "src/foreign-dl-parser.y"
+#line 184 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 38:
-#line 191 "src/foreign-dl-parser.y"
+#line 187 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 39:
-#line 192 "src/foreign-dl-parser.y"
+#line 188 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 40:
-#line 195 "src/foreign-dl-parser.y"
+#line 191 "src/foreign-dl-parser.y"
     {
                    igraph_i_dl_add_edge_w((yyvsp[(1) - (4)].integer)-1, (yyvsp[(2) - (4)].integer)-1, (yyvsp[(3) - (4)].real), context); ;}
     break;
 
   case 41:
-#line 197 "src/foreign-dl-parser.y"
+#line 193 "src/foreign-dl-parser.y"
     {
 		   igraph_i_dl_add_edge((yyvsp[(1) - (3)].integer)-1, (yyvsp[(2) - (3)].integer)-1, context);
 ;}
     break;
 
   case 42:
-#line 201 "src/foreign-dl-parser.y"
+#line 197 "src/foreign-dl-parser.y"
     { (yyval.integer)=igraph_pajek_get_number(igraph_dl_yyget_text(scanner), 
 					  igraph_dl_yyget_leng(scanner)); ;}
     break;
 
   case 43:
-#line 204 "src/foreign-dl-parser.y"
+#line 200 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 44:
-#line 205 "src/foreign-dl-parser.y"
+#line 201 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 45:
-#line 208 "src/foreign-dl-parser.y"
+#line 204 "src/foreign-dl-parser.y"
     {
                           igraph_i_dl_add_edge_w((yyvsp[(1) - (4)].integer), (yyvsp[(2) - (4)].integer), (yyvsp[(3) - (4)].real), context); ;}
     break;
 
   case 46:
-#line 210 "src/foreign-dl-parser.y"
+#line 206 "src/foreign-dl-parser.y"
     {
 			  igraph_i_dl_add_edge((yyvsp[(1) - (3)].integer), (yyvsp[(2) - (3)].integer), context);
  ;}
     break;
 
   case 47:
-#line 214 "src/foreign-dl-parser.y"
+#line 210 "src/foreign-dl-parser.y"
     { (yyval.real)=igraph_pajek_get_number(igraph_dl_yyget_text(scanner), 
 					 igraph_dl_yyget_leng(scanner)); ;}
     break;
 
   case 48:
-#line 217 "src/foreign-dl-parser.y"
+#line 213 "src/foreign-dl-parser.y"
     {
   /* Copy label list to trie, if needed */
   if (igraph_strvector_size(&context->labels) != 0) {
@@ -1786,63 +1783,63 @@ yyreduce:
     break;
 
   case 49:
-#line 233 "src/foreign-dl-parser.y"
+#line 229 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 50:
-#line 235 "src/foreign-dl-parser.y"
+#line 231 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 51:
-#line 236 "src/foreign-dl-parser.y"
+#line 232 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 52:
-#line 237 "src/foreign-dl-parser.y"
+#line 233 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 53:
-#line 238 "src/foreign-dl-parser.y"
+#line 234 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 54:
-#line 239 "src/foreign-dl-parser.y"
+#line 235 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 55:
-#line 242 "src/foreign-dl-parser.y"
+#line 238 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 56:
-#line 243 "src/foreign-dl-parser.y"
+#line 239 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 57:
-#line 246 "src/foreign-dl-parser.y"
+#line 242 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 58:
-#line 248 "src/foreign-dl-parser.y"
+#line 244 "src/foreign-dl-parser.y"
     { context->from=igraph_pajek_get_number(igraph_dl_yyget_text(scanner),
 							  igraph_dl_yyget_leng(scanner)); ;}
     break;
 
   case 59:
-#line 251 "src/foreign-dl-parser.y"
+#line 247 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 60:
-#line 251 "src/foreign-dl-parser.y"
+#line 247 "src/foreign-dl-parser.y"
     { 
   IGRAPH_CHECK(igraph_vector_push_back(&context->edges, 
 				       context->from-1)); 
@@ -1851,29 +1848,29 @@ yyreduce:
     break;
 
   case 61:
-#line 257 "src/foreign-dl-parser.y"
+#line 253 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 62:
-#line 258 "src/foreign-dl-parser.y"
+#line 254 "src/foreign-dl-parser.y"
     {;}
     break;
 
   case 63:
-#line 261 "src/foreign-dl-parser.y"
+#line 257 "src/foreign-dl-parser.y"
     { ;}
     break;
 
   case 64:
-#line 263 "src/foreign-dl-parser.y"
+#line 259 "src/foreign-dl-parser.y"
     {
   context->from=(yyvsp[(1) - (1)].integer);
  ;}
     break;
 
   case 66:
-#line 267 "src/foreign-dl-parser.y"
+#line 263 "src/foreign-dl-parser.y"
     {
   IGRAPH_CHECK(igraph_vector_push_back(&context->edges, 
 				       context->from));
@@ -1883,7 +1880,7 @@ yyreduce:
 
 
 /* Line 1267 of yacc.c.  */
-#line 1887 "y.tab.c"
+#line 1884 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2103,7 +2100,7 @@ yyreturn:
 }
 
 
-#line 273 "src/foreign-dl-parser.y"
+#line 269 "src/foreign-dl-parser.y"
 
 
 int igraph_dl_yyerror(YYLTYPE* locp, igraph_i_dl_parsedata_t* context, 

@@ -454,6 +454,19 @@ int igraph_community_edge_betweenness(const igraph_t *graph,
     if (igraph_vector_min(weights) <= 0) {
       IGRAPH_ERROR("weights must be strictly positive", IGRAPH_EINVAL);
     }
+
+    if (membership != 0) {
+      IGRAPH_WARNING("Membership vector will be selected based on the lowest "\
+          "modularity score.");
+    }
+    
+    if (modularity != 0 || membership != 0) {
+      IGRAPH_WARNING("Modularity calculation with weighted edge betweenness "\
+          "community detection might not make sense -- modularity treats edge "\
+          "weights as similarities while edge betwenness treats them as "\
+          "distances");
+    }
+
     IGRAPH_CHECK(igraph_2wheap_init(&heap, no_of_nodes));
     IGRAPH_FINALLY(igraph_2wheap_destroy, &heap);
     IGRAPH_CHECK(igraph_inclist_init_empty(&fathers, 
@@ -988,6 +1001,9 @@ int igraph_modularity_matrix(const igraph_t *graph,
   IGRAPH_CHECK(igraph_get_adjacency(graph, modmat, IGRAPH_GET_ADJACENCY_BOTH, 
 				    /*eids=*/ 0));
 
+  for (i=0; i<no_of_nodes; i++) {
+    MATRIX(*modmat, i, i) *= 2;
+  }
   for (i=0; i<no_of_nodes; i++) {
     for (j=0; j<no_of_nodes; j++) {
       MATRIX(*modmat, i, j) -= VECTOR(deg)[i] * VECTOR(deg)[j] / 2.0 / sw;

@@ -21,12 +21,13 @@ This is a color blind friendly palette from
 This is the suggested palette for visualizations where vertex colors
 mark categories, e.g. community membership.
 }
-\examples{
-\dontrun{
+\section{Examples}{
+
+\preformatted{
 library(igraphdata)
 data(karate)
-karate <- karate \%>\%
-  add_layout_(with_fr()) \%>\%
+karate <- karate %>%
+  add_layout_(with_fr()) %>%
   set_vertex_attr("size", value = 10)
 
 cl_k <- cluster_optimal(karate)
@@ -36,6 +37,7 @@ karate$palette <- categorical_pal(length(cl_k))
 plot(karate)
 }
 }
+
 \seealso{
 Other palettes: \code{\link{diverging_pal}},
   \code{\link{r_pal}}, \code{\link{sequential_pal}}

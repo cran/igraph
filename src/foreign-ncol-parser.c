@@ -75,12 +75,14 @@
       know about them.  */
    enum yytokentype {
      ALNUM = 258,
-     NEWLINE = 259
+     NEWLINE = 259,
+     ERROR = 260
    };
 #endif
 /* Tokens.  */
 #define ALNUM 258
 #define NEWLINE 259
+#define ERROR 260
 
 
 
@@ -110,11 +112,6 @@
    02110-1301 USA
 
 */
-
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wconversion"
-#pragma clang diagnostic ignored "-Wsign-conversion"
-#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -162,13 +159,13 @@ igraph_real_t igraph_ncol_get_number(const char *str, long int len);
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 87 "src/foreign-ncol-parser.y"
+#line 82 "src/foreign-ncol-parser.y"
 {
   long int edgenum;
   double weightnum;
 }
 /* Line 193 of yacc.c.  */
-#line 172 "y.tab.c"
+#line 169 "y.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -193,7 +190,7 @@ typedef struct YYLTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 197 "y.tab.c"
+#line 194 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -413,7 +410,7 @@ union yyalloc
 #define YYLAST   10
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  5
+#define YYNTOKENS  6
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  5
 /* YYNRULES -- Number of rules.  */
@@ -423,7 +420,7 @@ union yyalloc
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   259
+#define YYMAXUTOK   260
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -456,7 +453,8 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     1,     2,     3,     4
+       2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
+       5
 };
 
 #if YYDEBUG
@@ -470,15 +468,15 @@ static const yytype_uint8 yyprhs[] =
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-       6,     0,    -1,    -1,     6,     4,    -1,     6,     7,    -1,
-       8,     8,     4,    -1,     8,     8,     9,     4,    -1,     3,
+       7,     0,    -1,    -1,     7,     4,    -1,     7,     8,    -1,
+       9,     9,     4,    -1,     9,     9,    10,     4,    -1,     3,
       -1,     3,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   100,   100,   101,   102,   105,   110,   118,   123
+       0,    96,    96,    97,    98,   101,   106,   114,   119
 };
 #endif
 
@@ -487,8 +485,8 @@ static const yytype_uint8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "ALNUM", "NEWLINE", "$accept", "input",
-  "edge", "edgeid", "weight", 0
+  "$end", "error", "$undefined", "ALNUM", "NEWLINE", "ERROR", "$accept",
+  "input", "edge", "edgeid", "weight", 0
 };
 #endif
 
@@ -497,14 +495,14 @@ static const char *const yytname[] =
    token YYLEX-NUM.  */
 static const yytype_uint16 yytoknum[] =
 {
-       0,   256,   257,   258,   259
+       0,   256,   257,   258,   259,   260
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,     5,     6,     6,     6,     7,     7,     8,     9
+       0,     6,     7,     7,     7,     8,     8,     9,    10
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
@@ -564,8 +562,8 @@ static const yytype_int8 yycheck[] =
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     6,     0,     3,     4,     7,     8,     8,     3,     4,
-       9,     4
+       0,     7,     0,     3,     4,     8,     9,     9,     3,     4,
+      10,     4
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1408,7 +1406,7 @@ yyreduce:
   switch (yyn)
     {
         case 5:
-#line 105 "src/foreign-ncol-parser.y"
+#line 101 "src/foreign-ncol-parser.y"
     { 
            igraph_vector_push_back(context->vector, (yyvsp[(1) - (3)].edgenum));
            igraph_vector_push_back(context->vector, (yyvsp[(2) - (3)].edgenum));
@@ -1417,7 +1415,7 @@ yyreduce:
     break;
 
   case 6:
-#line 110 "src/foreign-ncol-parser.y"
+#line 106 "src/foreign-ncol-parser.y"
     { 
            igraph_vector_push_back(context->vector, (yyvsp[(1) - (4)].edgenum));
            igraph_vector_push_back(context->vector, (yyvsp[(2) - (4)].edgenum));
@@ -1427,7 +1425,7 @@ yyreduce:
     break;
 
   case 7:
-#line 118 "src/foreign-ncol-parser.y"
+#line 114 "src/foreign-ncol-parser.y"
     { igraph_trie_get2(context->trie, 
 				   igraph_ncol_yyget_text(scanner),
 				   igraph_ncol_yyget_leng(scanner), 
@@ -1435,14 +1433,14 @@ yyreduce:
     break;
 
   case 8:
-#line 123 "src/foreign-ncol-parser.y"
+#line 119 "src/foreign-ncol-parser.y"
     { (yyval.weightnum)=igraph_ncol_get_number(igraph_ncol_yyget_text(scanner), 
 					    igraph_ncol_yyget_leng(scanner)); ;}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1446 "y.tab.c"
+#line 1444 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1662,7 +1660,7 @@ yyreturn:
 }
 
 
-#line 126 "src/foreign-ncol-parser.y"
+#line 122 "src/foreign-ncol-parser.y"
 
 
 int igraph_ncol_yyerror(YYLTYPE* locp, 

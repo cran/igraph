@@ -51,42 +51,43 @@
      ARCSLISTLINE = 267,
      EDGESLISTLINE = 268,
      MATRIXLINE = 269,
-     VP_X_FACT = 270,
-     VP_Y_FACT = 271,
-     VP_IC = 272,
-     VP_BC = 273,
-     VP_LC = 274,
-     VP_LR = 275,
-     VP_LPHI = 276,
-     VP_BW = 277,
-     VP_FOS = 278,
-     VP_PHI = 279,
-     VP_R = 280,
-     VP_Q = 281,
-     VP_LA = 282,
-     VP_FONT = 283,
-     VP_URL = 284,
-     VP_SIZE = 285,
-     EP_C = 286,
-     EP_S = 287,
-     EP_A = 288,
-     EP_W = 289,
-     EP_H1 = 290,
-     EP_H2 = 291,
-     EP_A1 = 292,
-     EP_A2 = 293,
-     EP_K1 = 294,
-     EP_K2 = 295,
-     EP_AP = 296,
-     EP_P = 297,
-     EP_L = 298,
-     EP_LP = 299,
-     EP_LR = 300,
-     EP_LPHI = 301,
-     EP_LC = 302,
-     EP_LA = 303,
-     EP_SIZE = 304,
-     EP_FOS = 305
+     ERROR = 270,
+     VP_X_FACT = 271,
+     VP_Y_FACT = 272,
+     VP_IC = 273,
+     VP_BC = 274,
+     VP_LC = 275,
+     VP_LR = 276,
+     VP_LPHI = 277,
+     VP_BW = 278,
+     VP_FOS = 279,
+     VP_PHI = 280,
+     VP_R = 281,
+     VP_Q = 282,
+     VP_LA = 283,
+     VP_FONT = 284,
+     VP_URL = 285,
+     VP_SIZE = 286,
+     EP_C = 287,
+     EP_S = 288,
+     EP_A = 289,
+     EP_W = 290,
+     EP_H1 = 291,
+     EP_H2 = 292,
+     EP_A1 = 293,
+     EP_A2 = 294,
+     EP_K1 = 295,
+     EP_K2 = 296,
+     EP_AP = 297,
+     EP_P = 298,
+     EP_L = 299,
+     EP_LP = 300,
+     EP_LR = 301,
+     EP_LPHI = 302,
+     EP_LC = 303,
+     EP_LA = 304,
+     EP_SIZE = 305,
+     EP_FOS = 306
    };
 #endif
 /* Tokens.  */
@@ -102,49 +103,50 @@
 #define ARCSLISTLINE 267
 #define EDGESLISTLINE 268
 #define MATRIXLINE 269
-#define VP_X_FACT 270
-#define VP_Y_FACT 271
-#define VP_IC 272
-#define VP_BC 273
-#define VP_LC 274
-#define VP_LR 275
-#define VP_LPHI 276
-#define VP_BW 277
-#define VP_FOS 278
-#define VP_PHI 279
-#define VP_R 280
-#define VP_Q 281
-#define VP_LA 282
-#define VP_FONT 283
-#define VP_URL 284
-#define VP_SIZE 285
-#define EP_C 286
-#define EP_S 287
-#define EP_A 288
-#define EP_W 289
-#define EP_H1 290
-#define EP_H2 291
-#define EP_A1 292
-#define EP_A2 293
-#define EP_K1 294
-#define EP_K2 295
-#define EP_AP 296
-#define EP_P 297
-#define EP_L 298
-#define EP_LP 299
-#define EP_LR 300
-#define EP_LPHI 301
-#define EP_LC 302
-#define EP_LA 303
-#define EP_SIZE 304
-#define EP_FOS 305
+#define ERROR 270
+#define VP_X_FACT 271
+#define VP_Y_FACT 272
+#define VP_IC 273
+#define VP_BC 274
+#define VP_LC 275
+#define VP_LR 276
+#define VP_LPHI 277
+#define VP_BW 278
+#define VP_FOS 279
+#define VP_PHI 280
+#define VP_R 281
+#define VP_Q 282
+#define VP_LA 283
+#define VP_FONT 284
+#define VP_URL 285
+#define VP_SIZE 286
+#define EP_C 287
+#define EP_S 288
+#define EP_A 289
+#define EP_W 290
+#define EP_H1 291
+#define EP_H2 292
+#define EP_A1 293
+#define EP_A2 294
+#define EP_K1 295
+#define EP_K2 296
+#define EP_AP 297
+#define EP_P 298
+#define EP_L 299
+#define EP_LP 300
+#define EP_LR 301
+#define EP_LPHI 302
+#define EP_LC 303
+#define EP_LA 304
+#define EP_SIZE 305
+#define EP_FOS 306
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 123 "src/foreign-pajek-parser.y"
+#line 118 "src/foreign-pajek-parser.y"
 {
   long int intnum;
   double   realnum;  
@@ -154,7 +156,7 @@ typedef union YYSTYPE
   } string;  
 }
 /* Line 1529 of yacc.c.  */
-#line 158 "y.tab.h"
+#line 160 "y.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

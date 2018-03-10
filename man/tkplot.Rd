@@ -165,24 +165,22 @@ vertex.
 \code{tk_rotate} rotates the figure, its parameter can be given either
 in degrees or in radians.
 }
-\examples{
+\section{Examples}{
 
+\preformatted{
 g <- make_ring(10)
-\dontrun{tkplot(g)}
+tkplot(g)
 
-\dontrun{
 ## Saving a tkplot() to a file programatically
-g <- make_star(10, center=10) \%u\% make_ring(9, directed=TRUE)
+g <- make_star(10, center=10) %u% make_ring(9, directed=TRUE)
 E(g)$width <- sample(1:10, ecount(g), replace=TRUE)
 lay <- layout_nicely(g)
 
 id <- tkplot(g, layout=lay)
 canvas <- tk_canvas(id)
-tkpostscript(canvas, file="/tmp/output.eps")
+tcltk::tkpostscript(canvas, file="/tmp/output.eps")
 tk_close(id)
-}
 
-\dontrun{
 ## Setting the coordinates and adding a title label
 g <- make_ring(10)
 id <- tkplot(make_ring(10), canvas.width=450, canvas.height=500)
@@ -196,11 +194,11 @@ tk_set_coords(id, coords)
 width <- as.numeric(tkcget(canvas, "-width"))
 height <- as.numeric(tkcget(canvas, "-height"))
 tkcreate(canvas, "text", width/2, 25, text="My title",
-         justify="center", font=tcltk::tkfont.create(family="helvetica"
-                             ,size=20,weight="bold"))
+         justify="center", font=tcltk::tkfont.create(family="helvetica",
+         size=20,weight="bold"))
+}
 }
 
-}
 \seealso{
 \code{\link{plot.igraph}}, \code{\link{layout}}
 }

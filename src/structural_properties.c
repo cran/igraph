@@ -278,7 +278,12 @@ int igraph_average_path_length(const igraph_t *graph, igraph_real_t *res,
     }    
   } /* for i<no_of_nodes */
 
-  *res /= normfact;
+  
+  if (normfact > 0) {
+    *res /= normfact;
+  } else {
+    *res = IGRAPH_NAN;
+  }
 
   /* clean */
   igraph_Free(already_added);
@@ -2030,8 +2035,9 @@ int igraph_induced_subgraph(const igraph_t *graph, igraph_t *res,
 				     /* invmap= */ 0);
 }
 
-igraph_subgraph_implementation_t igraph_i_induced_subgraph_suggest_implementation(
-    const igraph_t *graph, const igraph_vs_t vids) {
+int igraph_i_induced_subgraph_suggest_implementation(
+    const igraph_t *graph, const igraph_vs_t vids,
+    igraph_subgraph_implementation_t *result) {
   double ratio;
   igraph_integer_t num_vs;
 
@@ -2044,10 +2050,12 @@ igraph_subgraph_implementation_t igraph_i_induced_subgraph_suggest_implementatio
 
   /* TODO: needs benchmarking; threshold was chosen totally arbitrarily */
   if (ratio > 0.5) {
-    return IGRAPH_SUBGRAPH_COPY_AND_DELETE;
+    *result = IGRAPH_SUBGRAPH_COPY_AND_DELETE;
   } else {
-    return IGRAPH_SUBGRAPH_CREATE_FROM_SCRATCH;
+    *result = IGRAPH_SUBGRAPH_CREATE_FROM_SCRATCH;
   }
+
+  return 0;
 }
 
 int igraph_induced_subgraph_map(const igraph_t *graph, igraph_t *res,
@@ -2057,7 +2065,7 @@ int igraph_induced_subgraph_map(const igraph_t *graph, igraph_t *res,
 				igraph_vector_t *invmap) {
 
   if (impl == IGRAPH_SUBGRAPH_AUTO) {
-    impl = igraph_i_induced_subgraph_suggest_implementation(graph, vids);
+    IGRAPH_CHECK(igraph_i_induced_subgraph_suggest_implementation(graph, vids, &impl));
   }
 
   switch (impl) {
@@ -5562,7 +5570,7 @@ int igraph_unfold_tree(const igraph_t *graph, igraph_t *tree,
   igraph_dqueue_t Q;
   igraph_vector_t neis;
   
-  long int r, v_ptr=no_of_nodes;
+  long int i, n, r, v_ptr=no_of_nodes;
 
   /* TODO: handle not-connected graphs, multiple root vertices */
 
@@ -5575,10 +5583,7 @@ int igraph_unfold_tree(const igraph_t *graph, igraph_t *tree,
   IGRAPH_FINALLY(igraph_vector_bool_destroy, &seen_edges);
   
   if (vertex_index) { 
-    long int i;
-    IGRAPH_CHECK(igraph_vector_resize(vertex_index, 
-				      no_of_nodes > no_of_edges+1 ? 
-				      no_of_nodes : no_of_edges+1));
+    IGRAPH_CHECK(igraph_vector_resize(vertex_index, no_of_nodes));
     for (i=0; i<no_of_nodes; i++) {
       VECTOR(*vertex_index)[i] = i;
     }
@@ -5592,7 +5597,6 @@ int igraph_unfold_tree(const igraph_t *graph, igraph_t *tree,
   
     while (!igraph_dqueue_empty(&Q)) {
       long int actnode=(long int) igraph_dqueue_pop(&Q);
-      long int i, n;
       
       IGRAPH_CHECK(igraph_incident(graph, &neis, (igraph_integer_t) actnode,
 				   mode));
@@ -5619,7 +5623,7 @@ int igraph_unfold_tree(const igraph_t *graph, igraph_t *tree,
 	  } else {
 	    
 	    if (vertex_index) { 
-	      VECTOR(*vertex_index)[v_ptr] = nei;
+	      IGRAPH_CHECK(igraph_vector_push_back(vertex_index, nei));
 	    }
 	    
 	    if (from==nei) {
@@ -5856,8 +5860,11 @@ int igraph_i_avg_nearest_neighbor_degree_weighted(const igraph_t *graph,
  *   this.
  * \param weights Optional edge weights. Supply a null pointer here
  *   for the non-weighted version. If this is not a null pointer, then
- *   the strength of the vertices is used instead of the normal vertex
- *   degree, see \ref igraph_strength().
+ *   the calculated quantity will be the sum of the strengths of the
+ *   neighbors of a given vertex (see \ref igraph_strength() ), divided 
+ *   by the strength of the vertex itself. Note that the denominator is
+ *   \em not the unweighted degree of the vertex so the quantity is not
+ *   really an "average" in this case.
  * \return Error code.
  * 
  * Time complexity: O(|V|+|E|), linear in the number of vertices and

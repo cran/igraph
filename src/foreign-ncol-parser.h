@@ -40,25 +40,27 @@
       know about them.  */
    enum yytokentype {
      ALNUM = 258,
-     NEWLINE = 259
+     NEWLINE = 259,
+     ERROR = 260
    };
 #endif
 /* Tokens.  */
 #define ALNUM 258
 #define NEWLINE 259
+#define ERROR 260
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 87 "src/foreign-ncol-parser.y"
+#line 82 "src/foreign-ncol-parser.y"
 {
   long int edgenum;
   double weightnum;
 }
 /* Line 1529 of yacc.c.  */
-#line 62 "y.tab.h"
+#line 64 "y.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

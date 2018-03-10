@@ -76,13 +76,15 @@
    enum yytokentype {
      ALNUM = 258,
      NEWLINE = 259,
-     HASH = 260
+     HASH = 260,
+     ERROR = 261
    };
 #endif
 /* Tokens.  */
 #define ALNUM 258
 #define NEWLINE 259
 #define HASH 260
+#define ERROR 261
 
 
 
@@ -113,11 +115,6 @@
 
 */
 
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wconversion"
-#pragma clang diagnostic ignored "-Wsign-conversion"
-#endif
-
 #include <stdio.h>
 #include <string.h>
 #include "igraph_hacks_internal.h"
@@ -135,7 +132,7 @@
 int igraph_lgl_yylex(YYSTYPE* lvalp, YYLTYPE* llocp, 
 		     void* scanner);
 int igraph_lgl_yyerror(YYLTYPE* locp, igraph_i_lgl_parsedata_t *context, 
-		       char *s);
+		       const char *s);
 char *igraph_lgl_yyget_text (yyscan_t yyscanner );
 int igraph_lgl_yyget_leng (yyscan_t yyscanner );
 igraph_real_t igraph_lgl_get_number(const char *str, long int len);
@@ -163,13 +160,13 @@ igraph_real_t igraph_lgl_get_number(const char *str, long int len);
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 86 "src/foreign-lgl-parser.y"
+#line 81 "src/foreign-lgl-parser.y"
 {
   long int edgenum;
   double weightnum;
 }
 /* Line 193 of yacc.c.  */
-#line 173 "y.tab.c"
+#line 170 "y.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -194,7 +191,7 @@ typedef struct YYLTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 198 "y.tab.c"
+#line 195 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -414,7 +411,7 @@ union yyalloc
 #define YYLAST   10
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  6
+#define YYNTOKENS  7
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  8
 /* YYNRULES -- Number of rules.  */
@@ -424,7 +421,7 @@ union yyalloc
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   260
+#define YYMAXUTOK   261
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -458,7 +455,7 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5
+       5,     6
 };
 
 #if YYDEBUG
@@ -473,17 +470,17 @@ static const yytype_uint8 yyprhs[] =
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-       7,     0,    -1,    -1,     7,     4,    -1,     7,     8,    -1,
-       9,    10,    -1,     5,    12,     4,    -1,    -1,    10,    11,
-      -1,    12,     4,    -1,    12,    13,     4,    -1,     3,    -1,
+       8,     0,    -1,    -1,     8,     4,    -1,     8,     9,    -1,
+      10,    11,    -1,     5,    13,     4,    -1,    -1,    11,    12,
+      -1,    13,     4,    -1,    13,    14,     4,    -1,     3,    -1,
        3,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   100,   100,   101,   102,   105,   107,   109,   109,   111,
-     116,   125,   130
+       0,    96,    96,    97,    98,   101,   103,   105,   105,   107,
+     112,   121,   126
 };
 #endif
 
@@ -492,8 +489,9 @@ static const yytype_uint8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "ALNUM", "NEWLINE", "HASH", "$accept",
-  "input", "vertex", "vertexdef", "edges", "edge", "edgeid", "weight", 0
+  "$end", "error", "$undefined", "ALNUM", "NEWLINE", "HASH", "ERROR",
+  "$accept", "input", "vertex", "vertexdef", "edges", "edge", "edgeid",
+  "weight", 0
 };
 #endif
 
@@ -502,15 +500,15 @@ static const char *const yytname[] =
    token YYLEX-NUM.  */
 static const yytype_uint16 yytoknum[] =
 {
-       0,   256,   257,   258,   259,   260
+       0,   256,   257,   258,   259,   260,   261
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,     6,     7,     7,     7,     8,     9,    10,    10,    11,
-      11,    12,    13
+       0,     7,     8,     8,     8,     9,    10,    11,    11,    12,
+      12,    13,    14
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
@@ -571,8 +569,8 @@ static const yytype_int8 yycheck[] =
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     7,     0,     4,     5,     8,     9,     3,    12,    10,
-       4,    11,    12,     3,     4,    13,     4
+       0,     8,     0,     4,     5,     9,    10,     3,    13,    11,
+       4,    12,    13,     3,     4,    14,     4
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1415,12 +1413,12 @@ yyreduce:
   switch (yyn)
     {
         case 6:
-#line 107 "src/foreign-lgl-parser.y"
+#line 103 "src/foreign-lgl-parser.y"
     { context->actvertex=(yyvsp[(2) - (3)].edgenum); ;}
     break;
 
   case 9:
-#line 111 "src/foreign-lgl-parser.y"
+#line 107 "src/foreign-lgl-parser.y"
     { 
              igraph_vector_push_back(context->vector, context->actvertex);
              igraph_vector_push_back(context->vector, (yyvsp[(1) - (2)].edgenum));
@@ -1429,7 +1427,7 @@ yyreduce:
     break;
 
   case 10:
-#line 116 "src/foreign-lgl-parser.y"
+#line 112 "src/foreign-lgl-parser.y"
     { 
 	     igraph_vector_push_back(context->vector, context->actvertex);
              igraph_vector_push_back(context->vector, (yyvsp[(1) - (3)].edgenum));
@@ -1439,7 +1437,7 @@ yyreduce:
     break;
 
   case 11:
-#line 125 "src/foreign-lgl-parser.y"
+#line 121 "src/foreign-lgl-parser.y"
     { igraph_trie_get2(context->trie, 
 				   igraph_lgl_yyget_text(scanner), 
 				   igraph_lgl_yyget_leng(scanner), 
@@ -1447,14 +1445,14 @@ yyreduce:
     break;
 
   case 12:
-#line 130 "src/foreign-lgl-parser.y"
+#line 126 "src/foreign-lgl-parser.y"
     { (yyval.weightnum)=igraph_lgl_get_number(igraph_lgl_yyget_text(scanner), 
 					   igraph_lgl_yyget_leng(scanner)); ;}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1458 "y.tab.c"
+#line 1456 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1674,11 +1672,11 @@ yyreturn:
 }
 
 
-#line 133 "src/foreign-lgl-parser.y"
+#line 129 "src/foreign-lgl-parser.y"
 
 
 int igraph_lgl_yyerror(YYLTYPE* locp, igraph_i_lgl_parsedata_t *context, 
-		       char *s) {
+		       const char *s) {
   snprintf(context->errmsg, sizeof(context->errmsg)/sizeof(char), 
 	   "Parse error in LGL file, line %i (%s)", 
 	   locp->first_line, s);

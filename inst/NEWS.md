@@ -1,4 +1,13 @@
 
+# igraph 1.2.1
+
+- The GLPK library is optional, if it is not available, then the
+  `cluster_optimal()` function does not work. Unfortunately we cannot
+  bundle the GLPK library into igraph on CRAN any more, because CRAN
+  maintainers forbid the pragmas in its source code.
+- Removed the NMF package dependency, and related functions.
+- Fix compilation without libxml2
+
 # igraph 1.1.2
 
 Jul 20, 2017

@@ -3436,9 +3436,11 @@ SEXP R_igraph_add_edges(SEXP graph, SEXP edges) {
 
   R_SEXP_to_vector(edges, &v);
   R_SEXP_to_igraph_copy(graph, &g);
+  IGRAPH_FINALLY(igraph_destroy, &g);
   igraph_add_edges(&g, &v, 0);
   PROTECT(result=R_igraph_to_SEXP(&g));
   igraph_destroy(&g);
+  IGRAPH_FINALLY_CLEAN(1);
 
   UNPROTECT(1);
   return result;
@@ -7325,9 +7327,11 @@ SEXP R_igraph_community_to_membership2(SEXP pmerges, SEXP pvcount,
   
   R_SEXP_to_matrix(pmerges, &merges);
   igraph_vector_init(&membership, 0);
+  IGRAPH_FINALLY(igraph_vector_destroy, &membership);
 
   igraph_community_to_membership(&merges, vcount, steps, &membership, 0);
   PROTECT(result=R_igraph_vector_to_SEXP(&membership));
+  IGRAPH_FINALLY_CLEAN(1);
   
   UNPROTECT(1);
   return result;

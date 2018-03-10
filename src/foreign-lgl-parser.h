@@ -41,26 +41,28 @@
    enum yytokentype {
      ALNUM = 258,
      NEWLINE = 259,
-     HASH = 260
+     HASH = 260,
+     ERROR = 261
    };
 #endif
 /* Tokens.  */
 #define ALNUM 258
 #define NEWLINE 259
 #define HASH 260
+#define ERROR 261
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 86 "src/foreign-lgl-parser.y"
+#line 81 "src/foreign-lgl-parser.y"
 {
   long int edgenum;
   double weightnum;
 }
 /* Line 1529 of yacc.c.  */
-#line 64 "y.tab.h"
+#line 66 "y.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

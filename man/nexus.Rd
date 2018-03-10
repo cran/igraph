@@ -194,8 +194,10 @@ networks that are included in the data set.
 Detailed data set information is printed similarly, but it contains more
 fields.
 }
-\examples{
-\dontrun{nexus_list(tag="weighted")
+\section{Examples}{
+
+\preformatted{
+nexus_list(tag="weighted")
 nexus_list(limit=3, order="name")
 nexus_list(limit=3, order="name")[[1]]
 nexus_info(2)
@@ -212,3 +214,4 @@ nexus_search("name:network")
 nexus_search("blog or US or karate")
 }
 }
+

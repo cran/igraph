@@ -137,10 +137,8 @@ positive and negative links, \url{http://arxiv.org/abs/0811.2329} (2008).
 \code{\link{communities}}, \code{\link{components}}
 }
 \author{
-Jorg Reichardt
-(\url{http://theorie.physik.uni-wuerzburg.de/~reichardt/}) for the original
-code and Gabor Csardi \email{csardi.gabor@gmail.com} for the igraph glue
-code.
+Jorg Reichardt for the original code and Gabor Csardi
+\email{csardi.gabor@gmail.com} for the igraph glue code.
 
 Changes to the original function for including the possibility of negative
 ties were implemented by Vincent Traag (\url{http://www.traag.net/}).
