@@ -19,18 +19,7 @@
 \alias{plot_hierarchy}
 \alias{max_cohesion}
 \alias{exportPajek}
-\alias{length.cohesiveBlocks}
-\alias{blocks}
-\alias{graphs_from_cohesive_blocks}
 \alias{cohesion.cohesiveBlocks}
-\alias{hierarchy}
-\alias{parent}
-\alias{print.cohesiveBlocks}
-\alias{summary.cohesiveBlocks}
-\alias{plot.cohesiveBlocks}
-\alias{plot_hierarchy}
-\alias{export_pajek}
-\alias{max_cohesion}
 \title{Calculate Cohesive Blocks}
 \usage{
 cohesive_blocks(graph, labels = TRUE)
@@ -51,11 +40,12 @@ parent(blocks)
 
 \method{summary}{cohesiveBlocks}(object, ...)
 
-\method{plot}{cohesiveBlocks}(x, y, colbar = rainbow(max(cohesion(x)) + 1),
-  col = colbar[max_cohesion(x) + 1], mark.groups = blocks(x)[-1], ...)
-
-plot_hierarchy(blocks, layout = layout_as_tree(hierarchy(blocks), root = 1),
+\method{plot}{cohesiveBlocks}(x, y, colbar = rainbow(max(cohesion(x)) +
+  1), col = colbar[max_cohesion(x) + 1], mark.groups = blocks(x)[-1],
   ...)
+
+plot_hierarchy(blocks, layout = layout_as_tree(hierarchy(blocks), root =
+  1), ...)
 
 export_pajek(blocks, graph, file, project.file = TRUE)
 

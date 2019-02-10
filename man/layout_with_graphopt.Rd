@@ -6,9 +6,9 @@
 \alias{with_graphopt}
 \title{The graphopt layout algorithm}
 \usage{
-layout_with_graphopt(graph, start = NULL, niter = 500, charge = 0.001,
-  mass = 30, spring.length = 0, spring.constant = 1,
-  max.sa.movement = 5)
+layout_with_graphopt(graph, start = NULL, niter = 500,
+  charge = 0.001, mass = 30, spring.length = 0,
+  spring.constant = 1, max.sa.movement = 5)
 
 with_graphopt(...)
 }
@@ -87,4 +87,5 @@ Other graph layouts: \code{\link{add_layout_}},
 Michael Schmuhl for the original graphopt code, rewritten and
 wrapped by Gabor Csardi \email{csardi.gabor@gmail.com}.
 }
+\concept{graph layouts}
 \keyword{graphs}

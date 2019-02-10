@@ -40,3 +40,4 @@ Other graph isomorphism: \code{\link{count_isomorphisms}},
   \code{\link{subgraph_isomorphic}},
   \code{\link{subgraph_isomorphisms}}
 }
+\concept{graph isomorphism}

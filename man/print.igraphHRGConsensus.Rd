@@ -31,3 +31,4 @@ Other hierarchical random graph functions: \code{\link{consensus_tree}},
   \code{\link{predict_edges}},
   \code{\link{print.igraphHRG}}, \code{\link{sample_hrg}}
 }
+\concept{hierarchical random graph functions}

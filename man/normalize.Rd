@@ -4,8 +4,8 @@
 \alias{normalize}
 \title{Normalize layout}
 \usage{
-normalize(xmin = -1, xmax = 1, ymin = xmin, ymax = xmax, zmin = xmin,
-  zmax = xmax)
+normalize(xmin = -1, xmax = 1, ymin = xmin, ymax = xmax,
+  zmin = xmin, zmax = xmax)
 }
 \arguments{
 \item{xmin, xmax}{Minimum and maximum for x coordinates.}
@@ -46,3 +46,5 @@ Other graph layouts: \code{\link{add_layout_}},
   \code{\link{layout_}}, \code{\link{merge_coords}},
   \code{\link{norm_coords}}
 }
+\concept{graph layouts}
+\concept{layout modifiers}

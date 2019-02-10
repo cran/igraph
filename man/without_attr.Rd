@@ -22,3 +22,4 @@ Other constructor modifiers: \code{\link{simplified}},
   \code{\link{with_vertex_}}, \code{\link{without_loops}},
   \code{\link{without_multiples}}
 }
+\concept{constructor modifiers}

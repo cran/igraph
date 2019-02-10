@@ -21,3 +21,4 @@ Other constructor modifiers: \code{\link{simplified}},
   \code{\link{without_attr}}, \code{\link{without_loops}},
   \code{\link{without_multiples}}
 }
+\concept{constructor modifiers}

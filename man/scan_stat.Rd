@@ -61,3 +61,4 @@ scan_stat(graphs = tsg, locality = "them", k = 1, tau = 4, ell = 2)
 \seealso{
 Other scan statistics: \code{\link{local_scan}}
 }
+\concept{scan statistics}

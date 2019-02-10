@@ -7,7 +7,8 @@
 \title{The Sugiyama graph layout generator}
 \usage{
 layout_with_sugiyama(graph, layers = NULL, hgap = 1, vgap = 1,
-  maxiter = 100, weights = NULL, attributes = c("default", "all", "none"))
+  maxiter = 100, weights = NULL, attributes = c("default", "all",
+  "none"))
 
 with_sugiyama(...)
 }
@@ -226,4 +227,5 @@ Other graph layouts: \code{\link{add_layout_}},
 \author{
 Tamas Nepusz \email{ntamas@gmail.com}
 }
+\concept{graph layouts}
 \keyword{graphs}

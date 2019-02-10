@@ -51,3 +51,4 @@ Other graph isomorphism: \code{\link{count_subgraph_isomorphisms}},
   \code{\link{subgraph_isomorphic}},
   \code{\link{subgraph_isomorphisms}}
 }
+\concept{graph isomorphism}

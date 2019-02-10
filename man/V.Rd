@@ -72,3 +72,4 @@ Other vertex and edge sequences: \code{\link{E}},
   \code{\link{print.igraph.es}},
   \code{\link{print.igraph.vs}}
 }
+\concept{vertex and edge sequences}

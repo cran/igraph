@@ -44,3 +44,4 @@ sample_motifs(g, 3)
 Other graph motifs: \code{\link{count_motifs}},
   \code{\link{sample_motifs}}
 }
+\concept{graph motifs}

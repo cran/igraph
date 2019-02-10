@@ -5,7 +5,8 @@
 \alias{centralization.closeness}
 \title{Centralize a graph according to the closeness of vertices}
 \usage{
-centr_clo(graph, mode = c("out", "in", "all", "total"), normalized = TRUE)
+centr_clo(graph, mode = c("out", "in", "all", "total"),
+  normalized = TRUE)
 }
 \arguments{
 \item{graph}{The input graph.}
@@ -44,3 +45,4 @@ Other centralization related: \code{\link{centr_betw_tmax}},
   \code{\link{centr_eigen_tmax}},
   \code{\link{centr_eigen}}, \code{\link{centralize}}
 }
+\concept{centralization related}

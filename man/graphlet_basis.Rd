@@ -6,13 +6,12 @@
 \alias{graphlets.project}
 \alias{graphlet_proj}
 \alias{graphlets.candidate.basis}
-\alias{graphlet_proj}
 \title{Graphlet decomposition of a graph}
 \usage{
 graphlet_basis(graph, weights = NULL)
 
-graphlet_proj(graph, weights = NULL, cliques, niter = 1000, Mu = rep(1,
-  length(cliques)))
+graphlet_proj(graph, weights = NULL, cliques, niter = 1000,
+  Mu = rep(1, length(cliques)))
 }
 \arguments{
 \item{graph}{The input graph, edge directions are ignored. Only simple graph

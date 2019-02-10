@@ -40,3 +40,4 @@ vec.norm
 Other latent position vector samplers: \code{\link{sample_dirichlet}},
   \code{\link{sample_sphere_volume}}
 }
+\concept{latent position vector samplers}

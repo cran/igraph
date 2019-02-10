@@ -110,3 +110,4 @@ Other functions for manipulating graph structure: \code{\link{add_edges}},
   \code{\link{igraph-minus}}, \code{\link{path}},
   \code{\link{vertex}}
 }
+\concept{functions for manipulating graph structure}

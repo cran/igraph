@@ -6,7 +6,8 @@
 \title{Count the isomorphic mappings between a graph and the subgraphs of
 another graph}
 \usage{
-count_subgraph_isomorphisms(pattern, target, method = c("lad", "vf2"), ...)
+count_subgraph_isomorphisms(pattern, target, method = c("lad", "vf2"),
+  ...)
 }
 \arguments{
 \item{pattern}{The smaller graph, it might be directed or
@@ -85,3 +86,4 @@ Other graph isomorphism: \code{\link{count_isomorphisms}},
   \code{\link{subgraph_isomorphic}},
   \code{\link{subgraph_isomorphisms}}
 }
+\concept{graph isomorphism}

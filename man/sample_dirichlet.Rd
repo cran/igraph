@@ -35,3 +35,4 @@ colSums(lpvs.dir)
 Other latent position vector samplers: \code{\link{sample_sphere_surface}},
   \code{\link{sample_sphere_volume}}
 }
+\concept{latent position vector samplers}

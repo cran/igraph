@@ -6,9 +6,9 @@
 \alias{from_incidence_matrix}
 \title{Create graphs from an incidence matrix}
 \usage{
-graph_from_incidence_matrix(incidence, directed = FALSE, mode = c("all",
-  "out", "in", "total"), multiple = FALSE, weighted = NULL,
-  add.names = NULL)
+graph_from_incidence_matrix(incidence, directed = FALSE,
+  mode = c("all", "out", "in", "total"), multiple = FALSE,
+  weighted = NULL, add.names = NULL)
 
 from_incidence_matrix(...)
 }

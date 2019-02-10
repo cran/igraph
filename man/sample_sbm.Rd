@@ -6,7 +6,8 @@
 \alias{sbm}
 \title{Sample stochastic block model}
 \usage{
-sample_sbm(n, pref.matrix, block.sizes, directed = FALSE, loops = FALSE)
+sample_sbm(n, pref.matrix, block.sizes, directed = FALSE,
+  loops = FALSE)
 }
 \arguments{
 \item{n}{Number of vertices in the graph.}

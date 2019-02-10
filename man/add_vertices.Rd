@@ -44,3 +44,4 @@ Other functions for manipulating graph structure: \code{\link{+.igraph}},
   \code{\link{igraph-minus}}, \code{\link{path}},
   \code{\link{vertex}}
 }
+\concept{functions for manipulating graph structure}

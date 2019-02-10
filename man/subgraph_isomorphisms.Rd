@@ -75,3 +75,4 @@ Other graph isomorphism: \code{\link{count_isomorphisms}},
   \code{\link{isomorphisms}},
   \code{\link{subgraph_isomorphic}}
 }
+\concept{graph isomorphism}

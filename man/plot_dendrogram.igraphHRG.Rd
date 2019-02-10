@@ -5,8 +5,8 @@
 \alias{hrg.dendrogram}
 \title{HRG dendrogram plot}
 \usage{
-\method{plot_dendrogram}{igraphHRG}(x, mode = igraph_opt("dend.plot.type"),
-  ...)
+\method{plot_dendrogram}{igraphHRG}(x,
+  mode = igraph_opt("dend.plot.type"), ...)
 }
 \arguments{
 \item{x}{An \code{igraphHRG}, a hierarchical random graph, as returned by

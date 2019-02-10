@@ -5,8 +5,8 @@
 \title{Compute local scan statistics on graphs}
 \usage{
 local_scan(graph.us, graph.them = NULL, k = 1, FUN = NULL,
-  weighted = FALSE, mode = c("out", "in", "all"), neighborhoods = NULL,
-  ...)
+  weighted = FALSE, mode = c("out", "in", "all"),
+  neighborhoods = NULL, ...)
 }
 \arguments{
 \item{graph.us, graph}{An igraph object, the graph for which the scan
@@ -96,3 +96,4 @@ Priebe, C. E., Conroy, J. M., Marchette, D. J., Park,
 \seealso{
 Other scan statistics: \code{\link{scan_stat}}
 }
+\concept{scan statistics}

@@ -3,7 +3,6 @@
 \name{igraph-dollar}
 \alias{igraph-dollar}
 \alias{$.igraph}
-\alias{igraph-dollar}
 \alias{$<-.igraph}
 \title{Getting and setting graph attributes, shortcut}
 \usage{
@@ -44,3 +43,4 @@ Other graph attributes: \code{\link{delete_edge_attr}},
   \code{\link{vertex_attr_names}},
   \code{\link{vertex_attr}}
 }
+\concept{graph attributes}

@@ -5,8 +5,6 @@
 \alias{induced.subgraph}
 \alias{subgraph.edges}
 \alias{induced_subgraph}
-\alias{induced_subgraph}
-\alias{subgraph.edges}
 \title{Subgraph of a graph}
 \usage{
 subgraph(graph, v)

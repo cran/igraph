@@ -24,22 +24,7 @@
 \alias{as_phylo.communities}
 \alias{show_trace}
 \alias{is_hierarchical}
-\alias{print.communities}
 \alias{modularity.communities}
-\alias{length.communities}
-\alias{sizes}
-\alias{algorithm}
-\alias{merges}
-\alias{crossing}
-\alias{code_len}
-\alias{is_hierarchical}
-\alias{as.dendrogram.communities}
-\alias{as.hclust.communities}
-\alias{as_phylo}
-\alias{as_phylo.communities}
-\alias{cut_at}
-\alias{show_trace}
-\alias{plot.communities}
 \title{Functions to deal with the result of network community detection}
 \usage{
 membership(communities)
@@ -65,7 +50,8 @@ is_hierarchical(communities)
 \method{as.dendrogram}{communities}(object, hang = -1,
   use.modularity = FALSE, ...)
 
-\method{as.hclust}{communities}(x, hang = -1, use.modularity = FALSE, ...)
+\method{as.hclust}{communities}(x, hang = -1, use.modularity = FALSE,
+  ...)
 
 as_phylo(x, ...)
 
@@ -76,8 +62,8 @@ cut_at(communities, no, steps)
 show_trace(communities)
 
 \method{plot}{communities}(x, y, col = membership(x),
-  mark.groups = communities(x), edge.color = c("black", "red")[crossing(x,
-  y) + 1], ...)
+  mark.groups = communities(x), edge.color = c("black",
+  "red")[crossing(x, y) + 1], ...)
 }
 \arguments{
 \item{communities, x, object}{A \code{communities} object, the result of an

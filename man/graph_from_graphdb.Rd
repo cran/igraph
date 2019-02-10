@@ -7,8 +7,8 @@
 \usage{
 graph_from_graphdb(url = NULL, prefix = "iso", type = "r001",
   nodes = NULL, pair = "A", which = 0,
-  base = "http://cneurocvs.rmki.kfki.hu/graphdb/gzip", compressed = TRUE,
-  directed = TRUE)
+  base = "http://cneurocvs.rmki.kfki.hu/graphdb/gzip",
+  compressed = TRUE, directed = TRUE)
 }
 \arguments{
 \item{url}{If not \code{NULL} it is a complete URL with the file to import.}

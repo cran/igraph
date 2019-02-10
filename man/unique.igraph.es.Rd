@@ -41,3 +41,4 @@ Other vertex and edge sequence operations: \code{\link{c.igraph.es}},
   \code{\link{union.igraph.vs}},
   \code{\link{unique.igraph.vs}}
 }
+\concept{vertex and edge sequence operations}

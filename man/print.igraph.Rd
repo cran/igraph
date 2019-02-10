@@ -5,7 +5,6 @@
 \alias{print_all}
 \alias{summary.igraph}
 \alias{str.igraph}
-\alias{summary.igraph}
 \title{Print graphs to the terminal}
 \usage{
 \method{print}{igraph}(x, full = igraph_opt("print.full"),

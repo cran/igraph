@@ -45,3 +45,4 @@ Other graph attributes: \code{\link{delete_edge_attr}},
   \code{\link{vertex_attr_names}},
   \code{\link{vertex_attr}}
 }
+\concept{graph attributes}

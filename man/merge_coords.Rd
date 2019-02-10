@@ -5,7 +5,6 @@
 \alias{layout.merge}
 \alias{piecewise.layout}
 \alias{layout_components}
-\alias{piecewise.layout}
 \title{Merging graph layouts}
 \usage{
 merge_coords(graphs, layouts, method = "dla")
@@ -91,4 +90,5 @@ Other graph layouts: \code{\link{add_layout_}},
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{graph layouts}
 \keyword{graphs}

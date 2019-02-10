@@ -10,12 +10,12 @@
 \alias{largest.cliques}
 \alias{count_max_cliques}
 \alias{max_cliques}
-\alias{max_cliques}
 \title{The functions find cliques, ie. complete subgraphs in a graph}
 \usage{
 cliques(graph, min = NULL, max = NULL)
 
-max_cliques(graph, min = NULL, max = NULL, subset = NULL, file = NULL)
+max_cliques(graph, min = NULL, max = NULL, subset = NULL,
+  file = NULL)
 }
 \arguments{
 \item{graph}{The input graph, directed graphs will be considered as

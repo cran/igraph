@@ -4,8 +4,8 @@
 \alias{[[.igraph}
 \title{Query and manipulate a graph as it were an adjacency list}
 \usage{
-\method{[[}{igraph}(x, i, j, from, to, ..., directed = TRUE, edges = FALSE,
-  exact = TRUE)
+\method{[[}{igraph}(x, i, j, from, to, ..., directed = TRUE,
+  edges = FALSE, exact = TRUE)
 }
 \arguments{
 \item{x}{The graph.}
@@ -80,3 +80,4 @@ Other structural queries: \code{\link{[.igraph}},
   \code{\link{is_directed}}, \code{\link{neighbors}},
   \code{\link{tail_of}}
 }
+\concept{structural queries}

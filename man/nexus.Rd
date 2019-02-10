@@ -14,12 +14,6 @@
 \alias{nexus_get}
 \alias{nexus_search}
 \alias{nexusDatasetInfo}
-\alias{print.nexusDatasetInfo}
-\alias{print.nexusDatasetInfoList}
-\alias{summary.nexusDatasetInfoList}
-\alias{nexus_info}
-\alias{nexus_get}
-\alias{nexus_search}
 \alias{[.nexusDatasetInfoList}
 \title{Query and download from the Nexus network repository}
 \usage{

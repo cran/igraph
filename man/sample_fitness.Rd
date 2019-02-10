@@ -5,8 +5,8 @@
 \alias{static.fitness.game}
 \title{Random graphs from vertex fitness scores}
 \usage{
-sample_fitness(no.of.edges, fitness.out, fitness.in = NULL, loops = FALSE,
-  multiple = FALSE)
+sample_fitness(no.of.edges, fitness.out, fitness.in = NULL,
+  loops = FALSE, multiple = FALSE)
 }
 \arguments{
 \item{no.of.edges}{The number of edges in the generated graph.}

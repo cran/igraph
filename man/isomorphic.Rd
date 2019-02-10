@@ -9,10 +9,11 @@
 \alias{is_isomorphic_to}
 \title{Decide if two graphs are isomorphic}
 \usage{
-isomorphic(graph1, graph2, method = c("auto", "direct", "vf2", "bliss"), ...)
-
-is_isomorphic_to(graph1, graph2, method = c("auto", "direct", "vf2", "bliss"),
+isomorphic(graph1, graph2, method = c("auto", "direct", "vf2", "bliss"),
   ...)
+
+is_isomorphic_to(graph1, graph2, method = c("auto", "direct", "vf2",
+  "bliss"), ...)
 }
 \arguments{
 \item{graph1}{The first graph.}
@@ -138,3 +139,4 @@ Other graph isomorphism: \code{\link{count_isomorphisms}},
   \code{\link{subgraph_isomorphic}},
   \code{\link{subgraph_isomorphisms}}
 }
+\concept{graph isomorphism}

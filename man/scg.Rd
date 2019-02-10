@@ -8,8 +8,9 @@ scg(X, ev, nt, groups = NULL, mtype = c("symmetric", "laplacian",
   "stochastic"), algo = c("optimum", "interv_km", "interv", "exact_scg"),
   norm = c("row", "col"), direction = c("default", "left", "right"),
   evec = NULL, p = NULL, use.arpack = FALSE, maxiter = 300,
-  sparse = igraph_opt("sparsematrices"), output = c("default", "matrix",
-  "graph"), semproj = FALSE, epairs = FALSE, stat.prob = FALSE)
+  sparse = igraph_opt("sparsematrices"), output = c("default",
+  "matrix", "graph"), semproj = FALSE, epairs = FALSE,
+  stat.prob = FALSE)
 }
 \arguments{
 \item{X}{The input graph or square matrix. Can be of class \code{igraph},

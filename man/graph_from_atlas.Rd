@@ -49,6 +49,5 @@ Other determimistic constructors: \code{\link{graph_from_edgelist}},
   \code{\link{make_lattice}}, \code{\link{make_ring}},
   \code{\link{make_star}}, \code{\link{make_tree}}
 }
-\concept{
-Graph Atlas.
-}
+\concept{Graph Atlas.}
+\concept{determimistic constructors}

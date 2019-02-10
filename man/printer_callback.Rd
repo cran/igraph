@@ -34,3 +34,4 @@ The subcommands:
 \seealso{
 Other printer callbacks: \code{\link{is_printer_callback}}
 }
+\concept{printer callbacks}

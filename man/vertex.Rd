@@ -45,3 +45,4 @@ Other functions for manipulating graph structure: \code{\link{+.igraph}},
   \code{\link{delete_vertices}}, \code{\link{edge}},
   \code{\link{igraph-minus}}, \code{\link{path}}
 }
+\concept{functions for manipulating graph structure}

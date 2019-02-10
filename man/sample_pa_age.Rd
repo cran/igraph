@@ -9,9 +9,9 @@
 \title{Generate an evolving random graph with preferential attachment and aging}
 \usage{
 sample_pa_age(n, pa.exp, aging.exp, m = NULL, aging.bin = 300,
-  out.dist = NULL, out.seq = NULL, out.pref = FALSE, directed = TRUE,
-  zero.deg.appeal = 1, zero.age.appeal = 0, deg.coef = 1, age.coef = 1,
-  time.window = NULL)
+  out.dist = NULL, out.seq = NULL, out.pref = FALSE,
+  directed = TRUE, zero.deg.appeal = 1, zero.age.appeal = 0,
+  deg.coef = 1, age.coef = 1, time.window = NULL)
 
 pa_age(...)
 }

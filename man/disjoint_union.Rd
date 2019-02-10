@@ -4,7 +4,6 @@
 \alias{disjoint_union}
 \alias{graph.disjoint.union}
 \alias{\%du\%}
-\alias{\%du\%}
 \title{Disjoint union of graphs}
 \usage{
 disjoint_union(...)

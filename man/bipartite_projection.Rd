@@ -8,7 +8,8 @@
 \title{Project a bipartite graph}
 \usage{
 bipartite_projection(graph, types = NULL, multiplicity = TRUE,
-  probe1 = NULL, which = c("both", "true", "false"), remove.type = TRUE)
+  probe1 = NULL, which = c("both", "true", "false"),
+  remove.type = TRUE)
 }
 \arguments{
 \item{graph}{The input graph. It can be directed, but edge directions are

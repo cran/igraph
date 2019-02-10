@@ -5,7 +5,6 @@
 \alias{make_bipartite_graph}
 \alias{graph.bipartite}
 \alias{is.bipartite}
-\alias{is_bipartite}
 \alias{bipartite_graph}
 \title{Create a bipartite graph}
 \usage{

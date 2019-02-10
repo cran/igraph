@@ -4,7 +4,6 @@
 \alias{as_data_frame}
 \alias{graph_from_data_frame}
 \alias{graph.data.frame}
-\alias{as_data_frame}
 \alias{get.data.frame}
 \alias{from_data_frame}
 \title{Creating igraph graphs from data frames or vice-versa}

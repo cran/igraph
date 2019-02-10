@@ -65,4 +65,5 @@ Other graph layouts: \code{\link{add_layout_}},
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{graph layouts}
 \keyword{graphs}

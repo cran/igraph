@@ -4,7 +4,8 @@
 \alias{sample_correlated_gnp_pair}
 \title{Sample a pair of correlated G(n,p) random graphs}
 \usage{
-sample_correlated_gnp_pair(n, corr, p, directed = FALSE, permutation = NULL)
+sample_correlated_gnp_pair(n, corr, p, directed = FALSE,
+  permutation = NULL)
 }
 \arguments{
 \item{n}{Numeric scalar, the number of vertices for the sampled graphs.}

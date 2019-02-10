@@ -15,3 +15,4 @@ Is this a printer callback?
 \seealso{
 Other printer callbacks: \code{\link{printer_callback}}
 }
+\concept{printer callbacks}

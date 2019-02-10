@@ -48,3 +48,4 @@ Other graph layouts: \code{\link{component_wise}},
   \code{\link{layout_}}, \code{\link{merge_coords}},
   \code{\link{norm_coords}}, \code{\link{normalize}}
 }
+\concept{graph layouts}

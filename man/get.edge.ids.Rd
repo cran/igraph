@@ -4,7 +4,8 @@
 \alias{get.edge.ids}
 \title{Find the edge ids based on the incident vertices of the edges}
 \usage{
-get.edge.ids(graph, vp, directed = TRUE, error = FALSE, multi = FALSE)
+get.edge.ids(graph, vp, directed = TRUE, error = FALSE,
+  multi = FALSE)
 }
 \arguments{
 \item{graph}{The input graph.}
@@ -65,3 +66,4 @@ Other structural queries: \code{\link{[.igraph}},
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{structural queries}

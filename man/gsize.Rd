@@ -34,3 +34,4 @@ Other structural queries: \code{\link{[.igraph}},
   \code{\link{incident}}, \code{\link{is_directed}},
   \code{\link{neighbors}}, \code{\link{tail_of}}
 }
+\concept{structural queries}

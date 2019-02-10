@@ -5,7 +5,6 @@
 \alias{igraph.options}
 \alias{getIgraphOpt}
 \alias{igraph_opt}
-\alias{igraph_opt}
 \title{Parameters for the igraph package}
 \usage{
 igraph_options(...)
@@ -117,4 +116,5 @@ Other igraph options: \code{\link{with_igraph_opt}}
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{igraph options}
 \keyword{graphs}

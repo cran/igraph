@@ -6,7 +6,8 @@
 \alias{with_mds}
 \title{Graph layout by multidimensional scaling}
 \usage{
-layout_with_mds(graph, dist = NULL, dim = 2, options = arpack_defaults)
+layout_with_mds(graph, dist = NULL, dim = 2,
+  options = arpack_defaults)
 
 with_mds(...)
 }
@@ -82,4 +83,5 @@ Other graph layouts: \code{\link{add_layout_}},
 Tamas Nepusz \email{ntamas@gmail.com} and Gabor Csardi
 \email{csardi.gabor@gmail.com}
 }
+\concept{graph layouts}
 \keyword{graphs}

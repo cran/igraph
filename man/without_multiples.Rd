@@ -19,3 +19,4 @@ Other constructor modifiers: \code{\link{simplified}},
   \code{\link{with_vertex_}}, \code{\link{without_attr}},
   \code{\link{without_loops}}
 }
+\concept{constructor modifiers}

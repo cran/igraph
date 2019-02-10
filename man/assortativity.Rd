@@ -6,8 +6,6 @@
 \alias{assortativity_degree}
 \alias{assortativity.nominal}
 \alias{assortativity_nominal}
-\alias{assortativity_nominal}
-\alias{assortativity_degree}
 \title{Assortativity coefficient}
 \usage{
 assortativity(graph, types1, types2 = NULL, directed = TRUE)

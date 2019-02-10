@@ -5,8 +5,8 @@
 \alias{infomap.community}
 \title{Infomap community finding}
 \usage{
-cluster_infomap(graph, e.weights = NULL, v.weights = NULL, nb.trials = 10,
-  modularity = TRUE)
+cluster_infomap(graph, e.weights = NULL, v.weights = NULL,
+  nb.trials = 10, modularity = TRUE)
 }
 \arguments{
 \item{graph}{The input graph.}

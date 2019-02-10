@@ -7,8 +7,8 @@
 \title{Create graphs from adjacency matrices}
 \usage{
 graph_from_adjacency_matrix(adjmatrix, mode = c("directed", "undirected",
-  "max", "min", "upper", "lower", "plus"), weighted = NULL, diag = TRUE,
-  add.colnames = NULL, add.rownames = NA)
+  "max", "min", "upper", "lower", "plus"), weighted = NULL,
+  diag = TRUE, add.colnames = NULL, add.rownames = NA)
 
 from_adjacency(...)
 }

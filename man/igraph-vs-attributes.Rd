@@ -3,13 +3,9 @@
 \name{igraph-vs-attributes}
 \alias{igraph-vs-attributes}
 \alias{[[<-.igraph.vs}
-\alias{igraph-vs-attributes}
 \alias{[<-.igraph.vs}
-\alias{igraph-vs-attributes}
 \alias{$.igraph.vs}
-\alias{igraph-vs-attributes}
 \alias{$<-.igraph.vs}
-\alias{igraph-vs-attributes}
 \alias{V<-}
 \title{Query or set attributes of the vertices in a vertex sequence}
 \usage{
@@ -100,3 +96,5 @@ Other graph attributes: \code{\link{delete_edge_attr}},
   \code{\link{vertex_attr_names}},
   \code{\link{vertex_attr}}
 }
+\concept{graph attributes}
+\concept{vertex and edge sequences}

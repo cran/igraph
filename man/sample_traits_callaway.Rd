@@ -6,12 +6,12 @@
 \alias{callaway.traits.game}
 \alias{establishment.game}
 \alias{traits_callaway}
-\alias{sample_traits}
 \alias{traits}
 \title{Graph generation based on different vertex types}
 \usage{
-sample_traits_callaway(nodes, types, edge.per.step = 1, type.dist = rep(1,
-  types), pref.matrix = matrix(1, types, types), directed = FALSE)
+sample_traits_callaway(nodes, types, edge.per.step = 1,
+  type.dist = rep(1, types), pref.matrix = matrix(1, types, types),
+  directed = FALSE)
 
 traits_callaway(...)
 

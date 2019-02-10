@@ -38,4 +38,5 @@ Other rewiring functions: \code{\link{keeping_degseq}},
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{rewiring functions}
 \keyword{graphs}

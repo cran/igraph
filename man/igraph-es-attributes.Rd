@@ -3,13 +3,9 @@
 \name{igraph-es-attributes}
 \alias{igraph-es-attributes}
 \alias{[[<-.igraph.es}
-\alias{igraph-es-attributes}
 \alias{[<-.igraph.es}
-\alias{igraph-es-attributes}
 \alias{$.igraph.es}
-\alias{igraph-es-attributes}
 \alias{$<-.igraph.es}
-\alias{igraph-es-attributes}
 \alias{E<-}
 \title{Query or set attributes of the edges in an edge sequence}
 \usage{
@@ -94,3 +90,4 @@ Other vertex and edge sequences: \code{\link{E}},
   \code{\link{print.igraph.es}},
   \code{\link{print.igraph.vs}}
 }
+\concept{vertex and edge sequences}

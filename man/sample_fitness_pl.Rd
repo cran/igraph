@@ -5,8 +5,9 @@
 \alias{static.power.law.game}
 \title{Scale-free random graphs, from vertex fitness scores}
 \usage{
-sample_fitness_pl(no.of.nodes, no.of.edges, exponent.out, exponent.in = -1,
-  loops = FALSE, multiple = FALSE, finite.size.correction = TRUE)
+sample_fitness_pl(no.of.nodes, no.of.edges, exponent.out,
+  exponent.in = -1, loops = FALSE, multiple = FALSE,
+  finite.size.correction = TRUE)
 }
 \arguments{
 \item{no.of.nodes}{The number of vertices in the generated graph.}

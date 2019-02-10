@@ -7,8 +7,9 @@
 \alias{similarity.invlogweighted}
 \title{Similarity measures of two vertices}
 \usage{
-similarity(graph, vids = V(graph), mode = c("all", "out", "in", "total"),
-  loops = FALSE, method = c("jaccard", "dice", "invlogweighted"))
+similarity(graph, vids = V(graph), mode = c("all", "out", "in",
+  "total"), loops = FALSE, method = c("jaccard", "dice",
+  "invlogweighted"))
 }
 \arguments{
 \item{graph}{The input graph.}

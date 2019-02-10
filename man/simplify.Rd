@@ -4,7 +4,6 @@
 \alias{simplify}
 \alias{is.simple}
 \alias{is_simple}
-\alias{is_simple}
 \title{Simple graphs}
 \usage{
 simplify(graph, remove.multiple = TRUE, remove.loops = TRUE,

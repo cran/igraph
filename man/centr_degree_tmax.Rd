@@ -5,8 +5,8 @@
 \alias{centralization.degree.tmax}
 \title{Theoretical maximum for degree centralization}
 \usage{
-centr_degree_tmax(graph = NULL, nodes = 0, mode = c("all", "out", "in",
-  "total"), loops = FALSE)
+centr_degree_tmax(graph = NULL, nodes = 0, mode = c("all", "out",
+  "in", "total"), loops = FALSE)
 }
 \arguments{
 \item{graph}{The input graph. It can also be \code{NULL}, if
@@ -41,3 +41,4 @@ Other centralization related: \code{\link{centr_betw_tmax}},
   \code{\link{centr_eigen_tmax}},
   \code{\link{centr_eigen}}, \code{\link{centralize}}
 }
+\concept{centralization related}

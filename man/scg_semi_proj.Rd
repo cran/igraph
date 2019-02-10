@@ -6,7 +6,8 @@
 \title{Semi-Projectors}
 \usage{
 scg_semi_proj(groups, mtype = c("symmetric", "laplacian", "stochastic"),
-  p = NULL, norm = c("row", "col"), sparse = igraph_opt("sparsematrices"))
+  p = NULL, norm = c("row", "col"),
+  sparse = igraph_opt("sparsematrices"))
 }
 \arguments{
 \item{groups}{A vector of \code{nrow(X)} or \code{vcount(X)} integers giving

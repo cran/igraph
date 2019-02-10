@@ -47,3 +47,4 @@ Other graph attributes: \code{\link{delete_edge_attr}},
   \code{\link{vertex_attr<-}},
   \code{\link{vertex_attr_names}}
 }
+\concept{graph attributes}

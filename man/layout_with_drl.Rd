@@ -12,8 +12,9 @@
 \alias{with_drl}
 \title{The DrL graph layout generator}
 \usage{
-layout_with_drl(graph, use.seed = FALSE, seed = matrix(runif(vcount(graph) *
-  2), ncol = 2), options = drl_defaults$default, weights = E(graph)$weight,
+layout_with_drl(graph, use.seed = FALSE,
+  seed = matrix(runif(vcount(graph) * 2), ncol = 2),
+  options = drl_defaults$default, weights = E(graph)$weight,
   fixed = NULL, dim = 2)
 
 with_drl(...)

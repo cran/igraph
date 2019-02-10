@@ -25,3 +25,4 @@ Other hierarchical random graph functions: \code{\link{consensus_tree}},
   \code{\link{print.igraphHRGConsensus}},
   \code{\link{print.igraphHRG}}
 }
+\concept{hierarchical random graph functions}

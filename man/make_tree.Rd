@@ -45,6 +45,5 @@ Other determimistic constructors: \code{\link{graph_from_atlas}},
   \code{\link{make_lattice}}, \code{\link{make_ring}},
   \code{\link{make_star}}
 }
-\concept{
-Trees.
-}
+\concept{Trees.}
+\concept{determimistic constructors}

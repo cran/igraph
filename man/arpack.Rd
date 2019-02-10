@@ -7,7 +7,6 @@
 \alias{arpack-options}
 \alias{igraph.arpack.default}
 \alias{arpack.unpack.complex}
-\alias{arpack_defaults}
 \title{ARPACK eigenvector calculation}
 \format{An object of class \code{list} of length 14.}
 \usage{

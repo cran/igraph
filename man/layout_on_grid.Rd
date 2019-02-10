@@ -5,7 +5,6 @@
 \alias{layout.grid}
 \alias{layout.grid.3d}
 \alias{on_grid}
-\alias{layout.grid.3d}
 \title{Simple grid layout}
 \usage{
 layout_on_grid(graph, width = 0, height = 0, dim = 2)
@@ -81,4 +80,5 @@ Other graph layouts: \code{\link{add_layout_}},
 \author{
 Tamas Nepusz \email{ntamas@gmail.com}
 }
+\concept{graph layouts}
 \keyword{graphs}

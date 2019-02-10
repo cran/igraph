@@ -9,7 +9,8 @@
 \usage{
 sample_pa(n, power = 1, m = NULL, out.dist = NULL, out.seq = NULL,
   out.pref = FALSE, zero.appeal = 1, directed = TRUE,
-  algorithm = c("psumtree", "psumtree-multiple", "bag"), start.graph = NULL)
+  algorithm = c("psumtree", "psumtree-multiple", "bag"),
+  start.graph = NULL)
 
 pa(...)
 }

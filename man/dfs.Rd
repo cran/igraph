@@ -6,9 +6,9 @@
 \title{Depth-first search}
 \usage{
 dfs(graph, root, neimode = c("out", "in", "all", "total"),
-  unreachable = TRUE, order = TRUE, order.out = FALSE, father = FALSE,
-  dist = FALSE, in.callback = NULL, out.callback = NULL, extra = NULL,
-  rho = parent.frame())
+  unreachable = TRUE, order = TRUE, order.out = FALSE,
+  father = FALSE, dist = FALSE, in.callback = NULL,
+  out.callback = NULL, extra = NULL, rho = parent.frame())
 }
 \arguments{
 \item{graph}{The input graph.}

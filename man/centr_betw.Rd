@@ -5,7 +5,8 @@
 \alias{centralization.betweenness}
 \title{Centralize a graph according to the betweenness of vertices}
 \usage{
-centr_betw(graph, directed = TRUE, nobigint = TRUE, normalized = TRUE)
+centr_betw(graph, directed = TRUE, nobigint = TRUE,
+  normalized = TRUE)
 }
 \arguments{
 \item{graph}{The input graph.}
@@ -48,3 +49,4 @@ Other centralization related: \code{\link{centr_betw_tmax}},
   \code{\link{centr_eigen_tmax}},
   \code{\link{centr_eigen}}, \code{\link{centralize}}
 }
+\concept{centralization related}

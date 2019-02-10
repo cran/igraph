@@ -4,8 +4,8 @@
 \alias{print.igraphHRG}
 \title{Print a hierarchical random graph model to the screen}
 \usage{
-\method{print}{igraphHRG}(x, type = c("auto", "tree", "plain"), level = 3,
-  ...)
+\method{print}{igraphHRG}(x, type = c("auto", "tree", "plain"),
+  level = 3, ...)
 }
 \arguments{
 \item{x}{\code{igraphHRG} object to print.}
@@ -61,3 +61,4 @@ Other hierarchical random graph functions: \code{\link{consensus_tree}},
   \code{\link{print.igraphHRGConsensus}},
   \code{\link{sample_hrg}}
 }
+\concept{hierarchical random graph functions}

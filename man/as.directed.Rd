@@ -3,7 +3,6 @@
 \name{as.directed}
 \alias{as.directed}
 \alias{as.undirected}
-\alias{as.undirected}
 \title{Convert between directed and undirected graphs}
 \usage{
 as.directed(graph, mode = c("mutual", "arbitrary"))

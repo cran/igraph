@@ -43,3 +43,4 @@ Other centralization related: \code{\link{centr_betw_tmax}},
   \code{\link{centr_degree}}, \code{\link{centr_eigen}},
   \code{\link{centralize}}
 }
+\concept{centralization related}

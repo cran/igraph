@@ -5,8 +5,8 @@
 \alias{centralization.degree}
 \title{Centralize a graph according to the degrees of vertices}
 \usage{
-centr_degree(graph, mode = c("all", "out", "in", "total"), loops = TRUE,
-  normalized = TRUE)
+centr_degree(graph, mode = c("all", "out", "in", "total"),
+  loops = TRUE, normalized = TRUE)
 }
 \arguments{
 \item{graph}{The input graph.}
@@ -47,3 +47,4 @@ Other centralization related: \code{\link{centr_betw_tmax}},
   \code{\link{centr_eigen_tmax}},
   \code{\link{centr_eigen}}, \code{\link{centralize}}
 }
+\concept{centralization related}

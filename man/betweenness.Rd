@@ -7,9 +7,7 @@
 \alias{betweenness.estimate}
 \alias{edge.betweenness.estimate}
 \alias{edge_betweenness}
-\alias{estimate_betweenness}
 \alias{estimate_edge_betweenness}
-\alias{edge_betweenness}
 \title{Vertex and edge betweenness centrality}
 \usage{
 estimate_betweenness(graph, vids = V(graph), directed = TRUE, cutoff,
@@ -18,7 +16,8 @@ estimate_betweenness(graph, vids = V(graph), directed = TRUE, cutoff,
 betweenness(graph, v = V(graph), directed = TRUE, weights = NULL,
   nobigint = TRUE, normalized = FALSE)
 
-edge_betweenness(graph, e = E(graph), directed = TRUE, weights = NULL)
+edge_betweenness(graph, e = E(graph), directed = TRUE,
+  weights = NULL)
 }
 \arguments{
 \item{graph}{The graph to analyze.}

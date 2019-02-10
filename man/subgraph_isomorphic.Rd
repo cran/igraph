@@ -7,10 +7,11 @@
 \alias{is_subgraph_isomorphic_to}
 \title{Decide if a graph is subgraph isomorphic to another one}
 \usage{
-subgraph_isomorphic(pattern, target, method = c("auto", "lad", "vf2"), ...)
-
-is_subgraph_isomorphic_to(pattern, target, method = c("auto", "lad", "vf2"),
+subgraph_isomorphic(pattern, target, method = c("auto", "lad", "vf2"),
   ...)
+
+is_subgraph_isomorphic_to(pattern, target, method = c("auto", "lad",
+  "vf2"), ...)
 }
 \arguments{
 \item{pattern}{The smaller graph, it might be directed or
@@ -113,3 +114,4 @@ Other graph isomorphism: \code{\link{count_isomorphisms}},
   \code{\link{isomorphisms}},
   \code{\link{subgraph_isomorphisms}}
 }
+\concept{graph isomorphism}

@@ -38,3 +38,4 @@ Other determimistic constructors: \code{\link{graph_from_atlas}},
   \code{\link{make_lattice}}, \code{\link{make_ring}},
   \code{\link{make_star}}, \code{\link{make_tree}}
 }
+\concept{determimistic constructors}

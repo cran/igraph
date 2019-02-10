@@ -5,7 +5,8 @@
 \alias{label.propagation.community}
 \title{Finding communities based on propagating labels}
 \usage{
-cluster_label_prop(graph, weights = NULL, initial = NULL, fixed = NULL)
+cluster_label_prop(graph, weights = NULL, initial = NULL,
+  fixed = NULL)
 }
 \arguments{
 \item{graph}{The input graph, should be undirected to make sense.}

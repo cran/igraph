@@ -7,8 +7,6 @@
 \alias{is_max_matching}
 \alias{maximum.bipartite.matching}
 \alias{max_bipartite_match}
-\alias{is_max_matching}
-\alias{max_bipartite_match}
 \title{Graph matching}
 \usage{
 is_matching(graph, matching, types = NULL)

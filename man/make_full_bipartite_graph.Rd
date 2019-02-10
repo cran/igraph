@@ -6,8 +6,8 @@
 \alias{full_bipartite_graph}
 \title{Create a full bipartite graph}
 \usage{
-make_full_bipartite_graph(n1, n2, directed = FALSE, mode = c("all", "out",
-  "in"))
+make_full_bipartite_graph(n1, n2, directed = FALSE, mode = c("all",
+  "out", "in"))
 
 full_bipartite_graph(...)
 }

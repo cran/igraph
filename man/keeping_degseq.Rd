@@ -39,4 +39,5 @@ Other rewiring functions: \code{\link{each_edge}},
 Tamas Nepusz \email{ntamas@gmail.com} and Gabor Csardi
 \email{csardi.gabor@gmail.com}
 }
+\concept{rewiring functions}
 \keyword{graphs}

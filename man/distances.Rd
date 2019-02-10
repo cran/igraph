@@ -7,14 +7,10 @@
 \alias{shortest.paths}
 \alias{get.shortest.paths}
 \alias{get.all.shortest.paths}
-\alias{mean_distance}
-\alias{distance_table}
 \alias{average.path.length}
 \alias{path.length.hist}
 \alias{all_shortest_paths}
 \alias{shortest_paths}
-\alias{shortest_paths}
-\alias{all_shortest_paths}
 \title{Shortest (directed or undirected) paths between vertices}
 \usage{
 distance_table(graph, directed = TRUE)
@@ -25,12 +21,12 @@ distances(graph, v = V(graph), to = V(graph), mode = c("all", "out",
   "in"), weights = NULL, algorithm = c("automatic", "unweighted",
   "dijkstra", "bellman-ford", "johnson"))
 
-shortest_paths(graph, from, to = V(graph), mode = c("out", "all", "in"),
-  weights = NULL, output = c("vpath", "epath", "both"),
+shortest_paths(graph, from, to = V(graph), mode = c("out", "all",
+  "in"), weights = NULL, output = c("vpath", "epath", "both"),
   predecessors = FALSE, inbound.edges = FALSE)
 
-all_shortest_paths(graph, from, to = V(graph), mode = c("out", "all", "in"),
-  weights = NULL)
+all_shortest_paths(graph, from, to = V(graph), mode = c("out", "all",
+  "in"), weights = NULL)
 }
 \arguments{
 \item{graph}{The graph to work on.}

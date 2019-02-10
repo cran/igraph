@@ -50,3 +50,4 @@ plot(karate)
 Other palettes: \code{\link{categorical_pal}},
   \code{\link{r_pal}}, \code{\link{sequential_pal}}
 }
+\concept{palettes}

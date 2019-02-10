@@ -98,4 +98,5 @@ Other graph layouts: \code{\link{add_layout_}},
 Tamas Nepusz \email{ntamas@gmail.com} and Gabor Csardi
 \email{csardi.gabor@gmail.com}
 }
+\concept{graph layouts}
 \keyword{graphs}

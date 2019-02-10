@@ -21,3 +21,4 @@ for categories, but they are not very attractive.
 Other palettes: \code{\link{categorical_pal}},
   \code{\link{diverging_pal}}, \code{\link{sequential_pal}}
 }
+\concept{palettes}

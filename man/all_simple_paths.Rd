@@ -4,8 +4,8 @@
 \alias{all_simple_paths}
 \title{List all simple paths from one source}
 \usage{
-all_simple_paths(graph, from, to = V(graph), mode = c("out", "in", "all",
-  "total"))
+all_simple_paths(graph, from, to = V(graph), mode = c("out", "in",
+  "all", "total"))
 }
 \arguments{
 \item{graph}{The input graph.}

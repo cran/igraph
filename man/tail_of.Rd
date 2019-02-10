@@ -28,3 +28,4 @@ Other structural queries: \code{\link{[.igraph}},
   \code{\link{incident_edges}}, \code{\link{incident}},
   \code{\link{is_directed}}, \code{\link{neighbors}}
 }
+\concept{structural queries}

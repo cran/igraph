@@ -40,4 +40,9 @@ is_graphical(degree(g)): \code{\link{is_degseq}}
 \author{
 Tamas Nepusz \email{ntamas@gmail.com}
 }
+\concept{graphical degree sequences
+
+g <- sample_gnp(100, 2/100)
+is_degseq(degree(g))
+is_graphical(degree(g))}
 \keyword{graphs}

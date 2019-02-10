@@ -7,7 +7,8 @@
 \title{Eigenvalues and eigenvectors of the adjacency matrix of a graph}
 \usage{
 spectrum(graph, algorithm = c("arpack", "auto", "lapack", "comp_auto",
-  "comp_lapack", "comp_arpack"), which = list(), options = arpack_defaults)
+  "comp_lapack", "comp_arpack"), which = list(),
+  options = arpack_defaults)
 }
 \arguments{
 \item{graph}{The input graph, can be directed or undirected.}

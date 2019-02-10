@@ -6,9 +6,10 @@
 \title{The Kamada-Kawai layout algorithm}
 \usage{
 layout_with_kk(graph, coords = NULL, dim = 2, maxiter = 50 *
-  vcount(graph), epsilon = 0, kkconst = vcount(graph), weights = NULL,
-  minx = NULL, maxx = NULL, miny = NULL, maxy = NULL, minz = NULL,
-  maxz = NULL, niter, sigma, initemp, coolexp, start)
+  vcount(graph), epsilon = 0, kkconst = vcount(graph),
+  weights = NULL, minx = NULL, maxx = NULL, miny = NULL,
+  maxy = NULL, minz = NULL, maxz = NULL, niter, sigma, initemp,
+  coolexp, start)
 
 with_kk(...)
 }
@@ -115,4 +116,5 @@ Other graph layouts: \code{\link{add_layout_}},
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{graph layouts}
 \keyword{graphs}

@@ -46,3 +46,5 @@ Other graph layouts: \code{\link{add_layout_}},
   \code{\link{layout_}}, \code{\link{merge_coords}},
   \code{\link{norm_coords}}, \code{\link{normalize}}
 }
+\concept{graph layouts}
+\concept{layout modifiers}

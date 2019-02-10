@@ -5,7 +5,8 @@
 \alias{contract.vertices}
 \title{Contract several vertices into a single one}
 \usage{
-contract(graph, mapping, vertex.attr.comb = igraph_opt("vertex.attr.comb"))
+contract(graph, mapping,
+  vertex.attr.comb = igraph_opt("vertex.attr.comb"))
 }
 \arguments{
 \item{graph}{The input graph, it can be directed or undirected.}

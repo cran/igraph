@@ -38,3 +38,4 @@ plot(karate)
 Other palettes: \code{\link{categorical_pal}},
   \code{\link{diverging_pal}}, \code{\link{r_pal}}
 }
+\concept{palettes}

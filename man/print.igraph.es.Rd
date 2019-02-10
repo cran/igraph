@@ -61,3 +61,4 @@ Other vertex and edge sequences: \code{\link{E}},
   \code{\link{igraph-vs-indexing}},
   \code{\link{print.igraph.vs}}
 }
+\concept{vertex and edge sequences}

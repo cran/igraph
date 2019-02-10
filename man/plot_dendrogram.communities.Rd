@@ -8,8 +8,9 @@
 \usage{
 plot_dendrogram(x, mode = igraph_opt("dend.plot.type"), ...)
 
-\method{plot_dendrogram}{communities}(x, mode = igraph_opt("dend.plot.type"),
-  ..., use.modularity = FALSE, palette = categorical_pal(8))
+\method{plot_dendrogram}{communities}(x,
+  mode = igraph_opt("dend.plot.type"), ..., use.modularity = FALSE,
+  palette = categorical_pal(8))
 }
 \arguments{
 \item{x}{An object containing the community structure of a graph. See

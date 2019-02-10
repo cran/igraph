@@ -4,7 +4,6 @@
 \alias{degree}
 \alias{degree.distribution}
 \alias{degree_distribution}
-\alias{degree_distribution}
 \title{Degree and degree distribution of the vertices}
 \usage{
 degree(graph, v = V(graph), mode = c("all", "out", "in", "total"),

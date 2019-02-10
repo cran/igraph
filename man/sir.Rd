@@ -5,10 +5,7 @@
 \alias{median.sir}
 \alias{quantile.sir}
 \alias{sir}
-\alias{median.sir}
-\alias{quantile.sir}
 \alias{time_bins}
-\alias{time_bins.sir}
 \title{SIR model on graphs}
 \usage{
 \method{time_bins}{sir}(x, middle = TRUE)

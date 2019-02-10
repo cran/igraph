@@ -40,3 +40,4 @@ Other graph attributes: \code{\link{delete_graph_attr}},
   \code{\link{vertex_attr_names}},
   \code{\link{vertex_attr}}
 }
+\concept{graph attributes}

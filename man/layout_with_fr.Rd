@@ -7,8 +7,9 @@
 \usage{
 layout_with_fr(graph, coords = NULL, dim = 2, niter = 500,
   start.temp = sqrt(vcount(graph)), grid = c("auto", "grid", "nogrid"),
-  weights = NULL, minx = NULL, maxx = NULL, miny = NULL, maxy = NULL,
-  minz = NULL, maxz = NULL, coolexp, maxdelta, area, repulserad, maxiter)
+  weights = NULL, minx = NULL, maxx = NULL, miny = NULL,
+  maxy = NULL, minz = NULL, maxz = NULL, coolexp, maxdelta, area,
+  repulserad, maxiter)
 
 with_fr(...)
 }
@@ -128,4 +129,5 @@ Other graph layouts: \code{\link{add_layout_}},
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{graph layouts}
 \keyword{graphs}

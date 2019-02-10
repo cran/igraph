@@ -6,9 +6,9 @@
 \title{Finding communities in graphs based on statistical meachanics}
 \usage{
 cluster_spinglass(graph, weights = NULL, vertex = NULL, spins = 25,
-  parupdate = FALSE, start.temp = 1, stop.temp = 0.01, cool.fact = 0.99,
-  update.rule = c("config", "random", "simple"), gamma = 1,
-  implementation = c("orig", "neg"), gamma.minus = 1)
+  parupdate = FALSE, start.temp = 1, stop.temp = 0.01,
+  cool.fact = 0.99, update.rule = c("config", "random", "simple"),
+  gamma = 1, implementation = c("orig", "neg"), gamma.minus = 1)
 }
 \arguments{
 \item{graph}{The input graph, can be directed but the direction of the edges

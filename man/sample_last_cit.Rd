@@ -8,9 +8,7 @@
 \alias{sample_cit_cit_types}
 \alias{lastcit.game}
 \alias{last_cit}
-\alias{sample_cit_types}
 \alias{cit_types}
-\alias{sample_cit_cit_types}
 \alias{cit_cit_types}
 \title{Random citation graphs}
 \usage{
@@ -24,8 +22,9 @@ sample_cit_types(n, edges = 1, types = rep(0, n), pref = rep(1,
 
 cit_types(...)
 
-sample_cit_cit_types(n, edges = 1, types = rep(0, n), pref = matrix(1,
-  nrow = length(types), ncol = length(types)), directed = TRUE, attr = TRUE)
+sample_cit_cit_types(n, edges = 1, types = rep(0, n),
+  pref = matrix(1, nrow = length(types), ncol = length(types)),
+  directed = TRUE, attr = TRUE)
 
 cit_cit_types(...)
 }

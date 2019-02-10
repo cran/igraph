@@ -5,8 +5,8 @@
 \alias{evcent}
 \title{Find Eigenvector Centrality Scores of Network Positions}
 \usage{
-eigen_centrality(graph, directed = FALSE, scale = TRUE, weights = NULL,
-  options = arpack_defaults)
+eigen_centrality(graph, directed = FALSE, scale = TRUE,
+  weights = NULL, options = arpack_defaults)
 }
 \arguments{
 \item{graph}{Graph to be analyzed.}
