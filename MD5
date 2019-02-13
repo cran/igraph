@@ -1,4 +1,4 @@
-a97c69c1785df267c9a8bdf9cfa5e431 *DESCRIPTION
+82697155e29b9e13f1aa5f55d1cd1fde *DESCRIPTION
 229efae9effacda32f9f057513f0c875 *NAMESPACE
 638a4ff2bbdff1f6ba877d42da9f8da7 *R/adjacency.R
 ba96cdf262f284a91629bcc81958464a *R/assortativity.R
@@ -73,8 +73,8 @@ c6ff94955e31c10166da5704574ee664 *R/topology.R
 dedeede120a8f6b67ac214934ec34b3d *R/versions.R
 986ffd9c0f8b6ff1c1144a6710954914 *R/weakref.R
 82be9ebc0900c63b2ffff118e8e81f9f *R/zzz-deprecate.R
-b9a0f40f24ee6008a0a7ceb66dd64b89 *configure
-2359fc2534718b80483d04f0570ec744 *configure.ac
+e7a874fe428f9d5ac2393e15625c4ff0 *configure
+266f2d042cb2da57fa4f34394c399df8 *configure.ac
 d41d8cd98f00b204e9800998ecf8427e *configure.win
 f6d91efbe9a92d9da367b19ae2b77d48 *demo/00Index
 594342a01208503fbaac63fa9b1f24fa *demo/centrality.R
@@ -85,7 +85,7 @@ faf3ffd01e590fd13b34efb775f173eb *demo/hrg.R
 771ca356197ee2b54c40ceccb4c2419c *demo/smallworld.R
 63f74b06a17d02a00dac03fb54a07b54 *inst/AUTHORS
 5cc5f3e2c4239fe9a47bfefdbb923dd0 *inst/CITATION
-7b56d0723e1d7b542f058322731a2791 *inst/NEWS.md
+61b5d73c53881e4256ee8b46a82d4984 *inst/NEWS.md
 27e30ac7130f81f5207760f3ef59161c *inst/README.md
 9318bc2aeb60f4f79eac2357da0d9b84 *inst/benchmarks/correlated.R
 4f938e92ca259e3259a5223e87e51bb0 *inst/benchmarks/local.scan.R
@@ -581,7 +581,7 @@ c784fda1171706a403d08b06eb5c243e *src/DensityGrid.cpp
 5ed39a98531aa791d2815b4c5e78d255 *src/DensityGrid_3d.cpp
 5cfb53cff37ca7d43a52db4f8e44ba94 *src/DensityGrid_3d.h
 9861ee6d9df86db6b973b8d8a72d4856 *src/Makevars.in
-5468a6ec548c7123b58cab129d5245f6 *src/Makevars.win
+3e5c857042b7a0f128583c1075674c84 *src/Makevars.win
 47ce39714f6f9d6ec3bd7c91624d87f4 *src/NetDataTypes.cpp
 69166cb2f393e3ab50bebc72b16d3f7e *src/NetDataTypes.h
 19c564585ab9700eb4356ee8eeb32403 *src/NetRoutines.cpp
@@ -613,8 +613,8 @@ edcf3afe464ddbeb584a664159dd8e64 *src/bliss.cc
 d68ac2b15e73f41afa201255b00180cc *src/bliss/bliss_heap.cc
 a908d17c67a15f1630dca13d3251548a *src/bliss/defs.cc
 909a84d005b4e83406e715606b6fb737 *src/bliss/defs.hh
-d9739297bcd67a4f49bc1d3d95a71eed *src/bliss/graph.cc
-6e18bc268db869be993132d19604c5fc *src/bliss/graph.hh
+f1905552a7f3b28221a1481e0b300f5e *src/bliss/graph.cc
+c11809c42634a8bf957f016ceb2078ac *src/bliss/graph.hh
 1f71a985781852d2472d3a5cfb17fd53 *src/bliss/heap.hh
 7e3eefe8a41743d132c7e1faf9d7d491 *src/bliss/igraph-changes.md
 cb75c3b12e2091449199f2620618b9d3 *src/bliss/kqueue.hh
@@ -848,7 +848,7 @@ d45e5264e0d3d4938d079599356bc688 *src/igraph_stack.c
 b5c3cdfed8c984310dae4ee4e3008ee3 *src/igraph_threading.h
 78c519533ba34d958b11a20b183c3dfb *src/igraph_trie.c
 4aa482a23cfc790fe9de29e1f8867038 *src/igraph_types_internal.h
-056b6ced8bfe6256eb01d08d3df7a67d *src/igraph_version.h
+e64695174d95af9bd48fc48220438fcc *src/igraph_version.h
 4244465fd1a0df2470e06a0c10df3e9e *src/include/igraph.h
 6716e5369613ded97a4199ba1023c05b *src/include/igraph_adjlist.h
 2947ecbc2e4cfd62b210777d1769a492 *src/include/igraph_arpack.h
@@ -944,7 +944,7 @@ a4d2a269bb68cd053e9346dddf368584 *src/layout_dh.c
 1e43eb788e8bafae353dd0f127609418 *src/layout_fr.c
 13624439921d6e2b5a0c72731f0cec17 *src/layout_gem.c
 9fa436dd96c8eaccf4f2a3a6f219b5e2 *src/layout_kk.c
-7881243c282b5f14b81c3a652e02d111 *src/lazyeval.c
+ef9170b9e7c2d1bedf611cedcc79fd20 *src/lazyeval.c
 201a9c70e7ebac764daf2578e9753397 *src/lsap.c
 14545fd5a7696734b84b8c7277347ff3 *src/matching.c
 2237e2aefeecfa2a00061eb8d8dfd8fd *src/math.c
@@ -1012,9 +1012,9 @@ d8e4562102dd19aa2b0ebb8b9ffc761a *src/prpack/prpack_utils.h
 f9a82bcf4a3a750ab39528bc8d304053 *src/qsort_r.c
 20fe91e8c46a4b2471a02b3446712ff2 *src/random.c
 84c0c4371f2bcc046dc328374260c71c *src/random_walk.c
-e5d9d6d104a2f86afb0bc56d9ce0c9ff *src/rinterface.c
+cb60dc5bcb6213bb7b0e94167d5301d8 *src/rinterface.c
 55c344dc2daf18e33b5e11a248013759 *src/rinterface.h
-63b9199bb474d623e913a480111ece06 *src/rinterface_extra.c
+9bd640fc620ccde39a84b4f481c9a267 *src/rinterface_extra.c
 9ff59160d545d276ac2419396cd07b77 *src/sbm.c
 57c6afe96c89270e09ba578385afcca1 *src/scan.c
 aea038197b2d7bf291ffae04eb916e1e *src/scg.c
