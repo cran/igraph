@@ -1,4 +1,4 @@
-82697155e29b9e13f1aa5f55d1cd1fde *DESCRIPTION
+b05c335fa34805d0ed7decbb1ef28724 *DESCRIPTION
 229efae9effacda32f9f057513f0c875 *NAMESPACE
 638a4ff2bbdff1f6ba877d42da9f8da7 *R/adjacency.R
 ba96cdf262f284a91629bcc81958464a *R/assortativity.R
@@ -1097,7 +1097,7 @@ d4677977768e0f15fb39a1d42bb4a7e7 *src/walktrap_communities.h
 4708174b9d0a7ad332731d356b1f51fd *src/walktrap_heap.cpp
 50c30f2b5e618bc971622ee539994586 *src/walktrap_heap.h
 5125d305fe99bd9f8a0f550eb758a30f *src/zeroin.c
-69ac2fe32f6046d4f6bb82ac12d76d42 *tests/testthat.R
+3ac491440c081055587468834ef456e0 *tests/testthat.R
 3a5ec4e3cc8d87587b31237c5541f86e *tests/testthat/celegansneural.gml.gz
 28cd0567bf26075c39c14d11c4c829aa *tests/testthat/dyad.census.R
 34d03342fd57be47bdcf3079baea1efa *tests/testthat/football.gml.gz
