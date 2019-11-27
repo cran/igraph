@@ -1,6 +1,6 @@
-b05c335fa34805d0ed7decbb1ef28724 *DESCRIPTION
+b3ab16f8b0bf774e8b93b26060ae5db3 *DESCRIPTION
 229efae9effacda32f9f057513f0c875 *NAMESPACE
-638a4ff2bbdff1f6ba877d42da9f8da7 *R/adjacency.R
+09228ba65a900fdabd76aa20c8b4a9d2 *R/adjacency.R
 ba96cdf262f284a91629bcc81958464a *R/assortativity.R
 4e8a737d746fe286c63f20391b85f5d7 *R/attributes.R
 fefa1c0d053707ca1bceafe8f6be822a *R/auto.R
@@ -29,14 +29,14 @@ e8c095f57a0f7ec495922d3a43d15aec *R/games.R
 e19b328c2621fe0db27bc9622a1003b1 *R/glet.R
 f088a71216577c92399af1b7244b4370 *R/hrg.R
 15a62d62546d46acda84a5eeddb19f42 *R/igraph-package.R
-cdbea7bbcda2d444b162ed7a57238b08 *R/incidence.R
+77186b76f1f2d9bfa48e28556e5b1838 *R/incidence.R
 ca2b9fd8d97dcc7d95988c33170e4777 *R/indexing.R
 94def4d6fa4c5dcde059b083f8a18fe2 *R/interface.R
 5eb3da96bcac60a5ae9636fd003de592 *R/iterators.R
 9b65f227ebf8c4a8cf42fa9861db62ab *R/layout.R
 a37fa01f6f25d76f29ee0301e76a07b1 *R/layout_drl.R
 95366f1e91f837bd730f943ee8c005b8 *R/lazyeval.R
-b510be15bc611d9b6b0e6c4aeedc9058 *R/make.R
+8f44d588c4f1a49d406b834f67214a0e *R/make.R
 90f64fe163faa43dbb168d3f40166e34 *R/minimum.spanning.tree.R
 fc601ca07614dca0e233bdf88ceaf2cf *R/motifs.R
 fcf5d996e7130577144025a55ed94655 *R/nexus.R
@@ -647,7 +647,6 @@ e29b420a3b78dee545166a0c8a168f1f *src/clustertool.cpp
 295ec5dc71ec18d35cf859f93a41903e *src/community.c
 c878447bf8cd5bd7d6ad60299325589f *src/complex.c
 9828657420ac846bfe520574e68ef2c9 *src/components.c
-d41d8cd98f00b204e9800998ecf8427e *src/config.h
 da22a174ed5a1435a55a2ea02737d424 *src/config.h.in
 378725bae7943f46f2251647fafb7a49 *src/conversion.c
 6f20b66f4a09e408f75df47f33b5f04d *src/cores.c
@@ -1182,7 +1181,7 @@ ded360a0009f7c4f67dc2b0352a0fb8a *tests/testthat/test_get.incidence.R
 713863c8a73e169cd24293f85d08fc74 *tests/testthat/test_get.shortest.paths.R
 03b481f55a65183b3b0e8ad203897960 *tests/testthat/test_girth.R
 f2214f9cf209e9878e4da3c57232f17f *tests/testthat/test_graph.adhesion.R
-6616d546c5d1fc6e253cde6c4fdee6db *tests/testthat/test_graph.adjacency.R
+d8a4ae5fc8b23235a3fed1249f21c2be *tests/testthat/test_graph.adjacency.R
 f7f7d009ae1a05610d9410b8bcc9d3a5 *tests/testthat/test_graph.adjlist.R
 9ba1d7ad6342b0bef83bf1aaa52aae50 *tests/testthat/test_graph.atlas.R
 cf3ba37d89177cbbdc45c3c175355921 *tests/testthat/test_graph.bfs.R
@@ -1207,7 +1206,7 @@ eba8e06baddc6b0a8ddfbe7e48cebac2 *tests/testthat/test_graphNEL.R
 7ade84c2f969fe28375fd8d0cb662cc8 *tests/testthat/test_graphlets.R
 3e58a33bfda76293340465d7aac08c86 *tests/testthat/test_hrg.R
 a570ca5f125efa4d98d030585f2004d2 *tests/testthat/test_hsbm.R
-534070cbc470a2fcc3bc59095ee11e6f *tests/testthat/test_igraph.options.R
+753560560670d5f5d28c7029ef745fd8 *tests/testthat/test_igraph.options.R
 026f3752506a2ec286066504e9d37a85 *tests/testthat/test_independent.vertex.sets.R
 e466a39d382b5505b953292b62c50366 *tests/testthat/test_indexing.R
 ff070d086e04573751eb22de047f4b7c *tests/testthat/test_indexing2.R

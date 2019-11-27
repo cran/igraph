@@ -2,7 +2,7 @@
 ## ----------------------------------------------------------------
 ##
 ##   IGraph R package
-##   Copyright (C) 2005-2014  Gabor Csardi <csardi.gabor@gmail.com>
+##   Copyright (C) 2005-2019  Gabor Csardi <csardi.gabor@gmail.com>
 ##   334 Harvard street, Cambridge, MA 02139 USA
 ##
 ##   This program is free software; you can redistribute it and/or modify
@@ -69,6 +69,20 @@ graph.adjacency.dense <- function(adjmatrix, mode=c("directed", "undirected", "m
   res
 }
 
+
+m2triplet <- get0("mat2triplet", asNamespace("Matrix"), inherits=FALSE)
+if(!is.function(m2triplet)) ## <==> (packageVersion("Matrix") < "1.3")
+    m2triplet <- function(x) {  ## a simplified version of new Matrix' mat2triplet()
+        T <- as(x, "TsparseMatrix")
+        if(is(T, "nsparseMatrix"))
+             list(i = T@i + 1L, j = T@j + 1L)
+        else list(i = T@i + 1L, j = T@j + 1L, x = T@x)
+    }
+
+mat_summary <- function(x) as.data.frame(m2triplet(x))
+if(FALSE) ## should work, too, *faster* :
+  mat_summary <- function(x) do.call(cbind, m2triplet(x))
+
 graph.adjacency.sparse <- function(adjmatrix, mode=c("directed", "undirected", "max",
                                                 "min", "upper", "lower", "plus"),
                                    weighted=NULL, diag=TRUE) {
@@ -83,8 +97,6 @@ graph.adjacency.sparse <- function(adjmatrix, mode=c("directed", "undirected", "
       stop("invalid value supplied for `weighted' argument, please see docs.")
     }
   }
-
-  mysummary <- Matrix::summary
 
   if (nrow(adjmatrix) != ncol(adjmatrix)) {
     stop("not a square matrix")
@@ -101,7 +113,7 @@ graph.adjacency.sparse <- function(adjmatrix, mode=c("directed", "undirected", "
 
   if (mode == "directed") {
     ## DIRECTED
-    el <- mysummary(adjmatrix)
+    el <- mat_summary(adjmatrix)
     if (!diag) { el <- el[ el[,1] != el[,2], ] }
   } else if (mode == "undirected") {
     ## UNDIRECTED, must be symmetric if weighted
@@ -113,10 +125,10 @@ graph.adjacency.sparse <- function(adjmatrix, mode=c("directed", "undirected", "
     } else {
       adjmatrix <- Matrix::tril(adjmatrix, -1)
     }
-    el <- mysummary(adjmatrix)
+    el <- mat_summary(adjmatrix)
   } else if (mode=="max") {
     ## MAXIMUM
-    el <- mysummary(adjmatrix)
+    el <- mat_summary(adjmatrix)
     rm(adjmatrix)
     if (!diag) { el <- el[ el[,1] != el[,2], ] }
     el <- el[ el[,3] != 0, ]
@@ -146,7 +158,7 @@ graph.adjacency.sparse <- function(adjmatrix, mode=c("directed", "undirected", "
     } else {
       adjmatrix <- Matrix::triu(adjmatrix, 1)
     }
-    el <- mysummary(adjmatrix)
+    el <- mat_summary(adjmatrix)
     rm(adjmatrix)
     if (!diag) { el <- el[ el[,1] != el[,2], ] }
   } else if (mode=="lower") {
@@ -156,13 +168,13 @@ graph.adjacency.sparse <- function(adjmatrix, mode=c("directed", "undirected", "
     } else {
       adjmatrix <- Matrix::tril(adjmatrix, -1)
     }
-    el <- mysummary(adjmatrix)
+    el <- mat_summary(adjmatrix)
     rm(adjmatrix)
     if (!diag) { el <- el[ el[,1] != el[,2], ] }
   } else if (mode=="min") {
     ## MINIMUM
     adjmatrix <- sign(adjmatrix) * sign(Matrix::t(adjmatrix)) * adjmatrix
-    el <- mysummary(adjmatrix)
+    el <- mat_summary(adjmatrix)
     if (!diag) { el <- el[ el[,1] != el[,2], ] }
     el <- el[ el[,3] != 0, ]
     w <- el[,3]
@@ -192,7 +204,7 @@ graph.adjacency.sparse <- function(adjmatrix, mode=c("directed", "undirected", "
     } else {
       adjmatrix <- Matrix::tril(adjmatrix, -1)
     }
-    el <- mysummary(adjmatrix)
+    el <- mat_summary(adjmatrix)
     if (diag) {
       loop <- el[,1] == el[,2]
       el[loop,3] <- el[loop,3] / 2
