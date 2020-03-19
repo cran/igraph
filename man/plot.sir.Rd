@@ -4,11 +4,23 @@
 \alias{plot.sir}
 \title{Plotting the results on multiple SIR model runs}
 \usage{
-\method{plot}{sir}(x, comp = c("NI", "NS", "NR"), median = TRUE,
-  quantiles = c(0.1, 0.9), color = NULL, median_color = NULL,
-  quantile_color = NULL, lwd.median = 2, lwd.quantile = 2,
-  lty.quantile = 3, xlim = NULL, ylim = NULL, xlab = "Time",
-  ylab = NULL, ...)
+\method{plot}{sir}(
+  x,
+  comp = c("NI", "NS", "NR"),
+  median = TRUE,
+  quantiles = c(0.1, 0.9),
+  color = NULL,
+  median_color = NULL,
+  quantile_color = NULL,
+  lwd.median = 2,
+  lwd.quantile = 2,
+  lty.quantile = 3,
+  xlim = NULL,
+  ylim = NULL,
+  xlab = "Time",
+  ylab = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{The output of the SIR simulation, coming from the \code{\link{sir}}

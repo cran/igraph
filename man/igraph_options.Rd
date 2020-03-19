@@ -111,7 +111,8 @@ igraph_opt("verbose")
 \code{igraph_options} is similar to \code{\link{options}} and
 \code{igraph_opt} is similar to \code{\link{getOption}}.
 
-Other igraph options: \code{\link{with_igraph_opt}}
+Other igraph options: 
+\code{\link{with_igraph_opt}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}

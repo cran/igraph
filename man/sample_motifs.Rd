@@ -5,8 +5,13 @@
 \alias{graph.motifs.est}
 \title{Graph motifs}
 \usage{
-sample_motifs(graph, size = 3, cut.prob = rep(0, size),
-  sample.size = vcount(graph)/10, sample = NULL)
+sample_motifs(
+  graph,
+  size = 3,
+  cut.prob = rep(0, size),
+  sample.size = vcount(graph)/10,
+  sample = NULL
+)
 }
 \arguments{
 \item{graph}{Graph object, the input graph.}
@@ -44,7 +49,8 @@ sample_motifs(g, 3)
 \seealso{
 \code{\link{isomorphism_class}}
 
-Other graph motifs: \code{\link{count_motifs}},
-  \code{\link{motifs}}
+Other graph motifs: 
+\code{\link{count_motifs}()},
+\code{\link{motifs}()}
 }
 \concept{graph motifs}

@@ -47,11 +47,9 @@ code_len(communities)
 
 is_hierarchical(communities)
 
-\method{as.dendrogram}{communities}(object, hang = -1,
-  use.modularity = FALSE, ...)
+\method{as.dendrogram}{communities}(object, hang = -1, use.modularity = FALSE, ...)
 
-\method{as.hclust}{communities}(x, hang = -1, use.modularity = FALSE,
-  ...)
+\method{as.hclust}{communities}(x, hang = -1, use.modularity = FALSE, ...)
 
 as_phylo(x, ...)
 
@@ -61,9 +59,14 @@ cut_at(communities, no, steps)
 
 show_trace(communities)
 
-\method{plot}{communities}(x, y, col = membership(x),
-  mark.groups = communities(x), edge.color = c("black",
-  "red")[crossing(x, y) + 1], ...)
+\method{plot}{communities}(
+  x,
+  y,
+  col = membership(x),
+  mark.groups = communities(x),
+  edge.color = c("black", "red")[crossing(x, y) + 1],
+  ...
+)
 }
 \arguments{
 \item{communities, x, object}{A \code{communities} object, the result of an

@@ -29,18 +29,22 @@ g$name <- "10-ring"
 g$name
 }
 \seealso{
-Other graph attributes: \code{\link{delete_edge_attr}},
-  \code{\link{delete_graph_attr}},
-  \code{\link{delete_vertex_attr}},
-  \code{\link{edge_attr<-}}, \code{\link{edge_attr_names}},
-  \code{\link{edge_attr}}, \code{\link{graph_attr<-}},
-  \code{\link{graph_attr_names}}, \code{\link{graph_attr}},
-  \code{\link{igraph-vs-attributes}},
-  \code{\link{set_edge_attr}},
-  \code{\link{set_graph_attr}},
-  \code{\link{set_vertex_attr}},
-  \code{\link{vertex_attr<-}},
-  \code{\link{vertex_attr_names}},
-  \code{\link{vertex_attr}}
+Other graph attributes: 
+\code{\link{delete_edge_attr}()},
+\code{\link{delete_graph_attr}()},
+\code{\link{delete_vertex_attr}()},
+\code{\link{edge_attr<-}()},
+\code{\link{edge_attr_names}()},
+\code{\link{edge_attr}()},
+\code{\link{graph_attr<-}()},
+\code{\link{graph_attr_names}()},
+\code{\link{graph_attr}()},
+\code{\link{igraph-vs-attributes}},
+\code{\link{set_edge_attr}()},
+\code{\link{set_graph_attr}()},
+\code{\link{set_vertex_attr}()},
+\code{\link{vertex_attr<-}()},
+\code{\link{vertex_attr_names}()},
+\code{\link{vertex_attr}()}
 }
 \concept{graph attributes}

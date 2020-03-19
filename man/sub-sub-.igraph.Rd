@@ -4,8 +4,7 @@
 \alias{[[.igraph}
 \title{Query and manipulate a graph as it were an adjacency list}
 \usage{
-\method{[[}{igraph}(x, i, j, from, to, ..., directed = TRUE,
-  edges = FALSE, exact = TRUE)
+\method{[[}{igraph}(x, i, j, from, to, ..., directed = TRUE, edges = FALSE, exact = TRUE)
 }
 \arguments{
 \item{x}{The graph.}
@@ -71,13 +70,19 @@ Vertex names are also supported, so instead of a numeric vertex id a
 vertex can also be given to \sQuote{\code{[}} and \sQuote{\code{[[}}.
 }
 \seealso{
-Other structural queries: \code{\link{[.igraph}},
-  \code{\link{adjacent_vertices}},
-  \code{\link{are_adjacent}}, \code{\link{ends}},
-  \code{\link{get.edge.ids}}, \code{\link{gorder}},
-  \code{\link{gsize}}, \code{\link{head_of}},
-  \code{\link{incident_edges}}, \code{\link{incident}},
-  \code{\link{is_directed}}, \code{\link{neighbors}},
-  \code{\link{tail_of}}
+Other structural queries: 
+\code{\link{[.igraph}()},
+\code{\link{adjacent_vertices}()},
+\code{\link{are_adjacent}()},
+\code{\link{ends}()},
+\code{\link{get.edge.ids}()},
+\code{\link{gorder}()},
+\code{\link{gsize}()},
+\code{\link{head_of}()},
+\code{\link{incident_edges}()},
+\code{\link{incident}()},
+\code{\link{is_directed}()},
+\code{\link{neighbors}()},
+\code{\link{tail_of}()}
 }
 \concept{structural queries}

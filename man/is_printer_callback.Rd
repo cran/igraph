@@ -13,6 +13,7 @@ is_printer_callback(x)
 Is this a printer callback?
 }
 \seealso{
-Other printer callbacks: \code{\link{printer_callback}}
+Other printer callbacks: 
+\code{\link{printer_callback}()}
 }
 \concept{printer callbacks}

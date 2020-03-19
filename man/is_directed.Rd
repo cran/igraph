@@ -24,12 +24,19 @@ g2 <- make_ring(10, directed = TRUE)
 is_directed(g2)
 }
 \seealso{
-Other structural queries: \code{\link{[.igraph}},
-  \code{\link{[[.igraph}}, \code{\link{adjacent_vertices}},
-  \code{\link{are_adjacent}}, \code{\link{ends}},
-  \code{\link{get.edge.ids}}, \code{\link{gorder}},
-  \code{\link{gsize}}, \code{\link{head_of}},
-  \code{\link{incident_edges}}, \code{\link{incident}},
-  \code{\link{neighbors}}, \code{\link{tail_of}}
+Other structural queries: 
+\code{\link{[.igraph}()},
+\code{\link{[[.igraph}()},
+\code{\link{adjacent_vertices}()},
+\code{\link{are_adjacent}()},
+\code{\link{ends}()},
+\code{\link{get.edge.ids}()},
+\code{\link{gorder}()},
+\code{\link{gsize}()},
+\code{\link{head_of}()},
+\code{\link{incident_edges}()},
+\code{\link{incident}()},
+\code{\link{neighbors}()},
+\code{\link{tail_of}()}
 }
 \concept{structural queries}

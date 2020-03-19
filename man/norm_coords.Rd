@@ -5,8 +5,15 @@
 \alias{layout.norm}
 \title{Normalize coordinates for plotting graphs}
 \usage{
-norm_coords(layout, xmin = -1, xmax = 1, ymin = -1, ymax = 1,
-  zmin = -1, zmax = 1)
+norm_coords(
+  layout,
+  xmin = -1,
+  xmax = 1,
+  ymin = -1,
+  ymax = 1,
+  zmin = -1,
+  zmax = 1
+)
 }
 \arguments{
 \item{layout}{A matrix with two or three columns, the layout to normalize.}
@@ -32,26 +39,28 @@ Rescale coordinates linearly to be within given bounds.
 coordinate separately to fit into the given limits.
 }
 \seealso{
-Other graph layouts: \code{\link{add_layout_}},
-  \code{\link{component_wise}},
-  \code{\link{layout_as_bipartite}},
-  \code{\link{layout_as_star}},
-  \code{\link{layout_as_tree}},
-  \code{\link{layout_in_circle}},
-  \code{\link{layout_nicely}},
-  \code{\link{layout_on_grid}},
-  \code{\link{layout_on_sphere}},
-  \code{\link{layout_randomly}},
-  \code{\link{layout_with_dh}},
-  \code{\link{layout_with_fr}},
-  \code{\link{layout_with_gem}},
-  \code{\link{layout_with_graphopt}},
-  \code{\link{layout_with_kk}},
-  \code{\link{layout_with_lgl}},
-  \code{\link{layout_with_mds}},
-  \code{\link{layout_with_sugiyama}},
-  \code{\link{layout_}}, \code{\link{merge_coords}},
-  \code{\link{normalize}}
+Other graph layouts: 
+\code{\link{add_layout_}()},
+\code{\link{component_wise}()},
+\code{\link{layout_as_bipartite}()},
+\code{\link{layout_as_star}()},
+\code{\link{layout_as_tree}()},
+\code{\link{layout_in_circle}()},
+\code{\link{layout_nicely}()},
+\code{\link{layout_on_grid}()},
+\code{\link{layout_on_sphere}()},
+\code{\link{layout_randomly}()},
+\code{\link{layout_with_dh}()},
+\code{\link{layout_with_fr}()},
+\code{\link{layout_with_gem}()},
+\code{\link{layout_with_graphopt}()},
+\code{\link{layout_with_kk}()},
+\code{\link{layout_with_lgl}()},
+\code{\link{layout_with_mds}()},
+\code{\link{layout_with_sugiyama}()},
+\code{\link{layout_}()},
+\code{\link{merge_coords}()},
+\code{\link{normalize}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}

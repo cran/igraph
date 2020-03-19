@@ -10,8 +10,7 @@
 \alias{cohesion.igraph}
 \title{Vertex connectivity.}
 \usage{
-vertex_connectivity(graph, source = NULL, target = NULL,
-  checks = TRUE)
+vertex_connectivity(graph, source = NULL, target = NULL, checks = TRUE)
 
 \method{cohesion}{igraph}(x, checks = TRUE, ...)
 }

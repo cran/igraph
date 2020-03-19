@@ -39,10 +39,14 @@ g
 plot(g)
 }
 \seealso{
-Other functions for manipulating graph structure: \code{\link{+.igraph}},
-  \code{\link{add_edges}}, \code{\link{add_vertices}},
-  \code{\link{delete_edges}},
-  \code{\link{delete_vertices}}, \code{\link{edge}},
-  \code{\link{igraph-minus}}, \code{\link{path}}
+Other functions for manipulating graph structure: 
+\code{\link{+.igraph}()},
+\code{\link{add_edges}()},
+\code{\link{add_vertices}()},
+\code{\link{delete_edges}()},
+\code{\link{delete_vertices}()},
+\code{\link{edge}()},
+\code{\link{igraph-minus}},
+\code{\link{path}()}
 }
 \concept{functions for manipulating graph structure}

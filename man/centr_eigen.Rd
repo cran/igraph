@@ -5,8 +5,13 @@
 \alias{centralization.evcent}
 \title{Centralize a graph according to the eigenvector centrality of vertices}
 \usage{
-centr_eigen(graph, directed = FALSE, scale = TRUE,
-  options = arpack_defaults, normalized = TRUE)
+centr_eigen(
+  graph,
+  directed = FALSE,
+  scale = TRUE,
+  options = arpack_defaults,
+  normalized = TRUE
+)
 }
 \arguments{
 \item{graph}{The input graph.}
@@ -51,10 +56,14 @@ centr_eigen(g0)$centralization
 centr_eigen(g1)$centralization
 }
 \seealso{
-Other centralization related: \code{\link{centr_betw_tmax}},
-  \code{\link{centr_betw}}, \code{\link{centr_clo_tmax}},
-  \code{\link{centr_clo}}, \code{\link{centr_degree_tmax}},
-  \code{\link{centr_degree}},
-  \code{\link{centr_eigen_tmax}}, \code{\link{centralize}}
+Other centralization related: 
+\code{\link{centr_betw_tmax}()},
+\code{\link{centr_betw}()},
+\code{\link{centr_clo_tmax}()},
+\code{\link{centr_clo}()},
+\code{\link{centr_degree_tmax}()},
+\code{\link{centr_degree}()},
+\code{\link{centr_eigen_tmax}()},
+\code{\link{centralize}()}
 }
 \concept{centralization related}

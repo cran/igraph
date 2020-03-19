@@ -5,9 +5,16 @@
 \alias{edge.betweenness.community}
 \title{Community structure detection based on edge betweenness}
 \usage{
-cluster_edge_betweenness(graph, weights = E(graph)$weight,
-  directed = TRUE, edge.betweenness = TRUE, merges = TRUE,
-  bridges = TRUE, modularity = TRUE, membership = TRUE)
+cluster_edge_betweenness(
+  graph,
+  weights = E(graph)$weight,
+  directed = TRUE,
+  edge.betweenness = TRUE,
+  merges = TRUE,
+  bridges = TRUE,
+  modularity = TRUE,
+  membership = TRUE
+)
 }
 \arguments{
 \item{graph}{The graph to analyze.}

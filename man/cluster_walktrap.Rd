@@ -5,8 +5,14 @@
 \alias{walktrap.community}
 \title{Community strucure via short random walks}
 \usage{
-cluster_walktrap(graph, weights = E(graph)$weight, steps = 4,
-  merges = TRUE, modularity = TRUE, membership = TRUE)
+cluster_walktrap(
+  graph,
+  weights = E(graph)$weight,
+  steps = 4,
+  merges = TRUE,
+  modularity = TRUE,
+  membership = TRUE
+)
 }
 \arguments{
 \item{graph}{The input graph, edge directions are ignored in directed

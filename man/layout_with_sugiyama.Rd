@@ -6,9 +6,15 @@
 \alias{with_sugiyama}
 \title{The Sugiyama graph layout generator}
 \usage{
-layout_with_sugiyama(graph, layers = NULL, hgap = 1, vgap = 1,
-  maxiter = 100, weights = NULL, attributes = c("default", "all",
-  "none"))
+layout_with_sugiyama(
+  graph,
+  layers = NULL,
+  hgap = 1,
+  vgap = 1,
+  maxiter = 100,
+  weights = NULL,
+  attributes = c("default", "all", "none")
+)
 
 with_sugiyama(...)
 }
@@ -124,7 +130,7 @@ V(DC)$shape <- "rectangle"
 V(DC)$size <- 20
 V(DC)$size2 <- 10
 V(DC)$label <- lapply(V(DC)$name, function(x)
-                      paste(strwrap(x, 12), collapse="\\n"))
+                      paste(strwrap(x, 12), collapse="\n"))
 E(DC)$arrow.size <- 0.5
 
 ## Create a similar layout using the predefined layers
@@ -204,25 +210,28 @@ Understanding of Hierarchical Systems". IEEE Transactions on Systems, Man
 and Cybernetics 11(2):109-125, 1981.
 }
 \seealso{
-Other graph layouts: \code{\link{add_layout_}},
-  \code{\link{component_wise}},
-  \code{\link{layout_as_bipartite}},
-  \code{\link{layout_as_star}},
-  \code{\link{layout_as_tree}},
-  \code{\link{layout_in_circle}},
-  \code{\link{layout_nicely}},
-  \code{\link{layout_on_grid}},
-  \code{\link{layout_on_sphere}},
-  \code{\link{layout_randomly}},
-  \code{\link{layout_with_dh}},
-  \code{\link{layout_with_fr}},
-  \code{\link{layout_with_gem}},
-  \code{\link{layout_with_graphopt}},
-  \code{\link{layout_with_kk}},
-  \code{\link{layout_with_lgl}},
-  \code{\link{layout_with_mds}}, \code{\link{layout_}},
-  \code{\link{merge_coords}}, \code{\link{norm_coords}},
-  \code{\link{normalize}}
+Other graph layouts: 
+\code{\link{add_layout_}()},
+\code{\link{component_wise}()},
+\code{\link{layout_as_bipartite}()},
+\code{\link{layout_as_star}()},
+\code{\link{layout_as_tree}()},
+\code{\link{layout_in_circle}()},
+\code{\link{layout_nicely}()},
+\code{\link{layout_on_grid}()},
+\code{\link{layout_on_sphere}()},
+\code{\link{layout_randomly}()},
+\code{\link{layout_with_dh}()},
+\code{\link{layout_with_fr}()},
+\code{\link{layout_with_gem}()},
+\code{\link{layout_with_graphopt}()},
+\code{\link{layout_with_kk}()},
+\code{\link{layout_with_lgl}()},
+\code{\link{layout_with_mds}()},
+\code{\link{layout_}()},
+\code{\link{merge_coords}()},
+\code{\link{norm_coords}()},
+\code{\link{normalize}()}
 }
 \author{
 Tamas Nepusz \email{ntamas@gmail.com}

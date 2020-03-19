@@ -6,8 +6,7 @@
 \alias{\%s\%}
 \title{Intersection of graphs}
 \usage{
-\method{intersection}{igraph}(..., byname = "auto",
-  keep.all.vertices = TRUE)
+\method{intersection}{igraph}(..., byname = "auto", keep.all.vertices = TRUE)
 }
 \arguments{
 \item{\dots}{Graph objects or lists of graph objects.}

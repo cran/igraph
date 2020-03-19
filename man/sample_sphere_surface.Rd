@@ -37,7 +37,8 @@ vec.norm    <- apply(lpvs.sph, 2, function(x) { sum(x^2) })
 vec.norm
 }
 \seealso{
-Other latent position vector samplers: \code{\link{sample_dirichlet}},
-  \code{\link{sample_sphere_volume}}
+Other latent position vector samplers: 
+\code{\link{sample_dirichlet}()},
+\code{\link{sample_sphere_volume}()}
 }
 \concept{latent position vector samplers}

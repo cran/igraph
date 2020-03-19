@@ -20,9 +20,12 @@ make_(ring(10),
   plot()
 }
 \seealso{
-Other constructor modifiers: \code{\link{simplified}},
-  \code{\link{with_graph_}}, \code{\link{with_vertex_}},
-  \code{\link{without_attr}}, \code{\link{without_loops}},
-  \code{\link{without_multiples}}
+Other constructor modifiers: 
+\code{\link{simplified}()},
+\code{\link{with_graph_}()},
+\code{\link{with_vertex_}()},
+\code{\link{without_attr}()},
+\code{\link{without_loops}()},
+\code{\link{without_multiples}()}
 }
 \concept{constructor modifiers}

@@ -5,11 +5,22 @@
 \alias{graph.bfs}
 \title{Breadth-first search}
 \usage{
-bfs(graph, root, neimode = c("out", "in", "all", "total"),
-  unreachable = TRUE, restricted = NULL, order = TRUE,
-  rank = FALSE, father = FALSE, pred = FALSE, succ = FALSE,
-  dist = FALSE, callback = NULL, extra = NULL,
-  rho = parent.frame())
+bfs(
+  graph,
+  root,
+  neimode = c("out", "in", "all", "total"),
+  unreachable = TRUE,
+  restricted = NULL,
+  order = TRUE,
+  rank = FALSE,
+  father = FALSE,
+  pred = FALSE,
+  succ = FALSE,
+  dist = FALSE,
+  callback = NULL,
+  extra = NULL,
+  rho = parent.frame()
+)
 }
 \arguments{
 \item{graph}{The input graph.}

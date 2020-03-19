@@ -32,8 +32,9 @@ g <- rewire(g, each_edge(prob = 0.05))
 mean_distance(g)
 }
 \seealso{
-Other rewiring functions: \code{\link{keeping_degseq}},
-  \code{\link{rewire}}
+Other rewiring functions: 
+\code{\link{keeping_degseq}()},
+\code{\link{rewire}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}

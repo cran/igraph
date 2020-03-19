@@ -5,8 +5,7 @@
 \alias{centralization.closeness}
 \title{Centralize a graph according to the closeness of vertices}
 \usage{
-centr_clo(graph, mode = c("out", "in", "all", "total"),
-  normalized = TRUE)
+centr_clo(graph, mode = c("out", "in", "all", "total"), normalized = TRUE)
 }
 \arguments{
 \item{graph}{The input graph.}
@@ -38,11 +37,14 @@ centr_betw(g, directed = FALSE)$centralization
 centr_eigen(g, directed = FALSE)$centralization
 }
 \seealso{
-Other centralization related: \code{\link{centr_betw_tmax}},
-  \code{\link{centr_betw}}, \code{\link{centr_clo_tmax}},
-  \code{\link{centr_degree_tmax}},
-  \code{\link{centr_degree}},
-  \code{\link{centr_eigen_tmax}},
-  \code{\link{centr_eigen}}, \code{\link{centralize}}
+Other centralization related: 
+\code{\link{centr_betw_tmax}()},
+\code{\link{centr_betw}()},
+\code{\link{centr_clo_tmax}()},
+\code{\link{centr_degree_tmax}()},
+\code{\link{centr_degree}()},
+\code{\link{centr_eigen_tmax}()},
+\code{\link{centr_eigen}()},
+\code{\link{centralize}()}
 }
 \concept{centralization related}

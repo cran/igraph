@@ -13,8 +13,12 @@ is_matching(graph, matching, types = NULL)
 
 is_max_matching(graph, matching, types = NULL)
 
-max_bipartite_match(graph, types = NULL, weights = NULL,
-  eps = .Machine$double.eps)
+max_bipartite_match(
+  graph,
+  types = NULL,
+  weights = NULL,
+  eps = .Machine$double.eps
+)
 }
 \arguments{
 \item{graph}{The input graph. It might be directed, but edge directions will

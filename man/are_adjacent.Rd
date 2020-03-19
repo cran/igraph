@@ -34,12 +34,19 @@ are_adjacent(ug, 1, 2)
 are_adjacent(ug, 2, 1)
 }
 \seealso{
-Other structural queries: \code{\link{[.igraph}},
-  \code{\link{[[.igraph}}, \code{\link{adjacent_vertices}},
-  \code{\link{ends}}, \code{\link{get.edge.ids}},
-  \code{\link{gorder}}, \code{\link{gsize}},
-  \code{\link{head_of}}, \code{\link{incident_edges}},
-  \code{\link{incident}}, \code{\link{is_directed}},
-  \code{\link{neighbors}}, \code{\link{tail_of}}
+Other structural queries: 
+\code{\link{[.igraph}()},
+\code{\link{[[.igraph}()},
+\code{\link{adjacent_vertices}()},
+\code{\link{ends}()},
+\code{\link{get.edge.ids}()},
+\code{\link{gorder}()},
+\code{\link{gsize}()},
+\code{\link{head_of}()},
+\code{\link{incident_edges}()},
+\code{\link{incident}()},
+\code{\link{is_directed}()},
+\code{\link{neighbors}()},
+\code{\link{tail_of}()}
 }
 \concept{structural queries}

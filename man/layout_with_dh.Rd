@@ -6,11 +6,18 @@
 \alias{with_dh}
 \title{The Davidson-Harel layout algorithm}
 \usage{
-layout_with_dh(graph, coords = NULL, maxiter = 10, fineiter = max(10,
-  log2(vcount(graph))), cool.fact = 0.75, weight.node.dist = 1,
-  weight.border = 0, weight.edge.lengths = edge_density(graph)/10,
+layout_with_dh(
+  graph,
+  coords = NULL,
+  maxiter = 10,
+  fineiter = max(10, log2(vcount(graph))),
+  cool.fact = 0.75,
+  weight.node.dist = 1,
+  weight.border = 0,
+  weight.edge.lengths = edge_density(graph)/10,
   weight.edge.crossings = 1 - sqrt(edge_density(graph)),
-  weight.node.edge.dist = 0.2 * (1 - edge_density(graph)))
+  weight.node.edge.dist = 0.2 * (1 - edge_density(graph))
+)
 
 with_dh(...)
 }
@@ -131,25 +138,28 @@ Annealing. \emph{ACM Transactions on Graphics} 15(4), pp. 301-331, 1996.
 \code{\link{layout_with_fr}},
 \code{\link{layout_with_kk}} for other layout algorithms.
 
-Other graph layouts: \code{\link{add_layout_}},
-  \code{\link{component_wise}},
-  \code{\link{layout_as_bipartite}},
-  \code{\link{layout_as_star}},
-  \code{\link{layout_as_tree}},
-  \code{\link{layout_in_circle}},
-  \code{\link{layout_nicely}},
-  \code{\link{layout_on_grid}},
-  \code{\link{layout_on_sphere}},
-  \code{\link{layout_randomly}},
-  \code{\link{layout_with_fr}},
-  \code{\link{layout_with_gem}},
-  \code{\link{layout_with_graphopt}},
-  \code{\link{layout_with_kk}},
-  \code{\link{layout_with_lgl}},
-  \code{\link{layout_with_mds}},
-  \code{\link{layout_with_sugiyama}},
-  \code{\link{layout_}}, \code{\link{merge_coords}},
-  \code{\link{norm_coords}}, \code{\link{normalize}}
+Other graph layouts: 
+\code{\link{add_layout_}()},
+\code{\link{component_wise}()},
+\code{\link{layout_as_bipartite}()},
+\code{\link{layout_as_star}()},
+\code{\link{layout_as_tree}()},
+\code{\link{layout_in_circle}()},
+\code{\link{layout_nicely}()},
+\code{\link{layout_on_grid}()},
+\code{\link{layout_on_sphere}()},
+\code{\link{layout_randomly}()},
+\code{\link{layout_with_fr}()},
+\code{\link{layout_with_gem}()},
+\code{\link{layout_with_graphopt}()},
+\code{\link{layout_with_kk}()},
+\code{\link{layout_with_lgl}()},
+\code{\link{layout_with_mds}()},
+\code{\link{layout_with_sugiyama}()},
+\code{\link{layout_}()},
+\code{\link{merge_coords}()},
+\code{\link{norm_coords}()},
+\code{\link{normalize}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}

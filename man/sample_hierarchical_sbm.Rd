@@ -6,6 +6,8 @@
 \title{Sample the hierarchical stochastic block model}
 \usage{
 sample_hierarchical_sbm(n, m, rho, C, p)
+
+hierarchical_sbm(...)
 }
 \arguments{
 \item{n}{Integer scalar, the number of vertices.}
@@ -56,5 +58,3 @@ if (require(Matrix)) { image(g[]) }
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
 \keyword{graphs}
-\keyword{graphs,}
-\keyword{random}

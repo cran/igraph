@@ -4,10 +4,16 @@
 \alias{embed_laplacian_matrix}
 \title{Spectral Embedding of the Laplacian of a Graph}
 \usage{
-embed_laplacian_matrix(graph, no, weights = NULL, which = c("lm", "la",
-  "sa"), degmode = c("out", "in", "all", "total"), type = c("default",
-  "D-A", "DAD", "I-DAD", "OAP"), scaled = TRUE,
-  options = igraph.arpack.default)
+embed_laplacian_matrix(
+  graph,
+  no,
+  weights = NULL,
+  which = c("lm", "la", "sa"),
+  degmode = c("out", "in", "all", "total"),
+  type = c("default", "D-A", "DAD", "I-DAD", "OAP"),
+  scaled = TRUE,
+  options = igraph.arpack.default
+)
 }
 \arguments{
 \item{graph}{The input graph, directed or undirected.}

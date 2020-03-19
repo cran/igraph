@@ -5,8 +5,13 @@
 \alias{scgNormEps}
 \title{Error of the spectral coarse graining (SCG) approximation}
 \usage{
-scg_eps(V, groups, mtype = c("symmetric", "laplacian", "stochastic"),
-  p = NULL, norm = c("row", "col"))
+scg_eps(
+  V,
+  groups,
+  mtype = c("symmetric", "laplacian", "stochastic"),
+  p = NULL,
+  norm = c("row", "col")
+)
 }
 \arguments{
 \item{V}{A numeric matrix of (eigen)vectors assumed normalized.  The vectors

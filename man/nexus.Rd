@@ -23,17 +23,31 @@
 
 \method{print}{nexusDatasetInfoList}(x, ...)
 
-nexus_list(tags = NULL, offset = 0, limit = 10, operator = c("or",
-  "and"), order = c("date", "name", "popularity"),
-  nexus.url = igraph_opt("nexus.url"))
+nexus_list(
+  tags = NULL,
+  offset = 0,
+  limit = 10,
+  operator = c("or", "and"),
+  order = c("date", "name", "popularity"),
+  nexus.url = igraph_opt("nexus.url")
+)
 
 nexus_info(id, nexus.url = igraph_opt("nexus.url"))
 
-nexus_get(id, offset = 0, order = c("date", "name", "popularity"),
-  nexus.url = igraph_opt("nexus.url"))
+nexus_get(
+  id,
+  offset = 0,
+  order = c("date", "name", "popularity"),
+  nexus.url = igraph_opt("nexus.url")
+)
 
-nexus_search(q, offset = 0, limit = 10, order = c("date", "name",
-  "popularity"), nexus.url = igraph_opt("nexus.url"))
+nexus_search(
+  q,
+  offset = 0,
+  limit = 10,
+  order = c("date", "name", "popularity"),
+  nexus.url = igraph_opt("nexus.url")
+)
 
 \method{[}{nexusDatasetInfoList}(x, i)
 }
@@ -119,7 +133,7 @@ following fields: \describe{
   \item{networks}{The ids and names of the networks in the data set. The
     numeric and character id are separated by a slash, and multiple networks
     are separated by spaces.}
-}
+} 
 
 \code{nexusDatasetInfo} objects returned by \code{nexus_info} have the
 following additional fields: \describe{

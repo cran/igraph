@@ -5,8 +5,14 @@
 \alias{power.law.fit}
 \title{Fitting a power-law distribution function to discrete data}
 \usage{
-fit_power_law(x, xmin = NULL, start = 2, force.continuous = FALSE,
-  implementation = c("plfit", "R.mle"), ...)
+fit_power_law(
+  x,
+  xmin = NULL,
+  start = 2,
+  force.continuous = FALSE,
+  implementation = c("plfit", "R.mle"),
+  ...
+)
 }
 \arguments{
 \item{x}{The data to fit, a numeric vector. For implementation

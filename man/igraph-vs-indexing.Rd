@@ -120,29 +120,33 @@ V(g)[ .nei( c('B', 'D'), "in" ) ]
 V(g)[ .nei( c('B', 'D'), "out" ) ]
 }
 \seealso{
-Other vertex and edge sequences: \code{\link{E}},
-  \code{\link{V}}, \code{\link{igraph-es-attributes}},
-  \code{\link{igraph-es-indexing2}},
-  \code{\link{igraph-es-indexing}},
-  \code{\link{igraph-vs-attributes}},
-  \code{\link{igraph-vs-indexing2}},
-  \code{\link{print.igraph.es}},
-  \code{\link{print.igraph.vs}}
+Other vertex and edge sequences: 
+\code{\link{E}()},
+\code{\link{V}()},
+\code{\link{igraph-es-attributes}},
+\code{\link{igraph-es-indexing2}},
+\code{\link{igraph-es-indexing}},
+\code{\link{igraph-vs-attributes}},
+\code{\link{igraph-vs-indexing2}},
+\code{\link{print.igraph.es}()},
+\code{\link{print.igraph.vs}()}
 
-Other vertex and edge sequence operations: \code{\link{c.igraph.es}},
-  \code{\link{c.igraph.vs}},
-  \code{\link{difference.igraph.es}},
-  \code{\link{difference.igraph.vs}},
-  \code{\link{igraph-es-indexing2}},
-  \code{\link{igraph-es-indexing}},
-  \code{\link{igraph-vs-indexing2}},
-  \code{\link{intersection.igraph.es}},
-  \code{\link{intersection.igraph.vs}},
-  \code{\link{rev.igraph.es}}, \code{\link{rev.igraph.vs}},
-  \code{\link{union.igraph.es}},
-  \code{\link{union.igraph.vs}},
-  \code{\link{unique.igraph.es}},
-  \code{\link{unique.igraph.vs}}
+Other vertex and edge sequence operations: 
+\code{\link{c.igraph.es}()},
+\code{\link{c.igraph.vs}()},
+\code{\link{difference.igraph.es}()},
+\code{\link{difference.igraph.vs}()},
+\code{\link{igraph-es-indexing2}},
+\code{\link{igraph-es-indexing}},
+\code{\link{igraph-vs-indexing2}},
+\code{\link{intersection.igraph.es}()},
+\code{\link{intersection.igraph.vs}()},
+\code{\link{rev.igraph.es}()},
+\code{\link{rev.igraph.vs}()},
+\code{\link{union.igraph.es}()},
+\code{\link{union.igraph.vs}()},
+\code{\link{unique.igraph.es}()},
+\code{\link{unique.igraph.vs}()}
 }
 \concept{vertex and edge sequence operations}
 \concept{vertex and edge sequences}

@@ -5,8 +5,13 @@
 \alias{is.chordal}
 \title{Chordality of a graph}
 \usage{
-is_chordal(graph, alpha = NULL, alpham1 = NULL, fillin = FALSE,
-  newgraph = FALSE)
+is_chordal(
+  graph,
+  alpha = NULL,
+  alpham1 = NULL,
+  fillin = FALSE,
+  newgraph = FALSE
+)
 }
 \arguments{
 \item{graph}{The input graph. It may be directed, but edge directions are

@@ -6,8 +6,13 @@
 \alias{degree_distribution}
 \title{Degree and degree distribution of the vertices}
 \usage{
-degree(graph, v = V(graph), mode = c("all", "out", "in", "total"),
-  loops = TRUE, normalized = FALSE)
+degree(
+  graph,
+  v = V(graph),
+  mode = c("all", "out", "in", "total"),
+  loops = TRUE,
+  normalized = FALSE
+)
 
 degree_distribution(graph, cumulative = FALSE, ...)
 }

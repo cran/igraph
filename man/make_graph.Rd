@@ -11,8 +11,15 @@
 \alias{undirected_graph}
 \title{Create an igraph graph from a list of edges, or a notable graph}
 \usage{
-make_graph(edges, ..., n = max(edges), isolates = NULL,
-  directed = TRUE, dir = directed, simplify = TRUE)
+make_graph(
+  edges,
+  ...,
+  n = max(edges),
+  isolates = NULL,
+  directed = TRUE,
+  dir = directed,
+  simplify = TRUE
+)
 
 make_directed_graph(edges, n = max(edges))
 
@@ -184,14 +191,17 @@ graph <- make_graph( ~ A-B-C-D-A, E-A:B:C:D,
                       C-P, C-L, I-L, I-P)
 }
 \seealso{
-Other determimistic constructors: \code{\link{graph_from_atlas}},
-  \code{\link{graph_from_edgelist}},
-  \code{\link{graph_from_literal}},
-  \code{\link{make_chordal_ring}},
-  \code{\link{make_empty_graph}},
-  \code{\link{make_full_citation_graph}},
-  \code{\link{make_full_graph}},
-  \code{\link{make_lattice}}, \code{\link{make_ring}},
-  \code{\link{make_star}}, \code{\link{make_tree}}
+Other determimistic constructors: 
+\code{\link{graph_from_atlas}()},
+\code{\link{graph_from_edgelist}()},
+\code{\link{graph_from_literal}()},
+\code{\link{make_chordal_ring}()},
+\code{\link{make_empty_graph}()},
+\code{\link{make_full_citation_graph}()},
+\code{\link{make_full_graph}()},
+\code{\link{make_lattice}()},
+\code{\link{make_ring}()},
+\code{\link{make_star}()},
+\code{\link{make_tree}()}
 }
 \concept{determimistic constructors}

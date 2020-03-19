@@ -11,8 +11,7 @@
 \alias{is_connected}
 \title{Connected components of a graph}
 \usage{
-component_distribution(graph, cumulative = FALSE, mul.size = FALSE,
-  ...)
+component_distribution(graph, cumulative = FALSE, mul.size = FALSE, ...)
 
 components(graph, mode = c("weak", "strong"))
 }

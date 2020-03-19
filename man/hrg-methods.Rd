@@ -27,10 +27,14 @@ The igraph HRG implementation is heavily based on the code published by
 Aaron Clauset, at his website (not functional any more).
 }
 \seealso{
-Other hierarchical random graph functions: \code{\link{consensus_tree}},
-  \code{\link{fit_hrg}}, \code{\link{hrg_tree}},
-  \code{\link{hrg}}, \code{\link{predict_edges}},
-  \code{\link{print.igraphHRGConsensus}},
-  \code{\link{print.igraphHRG}}, \code{\link{sample_hrg}}
+Other hierarchical random graph functions: 
+\code{\link{consensus_tree}()},
+\code{\link{fit_hrg}()},
+\code{\link{hrg_tree}()},
+\code{\link{hrg}()},
+\code{\link{predict_edges}()},
+\code{\link{print.igraphHRGConsensus}()},
+\code{\link{print.igraphHRG}()},
+\code{\link{sample_hrg}()}
 }
 \concept{hierarchical random graph functions}

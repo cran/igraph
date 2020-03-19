@@ -9,14 +9,25 @@
 \alias{traits}
 \title{Graph generation based on different vertex types}
 \usage{
-sample_traits_callaway(nodes, types, edge.per.step = 1,
-  type.dist = rep(1, types), pref.matrix = matrix(1, types, types),
-  directed = FALSE)
+sample_traits_callaway(
+  nodes,
+  types,
+  edge.per.step = 1,
+  type.dist = rep(1, types),
+  pref.matrix = matrix(1, types, types),
+  directed = FALSE
+)
 
 traits_callaway(...)
 
-sample_traits(nodes, types, k = 1, type.dist = rep(1, types),
-  pref.matrix = matrix(1, types, types), directed = FALSE)
+sample_traits(
+  nodes,
+  types,
+  k = 1,
+  type.dist = rep(1, types),
+  pref.matrix = matrix(1, types, types),
+  directed = FALSE
+)
 
 traits(...)
 }

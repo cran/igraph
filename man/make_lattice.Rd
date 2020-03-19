@@ -6,8 +6,15 @@
 \alias{lattice}
 \title{Create a lattice graph}
 \usage{
-make_lattice(dimvector = NULL, length = NULL, dim = NULL, nei = 1,
-  directed = FALSE, mutual = FALSE, circular = FALSE)
+make_lattice(
+  dimvector = NULL,
+  length = NULL,
+  dim = NULL,
+  nei = 1,
+  directed = FALSE,
+  mutual = FALSE,
+  circular = FALSE
+)
 
 lattice(...)
 }
@@ -48,15 +55,18 @@ make_lattice(c(5, 5, 5))
 make_lattice(length = 5, dim = 3)
 }
 \seealso{
-Other determimistic constructors: \code{\link{graph_from_atlas}},
-  \code{\link{graph_from_edgelist}},
-  \code{\link{graph_from_literal}},
-  \code{\link{make_chordal_ring}},
-  \code{\link{make_empty_graph}},
-  \code{\link{make_full_citation_graph}},
-  \code{\link{make_full_graph}}, \code{\link{make_graph}},
-  \code{\link{make_ring}}, \code{\link{make_star}},
-  \code{\link{make_tree}}
+Other determimistic constructors: 
+\code{\link{graph_from_atlas}()},
+\code{\link{graph_from_edgelist}()},
+\code{\link{graph_from_literal}()},
+\code{\link{make_chordal_ring}()},
+\code{\link{make_empty_graph}()},
+\code{\link{make_full_citation_graph}()},
+\code{\link{make_full_graph}()},
+\code{\link{make_graph}()},
+\code{\link{make_ring}()},
+\code{\link{make_star}()},
+\code{\link{make_tree}()}
 }
 \concept{Lattice}
 \concept{determimistic constructors}

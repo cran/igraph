@@ -5,8 +5,7 @@
 \alias{decompose.graph}
 \title{Decompose a graph into components}
 \usage{
-decompose(graph, mode = c("weak", "strong"), max.comps = NA,
-  min.vertices = 0)
+decompose(graph, mode = c("weak", "strong"), max.comps = NA, min.vertices = 0)
 }
 \arguments{
 \item{graph}{The original graph.}

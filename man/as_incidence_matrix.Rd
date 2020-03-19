@@ -5,8 +5,13 @@
 \alias{get.incidence}
 \title{Incidence matrix of a bipartite graph}
 \usage{
-as_incidence_matrix(graph, types = NULL, attr = NULL, names = TRUE,
-  sparse = FALSE)
+as_incidence_matrix(
+  graph,
+  types = NULL,
+  attr = NULL,
+  names = TRUE,
+  sparse = FALSE
+)
 }
 \arguments{
 \item{graph}{The input graph. The direction of the edges is ignored in

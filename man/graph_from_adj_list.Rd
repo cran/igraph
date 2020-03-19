@@ -5,8 +5,11 @@
 \alias{graph.adjlist}
 \title{Create graphs from adjacency lists}
 \usage{
-graph_from_adj_list(adjlist, mode = c("out", "in", "all", "total"),
-  duplicate = TRUE)
+graph_from_adj_list(
+  adjlist,
+  mode = c("out", "in", "all", "total"),
+  duplicate = TRUE
+)
 }
 \arguments{
 \item{adjlist}{The adjacency list. It should be consistent, i.e. the maximum

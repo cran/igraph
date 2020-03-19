@@ -6,9 +6,14 @@
 \alias{with_gem}
 \title{The GEM layout algorithm}
 \usage{
-layout_with_gem(graph, coords = NULL, maxiter = 40 * vcount(graph)^2,
-  temp.max = vcount(graph), temp.min = 1/10,
-  temp.init = sqrt(vcount(graph)))
+layout_with_gem(
+  graph,
+  coords = NULL,
+  maxiter = 40 * vcount(graph)^2,
+  temp.max = vcount(graph),
+  temp.min = 1/10,
+  temp.init = sqrt(vcount(graph))
+)
 
 with_gem(...)
 }
@@ -62,25 +67,28 @@ LNCS 894, pp. 388-403, 1995.
 \code{\link{layout_with_fr}},
 \code{\link{plot.igraph}}, \code{\link{tkplot}}
 
-Other graph layouts: \code{\link{add_layout_}},
-  \code{\link{component_wise}},
-  \code{\link{layout_as_bipartite}},
-  \code{\link{layout_as_star}},
-  \code{\link{layout_as_tree}},
-  \code{\link{layout_in_circle}},
-  \code{\link{layout_nicely}},
-  \code{\link{layout_on_grid}},
-  \code{\link{layout_on_sphere}},
-  \code{\link{layout_randomly}},
-  \code{\link{layout_with_dh}},
-  \code{\link{layout_with_fr}},
-  \code{\link{layout_with_graphopt}},
-  \code{\link{layout_with_kk}},
-  \code{\link{layout_with_lgl}},
-  \code{\link{layout_with_mds}},
-  \code{\link{layout_with_sugiyama}},
-  \code{\link{layout_}}, \code{\link{merge_coords}},
-  \code{\link{norm_coords}}, \code{\link{normalize}}
+Other graph layouts: 
+\code{\link{add_layout_}()},
+\code{\link{component_wise}()},
+\code{\link{layout_as_bipartite}()},
+\code{\link{layout_as_star}()},
+\code{\link{layout_as_tree}()},
+\code{\link{layout_in_circle}()},
+\code{\link{layout_nicely}()},
+\code{\link{layout_on_grid}()},
+\code{\link{layout_on_sphere}()},
+\code{\link{layout_randomly}()},
+\code{\link{layout_with_dh}()},
+\code{\link{layout_with_fr}()},
+\code{\link{layout_with_graphopt}()},
+\code{\link{layout_with_kk}()},
+\code{\link{layout_with_lgl}()},
+\code{\link{layout_with_mds}()},
+\code{\link{layout_with_sugiyama}()},
+\code{\link{layout_}()},
+\code{\link{merge_coords}()},
+\code{\link{norm_coords}()},
+\code{\link{normalize}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}

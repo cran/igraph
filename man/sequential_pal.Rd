@@ -35,7 +35,9 @@ plot(karate)
 }
 }
 \seealso{
-Other palettes: \code{\link{categorical_pal}},
-  \code{\link{diverging_pal}}, \code{\link{r_pal}}
+Other palettes: 
+\code{\link{categorical_pal}()},
+\code{\link{diverging_pal}()},
+\code{\link{r_pal}()}
 }
 \concept{palettes}

@@ -5,8 +5,12 @@
 \alias{centralization.degree.tmax}
 \title{Theoretical maximum for degree centralization}
 \usage{
-centr_degree_tmax(graph = NULL, nodes = 0, mode = c("all", "out",
-  "in", "total"), loops = FALSE)
+centr_degree_tmax(
+  graph = NULL,
+  nodes = 0,
+  mode = c("all", "out", "in", "total"),
+  loops = FALSE
+)
 }
 \arguments{
 \item{graph}{The input graph. It can also be \code{NULL}, if
@@ -35,10 +39,14 @@ centr_degree(g, normalized = FALSE)$centralization \%>\%
 centr_degree(g, normalized = TRUE)$centralization
 }
 \seealso{
-Other centralization related: \code{\link{centr_betw_tmax}},
-  \code{\link{centr_betw}}, \code{\link{centr_clo_tmax}},
-  \code{\link{centr_clo}}, \code{\link{centr_degree}},
-  \code{\link{centr_eigen_tmax}},
-  \code{\link{centr_eigen}}, \code{\link{centralize}}
+Other centralization related: 
+\code{\link{centr_betw_tmax}()},
+\code{\link{centr_betw}()},
+\code{\link{centr_clo_tmax}()},
+\code{\link{centr_clo}()},
+\code{\link{centr_degree}()},
+\code{\link{centr_eigen_tmax}()},
+\code{\link{centr_eigen}()},
+\code{\link{centralize}()}
 }
 \concept{centralization related}

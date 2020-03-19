@@ -40,12 +40,20 @@ parent(blocks)
 
 \method{summary}{cohesiveBlocks}(object, ...)
 
-\method{plot}{cohesiveBlocks}(x, y, colbar = rainbow(max(cohesion(x)) +
-  1), col = colbar[max_cohesion(x) + 1], mark.groups = blocks(x)[-1],
-  ...)
+\method{plot}{cohesiveBlocks}(
+  x,
+  y,
+  colbar = rainbow(max(cohesion(x)) + 1),
+  col = colbar[max_cohesion(x) + 1],
+  mark.groups = blocks(x)[-1],
+  ...
+)
 
-plot_hierarchy(blocks, layout = layout_as_tree(hierarchy(blocks), root =
-  1), ...)
+plot_hierarchy(
+  blocks,
+  layout = layout_as_tree(hierarchy(blocks), root = 1),
+  ...
+)
 
 export_pajek(blocks, graph, file, project.file = TRUE)
 

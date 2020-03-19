@@ -26,7 +26,7 @@ graph.incidence.sparse <- function(incidence, directed, mode, multiple,
                                    weighted) {
   n1 <- nrow(incidence)
   n2 <- ncol(incidence)
-  el <- mat_summary(incidence) # was summary(..)
+  el <- mysummary(incidence)
   el[,2] <- el[,2] + n1
 
   if (!is.null(weighted)) {

@@ -22,6 +22,11 @@ Determine whether the given vertex degrees (in- and out-degrees for
 directed graphs) can be reliazed in a simple graph, i.e. a graph without
 multiple or loop edges.
 }
+\examples{
+g <- sample_gnp(100, 2/100)
+is_degseq(degree(g))
+is_graphical(degree(g))
+}
 \references{
 Hakimi SL: On the realizability of a set of integers as degrees
 of the vertices of a simple graph. \emph{J SIAM Appl Math} 10:496-506, 1962.
@@ -31,18 +36,11 @@ realize graphical degree sequences of directed graphs.  \emph{The Electronic
 Journal of Combinatorics} 17(1):R66, 2010.
 }
 \seealso{
-Other graphical degree sequences
-
-g <- sample_gnp(100, 2/100)
-is_degseq(degree(g))
-is_graphical(degree(g)): \code{\link{is_degseq}}
+Other graphical degree sequences: 
+\code{\link{is_degseq}()}
 }
 \author{
 Tamas Nepusz \email{ntamas@gmail.com}
 }
-\concept{graphical degree sequences
-
-g <- sample_gnp(100, 2/100)
-is_degseq(degree(g))
-is_graphical(degree(g))}
+\concept{graphical degree sequences}
 \keyword{graphs}

@@ -29,13 +29,17 @@ directed graph, where every \code{i->j} edge is present if and only if
 print_all(make_full_citation_graph(10))
 }
 \seealso{
-Other determimistic constructors: \code{\link{graph_from_atlas}},
-  \code{\link{graph_from_edgelist}},
-  \code{\link{graph_from_literal}},
-  \code{\link{make_chordal_ring}},
-  \code{\link{make_empty_graph}},
-  \code{\link{make_full_graph}}, \code{\link{make_graph}},
-  \code{\link{make_lattice}}, \code{\link{make_ring}},
-  \code{\link{make_star}}, \code{\link{make_tree}}
+Other determimistic constructors: 
+\code{\link{graph_from_atlas}()},
+\code{\link{graph_from_edgelist}()},
+\code{\link{graph_from_literal}()},
+\code{\link{make_chordal_ring}()},
+\code{\link{make_empty_graph}()},
+\code{\link{make_full_graph}()},
+\code{\link{make_graph}()},
+\code{\link{make_lattice}()},
+\code{\link{make_ring}()},
+\code{\link{make_star}()},
+\code{\link{make_tree}()}
 }
 \concept{determimistic constructors}

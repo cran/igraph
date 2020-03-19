@@ -6,8 +6,11 @@
 \alias{degseq}
 \title{Generate random graphs with a given degree sequence}
 \usage{
-sample_degseq(out.deg, in.deg = NULL, method = c("simple", "vl",
-  "simple.no.multiple"))
+sample_degseq(
+  out.deg,
+  in.deg = NULL,
+  method = c("simple", "vl", "simple.no.multiple")
+)
 
 degseq(...)
 }

@@ -9,11 +9,14 @@
 \alias{is_isomorphic_to}
 \title{Decide if two graphs are isomorphic}
 \usage{
-isomorphic(graph1, graph2, method = c("auto", "direct", "vf2", "bliss"),
-  ...)
+isomorphic(graph1, graph2, method = c("auto", "direct", "vf2", "bliss"), ...)
 
-is_isomorphic_to(graph1, graph2, method = c("auto", "direct", "vf2",
-  "bliss"), ...)
+is_isomorphic_to(
+  graph1,
+  graph2,
+  method = c("auto", "direct", "vf2", "bliss"),
+  ...
+)
 }
 \arguments{
 \item{graph1}{The first graph.}
@@ -131,12 +134,13 @@ Tommi Junttila and Petteri Kaski: Engineering an Efficient Canonical
  on Graphbased Representations in Pattern Recognition}, 149--159, 2001.
 }
 \seealso{
-Other graph isomorphism: \code{\link{count_isomorphisms}},
-  \code{\link{count_subgraph_isomorphisms}},
-  \code{\link{graph_from_isomorphism_class}},
-  \code{\link{isomorphism_class}},
-  \code{\link{isomorphisms}},
-  \code{\link{subgraph_isomorphic}},
-  \code{\link{subgraph_isomorphisms}}
+Other graph isomorphism: 
+\code{\link{count_isomorphisms}()},
+\code{\link{count_subgraph_isomorphisms}()},
+\code{\link{graph_from_isomorphism_class}()},
+\code{\link{isomorphism_class}()},
+\code{\link{isomorphisms}()},
+\code{\link{subgraph_isomorphic}()},
+\code{\link{subgraph_isomorphisms}()}
 }
 \concept{graph isomorphism}

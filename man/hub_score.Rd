@@ -5,8 +5,7 @@
 \alias{hub.score}
 \title{Kleinberg's hub centrality scores.}
 \usage{
-hub_score(graph, scale = TRUE, weights = NULL,
-  options = arpack_defaults)
+hub_score(graph, scale = TRUE, weights = NULL, options = arpack_defaults)
 }
 \arguments{
 \item{graph}{The input graph.}

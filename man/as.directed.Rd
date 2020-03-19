@@ -7,8 +7,11 @@
 \usage{
 as.directed(graph, mode = c("mutual", "arbitrary"))
 
-as.undirected(graph, mode = c("collapse", "each", "mutual"),
-  edge.attr.comb = igraph_opt("edge.attr.comb"))
+as.undirected(
+  graph,
+  mode = c("collapse", "each", "mutual"),
+  edge.attr.comb = igraph_opt("edge.attr.comb")
+)
 }
 \arguments{
 \item{graph}{The graph to convert.}

@@ -17,10 +17,14 @@ An igraph graph.
 random graph model.
 }
 \seealso{
-Other hierarchical random graph functions: \code{\link{consensus_tree}},
-  \code{\link{fit_hrg}}, \code{\link{hrg-methods}},
-  \code{\link{hrg}}, \code{\link{predict_edges}},
-  \code{\link{print.igraphHRGConsensus}},
-  \code{\link{print.igraphHRG}}, \code{\link{sample_hrg}}
+Other hierarchical random graph functions: 
+\code{\link{consensus_tree}()},
+\code{\link{fit_hrg}()},
+\code{\link{hrg-methods}},
+\code{\link{hrg}()},
+\code{\link{predict_edges}()},
+\code{\link{print.igraphHRGConsensus}()},
+\code{\link{print.igraphHRG}()},
+\code{\link{sample_hrg}()}
 }
 \concept{hierarchical random graph functions}

@@ -5,8 +5,13 @@
 \alias{graph.mincut}
 \title{Minimum cut in a graph}
 \usage{
-min_cut(graph, source = NULL, target = NULL, capacity = NULL,
-  value.only = TRUE)
+min_cut(
+  graph,
+  source = NULL,
+  target = NULL,
+  capacity = NULL,
+  value.only = TRUE
+)
 }
 \arguments{
 \item{graph}{The input graph.}

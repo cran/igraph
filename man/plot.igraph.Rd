@@ -5,11 +5,19 @@
 \alias{plot.graph}
 \title{Plotting of graphs}
 \usage{
-\method{plot}{igraph}(x, axes = FALSE, add = FALSE, xlim = c(-1, 1),
-  ylim = c(-1, 1), mark.groups = list(), mark.shape = 1/2,
+\method{plot}{igraph}(
+  x,
+  axes = FALSE,
+  add = FALSE,
+  xlim = c(-1, 1),
+  ylim = c(-1, 1),
+  mark.groups = list(),
+  mark.shape = 1/2,
   mark.col = rainbow(length(mark.groups), alpha = 0.3),
   mark.border = rainbow(length(mark.groups), alpha = 1),
-  mark.expand = 15, ...)
+  mark.expand = 15,
+  ...
+)
 }
 \arguments{
 \item{x}{The graph to plot.}

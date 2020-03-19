@@ -25,6 +25,7 @@ with_igraph_opt(
 igraph_opt("sparsematrices")
 }
 \seealso{
-Other igraph options: \code{\link{igraph_options}}
+Other igraph options: 
+\code{\link{igraph_options}()}
 }
 \concept{igraph options}

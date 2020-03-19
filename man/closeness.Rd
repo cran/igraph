@@ -6,11 +6,22 @@
 \alias{estimate_closeness}
 \title{Closeness centrality of vertices}
 \usage{
-closeness(graph, vids = V(graph), mode = c("out", "in", "all",
-  "total"), weights = NULL, normalized = FALSE)
+closeness(
+  graph,
+  vids = V(graph),
+  mode = c("out", "in", "all", "total"),
+  weights = NULL,
+  normalized = FALSE
+)
 
-estimate_closeness(graph, vids = V(graph), mode = c("out", "in", "all",
-  "total"), cutoff, weights = NULL, normalized = FALSE)
+estimate_closeness(
+  graph,
+  vids = V(graph),
+  mode = c("out", "in", "all", "total"),
+  cutoff,
+  weights = NULL,
+  normalized = FALSE
+)
 }
 \arguments{
 \item{graph}{The graph to analyze.}

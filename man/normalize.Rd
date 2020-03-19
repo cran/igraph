@@ -4,8 +4,14 @@
 \alias{normalize}
 \title{Normalize layout}
 \usage{
-normalize(xmin = -1, xmax = 1, ymin = xmin, ymax = xmax,
-  zmin = xmin, zmax = xmax)
+normalize(
+  xmin = -1,
+  xmax = 1,
+  ymin = xmin,
+  ymax = xmax,
+  zmin = xmin,
+  zmax = xmax
+)
 }
 \arguments{
 \item{xmin, xmax}{Minimum and maximum for x coordinates.}
@@ -23,28 +29,31 @@ layout_(make_ring(10), with_fr(), normalize())
 \seealso{
 \code{\link{merge_coords}}, \code{\link{layout_}}.
 
-Other layout modifiers: \code{\link{component_wise}}
+Other layout modifiers: 
+\code{\link{component_wise}()}
 
-Other graph layouts: \code{\link{add_layout_}},
-  \code{\link{component_wise}},
-  \code{\link{layout_as_bipartite}},
-  \code{\link{layout_as_star}},
-  \code{\link{layout_as_tree}},
-  \code{\link{layout_in_circle}},
-  \code{\link{layout_nicely}},
-  \code{\link{layout_on_grid}},
-  \code{\link{layout_on_sphere}},
-  \code{\link{layout_randomly}},
-  \code{\link{layout_with_dh}},
-  \code{\link{layout_with_fr}},
-  \code{\link{layout_with_gem}},
-  \code{\link{layout_with_graphopt}},
-  \code{\link{layout_with_kk}},
-  \code{\link{layout_with_lgl}},
-  \code{\link{layout_with_mds}},
-  \code{\link{layout_with_sugiyama}},
-  \code{\link{layout_}}, \code{\link{merge_coords}},
-  \code{\link{norm_coords}}
+Other graph layouts: 
+\code{\link{add_layout_}()},
+\code{\link{component_wise}()},
+\code{\link{layout_as_bipartite}()},
+\code{\link{layout_as_star}()},
+\code{\link{layout_as_tree}()},
+\code{\link{layout_in_circle}()},
+\code{\link{layout_nicely}()},
+\code{\link{layout_on_grid}()},
+\code{\link{layout_on_sphere}()},
+\code{\link{layout_randomly}()},
+\code{\link{layout_with_dh}()},
+\code{\link{layout_with_fr}()},
+\code{\link{layout_with_gem}()},
+\code{\link{layout_with_graphopt}()},
+\code{\link{layout_with_kk}()},
+\code{\link{layout_with_lgl}()},
+\code{\link{layout_with_mds}()},
+\code{\link{layout_with_sugiyama}()},
+\code{\link{layout_}()},
+\code{\link{merge_coords}()},
+\code{\link{norm_coords}()}
 }
 \concept{graph layouts}
 \concept{layout modifiers}

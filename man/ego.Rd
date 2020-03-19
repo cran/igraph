@@ -12,14 +12,29 @@
 \alias{make_ego_graph}
 \title{Neighborhood of graph vertices}
 \usage{
-ego_size(graph, order = 1, nodes = V(graph), mode = c("all", "out",
-  "in"), mindist = 0)
+ego_size(
+  graph,
+  order = 1,
+  nodes = V(graph),
+  mode = c("all", "out", "in"),
+  mindist = 0
+)
 
-ego(graph, order = 1, nodes = V(graph), mode = c("all", "out", "in"),
-  mindist = 0)
+ego(
+  graph,
+  order = 1,
+  nodes = V(graph),
+  mode = c("all", "out", "in"),
+  mindist = 0
+)
 
-make_ego_graph(graph, order = 1, nodes = V(graph), mode = c("all",
-  "out", "in"), mindist = 0)
+make_ego_graph(
+  graph,
+  order = 1,
+  nodes = V(graph),
+  mode = c("all", "out", "in"),
+  mindist = 0
+)
 }
 \arguments{
 \item{graph}{The input graph.}

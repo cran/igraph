@@ -9,14 +9,25 @@
 \alias{asym_pref}
 \title{Trait-based random generation}
 \usage{
-sample_pref(nodes, types, type.dist = rep(1, types),
-  fixed.sizes = FALSE, pref.matrix = matrix(1, types, types),
-  directed = FALSE, loops = FALSE)
+sample_pref(
+  nodes,
+  types,
+  type.dist = rep(1, types),
+  fixed.sizes = FALSE,
+  pref.matrix = matrix(1, types, types),
+  directed = FALSE,
+  loops = FALSE
+)
 
 pref(...)
 
-sample_asym_pref(nodes, types, type.dist.matrix = matrix(1, types,
-  types), pref.matrix = matrix(1, types, types), loops = FALSE)
+sample_asym_pref(
+  nodes,
+  types,
+  type.dist.matrix = matrix(1, types, types),
+  pref.matrix = matrix(1, types, types),
+  loops = FALSE
+)
 
 asym_pref(...)
 }

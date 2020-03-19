@@ -5,10 +5,17 @@
 \alias{graph.graphdb}
 \title{Load a graph from the graph database for testing graph isomorphism.}
 \usage{
-graph_from_graphdb(url = NULL, prefix = "iso", type = "r001",
-  nodes = NULL, pair = "A", which = 0,
+graph_from_graphdb(
+  url = NULL,
+  prefix = "iso",
+  type = "r001",
+  nodes = NULL,
+  pair = "A",
+  which = 0,
   base = "http://cneurocvs.rmki.kfki.hu/graphdb/gzip",
-  compressed = TRUE, directed = TRUE)
+  compressed = TRUE,
+  directed = TRUE
+)
 }
 \arguments{
 \item{url}{If not \code{NULL} it is a complete URL with the file to import.}

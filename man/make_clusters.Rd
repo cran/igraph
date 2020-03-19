@@ -5,8 +5,13 @@
 \alias{create.communities}
 \title{Creates a communities object.}
 \usage{
-make_clusters(graph, membership = NULL, algorithm = NULL,
-  merges = NULL, modularity = TRUE)
+make_clusters(
+  graph,
+  membership = NULL,
+  algorithm = NULL,
+  merges = NULL,
+  modularity = TRUE
+)
 }
 \arguments{
 \item{graph}{The graph of the community structure.}

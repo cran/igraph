@@ -78,10 +78,14 @@ Notes in Computer Science} 4503, 1--13. Springer-Verlag, Berlin Heidelberg
 (2007).
 }
 \seealso{
-Other hierarchical random graph functions: \code{\link{consensus_tree}},
-  \code{\link{hrg-methods}}, \code{\link{hrg_tree}},
-  \code{\link{hrg}}, \code{\link{predict_edges}},
-  \code{\link{print.igraphHRGConsensus}},
-  \code{\link{print.igraphHRG}}, \code{\link{sample_hrg}}
+Other hierarchical random graph functions: 
+\code{\link{consensus_tree}()},
+\code{\link{hrg-methods}},
+\code{\link{hrg_tree}()},
+\code{\link{hrg}()},
+\code{\link{predict_edges}()},
+\code{\link{print.igraphHRGConsensus}()},
+\code{\link{print.igraphHRG}()},
+\code{\link{sample_hrg}()}
 }
 \concept{hierarchical random graph functions}

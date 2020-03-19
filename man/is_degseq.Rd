@@ -26,6 +26,11 @@ For directed graphs, the function checks whether the lengths of the two
 degree vectors are equal and whether their sums are also equal. These are
 known sufficient and necessary conditions for a degree sequence to be valid.
 }
+\examples{
+g <- sample_gnp(100, 2/100)
+is_degseq(degree(g))
+is_graphical(degree(g))
+}
 \references{
 Hakimi SL: On the realizability of a set of integers as degrees
 of the vertices of a simple graph. \emph{J SIAM Appl Math} 10:496-506, 1962.
@@ -35,18 +40,11 @@ realize graphical degree sequences of directed graphs.  \emph{The Electronic
 Journal of Combinatorics} 17(1):R66, 2010.
 }
 \seealso{
-Other graphical degree sequences
-
-g <- sample_gnp(100, 2/100)
-is_degseq(degree(g))
-is_graphical(degree(g)): \code{\link{is_graphical}}
+Other graphical degree sequences: 
+\code{\link{is_graphical}()}
 }
 \author{
 Tamas Nepusz \email{ntamas@gmail.com}
 }
-\concept{graphical degree sequences
-
-g <- sample_gnp(100, 2/100)
-is_degseq(degree(g))
-is_graphical(degree(g))}
+\concept{graphical degree sequences}
 \keyword{graphs}

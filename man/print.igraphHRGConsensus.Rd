@@ -25,10 +25,14 @@ The root of the dendrogram is \code{g3} (because it has no incoming
 edges), and it has two subgroups, \code{g1} and \code{g2}.
 }
 \seealso{
-Other hierarchical random graph functions: \code{\link{consensus_tree}},
-  \code{\link{fit_hrg}}, \code{\link{hrg-methods}},
-  \code{\link{hrg_tree}}, \code{\link{hrg}},
-  \code{\link{predict_edges}},
-  \code{\link{print.igraphHRG}}, \code{\link{sample_hrg}}
+Other hierarchical random graph functions: 
+\code{\link{consensus_tree}()},
+\code{\link{fit_hrg}()},
+\code{\link{hrg-methods}},
+\code{\link{hrg_tree}()},
+\code{\link{hrg}()},
+\code{\link{predict_edges}()},
+\code{\link{print.igraphHRG}()},
+\code{\link{sample_hrg}()}
 }
 \concept{hierarchical random graph functions}

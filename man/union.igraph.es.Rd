@@ -27,19 +27,21 @@ g <- make_(ring(10), with_vertex_(name = LETTERS[1:10]))
 union(E(g)[1:6], E(g)[5:9], E(g)['A|J'])
 }
 \seealso{
-Other vertex and edge sequence operations: \code{\link{c.igraph.es}},
-  \code{\link{c.igraph.vs}},
-  \code{\link{difference.igraph.es}},
-  \code{\link{difference.igraph.vs}},
-  \code{\link{igraph-es-indexing2}},
-  \code{\link{igraph-es-indexing}},
-  \code{\link{igraph-vs-indexing2}},
-  \code{\link{igraph-vs-indexing}},
-  \code{\link{intersection.igraph.es}},
-  \code{\link{intersection.igraph.vs}},
-  \code{\link{rev.igraph.es}}, \code{\link{rev.igraph.vs}},
-  \code{\link{union.igraph.vs}},
-  \code{\link{unique.igraph.es}},
-  \code{\link{unique.igraph.vs}}
+Other vertex and edge sequence operations: 
+\code{\link{c.igraph.es}()},
+\code{\link{c.igraph.vs}()},
+\code{\link{difference.igraph.es}()},
+\code{\link{difference.igraph.vs}()},
+\code{\link{igraph-es-indexing2}},
+\code{\link{igraph-es-indexing}},
+\code{\link{igraph-vs-indexing2}},
+\code{\link{igraph-vs-indexing}},
+\code{\link{intersection.igraph.es}()},
+\code{\link{intersection.igraph.vs}()},
+\code{\link{rev.igraph.es}()},
+\code{\link{rev.igraph.vs}()},
+\code{\link{union.igraph.vs}()},
+\code{\link{unique.igraph.es}()},
+\code{\link{unique.igraph.vs}()}
 }
 \concept{vertex and edge sequence operations}

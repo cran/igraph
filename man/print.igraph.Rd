@@ -7,11 +7,16 @@
 \alias{str.igraph}
 \title{Print graphs to the terminal}
 \usage{
-\method{print}{igraph}(x, full = igraph_opt("print.full"),
+\method{print}{igraph}(
+  x,
+  full = igraph_opt("print.full"),
   graph.attributes = igraph_opt("print.graph.attributes"),
   vertex.attributes = igraph_opt("print.vertex.attributes"),
-  edge.attributes = igraph_opt("print.edge.attributes"), names = TRUE,
-  max.lines = igraph_opt("auto.print.lines"), ...)
+  edge.attributes = igraph_opt("print.edge.attributes"),
+  names = TRUE,
+  max.lines = igraph_opt("auto.print.lines"),
+  ...
+)
 
 \method{summary}{igraph}(object, ...)
 }

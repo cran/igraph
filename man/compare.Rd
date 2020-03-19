@@ -6,8 +6,11 @@
 \alias{compare.membership}
 \title{Compares community structures using various metrics}
 \usage{
-compare(comm1, comm2, method = c("vi", "nmi", "split.join", "rand",
-  "adjusted.rand"))
+compare(
+  comm1,
+  comm2,
+  method = c("vi", "nmi", "split.join", "rand", "adjusted.rand")
+)
 }
 \arguments{
 \item{comm1}{A \code{\link{communities}} object containing a community

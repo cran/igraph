@@ -14,9 +14,12 @@ sample_(pa(10, m = 3, algorithm = "bag"))
 sample_(pa(10, m = 3, algorithm = "bag"), without_multiples())
 }
 \seealso{
-Other constructor modifiers: \code{\link{simplified}},
-  \code{\link{with_edge_}}, \code{\link{with_graph_}},
-  \code{\link{with_vertex_}}, \code{\link{without_attr}},
-  \code{\link{without_loops}}
+Other constructor modifiers: 
+\code{\link{simplified}()},
+\code{\link{with_edge_}()},
+\code{\link{with_graph_}()},
+\code{\link{with_vertex_}()},
+\code{\link{without_attr}()},
+\code{\link{without_loops}()}
 }
 \concept{constructor modifiers}

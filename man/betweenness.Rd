@@ -10,14 +10,25 @@
 \alias{estimate_edge_betweenness}
 \title{Vertex and edge betweenness centrality}
 \usage{
-estimate_betweenness(graph, vids = V(graph), directed = TRUE, cutoff,
-  weights = NULL, nobigint = TRUE)
+estimate_betweenness(
+  graph,
+  vids = V(graph),
+  directed = TRUE,
+  cutoff,
+  weights = NULL,
+  nobigint = TRUE
+)
 
-betweenness(graph, v = V(graph), directed = TRUE, weights = NULL,
-  nobigint = TRUE, normalized = FALSE)
+betweenness(
+  graph,
+  v = V(graph),
+  directed = TRUE,
+  weights = NULL,
+  nobigint = TRUE,
+  normalized = FALSE
+)
 
-edge_betweenness(graph, e = E(graph), directed = TRUE,
-  weights = NULL)
+edge_betweenness(graph, e = E(graph), directed = TRUE, weights = NULL)
 }
 \arguments{
 \item{graph}{The graph to analyze.}

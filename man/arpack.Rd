@@ -8,12 +8,20 @@
 \alias{igraph.arpack.default}
 \alias{arpack.unpack.complex}
 \title{ARPACK eigenvector calculation}
-\format{An object of class \code{list} of length 14.}
+\format{
+An object of class \code{list} of length 14.
+}
 \usage{
 arpack_defaults
 
-arpack(func, extra = NULL, sym = FALSE, options = arpack_defaults,
-  env = parent.frame(), complex = !sym)
+arpack(
+  func,
+  extra = NULL,
+  sym = FALSE,
+  options = arpack_defaults,
+  env = parent.frame(),
+  complex = !sym
+)
 }
 \arguments{
 \item{func}{The function to perform the matrix-vector multiplication. ARPACK

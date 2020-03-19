@@ -67,12 +67,13 @@ following extra arguments:
 }
 
 \seealso{
-Other graph isomorphism: \code{\link{count_isomorphisms}},
-  \code{\link{count_subgraph_isomorphisms}},
-  \code{\link{graph_from_isomorphism_class}},
-  \code{\link{isomorphic}},
-  \code{\link{isomorphism_class}},
-  \code{\link{isomorphisms}},
-  \code{\link{subgraph_isomorphic}}
+Other graph isomorphism: 
+\code{\link{count_isomorphisms}()},
+\code{\link{count_subgraph_isomorphisms}()},
+\code{\link{graph_from_isomorphism_class}()},
+\code{\link{isomorphic}()},
+\code{\link{isomorphism_class}()},
+\code{\link{isomorphisms}()},
+\code{\link{subgraph_isomorphic}()}
 }
 \concept{graph isomorphism}

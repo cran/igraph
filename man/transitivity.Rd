@@ -4,10 +4,14 @@
 \alias{transitivity}
 \title{Transitivity of a graph}
 \usage{
-transitivity(graph, type = c("undirected", "global", "globalundirected",
-  "localundirected", "local", "average", "localaverage",
-  "localaverageundirected", "barrat", "weighted"), vids = NULL,
-  weights = NULL, isolates = c("NaN", "zero"))
+transitivity(
+  graph,
+  type = c("undirected", "global", "globalundirected", "localundirected", "local",
+    "average", "localaverage", "localaverageundirected", "barrat", "weighted"),
+  vids = NULL,
+  weights = NULL,
+  isolates = c("NaN", "zero")
+)
 }
 \arguments{
 \item{graph}{The graph to analyze.}

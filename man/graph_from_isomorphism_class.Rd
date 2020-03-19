@@ -26,12 +26,13 @@ isomorphism class. Currently it can handle only graphs with 3 or 4
 vertices.
 }
 \seealso{
-Other graph isomorphism: \code{\link{count_isomorphisms}},
-  \code{\link{count_subgraph_isomorphisms}},
-  \code{\link{isomorphic}},
-  \code{\link{isomorphism_class}},
-  \code{\link{isomorphisms}},
-  \code{\link{subgraph_isomorphic}},
-  \code{\link{subgraph_isomorphisms}}
+Other graph isomorphism: 
+\code{\link{count_isomorphisms}()},
+\code{\link{count_subgraph_isomorphisms}()},
+\code{\link{isomorphic}()},
+\code{\link{isomorphism_class}()},
+\code{\link{isomorphisms}()},
+\code{\link{subgraph_isomorphic}()},
+\code{\link{subgraph_isomorphisms}()}
 }
 \concept{graph isomorphism}

@@ -15,9 +15,12 @@ make_(full_graph(5, loops = TRUE))
 make_(full_graph(5, loops = TRUE), without_loops())
 }
 \seealso{
-Other constructor modifiers: \code{\link{simplified}},
-  \code{\link{with_edge_}}, \code{\link{with_graph_}},
-  \code{\link{with_vertex_}}, \code{\link{without_attr}},
-  \code{\link{without_multiples}}
+Other constructor modifiers: 
+\code{\link{simplified}()},
+\code{\link{with_edge_}()},
+\code{\link{with_graph_}()},
+\code{\link{with_vertex_}()},
+\code{\link{without_attr}()},
+\code{\link{without_multiples}()}
 }
 \concept{constructor modifiers}

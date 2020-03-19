@@ -10,8 +10,13 @@
 \usage{
 graphlet_basis(graph, weights = NULL)
 
-graphlet_proj(graph, weights = NULL, cliques, niter = 1000,
-  Mu = rep(1, length(cliques)))
+graphlet_proj(
+  graph,
+  weights = NULL,
+  cliques,
+  niter = 1000,
+  Mu = rep(1, length(cliques))
+)
 }
 \arguments{
 \item{graph}{The input graph, edge directions are ignored. Only simple graph

@@ -12,19 +12,35 @@
 \alias{cit_cit_types}
 \title{Random citation graphs}
 \usage{
-sample_last_cit(n, edges = 1, agebins = n/7100, pref = (1:(agebins +
-  1))^-3, directed = TRUE)
+sample_last_cit(
+  n,
+  edges = 1,
+  agebins = n/7100,
+  pref = (1:(agebins + 1))^-3,
+  directed = TRUE
+)
 
 last_cit(...)
 
-sample_cit_types(n, edges = 1, types = rep(0, n), pref = rep(1,
-  length(types)), directed = TRUE, attr = TRUE)
+sample_cit_types(
+  n,
+  edges = 1,
+  types = rep(0, n),
+  pref = rep(1, length(types)),
+  directed = TRUE,
+  attr = TRUE
+)
 
 cit_types(...)
 
-sample_cit_cit_types(n, edges = 1, types = rep(0, n),
+sample_cit_cit_types(
+  n,
+  edges = 1,
+  types = rep(0, n),
   pref = matrix(1, nrow = length(types), ncol = length(types)),
-  directed = TRUE, attr = TRUE)
+  directed = TRUE,
+  attr = TRUE
+)
 
 cit_cit_types(...)
 }

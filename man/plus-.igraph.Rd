@@ -104,10 +104,14 @@ g$layout <- layout_in_circle
 plot(g)
 }
 \seealso{
-Other functions for manipulating graph structure: \code{\link{add_edges}},
-  \code{\link{add_vertices}}, \code{\link{delete_edges}},
-  \code{\link{delete_vertices}}, \code{\link{edge}},
-  \code{\link{igraph-minus}}, \code{\link{path}},
-  \code{\link{vertex}}
+Other functions for manipulating graph structure: 
+\code{\link{add_edges}()},
+\code{\link{add_vertices}()},
+\code{\link{delete_edges}()},
+\code{\link{delete_vertices}()},
+\code{\link{edge}()},
+\code{\link{igraph-minus}},
+\code{\link{path}()},
+\code{\link{vertex}()}
 }
 \concept{functions for manipulating graph structure}

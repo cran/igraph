@@ -6,6 +6,8 @@
 \title{Generate random graphs according to the random dot product graph model}
 \usage{
 sample_dot_product(vecs, directed = FALSE)
+
+dot_product(...)
 }
 \arguments{
 \item{vecs}{A numeric matrix in which each latent position vector is a

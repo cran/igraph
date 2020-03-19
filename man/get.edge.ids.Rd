@@ -4,8 +4,7 @@
 \alias{get.edge.ids}
 \title{Find the edge ids based on the incident vertices of the edges}
 \usage{
-get.edge.ids(graph, vp, directed = TRUE, error = FALSE,
-  multi = FALSE)
+get.edge.ids(graph, vp, directed = TRUE, error = FALSE, multi = FALSE)
 }
 \arguments{
 \item{graph}{The input graph.}
@@ -55,13 +54,20 @@ get.edge.ids(g, c(2,1, 1,4, 5,4))
 
 }
 \seealso{
-Other structural queries: \code{\link{[.igraph}},
-  \code{\link{[[.igraph}}, \code{\link{adjacent_vertices}},
-  \code{\link{are_adjacent}}, \code{\link{ends}},
-  \code{\link{gorder}}, \code{\link{gsize}},
-  \code{\link{head_of}}, \code{\link{incident_edges}},
-  \code{\link{incident}}, \code{\link{is_directed}},
-  \code{\link{neighbors}}, \code{\link{tail_of}}
+Other structural queries: 
+\code{\link{[.igraph}()},
+\code{\link{[[.igraph}()},
+\code{\link{adjacent_vertices}()},
+\code{\link{are_adjacent}()},
+\code{\link{ends}()},
+\code{\link{gorder}()},
+\code{\link{gsize}()},
+\code{\link{head_of}()},
+\code{\link{incident_edges}()},
+\code{\link{incident}()},
+\code{\link{is_directed}()},
+\code{\link{neighbors}()},
+\code{\link{tail_of}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}

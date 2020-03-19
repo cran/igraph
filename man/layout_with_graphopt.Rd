@@ -6,9 +6,16 @@
 \alias{with_graphopt}
 \title{The graphopt layout algorithm}
 \usage{
-layout_with_graphopt(graph, start = NULL, niter = 500,
-  charge = 0.001, mass = 30, spring.length = 0,
-  spring.constant = 1, max.sa.movement = 5)
+layout_with_graphopt(
+  graph,
+  start = NULL,
+  niter = 500,
+  charge = 0.001,
+  mass = 30,
+  spring.length = 0,
+  spring.constant = 1,
+  max.sa.movement = 5
+)
 
 with_graphopt(...)
 }
@@ -63,25 +70,28 @@ that, so a stable fixed point is not guaranteed.)
 See also \url{http://www.schmuhl.org/graphopt/} for the original graphopt.
 }
 \seealso{
-Other graph layouts: \code{\link{add_layout_}},
-  \code{\link{component_wise}},
-  \code{\link{layout_as_bipartite}},
-  \code{\link{layout_as_star}},
-  \code{\link{layout_as_tree}},
-  \code{\link{layout_in_circle}},
-  \code{\link{layout_nicely}},
-  \code{\link{layout_on_grid}},
-  \code{\link{layout_on_sphere}},
-  \code{\link{layout_randomly}},
-  \code{\link{layout_with_dh}},
-  \code{\link{layout_with_fr}},
-  \code{\link{layout_with_gem}},
-  \code{\link{layout_with_kk}},
-  \code{\link{layout_with_lgl}},
-  \code{\link{layout_with_mds}},
-  \code{\link{layout_with_sugiyama}},
-  \code{\link{layout_}}, \code{\link{merge_coords}},
-  \code{\link{norm_coords}}, \code{\link{normalize}}
+Other graph layouts: 
+\code{\link{add_layout_}()},
+\code{\link{component_wise}()},
+\code{\link{layout_as_bipartite}()},
+\code{\link{layout_as_star}()},
+\code{\link{layout_as_tree}()},
+\code{\link{layout_in_circle}()},
+\code{\link{layout_nicely}()},
+\code{\link{layout_on_grid}()},
+\code{\link{layout_on_sphere}()},
+\code{\link{layout_randomly}()},
+\code{\link{layout_with_dh}()},
+\code{\link{layout_with_fr}()},
+\code{\link{layout_with_gem}()},
+\code{\link{layout_with_kk}()},
+\code{\link{layout_with_lgl}()},
+\code{\link{layout_with_mds}()},
+\code{\link{layout_with_sugiyama}()},
+\code{\link{layout_}()},
+\code{\link{merge_coords}()},
+\code{\link{norm_coords}()},
+\code{\link{normalize}()}
 }
 \author{
 Michael Schmuhl for the original graphopt code, rewritten and

@@ -16,9 +16,12 @@ Constructor modifier to add graph attributes
 make_(ring(10), with_graph_(name = "10-ring"))
 }
 \seealso{
-Other constructor modifiers: \code{\link{simplified}},
-  \code{\link{with_edge_}}, \code{\link{with_vertex_}},
-  \code{\link{without_attr}}, \code{\link{without_loops}},
-  \code{\link{without_multiples}}
+Other constructor modifiers: 
+\code{\link{simplified}()},
+\code{\link{with_edge_}()},
+\code{\link{with_vertex_}()},
+\code{\link{without_attr}()},
+\code{\link{without_loops}()},
+\code{\link{without_multiples}()}
 }
 \concept{constructor modifiers}

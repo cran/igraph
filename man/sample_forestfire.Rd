@@ -5,8 +5,7 @@
 \alias{forest.fire.game}
 \title{Forest Fire Network Model}
 \usage{
-sample_forestfire(nodes, fw.prob, bw.factor = 1, ambs = 1,
-  directed = TRUE)
+sample_forestfire(nodes, fw.prob, bw.factor = 1, ambs = 1, directed = TRUE)
 }
 \arguments{
 \item{nodes}{The number of vertices in the graph.}

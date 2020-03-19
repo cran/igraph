@@ -36,14 +36,18 @@ graph_from_edgelist(el)
 graph_from_edgelist(cbind(1:10, c(2:10, 1)))
 }
 \seealso{
-Other determimistic constructors: \code{\link{graph_from_atlas}},
-  \code{\link{graph_from_literal}},
-  \code{\link{make_chordal_ring}},
-  \code{\link{make_empty_graph}},
-  \code{\link{make_full_citation_graph}},
-  \code{\link{make_full_graph}}, \code{\link{make_graph}},
-  \code{\link{make_lattice}}, \code{\link{make_ring}},
-  \code{\link{make_star}}, \code{\link{make_tree}}
+Other determimistic constructors: 
+\code{\link{graph_from_atlas}()},
+\code{\link{graph_from_literal}()},
+\code{\link{make_chordal_ring}()},
+\code{\link{make_empty_graph}()},
+\code{\link{make_full_citation_graph}()},
+\code{\link{make_full_graph}()},
+\code{\link{make_graph}()},
+\code{\link{make_lattice}()},
+\code{\link{make_ring}()},
+\code{\link{make_star}()},
+\code{\link{make_tree}()}
 }
 \concept{Edge list}
 \concept{determimistic constructors}

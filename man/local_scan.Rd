@@ -4,9 +4,16 @@
 \alias{local_scan}
 \title{Compute local scan statistics on graphs}
 \usage{
-local_scan(graph.us, graph.them = NULL, k = 1, FUN = NULL,
-  weighted = FALSE, mode = c("out", "in", "all"),
-  neighborhoods = NULL, ...)
+local_scan(
+  graph.us,
+  graph.them = NULL,
+  k = 1,
+  FUN = NULL,
+  weighted = FALSE,
+  mode = c("out", "in", "all"),
+  neighborhoods = NULL,
+  ...
+)
 }
 \arguments{
 \item{graph.us, graph}{An igraph object, the graph for which the scan
@@ -94,6 +101,7 @@ Priebe, C. E., Conroy, J. M., Marchette, D. J., Park,
   Mathematical Organization Theory}.
 }
 \seealso{
-Other scan statistics: \code{\link{scan_stat}}
+Other scan statistics: 
+\code{\link{scan_stat}()}
 }
 \concept{scan statistics}

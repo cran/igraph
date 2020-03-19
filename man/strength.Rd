@@ -5,8 +5,13 @@
 \alias{graph.strength}
 \title{Strength or weighted vertex degree}
 \usage{
-strength(graph, vids = V(graph), mode = c("all", "out", "in", "total"),
-  loops = TRUE, weights = NULL)
+strength(
+  graph,
+  vids = V(graph),
+  mode = c("all", "out", "in", "total"),
+  loops = TRUE,
+  weights = NULL
+)
 }
 \arguments{
 \item{graph}{The input graph.}

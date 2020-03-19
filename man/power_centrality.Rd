@@ -5,8 +5,15 @@
 \alias{bonpow}
 \title{Find Bonacich Power Centrality Scores of Network Positions}
 \usage{
-power_centrality(graph, nodes = V(graph), loops = FALSE,
-  exponent = 1, rescale = FALSE, tol = 1e-07, sparse = TRUE)
+power_centrality(
+  graph,
+  nodes = V(graph),
+  loops = FALSE,
+  exponent = 1,
+  rescale = FALSE,
+  tol = 1e-07,
+  sparse = TRUE
+)
 }
 \arguments{
 \item{graph}{the input graph.}

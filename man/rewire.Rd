@@ -26,7 +26,8 @@ g \%>\%
 print_all(rewire(g, with = keeping_degseq(niter = vcount(g) * 10)))
 }
 \seealso{
-Other rewiring functions: \code{\link{each_edge}},
-  \code{\link{keeping_degseq}}
+Other rewiring functions: 
+\code{\link{each_edge}()},
+\code{\link{keeping_degseq}()}
 }
 \concept{rewiring functions}

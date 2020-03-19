@@ -35,15 +35,18 @@ make_tree(10, 2)
 make_tree(10, 3, mode = "undirected")
 }
 \seealso{
-Other determimistic constructors: \code{\link{graph_from_atlas}},
-  \code{\link{graph_from_edgelist}},
-  \code{\link{graph_from_literal}},
-  \code{\link{make_chordal_ring}},
-  \code{\link{make_empty_graph}},
-  \code{\link{make_full_citation_graph}},
-  \code{\link{make_full_graph}}, \code{\link{make_graph}},
-  \code{\link{make_lattice}}, \code{\link{make_ring}},
-  \code{\link{make_star}}
+Other determimistic constructors: 
+\code{\link{graph_from_atlas}()},
+\code{\link{graph_from_edgelist}()},
+\code{\link{graph_from_literal}()},
+\code{\link{make_chordal_ring}()},
+\code{\link{make_empty_graph}()},
+\code{\link{make_full_citation_graph}()},
+\code{\link{make_full_graph}()},
+\code{\link{make_graph}()},
+\code{\link{make_lattice}()},
+\code{\link{make_ring}()},
+\code{\link{make_star}()}
 }
 \concept{Trees.}
 \concept{determimistic constructors}

@@ -5,8 +5,7 @@
 \alias{centralization.closeness.tmax}
 \title{Theoretical maximum for closeness centralization}
 \usage{
-centr_clo_tmax(graph = NULL, nodes = 0, mode = c("out", "in", "all",
-  "total"))
+centr_clo_tmax(graph = NULL, nodes = 0, mode = c("out", "in", "all", "total"))
 }
 \arguments{
 \item{graph}{The input graph. It can also be \code{NULL}, if
@@ -34,11 +33,14 @@ centr_clo(g, normalized = FALSE)$centralization \%>\%
 centr_clo(g, normalized = TRUE)$centralization
 }
 \seealso{
-Other centralization related: \code{\link{centr_betw_tmax}},
-  \code{\link{centr_betw}}, \code{\link{centr_clo}},
-  \code{\link{centr_degree_tmax}},
-  \code{\link{centr_degree}},
-  \code{\link{centr_eigen_tmax}},
-  \code{\link{centr_eigen}}, \code{\link{centralize}}
+Other centralization related: 
+\code{\link{centr_betw_tmax}()},
+\code{\link{centr_betw}()},
+\code{\link{centr_clo}()},
+\code{\link{centr_degree_tmax}()},
+\code{\link{centr_degree}()},
+\code{\link{centr_eigen_tmax}()},
+\code{\link{centr_eigen}()},
+\code{\link{centralize}()}
 }
 \concept{centralization related}

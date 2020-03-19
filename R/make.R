@@ -75,10 +75,7 @@ make_ <- function(...) {
   args <- args[!cidx]
 
   ## Modifiers
-  ## WRONG! wmods <- vapply(args, class, "") == "igraph_constructor_modifier"
-  ## Correct:
   wmods <- vapply(args, inherits, TRUE, what = "igraph_constructor_modifier")
-
   mods <- args[wmods]
   args <- args[!wmods]
 

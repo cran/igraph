@@ -9,8 +9,11 @@
 \usage{
 subgraph(graph, v)
 
-induced_subgraph(graph, vids, impl = c("auto", "copy_and_delete",
-  "create_from_scratch"))
+induced_subgraph(
+  graph,
+  vids,
+  impl = c("auto", "copy_and_delete", "create_from_scratch")
+)
 
 subgraph.edges(graph, eids, delete.vertices = TRUE)
 }

@@ -6,8 +6,15 @@
 \alias{bipartite}
 \title{Bipartite random graphs}
 \usage{
-sample_bipartite(n1, n2, type = c("gnp", "gnm"), p, m,
-  directed = FALSE, mode = c("out", "in", "all"))
+sample_bipartite(
+  n1,
+  n2,
+  type = c("gnp", "gnm"),
+  p,
+  m,
+  directed = FALSE,
+  mode = c("out", "in", "all")
+)
 
 bipartite(...)
 }

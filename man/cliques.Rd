@@ -14,8 +14,7 @@
 \usage{
 cliques(graph, min = NULL, max = NULL)
 
-max_cliques(graph, min = NULL, max = NULL, subset = NULL,
-  file = NULL)
+max_cliques(graph, min = NULL, max = NULL, subset = NULL, file = NULL)
 }
 \arguments{
 \item{graph}{The input graph, directed graphs will be considered as

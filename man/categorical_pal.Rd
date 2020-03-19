@@ -39,7 +39,9 @@ plot(karate)
 }
 
 \seealso{
-Other palettes: \code{\link{diverging_pal}},
-  \code{\link{r_pal}}, \code{\link{sequential_pal}}
+Other palettes: 
+\code{\link{diverging_pal}()},
+\code{\link{r_pal}()},
+\code{\link{sequential_pal}()}
 }
 \concept{palettes}

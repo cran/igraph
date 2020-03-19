@@ -4,8 +4,14 @@
 \alias{head_print}
 \title{Print the only the head of an R object}
 \usage{
-head_print(x, max_lines = 20, header = "", footer = "",
-  omitted_footer = "", ...)
+head_print(
+  x,
+  max_lines = 20,
+  header = "",
+  footer = "",
+  omitted_footer = "",
+  ...
+)
 }
 \arguments{
 \item{x}{The object to print, or a callback function. See

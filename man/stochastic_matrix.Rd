@@ -5,8 +5,11 @@
 \alias{get.stochastic}
 \title{Stochastic matrix of a graph}
 \usage{
-stochastic_matrix(graph, column.wise = FALSE,
-  sparse = igraph_opt("sparsematrices"))
+stochastic_matrix(
+  graph,
+  column.wise = FALSE,
+  sparse = igraph_opt("sparsematrices")
+)
 }
 \arguments{
 \item{graph}{The input graph. Must be of class \code{igraph}.}

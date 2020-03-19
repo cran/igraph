@@ -5,8 +5,14 @@
 \alias{random.graph.game}
 \title{Generate random graphs according to the Erdos-Renyi model}
 \usage{
-erdos.renyi.game(n, p.or.m, type = c("gnp", "gnm"), directed = FALSE,
-  loops = FALSE, ...)
+erdos.renyi.game(
+  n,
+  p.or.m,
+  type = c("gnp", "gnm"),
+  directed = FALSE,
+  loops = FALSE,
+  ...
+)
 }
 \arguments{
 \item{n}{The number of vertices in the graph.}

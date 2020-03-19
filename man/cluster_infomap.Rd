@@ -5,8 +5,13 @@
 \alias{infomap.community}
 \title{Infomap community finding}
 \usage{
-cluster_infomap(graph, e.weights = NULL, v.weights = NULL,
-  nb.trials = 10, modularity = TRUE)
+cluster_infomap(
+  graph,
+  e.weights = NULL,
+  v.weights = NULL,
+  nb.trials = 10,
+  modularity = TRUE
+)
 }
 \arguments{
 \item{graph}{The input graph.}
@@ -66,9 +71,8 @@ equation, \emph{Eur. Phys. J. Special Topics} 178, 13 (2009).
 Other community finding methods and \code{\link{communities}}.
 }
 \author{
-Martin Rosvall (\url{http://www.tp.umu.se/~rosvall/}) wrote the
-original C++ code. This was ported to be more igraph-like by Emmanuel
-Navarro.  The R interface and
+Martin Rosvall wrote the original C++ code. This was ported to
+be more igraph-like by Emmanuel Navarro.  The R interface and
 some cosmetics was done by Gabor Csardi \email{csardi.gabor@gmail.com}.
 }
 \keyword{graphs}

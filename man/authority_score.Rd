@@ -5,8 +5,7 @@
 \alias{authority.score}
 \title{Kleinberg's authority centrality scores.}
 \usage{
-authority_score(graph, scale = TRUE, weights = NULL,
-  options = arpack_defaults)
+authority_score(graph, scale = TRUE, weights = NULL, options = arpack_defaults)
 }
 \arguments{
 \item{graph}{The input graph.}

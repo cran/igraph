@@ -5,11 +5,26 @@
 \alias{with_fr}
 \title{The Fruchterman-Reingold layout algorithm}
 \usage{
-layout_with_fr(graph, coords = NULL, dim = 2, niter = 500,
-  start.temp = sqrt(vcount(graph)), grid = c("auto", "grid", "nogrid"),
-  weights = NULL, minx = NULL, maxx = NULL, miny = NULL,
-  maxy = NULL, minz = NULL, maxz = NULL, coolexp, maxdelta, area,
-  repulserad, maxiter)
+layout_with_fr(
+  graph,
+  coords = NULL,
+  dim = 2,
+  niter = 500,
+  start.temp = sqrt(vcount(graph)),
+  grid = c("auto", "grid", "nogrid"),
+  weights = NULL,
+  minx = NULL,
+  maxx = NULL,
+  miny = NULL,
+  maxy = NULL,
+  minz = NULL,
+  maxz = NULL,
+  coolexp,
+  maxdelta,
+  area,
+  repulserad,
+  maxiter
+)
 
 with_fr(...)
 }
@@ -106,25 +121,28 @@ Force-directed Placement. \emph{Software - Practice and Experience},
 \code{\link{layout_with_drl}}, \code{\link{layout_with_kk}} for
 other layout algorithms.
 
-Other graph layouts: \code{\link{add_layout_}},
-  \code{\link{component_wise}},
-  \code{\link{layout_as_bipartite}},
-  \code{\link{layout_as_star}},
-  \code{\link{layout_as_tree}},
-  \code{\link{layout_in_circle}},
-  \code{\link{layout_nicely}},
-  \code{\link{layout_on_grid}},
-  \code{\link{layout_on_sphere}},
-  \code{\link{layout_randomly}},
-  \code{\link{layout_with_dh}},
-  \code{\link{layout_with_gem}},
-  \code{\link{layout_with_graphopt}},
-  \code{\link{layout_with_kk}},
-  \code{\link{layout_with_lgl}},
-  \code{\link{layout_with_mds}},
-  \code{\link{layout_with_sugiyama}},
-  \code{\link{layout_}}, \code{\link{merge_coords}},
-  \code{\link{norm_coords}}, \code{\link{normalize}}
+Other graph layouts: 
+\code{\link{add_layout_}()},
+\code{\link{component_wise}()},
+\code{\link{layout_as_bipartite}()},
+\code{\link{layout_as_star}()},
+\code{\link{layout_as_tree}()},
+\code{\link{layout_in_circle}()},
+\code{\link{layout_nicely}()},
+\code{\link{layout_on_grid}()},
+\code{\link{layout_on_sphere}()},
+\code{\link{layout_randomly}()},
+\code{\link{layout_with_dh}()},
+\code{\link{layout_with_gem}()},
+\code{\link{layout_with_graphopt}()},
+\code{\link{layout_with_kk}()},
+\code{\link{layout_with_lgl}()},
+\code{\link{layout_with_mds}()},
+\code{\link{layout_with_sugiyama}()},
+\code{\link{layout_}()},
+\code{\link{merge_coords}()},
+\code{\link{norm_coords}()},
+\code{\link{normalize}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}

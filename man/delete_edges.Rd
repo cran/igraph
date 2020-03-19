@@ -28,10 +28,14 @@ g <- make_ring(10) \%>\%
 g
 }
 \seealso{
-Other functions for manipulating graph structure: \code{\link{+.igraph}},
-  \code{\link{add_edges}}, \code{\link{add_vertices}},
-  \code{\link{delete_vertices}}, \code{\link{edge}},
-  \code{\link{igraph-minus}}, \code{\link{path}},
-  \code{\link{vertex}}
+Other functions for manipulating graph structure: 
+\code{\link{+.igraph}()},
+\code{\link{add_edges}()},
+\code{\link{add_vertices}()},
+\code{\link{delete_vertices}()},
+\code{\link{edge}()},
+\code{\link{igraph-minus}},
+\code{\link{path}()},
+\code{\link{vertex}()}
 }
 \concept{functions for manipulating graph structure}

@@ -6,9 +6,16 @@
 \title{Community structure detecting based on the leading eigenvector of the
 community matrix}
 \usage{
-cluster_leading_eigen(graph, steps = -1, weights = NULL,
-  start = NULL, options = arpack_defaults, callback = NULL,
-  extra = NULL, env = parent.frame())
+cluster_leading_eigen(
+  graph,
+  steps = -1,
+  weights = NULL,
+  start = NULL,
+  options = arpack_defaults,
+  callback = NULL,
+  extra = NULL,
+  env = parent.frame()
+)
 }
 \arguments{
 \item{graph}{The input graph. Should be undirected as the method needs a

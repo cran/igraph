@@ -43,12 +43,13 @@ LP Cordella,  P Foggia, C Sansone, and M Vento: An improved algorithm
  on Graphbased Representations in Pattern Recognition}, 149--159, 2001.
 }
 \seealso{
-Other graph isomorphism: \code{\link{count_subgraph_isomorphisms}},
-  \code{\link{graph_from_isomorphism_class}},
-  \code{\link{isomorphic}},
-  \code{\link{isomorphism_class}},
-  \code{\link{isomorphisms}},
-  \code{\link{subgraph_isomorphic}},
-  \code{\link{subgraph_isomorphisms}}
+Other graph isomorphism: 
+\code{\link{count_subgraph_isomorphisms}()},
+\code{\link{graph_from_isomorphism_class}()},
+\code{\link{isomorphic}()},
+\code{\link{isomorphism_class}()},
+\code{\link{isomorphisms}()},
+\code{\link{subgraph_isomorphic}()},
+\code{\link{subgraph_isomorphisms}()}
 }
 \concept{graph isomorphism}

@@ -4,9 +4,15 @@
 \alias{embed_adjacency_matrix}
 \title{Spectral Embedding of Adjacency Matrices}
 \usage{
-embed_adjacency_matrix(graph, no, weights = NULL, which = c("lm", "la",
-  "sa"), scaled = TRUE, cvec = graph.strength(graph, weights =
-  weights)/(vcount(graph) - 1), options = igraph.arpack.default)
+embed_adjacency_matrix(
+  graph,
+  no,
+  weights = NULL,
+  which = c("lm", "la", "sa"),
+  scaled = TRUE,
+  cvec = graph.strength(graph, weights = weights)/(vcount(graph) - 1),
+  options = igraph.arpack.default
+)
 }
 \arguments{
 \item{graph}{The input graph, directed or undirected.}

@@ -5,8 +5,13 @@
 \alias{fastgreedy.community}
 \title{Community structure via greedy optimization of modularity}
 \usage{
-cluster_fast_greedy(graph, merges = TRUE, modularity = TRUE,
-  membership = TRUE, weights = E(graph)$weight)
+cluster_fast_greedy(
+  graph,
+  merges = TRUE,
+  modularity = TRUE,
+  membership = TRUE,
+  weights = E(graph)$weight
+)
 }
 \arguments{
 \item{graph}{The input graph}

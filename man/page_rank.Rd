@@ -7,12 +7,26 @@
 \alias{page_rank_old}
 \title{The Page Rank algorithm}
 \usage{
-page_rank(graph, algo = c("prpack", "arpack", "power"),
-  vids = V(graph), directed = TRUE, damping = 0.85,
-  personalized = NULL, weights = NULL, options = NULL)
+page_rank(
+  graph,
+  algo = c("prpack", "arpack", "power"),
+  vids = V(graph),
+  directed = TRUE,
+  damping = 0.85,
+  personalized = NULL,
+  weights = NULL,
+  options = NULL
+)
 
-page_rank_old(graph, vids = V(graph), directed = TRUE, niter = 1000,
-  eps = 0.001, damping = 0.85, old = FALSE)
+page_rank_old(
+  graph,
+  vids = V(graph),
+  directed = TRUE,
+  niter = 1000,
+  eps = 0.001,
+  damping = 0.85,
+  old = FALSE
+)
 }
 \arguments{
 \item{graph}{The graph object.}

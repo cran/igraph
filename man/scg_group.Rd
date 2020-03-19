@@ -5,9 +5,14 @@
 \alias{scgGrouping}
 \title{SCG Problem Solver}
 \usage{
-scg_group(V, nt, mtype = c("symmetric", "laplacian", "stochastic"),
-  algo = c("optimum", "interv_km", "interv", "exact_scg"), p = NULL,
-  maxiter = 100)
+scg_group(
+  V,
+  nt,
+  mtype = c("symmetric", "laplacian", "stochastic"),
+  algo = c("optimum", "interv_km", "interv", "exact_scg"),
+  p = NULL,
+  maxiter = 100
+)
 }
 \arguments{
 \item{V}{A numeric matrix of (eigen)vectors to be preserved by the coarse

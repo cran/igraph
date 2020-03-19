@@ -5,8 +5,16 @@
 \alias{alpha.centrality}
 \title{Find Bonacich alpha centrality scores of network positions}
 \usage{
-alpha_centrality(graph, nodes = V(graph), alpha = 1, loops = FALSE,
-  exo = 1, weights = NULL, tol = 1e-07, sparse = TRUE)
+alpha_centrality(
+  graph,
+  nodes = V(graph),
+  alpha = 1,
+  loops = FALSE,
+  exo = 1,
+  weights = NULL,
+  tol = 1e-07,
+  sparse = TRUE
+)
 }
 \arguments{
 \item{graph}{The input graph, can be directed or undirected}

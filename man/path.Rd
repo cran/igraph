@@ -45,10 +45,14 @@ g4 <- g3 + path(c("f", "c", "j", "d"), width=1:3, color="green")
 E(g4)[[]]
 }
 \seealso{
-Other functions for manipulating graph structure: \code{\link{+.igraph}},
-  \code{\link{add_edges}}, \code{\link{add_vertices}},
-  \code{\link{delete_edges}},
-  \code{\link{delete_vertices}}, \code{\link{edge}},
-  \code{\link{igraph-minus}}, \code{\link{vertex}}
+Other functions for manipulating graph structure: 
+\code{\link{+.igraph}()},
+\code{\link{add_edges}()},
+\code{\link{add_vertices}()},
+\code{\link{delete_edges}()},
+\code{\link{delete_vertices}()},
+\code{\link{edge}()},
+\code{\link{igraph-minus}},
+\code{\link{vertex}()}
 }
 \concept{functions for manipulating graph structure}

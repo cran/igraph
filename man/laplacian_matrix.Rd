@@ -5,8 +5,12 @@
 \alias{graph.laplacian}
 \title{Graph Laplacian}
 \usage{
-laplacian_matrix(graph, normalized = FALSE, weights = NULL,
-  sparse = igraph_opt("sparsematrices"))
+laplacian_matrix(
+  graph,
+  normalized = FALSE,
+  weights = NULL,
+  sparse = igraph_opt("sparsematrices")
+)
 }
 \arguments{
 \item{graph}{The input graph.}

@@ -30,15 +30,18 @@ make_full_graph(5)
 print_all(make_full_graph(4, directed = TRUE))
 }
 \seealso{
-Other determimistic constructors: \code{\link{graph_from_atlas}},
-  \code{\link{graph_from_edgelist}},
-  \code{\link{graph_from_literal}},
-  \code{\link{make_chordal_ring}},
-  \code{\link{make_empty_graph}},
-  \code{\link{make_full_citation_graph}},
-  \code{\link{make_graph}}, \code{\link{make_lattice}},
-  \code{\link{make_ring}}, \code{\link{make_star}},
-  \code{\link{make_tree}}
+Other determimistic constructors: 
+\code{\link{graph_from_atlas}()},
+\code{\link{graph_from_edgelist}()},
+\code{\link{graph_from_literal}()},
+\code{\link{make_chordal_ring}()},
+\code{\link{make_empty_graph}()},
+\code{\link{make_full_citation_graph}()},
+\code{\link{make_graph}()},
+\code{\link{make_lattice}()},
+\code{\link{make_ring}()},
+\code{\link{make_star}()},
+\code{\link{make_tree}()}
 }
 \concept{Full graph}
 \concept{determimistic constructors}

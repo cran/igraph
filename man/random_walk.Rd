@@ -4,8 +4,13 @@
 \alias{random_walk}
 \title{Random walk on a graph}
 \usage{
-random_walk(graph, start, steps, mode = c("out", "in", "all"),
-  stuck = c("return", "error"))
+random_walk(
+  graph,
+  start,
+  steps,
+  mode = c("out", "in", "all"),
+  stuck = c("return", "error")
+)
 }
 \arguments{
 \item{graph}{The input graph, might be undirected or directed.}

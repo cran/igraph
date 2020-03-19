@@ -6,8 +6,12 @@
 \alias{is_simple}
 \title{Simple graphs}
 \usage{
-simplify(graph, remove.multiple = TRUE, remove.loops = TRUE,
-  edge.attr.comb = igraph_opt("edge.attr.comb"))
+simplify(
+  graph,
+  remove.multiple = TRUE,
+  remove.loops = TRUE,
+  edge.attr.comb = igraph_opt("edge.attr.comb")
+)
 
 is_simple(graph)
 }

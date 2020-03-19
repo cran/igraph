@@ -17,16 +17,33 @@ distance_table(graph, directed = TRUE)
 
 mean_distance(graph, directed = TRUE, unconnected = TRUE)
 
-distances(graph, v = V(graph), to = V(graph), mode = c("all", "out",
-  "in"), weights = NULL, algorithm = c("automatic", "unweighted",
-  "dijkstra", "bellman-ford", "johnson"))
+distances(
+  graph,
+  v = V(graph),
+  to = V(graph),
+  mode = c("all", "out", "in"),
+  weights = NULL,
+  algorithm = c("automatic", "unweighted", "dijkstra", "bellman-ford", "johnson")
+)
 
-shortest_paths(graph, from, to = V(graph), mode = c("out", "all",
-  "in"), weights = NULL, output = c("vpath", "epath", "both"),
-  predecessors = FALSE, inbound.edges = FALSE)
+shortest_paths(
+  graph,
+  from,
+  to = V(graph),
+  mode = c("out", "all", "in"),
+  weights = NULL,
+  output = c("vpath", "epath", "both"),
+  predecessors = FALSE,
+  inbound.edges = FALSE
+)
 
-all_shortest_paths(graph, from, to = V(graph), mode = c("out", "all",
-  "in"), weights = NULL)
+all_shortest_paths(
+  graph,
+  from,
+  to = V(graph),
+  mode = c("out", "all", "in"),
+  weights = NULL
+)
 }
 \arguments{
 \item{graph}{The graph to work on.}

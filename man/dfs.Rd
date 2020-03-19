@@ -5,10 +5,20 @@
 \alias{graph.dfs}
 \title{Depth-first search}
 \usage{
-dfs(graph, root, neimode = c("out", "in", "all", "total"),
-  unreachable = TRUE, order = TRUE, order.out = FALSE,
-  father = FALSE, dist = FALSE, in.callback = NULL,
-  out.callback = NULL, extra = NULL, rho = parent.frame())
+dfs(
+  graph,
+  root,
+  neimode = c("out", "in", "all", "total"),
+  unreachable = TRUE,
+  order = TRUE,
+  order.out = FALSE,
+  father = FALSE,
+  dist = FALSE,
+  in.callback = NULL,
+  out.callback = NULL,
+  extra = NULL,
+  rho = parent.frame()
+)
 }
 \arguments{
 \item{graph}{The input graph.}
@@ -83,11 +93,11 @@ dfs(make_tree(10) \%du\% make_tree(10), root=1, "out",
 
 ## How to use a callback
 f.in <- function(graph, data, extra) {
-  cat("in:", paste(collapse=", ", data), "\\n")
+  cat("in:", paste(collapse=", ", data), "\n")
   FALSE
 }
 f.out <- function(graph, data, extra) {
-  cat("out:", paste(collapse=", ", data), "\\n")
+  cat("out:", paste(collapse=", ", data), "\n")
   FALSE
 }
 tmp <- dfs(make_tree(10), root=1, "out",
