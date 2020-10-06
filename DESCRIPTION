@@ -1,5 +1,5 @@
 Package: igraph
-Version: 1.2.5
+Version: 1.2.6
 Title: Network Analysis and Visualization
 Author: See AUTHORS file.
 Maintainer: Gábor Csárdi <csardi.gabor@gmail.com>
@@ -12,11 +12,11 @@ Imports: graphics, grDevices, magrittr, Matrix, pkgconfig (>= 2.0.0),
 Suggests: ape, digest, graph, igraphdata, rgl, scales, stats4, tcltk,
         testthat, withr
 License: GPL (>= 2)
-URL: http://igraph.org
+URL: https://igraph.org
 SystemRequirements: gmp (optional), libxml2 (optional), glpk (optional)
 BugReports: https://github.com/igraph/igraph/issues
 Encoding: UTF-8
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Collate: 'adjacency.R' 'auto.R' 'assortativity.R' 'attributes.R'
         'basic.R' 'bipartite.R' 'centrality.R' 'centralization.R'
         'cliques.R' 'cocitation.R' 'cohesive.blocks.R' 'community.R'
@@ -34,6 +34,6 @@ Collate: 'adjacency.R' 'auto.R' 'assortativity.R' 'attributes.R'
         'tkplot.R' 'topology.R' 'triangles.R' 'utils.R' 'uuid.R'
         'versions.R' 'weakref.R' 'zzz-deprecate.R'
 NeedsCompilation: yes
-Packaged: 2020-03-18 14:51:55 UTC; gaborcsardi
+Packaged: 2020-10-06 10:36:22 UTC; gaborcsardi
 Repository: CRAN
-Date/Publication: 2020-03-19 09:20:03 UTC
+Date/Publication: 2020-10-06 12:40:05 UTC

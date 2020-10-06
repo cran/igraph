@@ -238,6 +238,7 @@ int FUNCTION(igraph_vector,init_real)(TYPE(igraph_vector) *v, int no, ...) {
  * complexity of the memory allocation.
  */
 
+#ifndef USING_R
 int FUNCTION(igraph_vector,init_real_end)(TYPE(igraph_vector) *v, 
 					  BASE endmark, ...) {
   int i=0, n=0;
@@ -265,6 +266,7 @@ int FUNCTION(igraph_vector,init_real_end)(TYPE(igraph_vector) *v,
   IGRAPH_FINALLY_CLEAN(1);
   return 0;
 }
+#endif
 
 /**
  * \ingroup vector
