@@ -6,7 +6,7 @@
 \alias{chordal_ring}
 \title{Create an extended chordal ring graph}
 \usage{
-make_chordal_ring(n, w)
+make_chordal_ring(n, w, directed = FALSE)
 
 chordal_ring(...)
 }
@@ -15,6 +15,8 @@ chordal_ring(...)
 
 \item{w}{A matrix which specifies the extended chordal ring. See
 details below.}
+
+\item{directed}{Logical scalar, whether or not to create a directed graph.}
 
 \item{...}{Passed to \code{make_chordal_ring}.}
 }

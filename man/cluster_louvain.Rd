@@ -22,7 +22,7 @@ object, please see the \code{\link{communities}} manual page for details.
 \description{
 This function implements the multi-level modularity optimization algorithm
 for finding community structure, see references below. It is based on the
-modularity measure and a hierarchial approach.
+modularity measure and a hierarchical approach.
 }
 \details{
 This function implements the multi-level modularity optimization algorithm
@@ -30,7 +30,7 @@ for finding community structure, see VD Blondel, J-L Guillaume, R Lambiotte
 and E Lefebvre: Fast unfolding of community hierarchies in large networks,
 \url{https://arxiv.org/abs/0803.0476} for the details.
 
-It is based on the modularity measure and a hierarchial approach.
+It is based on the modularity measure and a hierarchical approach.
 Initially, each vertex is assigned to a community on its own. In every step,
 vertices are re-assigned to communities in a local, greedy way: each vertex
 is moved to the community with which it achieves the highest contribution to
@@ -64,6 +64,7 @@ Other community detection algorithms: \code{\link{cluster_walktrap}},
 \code{\link{cluster_edge_betweenness}},
 \code{\link{cluster_fast_greedy}},
 \code{\link{cluster_label_prop}}
+\code{\link{cluster_leiden}}
 }
 \author{
 Tom Gregorovic, Tamas Nepusz \email{ntamas@gmail.com}

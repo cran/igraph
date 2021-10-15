@@ -1,5 +1,9 @@
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define to 1 if you have the declaration of `isfinite', and to 0 if you
+   don't. */
+#undef HAVE_DECL_ISFINITE
+
 /* Define to 1 if you have the `expm1' function. */
 #undef HAVE_EXPM1
 
@@ -33,9 +37,6 @@
 /* Define to 1 if you have the `logbl' function. */
 #undef HAVE_LOGBL
 
-/* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
-
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #undef HAVE_NETINET_IN_H
 
@@ -62,6 +63,9 @@
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#undef HAVE_STDIO_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
@@ -111,6 +115,9 @@
 /* We don't care about thread-local storage in R */
 #undef IGRAPH_THREAD_LOCAL
 
+/* Define to 1 if you use the internal SuiteSparse library */
+#undef INTERNAL_SUITESPARSE
+
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
 
@@ -129,5 +136,7 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #undef STDC_HEADERS

@@ -271,7 +271,8 @@ The different methods for finding communities, they all return a
 \code{\link{cluster_fast_greedy}},
 \code{\link{cluster_label_prop}},
 \code{\link{cluster_leading_eigen}},
-\code{\link{cluster_louvain}}, \code{\link{cluster_optimal}},
-\code{\link{cluster_spinglass}}, \code{\link{cluster_walktrap}}.
+\code{\link{cluster_louvain}}, \code{\link{cluster_leiden}},
+\code{\link{cluster_optimal}}, \code{\link{cluster_spinglass}},
+\code{\link{cluster_walktrap}}.
 }
 \keyword{graphs}

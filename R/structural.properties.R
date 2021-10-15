@@ -732,12 +732,12 @@ estimate_betweenness <- function(graph, vids=V(graph), directed=TRUE, cutoff, we
 #' The vertex and edge betweenness are (roughly) defined by the number of
 #' geodesics (shortest paths) going through a vertex or an edge.
 #' 
-#' The vertex betweenness of vertex \eqn{v}{\code{v}} is defined by
+#' The vertex betweenness of vertex \code{v} is defined by
 #' 
 #' \deqn{\sum_{i\ne j, i\ne v, j\ne v} g_{ivj}/g_{ij}}{sum( g_ivj / g_ij,
 #' i!=j,i!=v,j!=v)}
 #' 
-#' The edge betweenness of edge \eqn{e}{\code{e}} is defined by
+#' The edge betweenness of edge \code{e} is defined by
 #' 
 #' \deqn{\sum_{i\ne j} g{iej}/g_{ij}.}{sum( g_iej / g_ij, i!=j).}
 #' 
@@ -770,8 +770,10 @@ estimate_betweenness <- function(graph, vids=V(graph), directed=TRUE, cutoff, we
 #' many shortest paths between a pair of vertices. If \code{TRUE} (the
 #' default), then big integers are not used.
 #' @param normalized Logical scalar, whether to normalize the betweenness
-#' scores. If \code{TRUE}, then the results are normalized according to
-#' \deqn{B^n=\frac{2B}{n^2-3n+2}}{Bnorm=2*B/(n*n-3*n+2)}, where
+#' scores. If \code{TRUE}, then the results are normalized by the number of ordered
+#' or unordered vertex pairs in directed and undirected graphs, respectively.
+#' In an undirected graph,			
+#' \deqn{B^n=\frac{2B}{(n-1)(n-2)},}{Bnorm=2*B/((n-1)*(n-2)),} where
 #' \eqn{B^n}{Bnorm} is the normalized, \eqn{B} the raw betweenness, and \eqn{n}
 #' is the number of vertices in the graph.
 #' @return A numeric vector with the betweenness score for each vertex in
@@ -819,7 +821,7 @@ betweenness <- function(graph, v=V(graph), directed=TRUE, weights=NULL,
   res <- .Call(C_R_igraph_betweenness, graph, v-1,
                as.logical(directed), weights, as.logical(nobigint))
   if (normalized) {
-    vc <- vcount(graph)
+    vc <- as.numeric(vcount(graph))
     if (is_directed(graph) && directed) {
       res <- res / ( vc*vc-3*vc+2)
     } else {
@@ -866,12 +868,17 @@ betweenness <- function(graph, v=V(graph), directed=TRUE, weights=NULL,
 #' \describe{ \item{"global"}{The global transitivity of an undirected
 #' graph (directed graphs are considered as undirected ones as well). This is
 #' simply the ratio of the triangles and the connected triples in the graph.
-#' For directed graph the direction of the edges is ignored. }
+#' For directed graphs the direction of the edges is ignored.}
 #' \item{"local"}{The local transitivity of an undirected graph, this is
 #' calculated for each vertex given in the \code{vids} argument. The local
 #' transitivity of a vertex is the ratio of the triangles connected to the
 #' vertex and the triples centered on the vertex. For directed graph the
-#' direction of the edges is ignored. } \item{"undirected"}{This is the
+#' direction of the edges is ignored. Note that calculations do not work
+#' reliably in non-simple graphs, and since the presence of mutual edges in
+#' a directed graph becomes non-simple when treated as undirected, therefore
+#' it is advised to avoid using this function on non-simple and/or directed
+#' graphs. igraph prints a warning in these cases; the warning will be turned
+#' into an error in igraph 1.3.0.} \item{"undirected"}{This is the
 #' same as \code{global}.} \item{"globalundirected"}{This is the same as
 #' \code{global}.} \item{"localundirected"}{This is the same as
 #' \code{local}.} \item{"barrat"}{The weighted transitivity as defined A.
@@ -1174,7 +1181,7 @@ constraint <- function(graph, nodes=V(graph), weights=NULL) {
 #' probability of mutual connection between a vertex pair, if we know that
 #' there is a (possibly non-mutual) connection between them. In other words,
 #' (unordered) vertex pairs are classified into three groups: (1)
-#' not-connected, (2) non-reciprocaly connected, (3) reciprocally connected.
+#' not-connected, (2) non-reciprocally connected, (3) reciprocally connected.
 #' The result is the size of group (3), divided by the sum of group sizes
 #' (2)+(3). This measure is calculated if \code{mode} is \code{ratio}.
 #' 
@@ -1483,7 +1490,7 @@ alpha.centrality.sparse <- function(graph, nodes=V(graph), alpha=1,
 #' 
 #' The alpha centrality of the vertices in a graph is defined as the solution
 #' of the following matrix equation: \deqn{x=\alpha A^T x+e,}{x=alpha t(A)x+e,}
-#' where \eqn{A}{A} is the (not neccessarily symmetric) adjacency matrix of the
+#' where \eqn{A}{A} is the (not necessarily symmetric) adjacency matrix of the
 #' graph, \eqn{e}{e} is the vector of exogenous sources of status of the
 #' vertices and \eqn{\alpha}{alpha} is the relative importance of the
 #' endogenous versus exogenous factors.
@@ -1911,7 +1918,7 @@ which_loop <- function(graph, eids=E(graph)) {
 #' \code{count_multiple} counts the multiplicity of each edge of a graph.
 #' 
 #' Note that the semantics for \code{which_multiple} and \code{count_multiple} is
-#' different. \code{which_multiple} gives \code{TRUE} for all occurences of a
+#' different. \code{which_multiple} gives \code{TRUE} for all occurrences of a
 #' multiple edge except for one. Ie. if there are three \code{i-j} edges in the
 #' graph then \code{which_multiple} returns \code{TRUE} for only two of them while
 #' \code{count_multiple} returns \sQuote{3} for all three.
@@ -2335,7 +2342,7 @@ estimate_edge_betweenness <- function(graph, e=E(graph),
 #' plus one. Note that (for currently unknown reasons) the first element of the
 #' vector is the number of clusters of size zero, so this is always zero.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso \code{\link{subcomponent}}, \code{\link{groups}}
+#' @seealso \code{\link{decompose}}, \code{\link{subcomponent}}, \code{\link{groups}}
 #' @export
 #' @keywords graphs
 #' @examples
@@ -2411,7 +2418,7 @@ unfold_tree <- function(graph, mode=c("all", "out", "in", "total"), roots) {
 
 #' Closeness centrality of vertices
 #' 
-#' Cloness centrality measures how many steps is required to access every other
+#' Closeness centrality measures how many steps is required to access every other
 #' vertex from a given vertex.
 #' 
 #' The closeness centrality of a vertex is defined by the inverse of the
@@ -2420,9 +2427,9 @@ unfold_tree <- function(graph, mode=c("all", "out", "in", "total"), roots) {
 #' 
 #' \deqn{\frac{1}{\sum_{i\ne v} d_vi}}{1/sum( d(v,i), i != v)}
 #' 
-#' If there is no (directed) path between vertex \eqn{v}{\code{v}} and
-#' \eqn{i}{\code{i}} then the total number of vertices is used in the formula
-#' instead of the path length.
+#' If there is no (directed) path between vertex \code{v} and \code{i}, then
+#' the total number of vertices is used in the formula instead of the path
+#' length.
 #' 
 #' \code{estimate_closeness} only considers paths of length \code{cutoff} or
 #' smaller, this can be run for larger graphs, as the running time is not
@@ -2590,7 +2597,7 @@ laplacian_matrix <- function(graph, normalized=FALSE, weights=NULL,
 #' Graph matching
 #' 
 #' A matching in a graph means the selection of a set of edges that are
-#' pairwise non-adjacenct, i.e. they have no common incident vertices. A
+#' pairwise non-adjacent, i.e. they have no common incident vertices. A
 #' matching is maximal if it is not a proper subset of any other matching.
 #' 
 #' \code{is_matching} checks a matching vector and verifies whether its
@@ -2680,12 +2687,7 @@ laplacian_matrix <- function(graph, normalized=FALSE, weights=NULL,
 is_matching <- function(graph, matching, types=NULL) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
-  if (is.null(types) && "type" %in% vertex_attr_names(graph)) { 
-    types <- V(graph)$type 
-  } 
-  if (!is.null(types)) { 
-    types <- as.logical(types) 
-  }
+  types <- handle_vertex_type_arg(types, graph, required=F)
   matching <- as.igraph.vs(graph, matching, na.ok=TRUE)-1
   matching[ is.na(matching) ] <- -1
 
@@ -2702,12 +2704,7 @@ is_matching <- function(graph, matching, types=NULL) {
 is_max_matching <- function(graph, matching, types=NULL) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
-  if (is.null(types) && "type" %in% vertex_attr_names(graph)) { 
-    types <- V(graph)$type 
-  } 
-  if (!is.null(types)) { 
-    types <- as.logical(types) 
-  }
+  types <- handle_vertex_type_arg(types, graph, required=F)
   matching <- as.igraph.vs(graph, matching, na.ok=TRUE)-1
   matching[ is.na(matching) ] <- -1
 
@@ -2725,12 +2722,7 @@ max_bipartite_match <- function(graph, types=NULL, weights=NULL,
                                        eps=.Machine$double.eps) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
-  if (is.null(types) && "type" %in% vertex_attr_names(graph)) { 
-    types <- V(graph)$type 
-  } 
-  if (!is.null(types)) { 
-    types <- as.logical(types) 
-  }
+  types <- handle_vertex_type_arg(types, graph, required=F)
   if (is.null(weights) && "weight" %in% edge_attr_names(graph)) { 
     weights <- E(graph)$weight 
   } 
@@ -2757,7 +2749,7 @@ max_bipartite_match <- function(graph, types=NULL, weights=NULL,
 
 #' Find mutual edges in a directed graph
 #' 
-#' This function checks the reciproc pair of the supplied edges.
+#' This function checks the reciprocal pair of the supplied edges.
 #' 
 #' In a directed graph an (A,B) edge is mutual if the graph also includes a
 #' (B,A) directed edge.
@@ -2798,13 +2790,28 @@ which_mutual <- which_mutual
 #' \code{NaN} (zero divided by zero), the same is true for \sQuote{\code{knnk}}
 #' if a given degree never appears in the network.
 #' 
+#' The weighted version computes a weighted average of the neighbor degrees as
+#'
+#' \code{k_nn_u = 1/s_u sum_v w_uv k_v},
+#'
+#' where \code{s_u = sum_v w_uv} is the sum of the incident edge weights
+#' of vertex \code{u}, i.e. its strength.
+#' The sum runs over the neighbors \code{v} of vertex \code{u}
+#' as indicated by \code{mode}. \code{w_uv} denotes the weighted adjacency matrix
+#' and \code{k_v} is the neighbors' degree, specified by \code{neighbor_degree_mode}.
+#'
 #' @aliases knn graph.knn
-#' @param graph The input graph. It can be directed, but it will be treated as
-#' undirected, i.e. the direction of the edges is ignored.
+#' @param graph The input graph. It may be directed.
 #' @param vids The vertices for which the calculation is performed. Normally it
 #' includes all vertices. Note, that if not all vertices are given here, then
 #' both \sQuote{\code{knn}} and \sQuote{\code{knnk}} will be calculated based
 #' on the given vertices only.
+#' @param mode Character constant to indicate the type of neighbors to consider
+#' in directed graphs. \code{out} considers out-neighbors, \code{in} considers
+#' in-neighbors and \code{all} ignores edge directions.
+#' @param neighbor.degree.mode The type of degree to average in directed graphs.
+#' \code{out} averages out-degrees, \code{in} averages in-degrees and \code{all}
+#' ignores edge directions for the degree calculation.
 #' @param weights Weight vector. If the graph has a \code{weight} edge
 #' attribute, then this is used by default. If this argument is given, then
 #' vertex strength (see \code{\link{strength}}) is used instead of vertex

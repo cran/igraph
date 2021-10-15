@@ -1,5 +1,5 @@
 /* -*- mode: C -*-  */
-/* vim:set ts=2 sw=2 sts=2 et: */
+/* vim:set ts=4 sw=4 sts=4 et: */
 /*
    IGraph library.
    Copyright (C) 2007-2012  Gabor Csardi <csardi.gabor@gmail.com>
@@ -51,25 +51,20 @@
  * \example examples/simple/blas.c
  */
 void igraph_blas_dgemv(igraph_bool_t transpose, igraph_real_t alpha,
-        const igraph_matrix_t* a, const igraph_vector_t* x,
-        igraph_real_t beta, igraph_vector_t* y) {
-  char trans = transpose ? 'T' : 'N';
-  int m, n;
-  int inc = 1;
+                       const igraph_matrix_t* a, const igraph_vector_t* x,
+                       igraph_real_t beta, igraph_vector_t* y) {
+    char trans = transpose ? 'T' : 'N';
+    int m, n;
+    int inc = 1;
 
-  m = (int) igraph_matrix_nrow(a);
-  n = (int) igraph_matrix_ncol(a);
+    m = (int) igraph_matrix_nrow(a);
+    n = (int) igraph_matrix_ncol(a);
 
-  assert(igraph_vector_size(x) == transpose ? m : n);
-  assert(igraph_vector_size(y) == transpose ? n : m);
+    assert(igraph_vector_size(x) == transpose ? m : n);
+    assert(igraph_vector_size(y) == transpose ? n : m);
 
-#ifdef HAVE_GFORTRAN
-  igraphdgemv_(&trans, &m, &n, &alpha, VECTOR(a->data), &m,
-               VECTOR(*x), &inc, &beta, VECTOR(*y), &inc, 1);
-#else
-  igraphdgemv_(&trans, &m, &n, &alpha, VECTOR(a->data), &m,
-               VECTOR(*x), &inc, &beta, VECTOR(*y), &inc);
-#endif
+    igraphdgemv_(&trans, &m, &n, &alpha, VECTOR(a->data), &m,
+                 VECTOR(*x), &inc, &beta, VECTOR(*y), &inc);
 }
 
 /**
@@ -95,26 +90,38 @@ void igraph_blas_dgemv(igraph_bool_t transpose, igraph_real_t alpha,
  *     arrays.
  */
 void igraph_blas_dgemv_array(igraph_bool_t transpose, igraph_real_t alpha,
-        const igraph_matrix_t* a, const igraph_real_t* x,
-        igraph_real_t beta, igraph_real_t* y) {
-  char trans = transpose ? 'T' : 'N';
-  int m, n;
-  int inc = 1;
+                             const igraph_matrix_t* a, const igraph_real_t* x,
+                             igraph_real_t beta, igraph_real_t* y) {
+    char trans = transpose ? 'T' : 'N';
+    int m, n;
+    int inc = 1;
 
-  m = (int) igraph_matrix_nrow(a);
-  n = (int) igraph_matrix_ncol(a);
+    m = (int) igraph_matrix_nrow(a);
+    n = (int) igraph_matrix_ncol(a);
 
-#ifdef HAVE_GFORTRAN
-  igraphdgemv_(&trans, &m, &n, &alpha, VECTOR(a->data), &m,
-               (igraph_real_t*)x, &inc, &beta, y, &inc, 1);
-#else
-  igraphdgemv_(&trans, &m, &n, &alpha, VECTOR(a->data), &m,
-               (igraph_real_t*)x, &inc, &beta, y, &inc);
-#endif
+    igraphdgemv_(&trans, &m, &n, &alpha, VECTOR(a->data), &m,
+                 (igraph_real_t*)x, &inc, &beta, y, &inc);
 }
 
 igraph_real_t igraph_blas_dnrm2(const igraph_vector_t *v) {
-  int n =igraph_vector_size(v);
-  int one = 1;
-  return igraphdnrm2_(&n, VECTOR(*v), &one);
+    int n = igraph_vector_size(v);
+    int one = 1;
+    return igraphdnrm2_(&n, VECTOR(*v), &one);
 }
+
+int igraph_blas_ddot(const igraph_vector_t *v1, const igraph_vector_t *v2,
+                       igraph_real_t *res) {
+
+    int n = igraph_vector_size(v1);
+    int one = 1;
+
+    if (igraph_vector_size(v2) != n) {
+        IGRAPH_ERROR("Dot product of vectors with different dimensions",
+                     IGRAPH_EINVAL);
+    }
+
+    *res = igraphddot_(&n, VECTOR(*v1), &one, VECTOR(*v2), &one);
+
+    return 0;
+}
+

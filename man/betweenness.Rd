@@ -55,8 +55,10 @@ default), then big integers are not used.}
 \item{v}{The vertices for which the vertex betweenness will be calculated.}
 
 \item{normalized}{Logical scalar, whether to normalize the betweenness
-scores. If \code{TRUE}, then the results are normalized according to
-\deqn{B^n=\frac{2B}{n^2-3n+2}}{Bnorm=2*B/(n*n-3*n+2)}, where
+scores. If \code{TRUE}, then the results are normalized by the number of ordered
+or unordered vertex pairs in directed and undirected graphs, respectively.
+In an undirected graph,            
+\deqn{B^n=\frac{2B}{(n-1)(n-2)},}{Bnorm=2*B/((n-1)*(n-2)),} where
 \eqn{B^n}{Bnorm} is the normalized, \eqn{B} the raw betweenness, and \eqn{n}
 is the number of vertices in the graph.}
 
@@ -78,12 +80,12 @@ The vertex and edge betweenness are (roughly) defined by the number of
 geodesics (shortest paths) going through a vertex or an edge.
 }
 \details{
-The vertex betweenness of vertex \eqn{v}{\code{v}} is defined by
+The vertex betweenness of vertex \code{v} is defined by
 
 \deqn{\sum_{i\ne j, i\ne v, j\ne v} g_{ivj}/g_{ij}}{sum( g_ivj / g_ij,
 i!=j,i!=v,j!=v)}
 
-The edge betweenness of edge \eqn{e}{\code{e}} is defined by
+The edge betweenness of edge \code{e} is defined by
 
 \deqn{\sum_{i\ne j} g{iej}/g_{ij}.}{sum( g_iej / g_ij, i!=j).}
 

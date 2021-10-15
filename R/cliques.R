@@ -34,7 +34,7 @@
 #' 
 #' \code{max_cliques} finds all maximal cliques in the input graph.  A
 #' clique in maximal if it cannot be extended to a larger clique. The largest
-#' cliques are always maximal, but a maximal clique is not neccessarily the
+#' cliques are always maximal, but a maximal clique is not necessarily the
 #' largest.
 #' 
 #' \code{count_max_cliques} counts the maximal cliques.
@@ -55,7 +55,7 @@
 #' \code{NULL} means no limit.
 #' @return \code{cliques}, \code{largest_cliques} and \code{clique_num}
 #' return a list containing numeric vectors of vertex ids. Each list element is
-#' a clique.
+#' a clique, i.e. a vertex sequence of class \code{\link[=V]{igraph.vs}}.
 #' 
 #' \code{max_cliques} returns \code{NULL}, invisibly, if its \code{file}
 #' argument is not \code{NULL}. The output is written to the specified file in

@@ -1,4 +1,4 @@
-AC_INIT(igraph, 1.2.6, csardi.gabor@gmail.com)
+AC_INIT(igraph, 1.2.7, csardi.gabor@gmail.com)
 AC_CONFIG_SRCDIR(src/rinterface.c)
 AC_CONFIG_HEADERS(src/config.h)
 
@@ -21,10 +21,11 @@ AC_PROG_CC
 
 # Fortran compiler, we need to check if it is the GNU compiler
 AC_PROG_FC
-if test "x$ac_cv_fc_compiler_gnu" == xyes; then
+if test "x$ac_cv_fc_compiler_gnu" = xyes; then
   AC_DEFINE([HAVE_GFORTRAN], [1], [Define to 1 if using the GNU fortran compiler])
 fi
 
+AC_DEFINE([INTERNAL_SUITESPARSE], [1], [Define to 1 if you use the internal SuiteSparse library])
 
 # Tricky check for C++ compiler, because Autoconf has a weird bug:
 # http://lists.gnu.org/archive/html/autoconf/2006-03/msg00067.html
@@ -42,11 +43,12 @@ AC_LANG_POP([C++])
 LIBS_SAVE=$LIBS
 LIBS="$LIBS -lm"
 AC_CHECK_FUNCS([rintf finite expm1 rint log2 logbl snprintf log1p round fmin stpcpy])
+AC_CHECK_DECLS(isfinite,,,[#include <math.h>])
 AC_CHECK_DECL([stpcpy],
 	[AC_DEFINE([HAVE_STPCPY_SIGNATURE], [1], [Define to 1 if the stpcpy function has a signature])])
 LIBS=$LIBS_SAVE
 
-AC_CHECK_HEADER([sys/times.h], 
+AC_CHECK_HEADER([sys/times.h],
       [AC_DEFINE([HAVE_TIMES_H], [1], [Define to 1 if you have the sys/times.h header])])
 
 AC_CHECK_HEADERS([ \
@@ -68,7 +70,7 @@ AC_CHECK_MEMBER([struct sockaddr.sa_len],
 
 graphml_support=yes
 AC_ARG_ENABLE(graphml,
-              AC_HELP_STRING([--disable-graphml], [Disable support for GraphML format]),
+              AS_HELP_STRING([--disable-graphml], [Disable support for GraphML format]),
               [graphml_support=$enableval], [graphml_support=yes])
 
 HAVE_LIBXML=0
@@ -107,14 +109,14 @@ AC_LANG_PUSH([C++])
 HAVE_GMP=0
 GMP_LIBS=""
 gmp_support=no
-AC_ARG_ENABLE(gmp, AC_HELP_STRING([--disable-gmp], [Compile without the GMP library]))
+AC_ARG_ENABLE(gmp, AS_HELP_STRING([--disable-gmp], [Compile without the GMP library]))
 if test "x$enable_gmp" != "xno"; then
   AC_CHECK_LIB([gmp], [__gmpz_add], [
     AC_CHECK_HEADER([gmp.h], [
       HAVE_GMP=1
       AC_DEFINE([HAVE_GMP], [1], [Define to 1 if you have the GMP library])
       gmp_support=yes
-      GMP_LIBS="-lgmp"      
+      GMP_LIBS="-lgmp"
     ])
   ])
 fi
@@ -124,7 +126,7 @@ AC_LANG_POP([C++])
 
 glpk_support=no
 AC_ARG_ENABLE(glpk,
-              AC_HELP_STRING([--enable-glpk], [Enable support for GLPK]),
+              AS_HELP_STRING([--enable-glpk], [Enable support for GLPK]),
               [glpk_support=$enableval], [glpk_support=yes])
 
 HAVE_GLPK=0

@@ -354,7 +354,7 @@ with_graph_ <- function(...) {
 #' @section Notable graphs:
 #'
 #' \code{make_graph} can create some notable graphs. The name of the
-#' graph (case insensitive), a character scalar must be suppliced as
+#' graph (case insensitive), a character scalar must be supplied as
 #' the \code{edges} argument, and other arguments are ignored. (A warning
 #' is given is they are specified.)
 #'
@@ -378,7 +378,7 @@ with_graph_ <- function(...) {
 #'     and not vertex transitive.}
 #'   \item{Franklin}{This is a graph whose embedding
 #'     to the Klein bottle can be colored with six colors, it is a counterexample
-#'     to the neccessity of the Heawood conjecture on a Klein bottle. It has 12
+#'     to the necessity of the Heawood conjecture on a Klein bottle. It has 12
 #'     vertices and 18 edges.}
 #'   \item{Frucht}{The Frucht Graph is the smallest
 #'     cubical graph whose automorphism group consists only of the identity
@@ -433,9 +433,9 @@ with_graph_ <- function(...) {
 #'   \item{Tetrahedral,
 #'     Tetrahedron}{Platonic solid with 4 vertices and 6 edges.}
 #'   \item{Thomassen}{The smallest hypotraceable graph, on 34 vertices and 52
-#'     edges. A hypotracable graph does not contain a Hamiltonian path but after
+#'     edges. A hypotraceable graph does not contain a Hamiltonian path but after
 #'     removing any single vertex from it the remainder always contains a
-#'     Hamiltonian path. A graph containing a Hamiltonian path is called tracable.}
+#'     Hamiltonian path. A graph containing a Hamiltonian path is called traceable.}
 #'   \item{Tutte}{Tait's Hamiltonian graph conjecture states that every
 #'     3-connected 3-regular planar graph is Hamiltonian.  This graph is a
 #'     counterexample. It has 46 vertices and 69 edges.}
@@ -557,6 +557,9 @@ make_graph <- function(edges, ..., n = max(edges), isolates = NULL,
 
       old_graph <- function(edges, n = max(edges), directed = TRUE) {
         on.exit( .Call(C_R_igraph_finalizer) )
+        if (missing(n) && (is.null(edges) || length(edges) == 0)) {
+          n <- 0
+        }
         .Call(C_R_igraph_create, as.numeric(edges)-1, as.numeric(n),
               as.logical(directed))
       }
@@ -649,7 +652,15 @@ undirected_graph <- function(...) constructor_spec(make_undirected_graph, ...)
 
 make_empty_graph <- function(n=0, directed=TRUE) {
   # Argument checks
-  n <- as.integer(n)
+  if (is.null(n)) {
+    stop("number of vertices must be an integer")
+  }
+
+  n <- suppressWarnings(as.integer(n))
+  if (is.na(n)) {
+    stop("number of vertices must be an integer")
+  }
+
   directed <- as.logical(directed)
 
   on.exit( .Call(C_R_igraph_finalizer) )
@@ -973,7 +984,7 @@ full_graph <- function(...) constructor_spec(make_full_graph, ...)
 #' Create a lattice graph
 #'
 #' \code{make_lattice} is a flexible function, it can create lattices of
-#' arbitrary dimensions, periodic or unperiodic ones. It has two
+#' arbitrary dimensions, periodic or aperiodic ones. It has two
 #' forms. In the first form you only supply \code{dimvector}, but not
 #' \code{length} and \code{dim}. In the second form you omit
 #' \code{dimvector} and supply \code{length} and \code{dim}.
@@ -1003,6 +1014,11 @@ full_graph <- function(...) constructor_spec(make_full_graph, ...)
 make_lattice <- function(dimvector = NULL, length = NULL, dim = NULL,
                           nei = 1, directed = FALSE, mutual = FALSE,
                           circular=FALSE) {
+
+  if (is.numeric(length) && length != floor(length)) {
+    warning("length was rounded to the nearest integer")
+    length <- round(length)
+  }
 
   if (is.null(dimvector)) {
     dimvector <- rep(length, dim)
@@ -1184,6 +1200,7 @@ atlas <- function(...) constructor_spec(graph_from_atlas, ...)
 #' @param n The number of vertices.
 #' @param w A matrix which specifies the extended chordal ring. See
 #'   details below.
+#' @param directed Logical scalar, whether or not to create a directed graph.
 #' @return An igraph graph.
 #'
 #' @family determimistic constructors
@@ -1192,11 +1209,11 @@ atlas <- function(...) constructor_spec(graph_from_atlas, ...)
 #' chord <- make_chordal_ring(15,
 #'     matrix(c(3, 12, 4, 7, 8, 11), nr = 2))
 
-make_chordal_ring <- function(n, w) {
+make_chordal_ring <- function(n, w, directed=FALSE) {
 
   on.exit( .Call(C_R_igraph_finalizer) )
-  res <- .Call(C_R_igraph_extended_chordal_ring, as.numeric(n),
-               as.matrix(w))
+  res <- .Call(C_R_igraph_extended_chordal_ring, as.integer(n),
+               as.matrix(w), as.logical(directed))
   if (igraph_opt("add.params")) {
     res$name <- "Extended chordal ring"
     res$w <- w
@@ -1429,7 +1446,7 @@ full_bipartite_graph <- function(...) constructor_spec(make_full_bipartite_graph
 #' boolean and \code{FALSE} for the vertices of the first kind and \code{TRUE}
 #' for vertices of the second kind.
 #'
-#' \code{make_bipartite_graph} basically does three things. First it checks tha
+#' \code{make_bipartite_graph} basically does three things. First it checks the
 #' \code{edges} vector against the vertex \code{types}. Then it creates a graph
 #' using the \code{edges} vector and finally it adds the \code{types} vector as
 #' a vertex attribute called \code{type}.

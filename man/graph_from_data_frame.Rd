@@ -44,7 +44,7 @@ the (symbolic) edge list and edge/vertex attributes.
 }
 \details{
 \code{graph_from_data_frame} creates igraph graphs from one or two data frames.
-It has two modes of operatation, depending whether the \code{vertices}
+It has two modes of operation, depending whether the \code{vertices}
 argument is \code{NULL} or not.
 
 If \code{vertices} is \code{NULL}, then the first two columns of \code{d}
@@ -59,9 +59,12 @@ additional vertex attributes. If \code{vertices} is not \code{NULL} then the
 symbolic edge list given in \code{d} is checked to contain only vertex names
 listed in \code{vertices}.
 
-Typically, the data frames are exported from some speadsheat software like
+Typically, the data frames are exported from some spreadsheet software like
 Excel and are imported into R via \code{\link{read.table}},
 \code{\link{read.delim}} or \code{\link{read.csv}}.
+
+All edges in the data frame are included in the graph, which may include
+multiple parallel edges and loops.
 
 \code{as_data_frame} converts the igraph graph into one or more data
 frames, depending on the \code{what} argument.

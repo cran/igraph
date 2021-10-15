@@ -425,7 +425,7 @@ eigen_centrality <- function(graph, directed=FALSE, scale=TRUE, weights=NULL, op
   # Function call
   res <- .Call(C_R_igraph_eigenvector_centrality, graph, directed, scale, weights, options)
   if (igraph_opt("add.vertex.names") && is_named(graph)) { 
-  names(res$vector) <- vertex_attr(graph, "name", ) 
+  names(res$vector) <- vertex_attr(graph, "name", V(graph)) 
   }
   res
 }
@@ -449,7 +449,7 @@ hub_score <- function(graph, scale=TRUE, weights=NULL, options=arpack_defaults) 
   # Function call
   res <- .Call(C_R_igraph_hub_score, graph, scale, weights, options)
   if (igraph_opt("add.vertex.names") && is_named(graph)) { 
-  names(res$vector) <- vertex_attr(graph, "name", ) 
+  names(res$vector) <- vertex_attr(graph, "name", V(graph)) 
   }
   res
 }
@@ -473,7 +473,7 @@ authority_score <- function(graph, scale=TRUE, weights=NULL, options=arpack_defa
   # Function call
   res <- .Call(C_R_igraph_authority_score, graph, scale, weights, options)
   if (igraph_opt("add.vertex.names") && is_named(graph)) { 
-  names(res$vector) <- vertex_attr(graph, "name", ) 
+  names(res$vector) <- vertex_attr(graph, "name", V(graph)) 
   }
   res
 }
@@ -506,10 +506,12 @@ max_cardinality <- function(graph) {
 }
 
 #' @export
-knn <- function(graph, vids=V(graph), weights=NULL) {
+knn <- function(graph, vids=V(graph), mode=c("all", "out", "in", "total"), neighbor.degree.mode=c("all", "out", "in", "total"), weights=NULL) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
   vids <- as.igraph.vs(graph, vids)
+  mode <- switch(igraph.match.arg(mode), "out"=1, "in"=2, "all"=3, "total"=3)
+  neighbor.degree.mode <- switch(igraph.match.arg(neighbor.degree.mode), "out"=1, "in"=2, "all"=3, "total"=3)
   if (is.null(weights) && "weight" %in% edge_attr_names(graph)) { 
   weights <- E(graph)$weight 
   } 
@@ -521,7 +523,7 @@ knn <- function(graph, vids=V(graph), weights=NULL) {
 
   on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call(C_R_igraph_avg_nearest_neighbor_degree, graph, vids-1, weights)
+  res <- .Call(C_R_igraph_avg_nearest_neighbor_degree, graph, vids-1, mode, neighbor.degree.mode, weights)
   if (igraph_opt("add.vertex.names") && is_named(graph)) { 
   names(res$knn) <- vertex_attr(graph, "name", vids) 
   }
@@ -941,6 +943,19 @@ similarity.invlogweighted <- function(graph, vids=V(graph), mode=c("all", "out",
   on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
   res <- .Call(C_R_igraph_similarity_inverse_log_weighted, graph, vids-1, mode)
+
+  res
+}
+
+#' @export
+cluster_fluid_communities <- function(graph, no.of.communities) {
+  # Argument checks
+  if (!is_igraph(graph)) { stop("Not a graph object") }
+  no.of.communities <- as.integer(no.of.communities)
+
+  on.exit( .Call(C_R_igraph_finalizer) )
+  # Function call
+  res <- .Call(C_R_igraph_community_fluid_communities, graph, no.of.communities)
 
   res
 }

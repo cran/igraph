@@ -8,7 +8,8 @@ all_simple_paths(
   graph,
   from,
   to = V(graph),
-  mode = c("out", "in", "all", "total")
+  mode = c("out", "in", "all", "total"),
+  cutoff = -1
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ from the given vertices should be calculated for directed graphs. If
 then \emph{to} it will be considered. If \code{all}, the default, then
 the corresponding undirected graph will be used, ie. not directed paths
 are searched. This argument is ignored for undirected graphs.}
+
+\item{cutoff}{Maximum length of path that is considered. If negative, paths of all lengths are considered.}
 }
 \value{
 A list of integer vectors, each integer vector is a path from

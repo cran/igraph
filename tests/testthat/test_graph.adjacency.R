@@ -1,5 +1,5 @@
 
-context("graph.adjancency")
+context("graph.adjacency")
 
 test_that("graph_from_adjacency_matrix works", {
 
@@ -156,13 +156,13 @@ test_that("graph_from_adjacency_matrix 2 edge bug is fixed", {
 
 })
 
-test_that("graph.adjacenct empty graph bug is fixed", {
+test_that("graph_from_adjacency_matrix empty graph bug is fixed", {
 
   library(Matrix)
   library(igraph)
   A <- Matrix(0, 10, 10, sparse=TRUE)
   g <- graph_from_adjacency_matrix(A, mode="undirected")
-  expect_that(as.matrix(g[]), equals(as.matrix(A)))
+  expect_equal(as.matrix(g[]), as.matrix(A), check.attributes=FALSE)
 
 })
 

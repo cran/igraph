@@ -5,16 +5,29 @@
 \alias{graph.knn}
 \title{Average nearest neighbor degree}
 \usage{
-knn(graph, vids = V(graph), weights = NULL)
+knn(
+  graph,
+  vids = V(graph),
+  mode = c("all", "out", "in", "total"),
+  neighbor.degree.mode = c("all", "out", "in", "total"),
+  weights = NULL
+)
 }
 \arguments{
-\item{graph}{The input graph. It can be directed, but it will be treated as
-undirected, i.e. the direction of the edges is ignored.}
+\item{graph}{The input graph. It may be directed.}
 
 \item{vids}{The vertices for which the calculation is performed. Normally it
 includes all vertices. Note, that if not all vertices are given here, then
 both \sQuote{\code{knn}} and \sQuote{\code{knnk}} will be calculated based
 on the given vertices only.}
+
+\item{mode}{Character constant to indicate the type of neighbors to consider
+in directed graphs. \code{out} considers out-neighbors, \code{in} considers
+in-neighbors and \code{all} ignores edge directions.}
+
+\item{neighbor.degree.mode}{The type of degree to average in directed graphs.
+\code{out} averages out-degrees, \code{in} averages in-degrees and \code{all}
+ignores edge directions for the degree calculation.}
 
 \item{weights}{Weight vector. If the graph has a \code{weight} edge
 attribute, then this is used by default. If this argument is given, then
@@ -39,6 +52,16 @@ same quantity in the function of vertex degree
 Note that for zero degree vertices the answer in \sQuote{\code{knn}} is
 \code{NaN} (zero divided by zero), the same is true for \sQuote{\code{knnk}}
 if a given degree never appears in the network.
+
+The weighted version computes a weighted average of the neighbor degrees as
+
+\code{k_nn_u = 1/s_u sum_v w_uv k_v},
+
+where \code{s_u = sum_v w_uv} is the sum of the incident edge weights
+of vertex \code{u}, i.e. its strength.
+The sum runs over the neighbors \code{v} of vertex \code{u}
+as indicated by \code{mode}. \code{w_uv} denotes the weighted adjacency matrix
+and \code{k_v} is the neighbors' degree, specified by \code{neighbor_degree_mode}.
 }
 \examples{
 

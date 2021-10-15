@@ -64,7 +64,8 @@ very large networks, http://www.arxiv.org/abs/cond-mat/0408187
 See also \code{\link{cluster_walktrap}},
 \code{\link{cluster_spinglass}},
 \code{\link{cluster_leading_eigen}} and
-\code{\link{cluster_edge_betweenness}} for other methods.
+\code{\link{cluster_edge_betweenness}}, \code{\link{cluster_louvain}}
+\code{\link{cluster_leiden}} for other methods.
 }
 \author{
 Tamas Nepusz \email{ntamas@gmail.com} and Gabor Csardi

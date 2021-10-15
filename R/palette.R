@@ -69,7 +69,7 @@ categorical_pal <- function(n) {
 
 #' Sequential palette
 #'
-#' This is the \sQuote{OrRd} palette from \url{https://colorbrewer2.org}.
+#' This is the \sQuote{OrRd} palette from \url{https://colorbrewer2.org/}.
 #' It has at most nine colors.
 #'
 #' Use this palette, if vertex colors mark some ordinal quantity, e.g. some
@@ -123,7 +123,7 @@ sequential_pal <- function(n) {
 
 #' Diverging palette
 #'
-#' This is the \sQuote{PuOr} palette from \url{https://colorbrewer2.org}.
+#' This is the \sQuote{PuOr} palette from \url{https://colorbrewer2.org/}.
 #' It has at most eleven colors.
 #'
 #' This is similar to \code{\link{sequential_pal}}, but it also puts

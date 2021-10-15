@@ -14,8 +14,8 @@ modularity_matrix(graph, membership, weights = NULL)
 \arguments{
 \item{x, graph}{The input graph.}
 
-\item{membership}{Numeric vector, for each vertex it gives its community.
-The communities are numbered from one.}
+\item{membership}{Numeric vector, one value for each vertex, the membership
+vector of the community structure.}
 
 \item{weights}{If not \code{NULL} then a numeric vector giving edge weights.}
 
@@ -25,7 +25,7 @@ The communities are numbered from one.}
 For \code{modularity} a numeric scalar, the modularity score of the
 given configuration.
 
-For \code{modularity_matrix} a numeic square matrix, its order is the number of
+For \code{modularity_matrix} a numeric square matrix, its order is the number of
 vertices in the graph.
 }
 \description{
@@ -72,12 +72,13 @@ modularity(g, membership(wtc))
 }
 \references{
 Clauset, A.; Newman, M. E. J. & Moore, C. Finding community
-structure in very large networks, \emph{Phyisical Review E} 2004, 70, 066111
+structure in very large networks, \emph{Physical Review E} 2004, 70, 066111
 }
 \seealso{
 \code{\link{cluster_walktrap}},
 \code{\link{cluster_edge_betweenness}},
-\code{\link{cluster_fast_greedy}}, \code{\link{cluster_spinglass}} for
+\code{\link{cluster_fast_greedy}}, \code{\link{cluster_spinglass}},
+\code{\link{cluster_louvain}} and \code{\link{cluster_leiden}} for
 various community detection methods.
 }
 \author{

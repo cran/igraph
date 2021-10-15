@@ -66,10 +66,15 @@ Hubert L and Arabie P: Comparing partitions. \emph{Journal of
 Classification} 2:193-218, 1985.
 }
 \seealso{
-\code{\link{cluster_walktrap}},
+See \code{\link{cluster_walktrap}},
+\code{\link{cluster_spinglass}},
+\code{\link{cluster_leading_eigen}},
 \code{\link{cluster_edge_betweenness}},
-\code{\link{cluster_fast_greedy}}, \code{\link{cluster_spinglass}} for
-various community detection methods.
+\code{\link{cluster_fast_greedy}},
+\code{\link{cluster_label_prop}}
+\code{\link{cluster_louvain}}
+\code{\link{cluster_leiden}}
+for various community detection methods.
 }
 \author{
 Tamas Nepusz \email{ntamas@gmail.com}

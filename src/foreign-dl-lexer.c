@@ -281,6 +281,7 @@ typedef int16_t flex_int16_t;
 typedef uint16_t flex_uint16_t;
 typedef int32_t flex_int32_t;
 typedef uint32_t flex_uint32_t;
+typedef uint64_t flex_uint64_t;
 #else
 typedef signed char flex_int8_t;
 typedef short int flex_int16_t;
@@ -445,7 +446,7 @@ struct yy_buffer_state
 	/* Number of characters read into yy_ch_buf, not including EOB
 	 * characters.
 	 */
-	int yy_n_chars;
+	yy_size_t yy_n_chars;
 
 	/* Whether we "own" the buffer - i.e., we know we created it,
 	 * and can realloc() it to grow it, and should free() it to
@@ -522,7 +523,7 @@ static void yy_init_buffer ( YY_BUFFER_STATE b, FILE *file , yyscan_t yyscanner 
 
 YY_BUFFER_STATE yy_scan_buffer ( char *base, yy_size_t size , yyscan_t yyscanner );
 YY_BUFFER_STATE yy_scan_string ( const char *yy_str , yyscan_t yyscanner );
-YY_BUFFER_STATE yy_scan_bytes ( const char *bytes, int len , yyscan_t yyscanner );
+YY_BUFFER_STATE yy_scan_bytes ( const char *bytes, yy_size_t len , yyscan_t yyscanner );
 
 void *yyalloc ( yy_size_t , yyscan_t yyscanner );
 void *yyrealloc ( void *, yy_size_t , yyscan_t yyscanner );
@@ -567,7 +568,7 @@ static void yynoreturn yy_fatal_error ( const char* msg , yyscan_t yyscanner );
  */
 #define YY_DO_BEFORE_ACTION \
 	yyg->yytext_ptr = yy_bp; \
-	yyleng = (int) (yy_cp - yy_bp); \
+	yyleng = (yy_size_t) (yy_cp - yy_bp); \
 	yyg->yy_hold_char = *yy_cp; \
 	*yy_cp = '\0'; \
 	yyg->yy_c_buf_p = yy_cp;
@@ -809,16 +810,15 @@ static const flex_int16_t yy_chk[319] =
 #include "config.h"
 #include <stdlib.h>
 #include <stdarg.h>
-#include <signal.h>
 #include "foreign-dl-header.h"
 #include "foreign-dl-parser.h"
 #define YY_EXTRA_TYPE igraph_i_dl_parsedata_t*
 #define YY_USER_ACTION yylloc->first_line = yylineno;
 #ifdef USING_R
-#define fprintf(file, msg, ...) (void)(1)
+#define fprintf(file, msg, ...) (1)
 #define YY_FATAL_ERROR(msg)                                     \
-  igraph_error("Fatal error in DL parser:" # msg, __FILE__,     \
-               __LINE__, IGRAPH_PARSEERROR)
+  igraph_error("Fatal error in DL parser: " # msg, __FILE__,    \
+               __LINE__, IGRAPH_PARSEERROR);
 #ifdef stdout 
 #  undef stdout
 #endif
@@ -860,8 +860,8 @@ struct yyguts_t
     size_t yy_buffer_stack_max; /**< capacity of stack. */
     YY_BUFFER_STATE * yy_buffer_stack; /**< Stack as an array. */
     char yy_hold_char;
-    int yy_n_chars;
-    int yyleng_r;
+    yy_size_t yy_n_chars;
+    yy_size_t yyleng_r;
     char *yy_c_buf_p;
     int yy_init;
     int yy_start;
@@ -918,7 +918,7 @@ FILE *yyget_out ( yyscan_t yyscanner );
 
 void yyset_out  ( FILE * _out_str , yyscan_t yyscanner );
 
-			int yyget_leng ( yyscan_t yyscanner );
+			yy_size_t yyget_leng ( yyscan_t yyscanner );
 
 char *yyget_text ( yyscan_t yyscanner );
 
@@ -997,7 +997,7 @@ static int input ( yyscan_t yyscanner );
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) \
 		{ \
 		int c = '*'; \
-		int n; \
+		yy_size_t n; \
 		for ( n = 0; n < max_size && \
 			     (c = getc( yyin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
@@ -1113,7 +1113,7 @@ YY_DECL
 		}
 
 	{
-#line 82 "src/foreign-dl-lexer.l"
+#line 81 "src/foreign-dl-lexer.l"
 
 
 #line 1119 "lex.yy.c"
@@ -1176,28 +1176,28 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 84 "src/foreign-dl-lexer.l"
+#line 83 "src/foreign-dl-lexer.l"
 { return NEWLINE; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 86 "src/foreign-dl-lexer.l"
+#line 85 "src/foreign-dl-lexer.l"
 { return DL; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 87 "src/foreign-dl-lexer.l"
+#line 86 "src/foreign-dl-lexer.l"
 {
   return NEQ; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 89 "src/foreign-dl-lexer.l"
+#line 88 "src/foreign-dl-lexer.l"
 { return NUM; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 91 "src/foreign-dl-lexer.l"
+#line 90 "src/foreign-dl-lexer.l"
 { 
   switch (yyextra->mode) { 
   case 0: BEGIN(FULLMATRIX); 
@@ -1211,91 +1211,91 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 102 "src/foreign-dl-lexer.l"
+#line 101 "src/foreign-dl-lexer.l"
 { BEGIN(LABELM); return LABELS; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 103 "src/foreign-dl-lexer.l"
+#line 102 "src/foreign-dl-lexer.l"
 {
   return LABELSEMBEDDED; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 105 "src/foreign-dl-lexer.l"
+#line 104 "src/foreign-dl-lexer.l"
 {
   yyextra->mode=0; return FORMATFULLMATRIX; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 107 "src/foreign-dl-lexer.l"
+#line 106 "src/foreign-dl-lexer.l"
 {
   yyextra->mode=1; return FORMATEDGELIST1; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 109 "src/foreign-dl-lexer.l"
+#line 108 "src/foreign-dl-lexer.l"
 {
   yyextra->mode=2; return FORMATNODELIST1; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 112 "src/foreign-dl-lexer.l"
+#line 111 "src/foreign-dl-lexer.l"
 { /* eaten up */ }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 113 "src/foreign-dl-lexer.l"
+#line 112 "src/foreign-dl-lexer.l"
 { return LABEL; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 115 "src/foreign-dl-lexer.l"
+#line 114 "src/foreign-dl-lexer.l"
 { return DIGIT; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 116 "src/foreign-dl-lexer.l"
+#line 115 "src/foreign-dl-lexer.l"
 { return LABEL; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 117 "src/foreign-dl-lexer.l"
+#line 116 "src/foreign-dl-lexer.l"
 { }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 119 "src/foreign-dl-lexer.l"
+#line 118 "src/foreign-dl-lexer.l"
 { return NUM; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 120 "src/foreign-dl-lexer.l"
+#line 119 "src/foreign-dl-lexer.l"
 { return LABEL; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 121 "src/foreign-dl-lexer.l"
+#line 120 "src/foreign-dl-lexer.l"
 { }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 123 "src/foreign-dl-lexer.l"
+#line 122 "src/foreign-dl-lexer.l"
 { return NUM; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 124 "src/foreign-dl-lexer.l"
+#line 123 "src/foreign-dl-lexer.l"
 { return LABEL; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 125 "src/foreign-dl-lexer.l"
+#line 124 "src/foreign-dl-lexer.l"
 { }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 127 "src/foreign-dl-lexer.l"
+#line 126 "src/foreign-dl-lexer.l"
 { /* eaten up */ }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
@@ -1303,7 +1303,7 @@ case YY_STATE_EOF(LABELM):
 case YY_STATE_EOF(FULLMATRIX):
 case YY_STATE_EOF(EDGELIST):
 case YY_STATE_EOF(NODELIST):
-#line 129 "src/foreign-dl-lexer.l"
+#line 128 "src/foreign-dl-lexer.l"
 { 
                           if (yyextra->eof) {
 			    yyterminate();
@@ -1316,17 +1316,17 @@ case YY_STATE_EOF(NODELIST):
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 139 "src/foreign-dl-lexer.l"
+#line 138 "src/foreign-dl-lexer.l"
 { return 0; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 141 "src/foreign-dl-lexer.l"
+#line 140 "src/foreign-dl-lexer.l"
 { return ERROR; }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 142 "src/foreign-dl-lexer.l"
+#line 141 "src/foreign-dl-lexer.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
 #line 1332 "lex.yy.c"
@@ -1515,7 +1515,7 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 
 	else
 		{
-			int num_to_read =
+			yy_size_t num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
@@ -1529,7 +1529,7 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 
 			if ( b->yy_is_our_buffer )
 				{
-				int new_size = b->yy_buf_size * 2;
+				yy_size_t new_size = b->yy_buf_size * 2;
 
 				if ( new_size <= 0 )
 					b->yy_buf_size += b->yy_buf_size / 8;
@@ -1587,7 +1587,7 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 
 	if ((yyg->yy_n_chars + number_to_move) > YY_CURRENT_BUFFER_LVALUE->yy_buf_size) {
 		/* Extend the array by 50%, plus the number we really need. */
-		int new_size = yyg->yy_n_chars + number_to_move + (yyg->yy_n_chars >> 1);
+		yy_size_t new_size = yyg->yy_n_chars + number_to_move + (yyg->yy_n_chars >> 1);
 		YY_CURRENT_BUFFER_LVALUE->yy_ch_buf = (char *) yyrealloc(
 			(void *) YY_CURRENT_BUFFER_LVALUE->yy_ch_buf, (yy_size_t) new_size , yyscanner );
 		if ( ! YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
@@ -1694,7 +1694,7 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 
 		else
 			{ /* need more input */
-			int offset = (int) (yyg->yy_c_buf_p - yyg->yytext_ptr);
+			yy_size_t offset = yyg->yy_c_buf_p - yyg->yytext_ptr;
 			++yyg->yy_c_buf_p;
 
 			switch ( yy_get_next_buffer( yyscanner ) )
@@ -2072,12 +2072,12 @@ YY_BUFFER_STATE yy_scan_string (const char * yystr , yyscan_t yyscanner)
  * @param yyscanner The scanner object.
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE yy_scan_bytes  (const char * yybytes, int  _yybytes_len , yyscan_t yyscanner)
+YY_BUFFER_STATE yy_scan_bytes  (const char * yybytes, yy_size_t  _yybytes_len , yyscan_t yyscanner)
 {
 	YY_BUFFER_STATE b;
 	char *buf;
 	yy_size_t n;
-	int i;
+	yy_size_t i;
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = (yy_size_t) (_yybytes_len + 2);
@@ -2111,7 +2111,6 @@ static void yynoreturn yy_fatal_error (const char* msg , yyscan_t yyscanner)
 	struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	(void)yyg;
 	fprintf( stderr, "%s\n", msg );
-	exit( YY_EXIT_FAILURE );
 }
 
 /* Redefine yyless() so it works in section 3 code. */
@@ -2121,7 +2120,7 @@ static void yynoreturn yy_fatal_error (const char* msg , yyscan_t yyscanner)
 	do \
 		{ \
 		/* Undo effects of setting up yytext. */ \
-        int yyless_macro_arg = (n); \
+        yy_size_t yyless_macro_arg = (n); \
         YY_LESS_LINENO(yyless_macro_arg);\
 		yytext[yyleng] = yyg->yy_hold_char; \
 		yyg->yy_c_buf_p = yytext + yyless_macro_arg; \
@@ -2189,7 +2188,7 @@ FILE *yyget_out  (yyscan_t yyscanner)
 /** Get the length of the current token.
  * @param yyscanner The scanner object.
  */
-int yyget_leng  (yyscan_t yyscanner)
+yy_size_t yyget_leng  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yyleng;
@@ -2482,4 +2481,4 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 142 "src/foreign-dl-lexer.l"
+#line 141 "src/foreign-dl-lexer.l"

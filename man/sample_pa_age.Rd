@@ -30,7 +30,7 @@ pa_age(...)
 \arguments{
 \item{n}{The number of vertices in the graph.}
 
-\item{pa.exp}{The preferantial attachment exponent, see the details below.}
+\item{pa.exp}{The preferential attachment exponent, see the details below.}
 
 \item{aging.exp}{The exponent of the aging, usually a non-positive number,
 see details below.}
@@ -87,9 +87,8 @@ This is a discrete time step model of a growing graph. We start with a
 network containing a single vertex (and no edges) in the first time step.
 Then in each time step (starting with the second) a new vertex is added and
 it initiates a number of edges to the old vertices in the network. The
-probability that an old vertex is connected to is proportional to \deqn{P[i]
-\sim (c\cdot k_i^\alpha+a)(d\cdot l_i^\beta+b)\cdot }{% P[i] ~ (c k[i]^alpha
-+ a) (d l[i]^beta + a)}
+probability that an old vertex is connected to is proportional to
+\deqn{P[i] \sim (c\cdot k_i^\alpha+a)(d\cdot l_i^\beta+b)}.
 
 Here \eqn{k_i}{k[i]} is the in-degree of vertex \eqn{i} in the current time
 step and \eqn{l_i}{l[i]} is the age of vertex \eqn{i}. The age is simply
@@ -119,7 +118,7 @@ will be normalized to sum up to 1. This behavior is similar to the
 
 By default a directed graph is generated, but it \code{directed} is set to
 \code{FALSE} then an undirected is created. Even if an undirected graph is
-generaed \eqn{k_i}{k[i]} denotes only the adjacent edges not initiated by
+generated \eqn{k_i}{k[i]} denotes only the adjacent edges not initiated by
 the vertex itself except if \code{out.pref} is set to \code{TRUE}.
 
 If the \code{time.window} argument is given (and not NULL) then

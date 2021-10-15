@@ -87,7 +87,7 @@
 #' one, or \code{zero.appeal} was not one.  \code{bag} is the algorithm that
 #' was previously (before version 0.6) used if \code{power} was one and
 #' \code{zero.appeal} was one as well. It works by putting the ids of the
-#' vertices into a bag (mutliset, really), exactly as many times as their
+#' vertices into a bag (multiset, really), exactly as many times as their
 #' (in-)degree, plus once more. Then the required number of cited vertices are
 #' drawn from the bag, with replacement. This method might generate multiple
 #' edges. It only works if \code{power} and \code{zero.appeal} are equal one.
@@ -326,7 +326,6 @@ gnm <- function(...) constructor_spec(sample_gnm, ...)
 #' @param directed Logical, whether the graph will be directed, defaults to
 #' FALSE.
 #' @param loops Logical, whether to add loop edges, defaults to FALSE.
-#' @param \dots Additional arguments, ignored.
 #' @return A graph object.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
 #' @seealso \code{\link{sample_pa}}
@@ -340,7 +339,7 @@ gnm <- function(...) constructor_spec(sample_gnm, ...)
 #' degree_distribution(g)
 #' 
 erdos.renyi.game <- function(n, p.or.m, type=c("gnp", "gnm"),
-                             directed=FALSE, loops=FALSE, ...) {
+                             directed=FALSE, loops=FALSE) {
 
   type <- igraph.match.arg(type)
   type1 <- switch(type, "gnp"=0, "gnm"=1)
@@ -393,7 +392,7 @@ random.graph.game <- erdos.renyi.game
 #' with the given degree sequence (if this is possible at all). Then some
 #' rewiring is done to make the graph connected. Finally a Monte-Carlo
 #' algorithm is used to randomize the graph. The \dQuote{vl} samples from the
-#' undirected, connected simple graphs unformly.
+#' undirected, connected simple graphs uniformly.
 #'
 #' @aliases degree.sequence.game
 #' @param out.deg Numeric vector, the sequence of degrees (for undirected
@@ -525,9 +524,8 @@ growing <- function(...) constructor_spec(sample_growing, ...)
 #' network containing a single vertex (and no edges) in the first time step.
 #' Then in each time step (starting with the second) a new vertex is added and
 #' it initiates a number of edges to the old vertices in the network. The
-#' probability that an old vertex is connected to is proportional to \deqn{P[i]
-#' \sim (c\cdot k_i^\alpha+a)(d\cdot l_i^\beta+b)\cdot }{% P[i] ~ (c k[i]^alpha
-#' + a) (d l[i]^beta + a)}
+#' probability that an old vertex is connected to is proportional to
+#' \deqn{P[i] \sim (c\cdot k_i^\alpha+a)(d\cdot l_i^\beta+b)}.
 #' 
 #' Here \eqn{k_i}{k[i]} is the in-degree of vertex \eqn{i} in the current time
 #' step and \eqn{l_i}{l[i]} is the age of vertex \eqn{i}. The age is simply
@@ -557,7 +555,7 @@ growing <- function(...) constructor_spec(sample_growing, ...)
 #' 
 #' By default a directed graph is generated, but it \code{directed} is set to
 #' \code{FALSE} then an undirected is created. Even if an undirected graph is
-#' generaed \eqn{k_i}{k[i]} denotes only the adjacent edges not initiated by
+#' generated \eqn{k_i}{k[i]} denotes only the adjacent edges not initiated by
 #' the vertex itself except if \code{out.pref} is set to \code{TRUE}.
 #' 
 #' If the \code{time.window} argument is given (and not NULL) then
@@ -568,7 +566,7 @@ growing <- function(...) constructor_spec(sample_growing, ...)
 #' 
 #' @aliases sample_pa_age aging.prefatt.game aging.barabasi.game aging.ba.game
 #' @param n The number of vertices in the graph.
-#' @param pa.exp The preferantial attachment exponent, see the details below.
+#' @param pa.exp The preferential attachment exponent, see the details below.
 #' @param aging.exp The exponent of the aging, usually a non-positive number,
 #' see details below.
 #' @param m The number of edges each new vertex creates (except the very first
@@ -867,7 +865,7 @@ grg <- function(...) constructor_spec(sample_grg, ...)
 #' \code{sample_pref} the probability that two vertices will be connected
 #' depends on their type and is given by the \sQuote{pref.matrix} argument.
 #' This matrix should be symmetric to make sense but this is not checked. The
-#' distribution of the different vertes types is given by the
+#' distribution of the different vertex types is given by the
 #' \sQuote{type.dist} vector.
 #' 
 #' For \code{sample_asym_pref} each vertex has an in-type and an
@@ -1067,7 +1065,7 @@ smallworld <- function(...) constructor_spec(sample_smallworld, ...)
 #' graph is growing.
 #'
 #' \code{sample_cit_types} is similarly a growing stochastic block model,
-#' but the probability of an edge depends on the (potentiall) cited
+#' but the probability of an edge depends on the (potentially) cited
 #' vertex only.
 #' 
 #' @aliases cited.type.game sample_cit_types citing.cited.type.game
@@ -1169,7 +1167,7 @@ cit_cit_types <- function(...) constructor_spec(sample_cit_cit_types, ...)
 #' Similarly to unipartite (one-mode) networks, we can define the $G(n,p)$, and
 #' $G(n,m)$ graph classes for bipartite graphs, via their generating process.
 #' In $G(n,p)$ every possible edge between top and bottom vertices is realized
-#' with probablity $p$, independently of the rest of the edges. In $G(n,m)$, we
+#' with probability $p$, independently of the rest of the edges. In $G(n,m)$, we
 #' uniformly choose $m$ edges to realize.
 #'
 #' @aliases bipartite.random.game
@@ -1275,7 +1273,6 @@ bipartite <- function(...) constructor_spec(sample_bipartite, ...)
 #' group. The sum of the vector must match the number of vertices.
 #' @param directed Logical scalar, whether to generate a directed graph.
 #' @param loops Logical scalar, whether self-loops are allowed in the graph.
-#' @param \dots Passed to \code{sample_sbm}.
 #' @return An igraph graph.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
 #' @seealso \code{\link{sample_gnp}}, \code{\link{sample_gnm}}
@@ -1293,6 +1290,7 @@ bipartite <- function(...) constructor_spec(sample_bipartite, ...)
 sample_sbm <- sample_sbm
 
 #' @rdname sample_sbm
+#' @param ... Passed to \code{sample_sbm}.
 #' @export
 
 sbm <- function(...) constructor_spec(sample_sbm, ...)
@@ -1321,7 +1319,6 @@ sbm <- function(...) constructor_spec(sample_sbm, ...)
 #' differ in different blocks.
 #' @param p Numeric scalar, the Bernoulli rate of connections between vertices
 #' in different blocks.
-#' @param \dots Passed to \code{sample_hierarchical_sbm}.
 #' @return An igraph graph.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
 #' @seealso \code{\link{sbm.game}}
@@ -1368,6 +1365,7 @@ sample_hierarchical_sbm <- function(n, m, rho, C, p) {
 }
 
 #' @rdname sample_hierarchical_sbm
+#' @param ... Passed to \code{sample_hierarchical_sbm}.
 #' @export
 
 hierarchical_sbm <- function(...)
@@ -1391,7 +1389,6 @@ hierarchical_sbm <- function(...)
 #' column.
 #' @param directed A logical scalar, TRUE if the generated graph should be
 #' directed.
-#' @param \dots Passed to \code{sample_dot_product}.
 #' @return An igraph graph object which is the generated random dot product
 #' graph.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
@@ -1417,8 +1414,9 @@ hierarchical_sbm <- function(...)
 
 sample_dot_product <- sample_dot_product
 
-#' @export
 #' @rdname sample_dot_product
+#' @param ... Passed to \code{sample_dot_product}.
+#' @export
 
 dot_product <- function(...) constructor_spec(sample_dot_product, ...)
 

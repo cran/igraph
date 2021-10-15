@@ -64,8 +64,9 @@ Rev E} 76, 036106. (2007)
 \seealso{
 \code{\link{communities}} for extracting the actual results.
 
-\code{\link{cluster_fast_greedy}}, \code{\link{cluster_walktrap}} and
-\code{\link{cluster_spinglass}} for other community detection methods.
+\code{\link{cluster_fast_greedy}}, \code{\link{cluster_walktrap}},
+\code{\link{cluster_spinglass}}, \code{\link{cluster_louvain}} and
+\code{\link{cluster_leiden}} for other community detection methods.
 }
 \author{
 Tamas Nepusz \email{ntamas@gmail.com} for the C implementation,

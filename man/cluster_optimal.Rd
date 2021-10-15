@@ -45,7 +45,7 @@ might be possible.
 ## Zachary's karate club
 g <- make_graph("Zachary")
 
-## We put everything into a big 'try' block, in case 
+## We put everything into a big 'try' block, in case
 ## igraph was compiled without GLPK support
 
 ## The calculation only takes a couple of seconds

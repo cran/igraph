@@ -52,7 +52,7 @@
 #' @aliases layout
 #' @section Modifiers:
 #' Modifiers modify how a layout calculation is performed.
-#' Currently implemented modifyers: \itemize{
+#' Currently implemented modifiers: \itemize{
 #'   \item \code{component_wise} calculates the layout separately
 #'     for each component of the graph, and then merges
 #'     them.
@@ -291,20 +291,7 @@ layout_as_bipartite <- function(graph, types = NULL, hgap = 1, vgap = 1,
 
   ## Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
-  if (is.null(types) && "type" %in% vertex_attr_names(graph)) {
-    types <- V(graph)$type
-  }
-  if (!is.null(types)) {
-    if (!is.logical(types)) {
-      warning("vertex types converted to logical")
-    }
-    types <- as.logical(types)
-    if (any(is.na(types))) {
-      stop("`NA' is not allowed in vertex types")
-    }
-  } else {
-    stop("Not a bipartite graph, supply `types' argument")
-  }
+  types <- handle_vertex_type_arg(types, graph)
   hgap <- as.numeric(hgap)
   vgap <- as.numeric(vgap)
   maxiter <- as.integer(maxiter)
@@ -390,7 +377,7 @@ as_star <- function(...) layout_spec(layout_as_star, ...)
 #'
 #' Arranges the nodes in a tree where the given node is used as the root.  The
 #' tree is directed downwards and the parents are centered above its children.
-#' For the exact algorithm, the refernce below.
+#' For the exact algorithm, the reference below.
 #'
 #' If the given graph is not a tree, a breadth-first search is executed first
 #' to obtain a possible spanning tree.
@@ -608,7 +595,7 @@ nicely <- function(...) layout_spec(layout_nicely, ...)
 
 #' Simple grid layout
 #'
-#' This layout places vertices on a rectangulat grid, in two or three
+#' This layout places vertices on a rectangular grid, in two or three
 #' dimensions.
 #'
 #' The function places the vertices on a simple rectangular grid, one after the
@@ -1181,7 +1168,7 @@ with_gem <- function(...) layout_spec(layout_with_gem, ...)
 #' \code{layout_with_graphopt} is a port of the graphopt layout algorithm by Michael
 #' Schmuhl. graphopt version 0.4.1 was rewritten in C and the support for
 #' layers was removed (might be added later) and a code was a bit reorganized
-#' to avoid some unneccessary steps is the node charge (see below) is zero.
+#' to avoid some unnecessary steps is the node charge (see below) is zero.
 #'
 #' graphopt uses physical analogies for defining attracting and repelling
 #' forces among the vertices and then the physical system is simulated until it
@@ -1252,7 +1239,7 @@ with_graphopt <- function(...) layout_spec(layout_with_graphopt, ...)
 
 #' The Kamada-Kawai layout algorithm
 #'
-#' Place the vertices on the plane, or in the 3d space, based on a phyisical
+#' Place the vertices on the plane, or in the 3d space, based on a physical
 #' model of springs.
 #'
 #' See the referenced paper below for the details of the algorithm.
@@ -1737,10 +1724,11 @@ with_mds <- function(...) layout_spec(layout_with_mds, ...)
 
   # Separate real and dummy vertices
   vc <- vcount(graph)
-  res$layout <- res$res[seq_len(vc),]
   if (nrow(res$res)==vc) {
+    res$layout <- res$res
     res$layout.dummy <- matrix(NA_real_, nrow=0, ncol=2)
   } else {
+    res$layout <- res$res[seq_len(vc),]
     res$layout.dummy <- res$res[(vc+1):nrow(res$res),]
   }
 
@@ -1916,7 +1904,7 @@ norm_coords <- function(layout, xmin=-1, xmax=1, ymin=-1, ymax=1,
                           zmin=-1, zmax=1) {
 
   if (!is.matrix(layout)) {
-    stop("`layout' not a matrix")
+    stop("`layout' must be a matrix")
   }
   if (ncol(layout) != 2 && ncol(layout) != 3) {
     stop("`layout' should have 2 or three columns")

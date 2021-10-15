@@ -47,16 +47,15 @@
 #include "config.h"
 #include <stdlib.h>
 #include <stdarg.h>
-#include <signal.h>
 #include "foreign-dl-header.h"
 #include "foreign-dl-parser.h"
 #define YY_EXTRA_TYPE igraph_i_dl_parsedata_t*
 #define YY_USER_ACTION yylloc->first_line = yylineno;
 #ifdef USING_R
-#define fprintf(file, msg, ...) (void)(1)
+#define fprintf(file, msg, ...) (1)
 #define YY_FATAL_ERROR(msg)                                     \
-  igraph_error("Fatal error in DL parser:" # msg, __FILE__,     \
-               __LINE__, IGRAPH_PARSEERROR)
+  igraph_error("Fatal error in DL parser: " # msg, __FILE__,    \
+               __LINE__, IGRAPH_PARSEERROR);
 #ifdef stdout 
 #  undef stdout
 #endif

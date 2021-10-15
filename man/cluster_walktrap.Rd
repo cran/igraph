@@ -66,7 +66,8 @@ vector, merge matrix, modularity score, etc.
 \code{\link{modularity}} and \code{\link{cluster_fast_greedy}},
 \code{\link{cluster_spinglass}},
 \code{\link{cluster_leading_eigen}},
-\code{\link{cluster_edge_betweenness}} for other community detection
+\code{\link{cluster_edge_betweenness}}, \code{\link{cluster_louvain}},
+and \code{\link{cluster_leiden}} for other community detection
 methods.
 }
 \author{

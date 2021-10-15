@@ -10,8 +10,7 @@ erdos.renyi.game(
   p.or.m,
   type = c("gnp", "gnm"),
   directed = FALSE,
-  loops = FALSE,
-  ...
+  loops = FALSE
 )
 }
 \arguments{
@@ -28,8 +27,6 @@ G(n,m) graphs).}
 FALSE.}
 
 \item{loops}{Logical, whether to add loop edges, defaults to FALSE.}
-
-\item{\dots}{Additional arguments, ignored.}
 }
 \value{
 A graph object.
