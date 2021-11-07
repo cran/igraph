@@ -1,12 +1,20 @@
+# Unreleased
+
+# igraph 1.2.8
+
+Oct 26, 2021
+
+No user visible changes.
+
 # igraph 1.2.7
 
-Oct 9, 2021
+Oct 15, 2021
 
 The C core is updated to 0.8.5, fixing a range of bugs and introducing a number of new functions.
 
 Added:
 - cluster_leiden added (#399).
-- cluster_fluid_communties added (#454)
+- cluster_fluid_communities added (#454)
 
 Fixed:
 - `make_lattice()` correctly rounds `length` to the nearest integer while
@@ -49,7 +57,7 @@ Misc:
 
 Oct 5, 2020
 
-No use visible changes.
+No user visible changes.
 
 # igraph 1.2.5
 
