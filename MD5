@@ -1,6 +1,6 @@
-3ba2b7ebd7eac861b6b2eb62d1992e13 *DESCRIPTION
+f8f119d392ac4273076c60716fdd8ae8 *DESCRIPTION
 8c5fa8bd5ab8cb0f1ba89245da3e9f35 *NAMESPACE
-01c3eef8c761e8e0a291593e2a640a2a *NEWS.md
+56bb5202d9eb320758974ef717722caf *NEWS.md
 3dd07346c38169b335b2a3e587d632f0 *R/adjacency.R
 c63b7ebecabf033848c48e14000f5411 *R/assortativity.R
 4e8a737d746fe286c63f20391b85f5d7 *R/attributes.R
@@ -73,11 +73,11 @@ c33341162aa4bb9f1c2aab258e64afd2 *R/tkplot.R
 dedeede120a8f6b67ac214934ec34b3d *R/versions.R
 986ffd9c0f8b6ff1c1144a6710954914 *R/weakref.R
 82be9ebc0900c63b2ffff118e8e81f9f *R/zzz-deprecate.R
-21ae97ee3ece8d9d32afda01c9d4028e *build/partial.rdb
+2287f06cc3a15016e4ed0ebef97ddeac *build/partial.rdb
 f89c7780070ec8f00ba8069a744208b5 *cleanup
 f89c7780070ec8f00ba8069a744208b5 *cleanup.win
-78a0b419071144b19f9ebbe60661515d *configure
-0e7c29b4221e28885b831cf8a4d72af5 *configure.ac
+83720d235ba4ca99d7d33cde7209f9ee *configure
+e41853d3b1dd95f89e499f9202787d9d *configure.ac
 d41d8cd98f00b204e9800998ecf8427e *configure.win
 f6d91efbe9a92d9da367b19ae2b77d48 *demo/00Index
 594342a01208503fbaac63fa9b1f24fa *demo/centrality.R
@@ -88,7 +88,7 @@ f6d91efbe9a92d9da367b19ae2b77d48 *demo/00Index
 771ca356197ee2b54c40ceccb4c2419c *demo/smallworld.R
 533841a60d999179e935f79c4820ceb5 *inst/AUTHORS
 85aedebfc2b8ee7226005dc1b4779e9c *inst/CITATION
-01c3eef8c761e8e0a291593e2a640a2a *inst/NEWS.md
+56bb5202d9eb320758974ef717722caf *inst/NEWS.md
 f1b03dc9e25e5d0e95de8706923d2b3f *inst/README.md
 9318bc2aeb60f4f79eac2357da0d9b84 *inst/benchmarks/correlated.R
 4f938e92ca259e3259a5223e87e51bb0 *inst/benchmarks/local.scan.R
@@ -465,9 +465,9 @@ b94a5951dda8da6c33e29ed7aa178bf3 *man/write_graph.Rd
 8b93d70db9a03717a99d81507c2900d8 *src/DensityGrid.h
 d01c581ebaf62e157740782663e0b65f *src/DensityGrid_3d.cpp
 bca5d908a5893ced188bf8fd3891b562 *src/DensityGrid_3d.h
-c8d990de9ed3e0d0c096f019c9baf25b *src/Makevars.in
-e8247b6f5f452ddc19ef0ed5cba7982d *src/Makevars.ucrt
-a0a480de89588c3a6d6b06faece3884d *src/Makevars.win
+7bdadadc1fb6012f6ae17691889599f5 *src/Makevars.in
+1a2f1701aad9b63be71a1a74b01a06f7 *src/Makevars.ucrt
+506d0e80ed9a392ce5572a667bf9b8c4 *src/Makevars.win
 05c7b9240ae92d48004a3f7335afe155 *src/NetDataTypes.cpp
 377a29ba8475255d8c04c95534f6d930 *src/NetDataTypes.h
 1076a8641d451baf4b72731c0c547e9a *src/NetRoutines.cpp
@@ -738,7 +738,7 @@ fad3ffc4b6579264f6ce8c378aadfab8 *src/igraph_set.c
 b535c79382282f3e04b2ff6f4d333e74 *src/igraph_threading.h
 ba681df00e955c14d2a2c18ea0886215 *src/igraph_trie.c
 f755efc0bea50bf78e052c55d8076286 *src/igraph_types_internal.h
-f4302875e7fc91c01127d48fd378758f *src/igraph_version.h
+48aae6beb6c4ea8f7e34d116312f3bc6 *src/igraph_version.h
 cabc15d24f6ff93862ca55e43a5cf19e *src/include/igraph.h
 6d0d59486d8c9c1da585872e63f05aec *src/include/igraph_adjlist.h
 654aa0c345cb3a97431caa7600dcefcc *src/include/igraph_arpack.h
