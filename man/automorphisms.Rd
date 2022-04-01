@@ -5,10 +5,17 @@
 \alias{graph.automorphisms}
 \title{Number of automorphisms}
 \usage{
-automorphisms(graph, sh = "fm")
+automorphisms(graph, colors, sh = "fm")
 }
 \arguments{
 \item{graph}{The input graph, it is treated as undirected.}
+
+\item{colors}{The colors of the individual vertices of the graph; only
+vertices having the same color are allowed to match each other in an
+automorphism. When omitted, igraph uses the \code{color} attribute of the
+vertices, or, if there is no such vertex attribute, it simply assumes that
+all vertices have the same color. Pass NULL explicitly if the graph has a
+\code{color} vertex attribute but you do not want to use it.}
 
 \item{sh}{The splitting heuristics for the BLISS algorithm. Possible values
 are: \sQuote{\code{f}}: first non-singleton cell, \sQuote{\code{fl}}: first
@@ -37,7 +44,9 @@ graph into itself.
 
 This function calculates the number of automorphism of a graph using the
 BLISS algorithm. See also the BLISS homepage at
-\url{http://www.tcs.hut.fi/Software/bliss/index.html}.
+\url{http://www.tcs.hut.fi/Software/bliss/index.html}. If you need the
+automorphisms themselves, use \code{\link{automorphism_group}} to obtain
+a compact representation of the automorphism group.
 }
 \examples{
 
@@ -45,6 +54,11 @@ BLISS algorithm. See also the BLISS homepage at
 ## and each of these graphs can be "flipped"
 g <- make_ring(10)
 automorphisms(g)
+
+## A full graph has n! automorphisms; however, we restrict the vertex
+## matching by colors, leading to only 4 automorphisms
+g <- make_full_graph(4)
+automorphisms(g, colors=c(1,2,1,2))
 }
 \references{
 Tommi Junttila and Petteri Kaski: Engineering an Efficient
@@ -53,7 +67,9 @@ the Ninth Workshop on Algorithm Engineering and Experiments and the Fourth
 Workshop on Analytic Algorithms and Combinatorics.} 2007.
 }
 \seealso{
-\code{\link{canonical_permutation}}, \code{\link{permute}}
+\code{\link{canonical_permutation}}, \code{\link{permute}},
+and \code{\link{automorphism_group}} for a compact representation of all
+automorphisms
 }
 \author{
 Tommi Junttila (\url{http://users.ics.aalto.fi/tjunttil/}) for BLISS

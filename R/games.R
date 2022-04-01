@@ -224,7 +224,7 @@ sample_gnp <- function(n, p, directed = FALSE, loops = FALSE) {
                as.numeric(p), as.logical(directed), as.logical(loops))
 
   if (igraph_opt("add.params")) {
-    res$name <- sprintf("Erdos renyi (%s) graph", type)
+    res$name <- sprintf("Erdos-Renyi (%s) graph", type)
     res$type <- type
     res$loops <- loops
     res$p <- p
@@ -279,7 +279,7 @@ sample_gnm <- function(n, m, directed = FALSE, loops = FALSE) {
                as.numeric(m), as.logical(directed), as.logical(loops))
 
   if (igraph_opt("add.params")) {
-    res$name <- sprintf("Erdos renyi (%s) graph", type)
+    res$name <- sprintf("Erdos-Renyi (%s) graph", type)
     res$type <- type
     res$loops <- loops
     res$m <- m
@@ -349,7 +349,7 @@ erdos.renyi.game <- function(n, p.or.m, type=c("gnp", "gnm"),
                as.numeric(p.or.m), as.logical(directed), as.logical(loops))
 
   if (igraph_opt("add.params")) {
-    res$name <- sprintf("Erdos renyi (%s) graph", type)
+    res$name <- sprintf("Erdos-Renyi (%s) graph", type)
     res$type <- type
     res$loops <- loops
     if (type=="gnp") { res$p <- p.or.m }
@@ -366,8 +366,8 @@ random.graph.game <- erdos.renyi.game
 
 #' Generate random graphs with a given degree sequence
 #' 
-#' It is often useful to create a graph with given vertex degrees. This is
-#' exactly what \code{sample_degseq} does.
+#' It is often useful to create a graph with given vertex degrees. This function
+#' creates such a graph in a randomized manner.
 #' 
 #' The \dQuote{simple} method connects the out-stubs of the edges (undirected
 #' graphs) or the out-stubs and in-stubs (directed graphs) together. This way
@@ -384,6 +384,11 @@ random.graph.game <- erdos.renyi.game
 #' fast and it will eventually succeed if the provided degree sequence is
 #' graphical, but there is no upper bound on the number of iterations.
 #' 
+#' The \dQuote{simple.no.multiple.uniform} method is a variant of
+#' \dQuote{simple.no.multiple} with the added benefit of sampling uniformly
+#' from the set of all possible simple graphs with the given degree sequence.
+#' Ensuring uniformity has some performance implications, though.
+#'
 #' The \dQuote{vl} method is a more sophisticated generator. The algorithm and
 #' the implementation was done by Fabien Viger and Matthieu Latapy. This
 #' generator always generates undirected, connected simple graphs, it is an
@@ -407,7 +412,8 @@ random.graph.game <- erdos.renyi.game
 #' @return The new graph object.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
 #' @seealso \code{\link{sample_gnp}}, \code{\link{sample_pa}},
-#' \code{\link{simplify}} to get rid of the multiple and/or loops edges.
+#' \code{\link{simplify}} to get rid of the multiple and/or loops edges,
+#' \code{\link{realize_degseq}} for a deterministic variant.
 #' @export
 #' @keywords graphs
 #' @examples
@@ -440,11 +446,10 @@ random.graph.game <- erdos.renyi.game
 #' all(degree(g5) == degs)
 
 sample_degseq <- function(out.deg, in.deg=NULL,
-                                 method=c("simple", "vl",
-                                   "simple.no.multiple")) {
+                          method=c("simple", "vl", "simple.no.multiple", "simple.no.multiple.uniform")) {
 
   method <- igraph.match.arg(method)
-  method1 <- switch(method, "simple"=0, "vl"=1, "simple.no.multiple"=2)
+  method1 <- switch(method, "simple"=0, "vl"=1, "simple.no.multiple"=2, "simple.no.multiple.uniform"=3)
   if (!is.null(in.deg)) { in.deg <- as.numeric(in.deg) }
 
   on.exit( .Call(C_R_igraph_finalizer) )
@@ -458,11 +463,14 @@ sample_degseq <- function(out.deg, in.deg=NULL,
 }
 
 #' @rdname sample_degseq
-#' @param ... Passed to \code{sample_degree}.
+#' @param deterministic  Whether the construction should be deterministic
+#' @param ... Passed to \code{realize_degseq} if \sQuote{deterministic} is true,
+#' or to \code{sample_degseq} otherwise.
 #' @export
 
-degseq <- function(...) constructor_spec(sample_degseq, ...)
-
+degseq <- function(..., deterministic=FALSE) constructor_spec(
+  if (deterministic) realize_degseq else sample_degseq, ...
+)
 
 ## -----------------------------------------------------------------
 
@@ -742,8 +750,8 @@ pa_age <- function(...) constructor_spec(sample_pa_age, ...)
 #' @examples
 #' 
 #' # two types of vertices, they like only themselves
-#' g1 <- sample_traits_callaway(1000, 2, pref.matrix=matrix( c(1,0,0,1), nc=2))
-#' g2 <- sample_traits(1000, 2, k=2, pref.matrix=matrix( c(1,0,0,1), nc=2))
+#' g1 <- sample_traits_callaway(1000, 2, pref.matrix=matrix( c(1,0,0,1), ncol=2))
+#' g2 <- sample_traits(1000, 2, k=2, pref.matrix=matrix( c(1,0,0,1), ncol=2))
 
 sample_traits_callaway <- function(nodes, types, edge.per.step=1,
                                  type.dist=rep(1, types),
@@ -899,11 +907,11 @@ grg <- function(...) constructor_spec(sample_grg, ...)
 #' @keywords graphs
 #' @examples
 #' 
-#' pf <- matrix( c(1, 0, 0, 1), nr=2)
+#' pf <- matrix( c(1, 0, 0, 1), nrow=2)
 #' g <- sample_pref(20, 2, pref.matrix=pf)
 #' \dontrun{tkplot(g, layout=layout_with_fr)}
 #' 
-#' pf <- matrix( c(0, 1, 0, 0), nr=2)
+#' pf <- matrix( c(0, 1, 0, 0), nrow=2)
 #' g <- sample_asym_pref(20, 2, pref.matrix=pf)
 #' \dontrun{tkplot(g, layout=layout_in_circle)}
 #' 
@@ -916,6 +924,11 @@ sample_pref <- function(nodes, types, type.dist=rep(1, types),
     stop("Invalid size for preference matrix")
   }
   
+  if (!directed && !isSymmetric(pref.matrix)) {
+    warning("Undirected graphs require symmetric preference matrices, symmetrizing matrix. igraph 1.4.0 will reject non-symmetric matrices for undirected graphs.")
+    pref.matrix <- Matrix::forceSymmetric((pref.matrix + t(pref.matrix)) / 2)
+  }
+
   on.exit( .Call(C_R_igraph_finalizer) )
   res <- .Call(C_R_igraph_preference_game, as.double(nodes),
                as.double(types),
@@ -958,7 +971,7 @@ sample_asym_pref <- function(nodes, types,
   
   on.exit( .Call(C_R_igraph_finalizer) )
   res <- .Call(C_R_igraph_asymmetric_preference_game,
-               as.double(nodes), as.double(types),
+               as.double(nodes), as.double(types), as.double(types),
                matrix(as.double(type.dist.matrix), types, types),
                matrix(as.double(pref.matrix), types, types),
                as.logical(loops))
@@ -1343,7 +1356,7 @@ sample_hierarchical_sbm <- function(n, m, rho, C, p) {
   commonlen <- unique(c(mlen, rholen, Clen))
 
   if (length(commonlen) == 1 && commonlen == 1) {
-    hsbm.1.game(n, m, rho, C, p)
+    hsbm_1_game(n, m, rho, C, p)
   } else {
     commonlen <- setdiff(commonlen, 1)
     if (length(commonlen) != 1) {
@@ -1360,7 +1373,7 @@ sample_hierarchical_sbm <- function(n, m, rho, C, p) {
     } else {
       rep(list(C), length.out=commonlen)
     }
-    hsbm.list.game(n, m, rho, C, p)
+    hsbm_list_game(n, m, rho, C, p)
   }  
 }
 
@@ -1665,8 +1678,8 @@ sample_fitness_pl <- sample_fitness_pl
 #' g <- sample_forestfire(10000, fw.prob=0.37, bw.factor=0.32/0.37)
 #' dd1 <- degree_distribution(g, mode="in")
 #' dd2 <- degree_distribution(g, mode="out")
-#' plot(seq(along=dd1)-1, dd1, log="xy")
-#' points(seq(along=dd2)-1, dd2, col=2, pch=2)
+#' plot(seq(along.with=dd1)-1, dd1, log="xy")
+#' points(seq(along.with=dd2)-1, dd2, col=2, pch=2)
 
 sample_forestfire <- sample_forestfire
 
@@ -1681,10 +1694,13 @@ sample_forestfire <- sample_forestfire
 #' 
 #' @param old.graph The original graph.
 #' @param corr A scalar in the unit interval, the target Pearson
-#' correlation between the adjacency matrices of the original the generated
+#' correlation between the adjacency matrices of the original and the generated
 #' graph (the adjacency matrix being used as a vector).
 #' @param p A numeric scalar, the probability of an edge between two
-#' vertices, it must in the open (0,1) interval.
+#' vertices, it must in the open (0,1) interval. The default is the empirical
+#' edge density of the graph. If you are resampling an Erdos-Renyi graph and
+#' you know the original edge probability of the Erdos-Renyi model, you should
+#' supply that explicitly.
 #' @param permutation A numeric vector, a permutation vector that is
 #' applied on the vertices of the first graph, to get the second graph.  If
 #' \code{NULL}, the vertices are not permuted.

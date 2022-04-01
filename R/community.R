@@ -366,7 +366,7 @@ modularity <- function(x, ...)
 #' The modularity of a graph with respect to some division (or vertex types)
 #' measures how good the division is, or how separated are the different vertex
 #' types from each other. It defined as \deqn{Q=\frac{1}{2m} \sum_{i,j}
-#' (A_{ij}-\frac{k_ik_j}{2m})\delta(c_i,c_j),}{Q=1/(2m) * sum( (Aij-ki*kj/(2m)
+#' (A_{ij}-\gamma\frac{k_ik_j}{2m})\delta(c_i,c_j),}{Q=1/(2m) * sum( (Aij-gamma*ki*kj/(2m)
 #' ) delta(ci,cj),i,j),} here \eqn{m} is the number of edges, \eqn{A_{ij}}{Aij}
 #' is the element of the \eqn{A} adjacency matrix in row \eqn{i} and column
 #' \eqn{j}, \eqn{k_i}{ki} is the degree of \eqn{i}, \eqn{k_j}{kj} is the degree
@@ -374,6 +374,14 @@ modularity <- function(x, ...)
 #' \eqn{c_j}{cj} that of \eqn{j}, the sum goes over all \eqn{i} and \eqn{j}
 #' pairs of vertices, and \eqn{\delta(x,y)}{delta(x,y)} is 1 if \eqn{x=y} and 0
 #' otherwise.
+#'
+#' The resolution parameter \eqn{\gamma}{gamma} allows weighting the random
+#' null model, which might be useful when finding partitions with a high
+#' modularity. Maximizing modularity with higher values of the resolution
+#' parameter typically results in more, smaller clusters when finding
+#' partitions with a high modularity. Lower values typically results in fewer,
+#' larger clusters. The original definition of modularity is retrieved when
+#' setting \eqn{\gamma}{gamma} to 1. 
 #'
 #' If edge weights are given, then these are considered as the element of the
 #' \eqn{A} adjacency matrix, and \eqn{k_i}{ki} is the sum of weights of
@@ -393,6 +401,10 @@ modularity <- function(x, ...)
 #' @param membership Numeric vector, one value for each vertex, the membership
 #' vector of the community structure.
 #' @param weights If not \code{NULL} then a numeric vector giving edge weights.
+#' @param resolution The resolution parameter. Must be greater than or equal to
+#' 0. Set it to 1 to use the classical definition of modularity. 
+#' @param directed Whether to use the directed or undirected version of
+#' modularity. Ignored for undirected graphs. 
 #' @param \dots Additional arguments, none currently.
 #' @return For \code{modularity} a numeric scalar, the modularity score of the
 #' given configuration.
@@ -419,7 +431,7 @@ modularity <- function(x, ...)
 #' modularity(g, membership(wtc))
 #'
 
-modularity.igraph <- function(x, membership, weights=NULL, ...) {
+modularity.igraph <- function(x, membership, weights=NULL, resolution=1, directed=TRUE, ...) {
   # Argument checks
   if (!is_igraph(x)) { stop("Not a graph object") }
   if (is.null(membership) || (!is.numeric(membership) && !is.factor(membership))) {
@@ -427,10 +439,12 @@ modularity.igraph <- function(x, membership, weights=NULL, ...) {
   }
   membership <- as.numeric(membership)
   if (!is.null(weights)) weights <- as.numeric(weights)
+  resolution <- as.numeric(resolution)
+  directed <- as.logical(directed)
 
   on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call(C_R_igraph_modularity, x, membership-1, weights)
+  res <- .Call(C_R_igraph_modularity, x, membership-1, weights, resolution, directed)
   res
 }
 
@@ -450,7 +464,7 @@ modularity.communities <- function(x, ...) {
 #' @aliases mod.matrix
 #' @export
 
-modularity_matrix <- function(graph, membership, weights=NULL) {
+modularity_matrix <- function(graph, membership, weights=NULL, resolution=1, directed=TRUE) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
   if (!missing(membership)) {
@@ -466,9 +480,12 @@ modularity_matrix <- function(graph, membership, weights=NULL) {
     weights <- NULL
   }
 
+  resolution <- as.numeric(resolution)
+  directed <- as.logical(directed)
+
   on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call(C_R_igraph_modularity_matrix, graph, weights)
+  res <- .Call(C_R_igraph_modularity_matrix, graph, weights, resolution, directed)
 
   res
 }
@@ -832,13 +849,13 @@ community.to.membership2 <- function(merges, vcount, steps) {
 #' @aliases spinglass.community
 #' @param graph The input graph, can be directed but the direction of the edges
 #' is neglected.
-#' @param weights The weights of the edges. Either a numeric vector or
-#' \code{NULL}. If it is null and the input graph has a \sQuote{weight} edge
-#' attribute then that will be used. If \code{NULL} and no such attribute is
-#' present then the edges will have equal weights. Set this to \code{NA} if the
-#' graph was a \sQuote{weight} edge attribute, but you don't want to use it for
-#' community detection. A larger edge weight means a stronger connection
-#' for this function.
+#' @param weights The weights of the edges. It must be a positive numeric vector,
+#' \code{NULL} or \code{NA}. If it is \code{NULL} and the input graph has a
+#' \sQuote{weight} edge attribute, then that attribute will be used. If
+#' \code{NULL} and no such attribute is present, then the edges will have equal
+#' weights. Set this to \code{NA} if the graph was a \sQuote{weight} edge
+#' attribute, but you don't want to use it for community detection. A larger
+#' edge weight means a stronger connection for this function.
 #' @param vertex This parameter can be used to calculate the community of a
 #' given vertex without calculating all communities. Note that if this argument
 #' is present then some other arguments are ignored.
@@ -946,7 +963,7 @@ cluster_spinglass <- function(graph, weights=NULL, vertex=NULL, spins=25,
                                             "orig"=0, "neg"=1)
 
   on.exit( .Call(C_R_igraph_finalizer) )
-  if (is.null(vertex)) {
+  if (is.null(vertex) || length(vertex)==0) {
     res <- .Call(C_R_igraph_spinglass_community, graph, weights,
                  as.numeric(spins), as.logical(parupdate),
                  as.numeric(start.temp),
@@ -975,10 +992,13 @@ cluster_spinglass <- function(graph, weights=NULL, vertex=NULL, spins=25,
 #' @param graph The input graph, only undirected graphs are supported.
 #' @param objective_function Whether to use the Constant Potts Model (CPM) or
 #'   modularity. Must be either \code{"CPM"} or \code{"modularity"}.
-#' @param weights Optional edge weights to be used. Can be a vector or an edge
-#'   attribute name. If the graph has a \code{weight} edge attribute, then this
-#'   is used by default. Supply \code{NA} here if the graph has a \code{weight}
-#'   edge attribute, but you want to ignore it.
+#' @param weights The weights of the edges. It must be a positive numeric vector,
+#'   \code{NULL} or \code{NA}. If it is \code{NULL} and the input graph has a
+#'   \sQuote{weight} edge attribute, then that attribute will be used. If
+#'   \code{NULL} and no such attribute is present, then the edges will have equal
+#'   weights. Set this to \code{NA} if the graph was a \sQuote{weight} edge
+#'   attribute, but you don't want to use it for community detection. A larger
+#'   edge weight means a stronger connection for this function.
 #' @param resolution_parameter The resolution parameter to use. Higher
 #'   resolutions lead to more smaller communities, while lower resolutions lead
 #'   to fewer larger communities.
@@ -1132,7 +1152,7 @@ cluster_leiden <- function(graph, objective_function=c("CPM", "modularity"),
 
 cluster_fluid_communities <- cluster_fluid_communities
 
-#' Community strucure via short random walks
+#' Community structure via short random walks
 #'
 #' This function tries to find densely connected subgraphs, also called
 #' communities in a graph via random walks. The idea is that short random walks
@@ -1145,9 +1165,14 @@ cluster_fluid_communities <- cluster_fluid_communities
 #' @aliases walktrap.community
 #' @param graph The input graph, edge directions are ignored in directed
 #' graphs.
-#' @param weights The edge weights. Larger edge weights increase the
-#' probability that an edge is selected by the random walker. In other
-#' words, larger edge weights correspond to stronger connections.
+#' @param weights The weights of the edges. It must be a positive numeric vector,
+#' \code{NULL} or \code{NA}. If it is \code{NULL} and the input graph has a
+#' \sQuote{weight} edge attribute, then that attribute will be used. If
+#' \code{NULL} and no such attribute is present, then the edges will have equal
+#' weights. Set this to \code{NA} if the graph was a \sQuote{weight} edge
+#' attribute, but you don't want to use it for community detection. Larger edge
+#' weights increase the probability that an edge is selected by the random
+#' walker. In other words, larger edge weights correspond to stronger connections.
 #' @param steps The length of the random walks to perform.
 #' @param merges Logical scalar, whether to include the merge matrix in the
 #' result.
@@ -1179,9 +1204,9 @@ cluster_fluid_communities <- cluster_fluid_communities
 #' g <- add_edges(g, c(1,6, 1,11, 6, 11))
 #' cluster_walktrap(g)
 #'
-cluster_walktrap <- function(graph, weights=E(graph)$weight, steps=4,
-                               merges=TRUE, modularity=TRUE,
-                               membership=TRUE) {
+cluster_walktrap <- function(graph, weights=NULL, steps=4,
+                             merges=TRUE, modularity=TRUE,
+                             membership=TRUE) {
   if (!is_igraph(graph)) {
     stop("Not a graph object!")
   }
@@ -1190,8 +1215,13 @@ cluster_walktrap <- function(graph, weights=E(graph)$weight, steps=4,
     modularity <- TRUE
   }
 
-  if (!is.null(weights)) {
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) {
+    weights <- E(graph)$weight
+  }
+  if (!is.null(weights) && !any(is.na(weights))) {
     weights <- as.numeric(weights)
+  } else {
+    weights <- NULL
   }
 
   on.exit( .Call(C_R_igraph_finalizer) )
@@ -1236,10 +1266,14 @@ cluster_walktrap <- function(graph, weights=E(graph)$weight, steps=4,
 #'
 #' @aliases edge.betweenness.community cluster_edge_betweenness
 #' @param graph The graph to analyze.
-#' @param weights The edge weights. Supply \code{NULL} to omit edge weights. By
-#' default the \sQuote{\code{weight}} edge attribute is used, if it is present.
-#' Edge weights are used to calculate weighted edge betweenness. This means
-#' that edges are interpreted as distances, not as connection strengths.
+#' @param weights The weights of the edges. It must be a positive numeric vector,
+#' \code{NULL} or \code{NA}. If it is \code{NULL} and the input graph has a
+#' \sQuote{weight} edge attribute, then that attribute will be used. If
+#' \code{NULL} and no such attribute is present, then the edges will have equal
+#' weights. Set this to \code{NA} if the graph was a \sQuote{weight} edge
+#' attribute, but you don't want to use it for community detection. Edge weights
+#' are used to calculate weighted edge betweenness. This means that edges are
+#' interpreted as distances, not as connection strengths.
 #' @param directed Logical constant, whether to calculate directed edge
 #' betweenness for directed graphs. It is ignored for undirected graphs.
 #' @param edge.betweenness Logical constant, whether to return the edge
@@ -1289,18 +1323,23 @@ cluster_walktrap <- function(graph, weights=E(graph)$weight, steps=4,
 #' eb <- cluster_edge_betweenness(g)
 #' eb
 #'
-cluster_edge_betweenness <- function(graph, weights=E(graph)$weight,
-                                       directed=TRUE,
-                                       edge.betweenness=TRUE,
-                                       merges=TRUE, bridges=TRUE,
-                                       modularity=TRUE,
-                                       membership=TRUE) {
+cluster_edge_betweenness <- function(graph, weights=NULL,
+                                     directed=TRUE,
+                                     edge.betweenness=TRUE,
+                                     merges=TRUE, bridges=TRUE,
+                                     modularity=TRUE,
+                                     membership=TRUE) {
   if (!is_igraph(graph)) {
     stop("Not a graph object!")
   }
 
-  if (!is.null(weights)) {
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) {
+    weights <- E(graph)$weight
+  }
+  if (!is.null(weights) && any(!is.na(weights))) {
     weights <- as.numeric(weights)
+  } else {
+    weights <- NULL
   }
 
   on.exit( .Call(C_R_igraph_finalizer) )
@@ -1340,11 +1379,13 @@ cluster_edge_betweenness <- function(graph, weights=E(graph)$weight,
 #' @param membership Logical scalar, whether to calculate the membership vector
 #' corresponding to the maximum modularity score, considering all possible
 #' community structures along the merges.
-#' @param weights If not \code{NULL}, then a numeric vector of edge weights.
-#' The length must match the number of edges in the graph.  By default the
-#' \sQuote{\code{weight}} edge attribute is used as weights. If it is not
-#' present, then all edges are considered to have the same weight.
-#' Larger edge weights correspond to stronger connections.
+#' @param weights The weights of the edges. It must be a positive numeric vector,
+#' \code{NULL} or \code{NA}. If it is \code{NULL} and the input graph has a
+#' \sQuote{weight} edge attribute, then that attribute will be used. If
+#' \code{NULL} and no such attribute is present, then the edges will have equal
+#' weights. Set this to \code{NA} if the graph was a \sQuote{weight} edge
+#' attribute, but you don't want to use it for community detection. A larger
+#' edge weight means a stronger connection for this function.
 #' @return \code{cluster_fast_greedy} returns a \code{\link{communities}}
 #' object, please see the \code{\link{communities}} manual page for details.
 #' @author Tamas Nepusz \email{ntamas@@gmail.com} and Gabor Csardi
@@ -1369,14 +1410,18 @@ cluster_edge_betweenness <- function(graph, weights=E(graph)$weight,
 #' sizes(fc)
 #'
 cluster_fast_greedy <- function(graph, merges=TRUE, modularity=TRUE,
-                                 membership=TRUE,
-                                 weights=E(graph)$weight) {
+                                membership=TRUE, weights=NULL) {
   if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
 
-  if (!is.null(weights)) {
+  if (is.null(weights) && "weight" %in% edge_attr_names(graph)) {
+    weights <- E(graph)$weight
+  }
+  if (!is.null(weights) && any(!is.na(weights))) {
     weights <- as.numeric(weights)
+  } else {
+    weights <- NULL
   }
 
   on.exit( .Call(C_R_igraph_finalizer) )
@@ -1434,10 +1479,13 @@ igraph.i.levc.arp <- function(externalP, externalE) {
 #' symmetric matrix.
 #' @param steps The number of steps to take, this is actually the number of
 #' tries to make a step. It is not a particularly useful parameter.
-#' @param weights An optional weight vector. The \sQuote{weight} edge attribute
-#' is used if present. Supply \sQuote{\code{NA}} here if you want to ignore the
-#' \sQuote{weight} edge attribute. Larger edge weights correspond to stronger
-#' connections between vertices.
+#' @param weights The weights of the edges. It must be a positive numeric vector,
+#' \code{NULL} or \code{NA}. If it is \code{NULL} and the input graph has a
+#' \sQuote{weight} edge attribute, then that attribute will be used. If
+#' \code{NULL} and no such attribute is present, then the edges will have equal
+#' weights. Set this to \code{NA} if the graph was a \sQuote{weight} edge
+#' attribute, but you don't want to use it for community detection. A larger
+#' edge weight means a stronger connection for this function.
 #' @param start \code{NULL}, or a numeric membership vector, giving the start
 #' configuration of the algorithm.
 #' @param options A named list to override some ARPACK options.
@@ -1549,11 +1597,13 @@ cluster_leading_eigen <- function(graph, steps=-1, weights=NULL,
 #'
 #' @aliases label.propagation.community
 #' @param graph The input graph, should be undirected to make sense.
-#' @param weights An optional weight vector. It should contain a positive
-#' weight for all the edges. The \sQuote{weight} edge attribute is used if
-#' present. Supply \sQuote{\code{NA}} here if you want to ignore the
-#' \sQuote{weight} edge attribute. Larger edge weights correspond to
-#' stronger connections.
+#' @param weights The weights of the edges. It must be a positive numeric vector,
+#' \code{NULL} or \code{NA}. If it is \code{NULL} and the input graph has a
+#' \sQuote{weight} edge attribute, then that attribute will be used. If
+#' \code{NULL} and no such attribute is present, then the edges will have equal
+#' weights. Set this to \code{NA} if the graph was a \sQuote{weight} edge
+#' attribute, but you don't want to use it for community detection. A larger
+#' edge weight means a stronger connection for this function.
 #' @param initial The initial state. If \code{NULL}, every vertex will have a
 #' different label at the beginning. Otherwise it must be a vector with an
 #' entry for each vertex. Non-negative values denote different labels, negative
@@ -1582,17 +1632,16 @@ cluster_leading_eigen <- function(graph, steps=-1, weights=NULL,
 #'   g <- add_edges(g, c(1, 12))
 #'   cluster_label_prop(g)
 #'
-cluster_label_prop <- function(graph, weights=NULL, initial=NULL,
-                                        fixed=NULL) {
+cluster_label_prop <- function(graph, weights=NULL, initial=NULL, fixed=NULL) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
   if (is.null(weights) && "weight" %in% edge_attr_names(graph)) {
-  weights <- E(graph)$weight
+    weights <- E(graph)$weight
   }
   if (!is.null(weights) && any(!is.na(weights))) {
-  weights <- as.numeric(weights)
+    weights <- as.numeric(weights)
   } else {
-  weights <- NULL
+    weights <- NULL
   }
   if (!is.null(initial)) initial <- as.numeric(initial)
   if (!is.null(fixed)) fixed <- as.logical(fixed)
@@ -1636,10 +1685,18 @@ cluster_label_prop <- function(graph, weights=NULL, initial=NULL,
 #'
 #' @aliases multilevel.community
 #' @param graph The input graph.
-#' @param weights Optional positive weight vector.  If the graph has a
-#' \code{weight} edge attribute, then this is used by default. Supply \code{NA}
-#' here if the graph has a \code{weight} edge attribute, but you want to ignore
-#' it. Larger edge weights correspond to stronger connections.
+#' @param weights The weights of the edges. It must be a positive numeric vector,
+#' \code{NULL} or \code{NA}. If it is \code{NULL} and the input graph has a
+#' \sQuote{weight} edge attribute, then that attribute will be used. If
+#' \code{NULL} and no such attribute is present, then the edges will have equal
+#' weights. Set this to \code{NA} if the graph was a \sQuote{weight} edge
+#' attribute, but you don't want to use it for community detection. A larger
+#' edge weight means a stronger connection for this function.
+#' @param resolution Optional resolution parameter that allows the user to
+#' adjust the resolution parameter of the modularity function that the algorithm
+#' uses internally. Lower values typically yield fewer, larger clusters. The
+#' original definition of modularity is recovered when the resolution parameter
+#' is set to 1.
 #' @return \code{cluster_louvain} returns a \code{\link{communities}}
 #' object, please see the \code{\link{communities}} manual page for details.
 #' @author Tom Gregorovic, Tamas Nepusz \email{ntamas@@gmail.com}
@@ -1665,21 +1722,22 @@ cluster_label_prop <- function(graph, weights=NULL, initial=NULL,
 #' g <- add_edges(g, c(1,6, 1,11, 6, 11))
 #' cluster_louvain(g)
 #'
-cluster_louvain <- function(graph, weights=NULL) {
+cluster_louvain <- function(graph, weights=NULL, resolution=1) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
   if (is.null(weights) && "weight" %in% edge_attr_names(graph)) {
-  weights <- E(graph)$weight
+    weights <- E(graph)$weight
   }
   if (!is.null(weights) && any(!is.na(weights))) {
-  weights <- as.numeric(weights)
+    weights <- as.numeric(weights)
   } else {
-  weights <- NULL
+    weights <- NULL
   }
+  resolution <- as.numeric(resolution)
 
   on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
-  res <- .Call(C_R_igraph_community_multilevel, graph, weights)
+  res <- .Call(C_R_igraph_community_multilevel, graph, weights, resolution)
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     res$names <- V(graph)$name
   }
@@ -1735,10 +1793,13 @@ cluster_louvain <- function(graph, weights=NULL) {
 #' @aliases optimal.community
 #' @param graph The input graph. Edge directions are ignored for directed
 #' graphs.
-#' @param weights Optional positive weight vector for optimizing weighted
-#' modularity. If the graph has a \code{weight} edge attribute, then this is
-#' used by default. Supply \code{NA} to ignore the weights of a weighted graph.
-#' Larger edge weights correspond to stronger connections.
+#' @param weights The weights of the edges. It must be a positive numeric vector,
+#' \code{NULL} or \code{NA}. If it is \code{NULL} and the input graph has a
+#' \sQuote{weight} edge attribute, then that attribute will be used. If
+#' \code{NULL} and no such attribute is present, then the edges will have equal
+#' weights. Set this to \code{NA} if the graph was a \sQuote{weight} edge
+#' attribute, but you don't want to use it for community detection. A larger
+#' edge weight means a stronger connection for this function.
 #' @return \code{cluster_optimal} returns a \code{\link{communities}} object,
 #' please see the \code{\link{communities}} manual page for details.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}

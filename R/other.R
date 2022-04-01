@@ -107,7 +107,7 @@ sample_seq <- function(low, high, length) {
 #' @param required whether the graph has to be bipartite
 #' @return A logical vector representing the resolved vertex type for each
 #' vertex in the graph
-#' @author Tamas Nepusz \email{ntamas@gmail.com}
+#' @author Tamas Nepusz \email{ntamas@@gmail.com}
 #' @keywords internal
 #'
 handle_vertex_type_arg <- function(types, graph, required = T) {
@@ -124,7 +124,7 @@ handle_vertex_type_arg <- function(types, graph, required = T) {
     }
   }
   if (is.null(types) && required) {
-    stop("Not a bipartite graph, supply `types' argument") 
+    stop("Not a bipartite graph, supply `types' argument or add a vertex attribute named `type'")
   }
   return(types)
 }

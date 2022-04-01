@@ -9,10 +9,10 @@
 sample_degseq(
   out.deg,
   in.deg = NULL,
-  method = c("simple", "vl", "simple.no.multiple")
+  method = c("simple", "vl", "simple.no.multiple", "simple.no.multiple.uniform")
 )
 
-degseq(...)
+degseq(..., deterministic = FALSE)
 }
 \arguments{
 \item{out.deg}{Numeric vector, the sequence of degrees (for undirected
@@ -27,14 +27,17 @@ should be even. For directed graphs its sum should be the same as the sum of
 \dQuote{simple}, \dQuote{simple.no.multiple} and \dQuote{vl} methods are
 implemented.}
 
-\item{...}{Passed to \code{sample_degree}.}
+\item{...}{Passed to \code{realize_degseq} if \sQuote{deterministic} is true,
+or to \code{sample_degseq} otherwise.}
+
+\item{deterministic}{Whether the construction should be deterministic}
 }
 \value{
 The new graph object.
 }
 \description{
-It is often useful to create a graph with given vertex degrees. This is
-exactly what \code{sample_degseq} does.
+It is often useful to create a graph with given vertex degrees. This function
+creates such a graph in a randomized manner.
 }
 \details{
 The \dQuote{simple} method connects the out-stubs of the edges (undirected
@@ -51,6 +54,11 @@ scratch if it gets stuck. It is not guaranteed to sample uniformly from the
 space of all possible graphs with the given sequence, but it is relatively
 fast and it will eventually succeed if the provided degree sequence is
 graphical, but there is no upper bound on the number of iterations.
+
+The \dQuote{simple.no.multiple.uniform} method is a variant of
+\dQuote{simple.no.multiple} with the added benefit of sampling uniformly
+from the set of all possible simple graphs with the given degree sequence.
+Ensuring uniformity has some performance implications, though.
 
 The \dQuote{vl} method is a more sophisticated generator. The algorithm and
 the implementation was done by Fabien Viger and Matthieu Latapy. This
@@ -93,7 +101,8 @@ all(degree(g5) == degs)
 }
 \seealso{
 \code{\link{sample_gnp}}, \code{\link{sample_pa}},
-\code{\link{simplify}} to get rid of the multiple and/or loops edges.
+\code{\link{simplify}} to get rid of the multiple and/or loops edges,
+\code{\link{realize_degseq}} for a deterministic variant.
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}

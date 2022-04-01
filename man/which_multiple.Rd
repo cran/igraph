@@ -7,6 +7,7 @@
 \alias{is.multiple}
 \alias{count.multiple}
 \alias{count_multiple}
+\alias{any_loop}
 \alias{any_multiple}
 \alias{which_loop}
 \title{Find the multiple or loop edges in a graph}
@@ -20,9 +21,9 @@ which_multiple(graph, eids = E(graph))
 all edges in the graph.}
 }
 \value{
-\code{any_multiple} returns a logical scalar.  \code{which_loop} and
-\code{which_multiple} return a logical vector. \code{count_multiple} returns a
-numeric vector.
+\code{any_loop} and \code{any_multiple} return a logical scalar.
+\code{which_loop} and \code{which_multiple} return a logical vector.
+\code{count_multiple} returns a numeric vector.
 }
 \description{
 A loop edge is an edge from a vertex to itself. An edge is a multiple edge
@@ -30,6 +31,8 @@ if it has exactly the same head and tail vertices as another edge. A graph
 without multiple and loop edges is called a simple graph.
 }
 \details{
+\code{any_loop} decides whether the graph has any loop edges.
+
 \code{which_loop} decides whether the edges of the graph are loop edges.
 
 \code{any_multiple} decides whether the graph has any multiple edges.
@@ -52,6 +55,7 @@ original multiplicity as an edge attribute.
 
 # Loops
 g <- graph( c(1,1,2,2,3,3,4,5) )
+any_loop(g)
 which_loop(g)
 
 # Multiple edges
@@ -69,7 +73,7 @@ which_multiple(graph( c(1,2, 2,1), dir=FALSE ))
 # Remove multiple edges but keep multiplicity
 g <- barabasi.game(10, m=3, algorithm="bag")
 E(g)$weight <- count_multiple(g)
-g <- simplify(g)
+g <- simplify(g, edge.attr.comb=list(weight = "min"))
 any(which_multiple(g))
 E(g)$weight
 

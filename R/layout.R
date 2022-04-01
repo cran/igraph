@@ -350,6 +350,9 @@ layout_as_star <- function(graph, center=V(graph)[1], order=NULL) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
   center <- as.igraph.vs(graph, center)
+  if (length(center)==0) {
+    center <- 1
+  }
   if (!is.null(order)) order <- as.numeric(order)-1
 
   on.exit(.Call(C_R_igraph_finalizer) )
@@ -1729,7 +1732,7 @@ with_mds <- function(...) layout_spec(layout_with_mds, ...)
     res$layout.dummy <- matrix(NA_real_, nrow=0, ncol=2)
   } else {
     res$layout <- res$res[seq_len(vc),]
-    res$layout.dummy <- res$res[(vc+1):nrow(res$res),]
+    res$layout.dummy <- res$res[(vc+1):nrow(res$res),, drop=FALSE]
   }
 
   # Add some attributes to the extended graph

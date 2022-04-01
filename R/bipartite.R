@@ -77,7 +77,7 @@
 #' graph.isomorphic(proj[[2]], make_full_graph(5))
 #' 
 #' ## The projection keeps the vertex attributes
-#' M <- matrix(0, nr=5, nc=3)
+#' M <- matrix(0, nrow=5, ncol=3)
 #' rownames(M) <- c("Alice", "Bob", "Cecil", "Dan", "Ethel")
 #' colnames(M) <- c("Party", "Skiing", "Badminton")
 #' M[] <- sample(0:1, length(M), replace=TRUE)
@@ -90,13 +90,16 @@
 #' 
 bipartite_projection <- function(graph, types=NULL,
                                  multiplicity=TRUE, probe1=NULL,
-				 which=c("both", "true", "false"),
+                                 which=c("both", "true", "false"),
                                  remove.type=TRUE) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
   types <- handle_vertex_type_arg(types, graph)
   if (!is.null(probe1)) {
     probe1 <- as.igraph.vs(graph, probe1)-1
+    if (length(probe1) < 1) {
+      probe1 <- -1
+    }
   } else {
     probe1 <- -1
   }

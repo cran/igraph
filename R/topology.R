@@ -74,7 +74,7 @@ graph.get.isomorphisms.vf2 <- function(graph1, graph2, vertex.color1,
   res <- .Call(C_R_igraph_get_isomorphisms_vf2, graph1, graph2, vertex.color1,
                vertex.color2, edge.color1, edge.color2)
 
-  lapply(res, function(x) V(graph2)[x + 1])
+  lapply(res, function(.x) V(graph2)[.x + 1])
 }
 
 #' @export
@@ -131,7 +131,7 @@ graph.get.subisomorphisms.vf2 <- function(graph1, graph2, vertex.color1,
   res <- .Call(C_R_igraph_get_subisomorphisms_vf2, graph1, graph2,
                vertex.color1, vertex.color2, edge.color1, edge.color2)
 
-  lapply(res, function(x) V(graph1)[x + 1])
+  lapply(res, function(.x) V(graph1)[.x + 1])
 }
 
 #' @export
@@ -731,6 +731,12 @@ graph_from_isomorphism_class <- graph_from_isomorphism_class
 #' 
 #' @aliases canonical.permutation canonical_permutation
 #' @param graph The input graph, treated as undirected.
+#' @param colors The colors of the individual vertices of the graph; only
+#' vertices having the same color are allowed to match each other in an
+#' automorphism. When omitted, igraph uses the \code{color} attribute of the
+#' vertices, or, if there is no such vertex attribute, it simply assumes that
+#' all vertices have the same color. Pass NULL explicitly if the graph has a
+#' \code{color} vertex attribute but you do not want to use it.
 #' @param sh Type of the heuristics to use for the BLISS algorithm. See details
 #' for possible values.
 #' @return A list with the following members: \item{labeling}{The canonical
@@ -831,10 +837,18 @@ permute <- permute
 #' 
 #' This function calculates the number of automorphism of a graph using the
 #' BLISS algorithm. See also the BLISS homepage at
-#' \url{http://www.tcs.hut.fi/Software/bliss/index.html}.
+#' \url{http://www.tcs.hut.fi/Software/bliss/index.html}. If you need the
+#' automorphisms themselves, use \code{\link{automorphism_group}} to obtain
+#' a compact representation of the automorphism group.
 #' 
 #' @aliases graph.automorphisms automorphisms
 #' @param graph The input graph, it is treated as undirected.
+#' @param colors The colors of the individual vertices of the graph; only
+#' vertices having the same color are allowed to match each other in an
+#' automorphism. When omitted, igraph uses the \code{color} attribute of the
+#' vertices, or, if there is no such vertex attribute, it simply assumes that
+#' all vertices have the same color. Pass NULL explicitly if the graph has a
+#' \code{color} vertex attribute but you do not want to use it.
 #' @param sh The splitting heuristics for the BLISS algorithm. Possible values
 #' are: \sQuote{\code{f}}: first non-singleton cell, \sQuote{\code{fl}}: first
 #' largest non-singleton cell, \sQuote{\code{fs}}: first smallest non-singleton
@@ -852,7 +866,9 @@ permute <- permute
 #' @author Tommi Junttila (\url{http://users.ics.aalto.fi/tjunttil/}) for BLISS
 #' and Gabor Csardi \email{csardi.gabor@@gmail.com} for the igraph glue code
 #' and this manual page.
-#' @seealso \code{\link{canonical_permutation}}, \code{\link{permute}}
+#' @seealso \code{\link{canonical_permutation}}, \code{\link{permute}},
+#' and \code{\link{automorphism_group}} for a compact representation of all
+#' automorphisms
 #' @references Tommi Junttila and Petteri Kaski: Engineering an Efficient
 #' Canonical Labeling Tool for Large and Sparse Graphs, \emph{Proceedings of
 #' the Ninth Workshop on Algorithm Engineering and Experiments and the Fourth
@@ -864,6 +880,70 @@ permute <- permute
 #' ## and each of these graphs can be "flipped"
 #' g <- make_ring(10)
 #' automorphisms(g)
+#' 
+#' ## A full graph has n! automorphisms; however, we restrict the vertex
+#' ## matching by colors, leading to only 4 automorphisms
+#' g <- make_full_graph(4)
+#' automorphisms(g, colors=c(1,2,1,2))
 #' @export
 
 automorphisms <- automorphisms
+
+
+#' Generating set of the automorphism group of a graph
+#' 
+#' Compute the generating set of the automorphism group of a graph.
+#' 
+#' An automorphism of a graph is a permutation of its vertices which brings the
+#' graph into itself. The automorphisms of a graph form a group and there exists
+#' a subset of this group (i.e. a set of permutations) such that every other
+#' permutation can be expressed as a combination of these permutations. These
+#' permutations are called the generating set of the automorphism group.
+#' 
+#' This function calculates a possible generating set of the automorphism of
+#' a graph using the BLISS algorithm. See also the BLISS homepage at
+#' \url{http://www.tcs.hut.fi/Software/bliss/index.html}. The calculated
+#' generating set is not necessarily minimal, and it may depend on the splitting
+#' heuristics used by BLISS.
+#' 
+#' @param graph The input graph, it is treated as undirected.
+#' @param colors The colors of the individual vertices of the graph; only
+#' vertices having the same color are allowed to match each other in an
+#' automorphism. When omitted, igraph uses the \code{color} attribute of the
+#' vertices, or, if there is no such vertex attribute, it simply assumes that
+#' all vertices have the same color. Pass NULL explicitly if the graph has a
+#' \code{color} vertex attribute but you do not want to use it.
+#' @param sh The splitting heuristics for the BLISS algorithm. Possible values
+#' are: \sQuote{\code{f}}: first non-singleton cell, \sQuote{\code{fl}}: first
+#' largest non-singleton cell, \sQuote{\code{fs}}: first smallest non-singleton
+#' cell, \sQuote{\code{fm}}: first maximally non-trivially connected
+#' non-singleton cell, \sQuote{\code{flm}}: first largest maximally
+#' non-trivially connected non-singleton cell, \sQuote{\code{fsm}}: first
+#' smallest maximally non-trivially connected non-singleton cell.
+#' @param details Specifies whether to provide additional details about the
+#' BLISS internals in the result.
+#' @return When \code{details} is \code{FALSE}, a list of vertex permutations
+#' that form a generating set of the automorphism group of the input graph.
+#' When \code{details} is \code{TRUE}, a named list with two members:
+#' \item{generators}{Returns the generators themselves} \item{info}{Additional
+#' information about the BLISS internals. See \code{\link{automorphisms}} for
+#' more details.}
+#' @author Tommi Junttila (\url{http://users.ics.aalto.fi/tjunttil/}) for BLISS,
+#' Gabor Csardi \email{csardi.gabor@@gmail.com} for the igraph glue code and
+#' Tamas Nepusz \email{ntamas@@gmail.com} for this manual page.
+#' @seealso \code{\link{canonical_permutation}}, \code{\link{permute}},
+#' \code{\link{automorphisms}}
+#' @references Tommi Junttila and Petteri Kaski: Engineering an Efficient
+#' Canonical Labeling Tool for Large and Sparse Graphs, \emph{Proceedings of
+#' the Ninth Workshop on Algorithm Engineering and Experiments and the Fourth
+#' Workshop on Analytic Algorithms and Combinatorics.} 2007.
+#' @keywords graphs
+#' @examples
+#' 
+#' ## A ring has n*2 automorphisms, and a possible generating set is one that
+#' ## "turns" the ring by one vertex to the left or right
+#' g <- make_ring(10)
+#' automorphism_group(g)
+#' @export
+
+automorphism_group <- automorphism_group

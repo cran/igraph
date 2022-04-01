@@ -36,9 +36,13 @@ __BEGIN_DECLS
 
 typedef enum { IGRAPH_UNDIRECTED = 0, IGRAPH_DIRECTED = 1 } igraph_i_directed_t;
 
-typedef enum { IGRAPH_NO_LOOPS = 0, IGRAPH_LOOPS = 1 } igraph_i_loops_t;
+/* Note for the enum below: yes, IGRAPH_LOOPS_TWICE is 1, and IGRAPH_LOOPS_ONCE
+ * is 2. This is intentional, for the sake of backwards compatibility with
+ * earlier versions where we only had IGRAPH_LOOPS and it meant
+ * IGRAPH_LOOPS_TWICE */
+typedef enum { IGRAPH_NO_LOOPS = 0, IGRAPH_LOOPS = 1, IGRAPH_LOOPS_TWICE = 1, IGRAPH_LOOPS_ONCE = 2 } igraph_loops_t;
 
-typedef enum { IGRAPH_NO_MULTIPLE = 0, IGRAPH_MULTIPLE = 1 } igraph_i_multiple_t;
+typedef enum { IGRAPH_NO_MULTIPLE = 0, IGRAPH_MULTIPLE = 1 } igraph_multiple_t;
 
 typedef enum { IGRAPH_ASCENDING = 0, IGRAPH_DESCENDING = 1 } igraph_order_t;
 
@@ -47,6 +51,10 @@ typedef enum { IGRAPH_MINIMUM = 0, IGRAPH_MAXIMUM = 1 } igraph_optimal_t;
 typedef enum { IGRAPH_OUT = 1, IGRAPH_IN = 2, IGRAPH_ALL = 3,
                IGRAPH_TOTAL = 3
              } igraph_neimode_t;
+
+/* Reverse IGRAPH_OUT to IGRAPH_IN and vice versa. Leave other values alone. */
+#define IGRAPH_REVERSE_MODE(mode) \
+    ((mode) == IGRAPH_IN ? IGRAPH_OUT : ((mode) == IGRAPH_OUT ? IGRAPH_IN : (mode)))
 
 typedef enum { IGRAPH_WEAK = 1, IGRAPH_STRONG = 2 } igraph_connectedness_t;
 
@@ -110,7 +118,9 @@ typedef enum { IGRAPH_EDGEORDER_ID = 0,
              } igraph_edgeorder_type_t;
 
 typedef enum { IGRAPH_TO_DIRECTED_ARBITRARY = 0,
-               IGRAPH_TO_DIRECTED_MUTUAL
+               IGRAPH_TO_DIRECTED_MUTUAL,
+               IGRAPH_TO_DIRECTED_RANDOM,
+               IGRAPH_TO_DIRECTED_ACYCLIC
              } igraph_to_directed_t;
 
 typedef enum { IGRAPH_TO_UNDIRECTED_EACH = 0,

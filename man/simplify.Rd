@@ -4,6 +4,7 @@
 \alias{simplify}
 \alias{is.simple}
 \alias{is_simple}
+\alias{simplify_and_colorize}
 \title{Simple graphs}
 \usage{
 simplify(
@@ -14,6 +15,8 @@ simplify(
 )
 
 is_simple(graph)
+
+simplify_and_colorize(graph)
 }
 \arguments{
 \item{graph}{The graph to work on.}
@@ -29,7 +32,7 @@ single one in the new graph, and their attributes are combined. Please see
 \code{\link{attribute.combination}} for details on this.}
 }
 \value{
-A new graph object with the edges deleted.
+a new graph object with the edges deleted.
 }
 \description{
 Simple graphs are graphs which do not contain loop and multiple edges.
@@ -45,6 +48,16 @@ it does not contain loop edges and multiple edges.
 \code{simplify} removes the loop and/or multiple edges from a graph.  If
 both \code{remove.loops} and \code{remove.multiple} are \code{TRUE} the
 function returns a simple graph.
+
+\code{simplify_and_colorize} constructs a new, simple graph from a graph and
+also sets a \code{color} attribute on both the vertices and the edges.
+The colors of the vertices represent the number of self-loops that were
+originally incident on them, while the colors of the edges represent the
+multiplicities of the same edges in the original graph. This allows one to
+take into account the edge multiplicities and the number of loop edges in
+the VF2 isomorphism algorithm. Other graph, vertex and edge attributes from
+the original graph are discarded as the primary purpose of this function is
+to facilitate the usage of multigraphs with the VF2 algorithm.
 }
 \examples{
 

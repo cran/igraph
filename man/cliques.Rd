@@ -10,9 +10,10 @@
 \alias{largest.cliques}
 \alias{count_max_cliques}
 \alias{max_cliques}
-\title{The functions find cliques, ie. complete subgraphs in a graph}
+\alias{clique_size_counts}
+\title{Functions to find cliques, ie. complete subgraphs in a graph}
 \usage{
-cliques(graph, min = NULL, max = NULL)
+cliques(graph, min = 0, max = 0)
 
 max_cliques(graph, min = NULL, max = NULL, subset = NULL, file = NULL)
 }
@@ -49,6 +50,10 @@ this case.
 
 \code{clique_num} and \code{count_max_cliques} return an integer
 scalar.
+
+\code{clique_size_counts} returns a numeric vector with the clique sizes such that
+the i-th item belongs to cliques of size i. Trailing zeros are currently
+truncated, but this might change in future versions.
 }
 \description{
 These functions find all, the largest or all the maximal cliques in an
@@ -62,7 +67,7 @@ size limitations given in the \code{min} and \code{max} arguments.
 clique is largest if there is no other clique including more vertices.
 
 \code{max_cliques} finds all maximal cliques in the input graph.  A
-clique in maximal if it cannot be extended to a larger clique. The largest
+clique is maximal if it cannot be extended to a larger clique. The largest
 cliques are always maximal, but a maximal clique is not necessarily the
 largest.
 
@@ -70,9 +75,8 @@ largest.
 
 \code{clique_num} calculates the size of the largest clique(s).
 
-The current implementation of these functions searches for maximal
-independent vertex sets (see \code{\link{ivs}}) in the
-complementer graph.
+\code{clique_size_counts} returns a numeric vector representing a histogram
+of clique sizes, between the given minimum and maximum clique size.
 }
 \examples{
 
@@ -85,8 +89,6 @@ largest_cliques(g)
 # To have a bit less maximal cliques, about 100-200 usually
 g <- sample_gnp(100, 0.03)
 max_cliques(g)
-
-
 }
 \references{
 For maximal cliques the following algorithm is implemented:
