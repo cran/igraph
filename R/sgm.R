@@ -49,7 +49,7 @@ solve_LSAP <- function (x, maximum = FALSE) {
 #' @param iteration The number of iterations for the Frank-Wolfe algorithm
 #' @return A numeric matrix which is the permutation matrix that determines the
 #' bijection between the graphs of \code{A} and \code{B}
-#' @author Vince Lyzinski \url{http://www.ams.jhu.edu/~lyzinski/}
+#' @author Vince Lyzinski \url{https://www.ams.jhu.edu/~lyzinski/}
 #' @seealso
 #' \code{\link{sample_correlated_gnp}},\code{\link{sample_correlated_gnp_pair}}
 #' @references Vogelstein, J. T., Conroy, J. M., Podrazik, L. J., Kratzer, S.
@@ -63,12 +63,12 @@ solve_LSAP <- function (x, maximum = FALSE) {
 #' @examples
 #' 
 #'  #require(Matrix)
-#'  g1 <- erdos.renyi.game(10, .1)
+#'  g1 <- sample_gnp(10, 0.1)
 #'  randperm <- c(1:3, 3+sample(7))
 #'  g2 <- sample_correlated_gnp(g1, corr=1, p=g1$p, permutation=randperm)
 #'  A  <- as.matrix(get.adjacency(g1))
 #'  B  <- as.matrix(get.adjacency(g2))
-#'  P  <-match_vertices (A, B, m=3, start=diag(rep(1, nrow(A)-3)), 20)
+#'  P  <- match_vertices(A, B, m=3, start=diag(rep(1, nrow(A)-3)), 20)
 #'  P
 #' @export
 

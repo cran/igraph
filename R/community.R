@@ -266,7 +266,7 @@ as_membership <- function(x) add_class(x, "membership")
 
 print.communities <- function(x, ...) {
 
-  noc <- if (!is.null(x$membership)) max(membership(x)) else NA
+  noc <- if (!is.null(x$membership)) max(membership(x), 0) else NA
   mod <- if (!is.null(x$modularity)) {
     modularity(x) %>% format(digits = 2)
   } else {
@@ -1150,7 +1150,24 @@ cluster_leiden <- function(graph, objective_function=c("CPM", "modularity"),
 #' g <- graph.famous("Zachary")
 #' comms <- cluster_fluid_communities(g, 2)
 
-cluster_fluid_communities <- cluster_fluid_communities
+cluster_fluid_communities <- function(graph, no.of.communities) {
+  # Argument checks
+  if (!is_igraph(graph)) { stop("Not a graph object") }
+  no.of.communities <- as.integer(no.of.communities)
+
+  on.exit( .Call(C_R_igraph_finalizer) )
+  # Function call
+  res <- .Call(C_R_igraph_community_fluid_communities, graph, no.of.communities)
+
+  if (igraph_opt("add.vertex.names") && is_named(graph)) {
+    res$names <- V(graph)$name
+  }
+  res$vcount <- vcount(graph)
+  res$algorithm <- "fluid communities"
+  res$membership <- res$membership + 1
+  class(res) <- "communities"
+  res
+}
 
 #' Community structure via short random walks
 #'
@@ -1178,7 +1195,7 @@ cluster_fluid_communities <- cluster_fluid_communities
 #' result.
 #' @param modularity Logical scalar, whether to include the vector of the
 #' modularity scores in the result. If the \code{membership} argument is true,
-#' then it will be always calculated.
+#' then it will always be calculated.
 #' @param membership Logical scalar, whether to calculate the membership vector
 #' for the split corresponding to the highest modularity value.
 #' @return \code{cluster_walktrap} returns a \code{\link{communities}}
@@ -1233,8 +1250,12 @@ cluster_walktrap <- function(graph, weights=NULL, steps=4,
 
   res$vcount <- vcount(graph)
   res$algorithm <- "walktrap"
-  res$membership <- res$membership + 1
-  res$merges <- res$merges + 1
+  if (!is.null(res$membership)) {
+    res$membership <- res$membership + 1
+  }
+  if (!is.null(res$merges)) {
+    res$merges <- res$merges + 1
+  }
   class(res) <- "communities"
   res
 }

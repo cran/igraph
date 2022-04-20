@@ -7,7 +7,7 @@
 \alias{induced_subgraph}
 \title{Subgraph of a graph}
 \usage{
-subgraph(graph, v)
+subgraph(graph, vids)
 
 induced_subgraph(
   graph,
@@ -19,9 +19,6 @@ subgraph.edges(graph, eids, delete.vertices = TRUE)
 }
 \arguments{
 \item{graph}{The original graph.}
-
-\item{v}{Numeric vector, the vertices of the original graph which will
-form the subgraph.}
 
 \item{vids}{Numeric vector, the vertices of the original graph which will
 form the subgraph.}
@@ -56,9 +53,10 @@ between them will be kept in the result graph.
 one can specify the vertices and edges to keep. This function will be
 renamed to \code{subgraph} in the next major version of igraph.
 
-The \code{subgraph} function does the same as \code{induced.graph} currently
-(assuming \sQuote{\code{auto}} as the \code{impl} argument), but it is
-deprecated and will be removed in the next major version of igraph.
+The \code{subgraph} function currently does the same as \code{induced_subgraph}
+(assuming \sQuote{\code{auto}} as the \code{impl} argument), but this behaviour
+is deprecated. In the next major version, \code{subgraph} will overtake the
+functionality of \code{subgraph.edges}.
 }
 \examples{
 

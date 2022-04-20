@@ -49,8 +49,8 @@ NULL
 #' fast handling of large graphs, with millions of vertices and edges, 3)
 #' allowing rapid prototyping via high level languages like R.
 #' 
-#' @section Igraph graphs:
-#'   Igraph graphs have a class \sQuote{\code{igraph}}. They are printed to
+#' @section igraph graphs:
+#'   igraph graphs have a class \sQuote{\code{igraph}}. They are printed to
 #'   the screen in a special format, here is an example, a ring graph
 #'   created using \code{\link{make_ring}}: \preformatted{
 #'     IGRAPH U--- 10 10 -- Ring graph
@@ -92,7 +92,7 @@ NULL
 #'   \code{\link{graph_from_literal}} function is easiest. It uses R's formula
 #'   interface, its manual page contains many examples. Another option is
 #'   \code{\link{graph}}, which takes numeric vertex ids directly.
-#'   \code{\link{graph.atlas}} creates graph from the Graph Atlas,
+#'   \code{\link{graph_from_atlas}} creates graph from the Graph Atlas,
 #'   \code{\link{make_graph}} can create some special graphs.
 #' 
 #'   To create graphs from field data, \code{\link{graph_from_edgelist}},

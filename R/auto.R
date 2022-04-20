@@ -367,10 +367,10 @@ harmonic_centrality <- function(graph, vids=V(graph), mode=c("out", "in", "all",
 }
 
 #' @export
-page_rank <- function(graph, algo=c("prpack", "arpack", "power"), vids=V(graph), directed=TRUE, damping=0.85, personalized=NULL, weights=NULL, options=NULL) {
+page_rank <- function(graph, algo=c("prpack", "arpack"), vids=V(graph), directed=TRUE, damping=0.85, personalized=NULL, weights=NULL, options=NULL) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
-  algo <- switch(igraph.match.arg(algo), "power"=0L, "arpack"=1L, "prpack"=2L)
+  algo <- switch(igraph.match.arg(algo), "arpack"=1L, "prpack"=2L)
   vids <- as.igraph.vs(graph, vids)
   directed <- as.logical(directed)
   damping <- as.numeric(damping)
@@ -1355,19 +1355,6 @@ similarity.invlogweighted <- function(graph, vids=V(graph), mode=c("all", "out",
 }
 
 #' @export
-cluster_fluid_communities <- function(graph, no.of.communities) {
-  # Argument checks
-  if (!is_igraph(graph)) { stop("Not a graph object") }
-  no.of.communities <- as.integer(no.of.communities)
-
-  on.exit( .Call(C_R_igraph_finalizer) )
-  # Function call
-  res <- .Call(C_R_igraph_community_fluid_communities, graph, no.of.communities)
-
-  res
-}
-
-#' @export
 sample_hrg <- function(hrg) {
   # Argument checks
   if (is.null(hrg)) {
@@ -1568,9 +1555,6 @@ dominator_tree <- function(graph, root, mode=c("out", "in", "all", "total")) {
   on.exit( .Call(C_R_igraph_finalizer) )
   # Function call
   res <- .Call(C_R_igraph_dominator_tree, graph, root-1, mode)
-  if (igraph_opt("return.vs.es")) {
-    res$dom <- create_vs(graph, res$dom)
-  }
   if (igraph_opt("return.vs.es")) {
     res$leftout <- create_vs(graph, res$leftout)
   }
@@ -1966,7 +1950,7 @@ graph.isomorphic.34 <- function(graph1, graph2) {
 }
 
 #' @export
-canonical_permutation <- function(graph, colors, sh="fm") {
+canonical_permutation <- function(graph, colors, sh=c("fm", "f", "fs", "fl", "flm", "fsm")) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
   if (missing(colors)) {
@@ -2002,7 +1986,7 @@ permute <- function(graph, permutation) {
 }
 
 #' @export
-graph.isomorphic.bliss <- function(graph1, graph2, colors1, colors2, sh="fm") {
+graph.isomorphic.bliss <- function(graph1, graph2, colors1, colors2, sh=c("fm", "f", "fs", "fl", "flm", "fsm")) {
   # Argument checks
   if (!is_igraph(graph1)) { stop("Not a graph object") }
   if (!is_igraph(graph2)) { stop("Not a graph object") }
@@ -2036,7 +2020,7 @@ graph.isomorphic.bliss <- function(graph1, graph2, colors1, colors2, sh="fm") {
 }
 
 #' @export
-automorphisms <- function(graph, colors, sh="fm") {
+automorphisms <- function(graph, colors, sh=c("fm", "f", "fs", "fl", "flm", "fsm")) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
   if (missing(colors)) {
@@ -2059,7 +2043,7 @@ automorphisms <- function(graph, colors, sh="fm") {
 }
 
 #' @export
-automorphism_group <- function(graph, colors, sh="fm", details=FALSE) {
+automorphism_group <- function(graph, colors, sh=c("fm", "f", "fs", "fl", "flm", "fsm"), details=FALSE) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
   if (missing(colors)) {

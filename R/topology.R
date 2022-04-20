@@ -238,14 +238,11 @@ graph.subisomorphic.lad <- function(pattern, target, domains=NULL,
 #' canonical forms are compared.
 #' Extra arguments:
 #' \describe{
-#'   \item{sh1}{Character constant, the heuristics to use in the BLISS
-#'     algorithm, for \code{graph1}. See the \code{sh} argument of
-#'     \code{\link{canonical_permutation}} for possible values.}
-#'   \item{sh2}{Character constant, the heuristics to use in the BLISS
-#'     algorithm, for \code{graph2}. See the \code{sh} argument of
+#'   \item{sh}{Character constant, the heuristics to use in the BLISS
+#'     algorithm for \code{graph1} and \code{graph2}. See the \code{sh} argument of
 #'     \code{\link{canonical_permutation}} for possible values.}
 #' }
-#' \code{sh1} and \code{sh2} default to \sQuote{fm}.
+#' \code{sh} defaults to \sQuote{fm}.
 #'
 #' @param graph1 The first graph.
 #' @param graph2 The second graph.
@@ -654,8 +651,8 @@ subgraph_isomorphisms <- function(pattern, target,
 #' The isomorphism class is a non-negative integer number.
 #' Graphs (with the same number of vertices) having the same isomorphism
 #' class are isomorphic and isomorphic graphs always have the same
-#' isomorphism class. Currently it can handle only graphs with 3 or 4
-#' vertices.
+#' isomorphism class. Currently it can handle directed graphs with 3 or 4
+#' vertices and undirected graphs with 3 to 6 vertices.
 #'
 #' @param graph The input graph.
 #' @param v Optionally a vertex sequence. If not missing, then an induced
@@ -691,8 +688,8 @@ isomorphism_class <- function(graph, v) {
 #' The isomorphism class is a non-negative integer number.
 #' Graphs (with the same number of vertices) having the same isomorphism
 #' class are isomorphic and isomorphic graphs always have the same
-#' isomorphism class. Currently it can handle only graphs with 3 or 4
-#' vertices.
+#' isomorphism class. Currently it can handle directed graphs with 3 or 4
+#' vertices and undirected graphd with 3 to 6 vertices.
 #'
 #' @param size The number of vertices in the graph.
 #' @param number The isomorphism class.
@@ -749,9 +746,9 @@ graph_from_isomorphism_class <- graph_from_isomorphism_class
 #' \item{"nof_bad_nodes"}{Number of bad nodes.}
 #' \item{"nof_canupdates"}{Number of canrep updates.}
 #' \item{"max_level"}{Maximum level.} \item{"group_size"}{The size
-#' of the automorphism group of the input graph, as a string. This number is
-#' exact if igraph was compiled with the GMP library, and approximate
-#' otherwise.} } }
+#' of the automorphism group of the input graph, as a string. The string
+#' representation is necessary because the group size can easily exceed
+#' values that are exactly representable in floating point.} } }
 #' @author Tommi Junttila for BLISS, Gabor Csardi
 #' \email{csardi.gabor@@gmail.com} for the igraph and R interfaces.
 #' @seealso \code{\link{permute}} to apply a permutation to a graph,

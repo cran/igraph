@@ -1,4 +1,28 @@
-# Unreleased
+# igraph 1.3.1
+
+Fixed:
+
+- `graph_from_adjacency_matrix()` now works with sparse matrices even if the
+  cell values in the sparse matrix are unspecified.
+- Fixed crash in `cluster_walktrap()` when `modularity=FALSE` and `membership=FALSE`
+- `edge_attr()` does not ignore its `index=...` argument any more.
+- `automorphisms()`, `automorphism_group()` and `canonical_permutation()` now
+  allow all possible values supported by the C core in the `sh` argument.
+  Earlier versions supported only `"fm"`.
+- The `vertex.frame.width` plotting parameter now allows zero and negative
+  values; these will simply remove the outline of the corresponding vertex.
+- The documentation of the `sh` argument of the BLISS isomorphism algorithm in
+  `isomorphic()` was fixed; earlier versions incorrectly referred to `sh1` and
+  `sh2`.
+- `dominator_tree()` now conforms to its documentation with respect to the
+  `dom` component of the result: it contains the indices of the dominator
+  vertices for each vertex and -1 for the root of the dominator tree.
+- Mentions of the `"power"` algorithm of `page_rank()` have been removed from
+  the documentation, as this method is no longer available.
+- Several other documentation fixes to bring the docs up to date with new behaviours
+  in igraph 1.3.
+
+# igraph 1.3.0
 
 The C core is updated to 0.9.7, fixing a range of bugs and introducing a number
 of new functions.
@@ -27,7 +51,7 @@ Added:
 - `bridges()` finds the bridges (cut-edges) of a graph
 - The frame width of circle, rectangle and square vertex shapes can now be
   adjusted on plots with the `frame.width` vertex attribute or the
-  `vertex.frame.width` keyword argumen, thanks to @simoncarrignon .
+  `vertex.frame.width` keyword argument, thanks to @simoncarrignon .
   See PR #500 for more details.
 - `automorphism_group()` returns a possible (not necessarily minimal)
   generating set of the automorphism group of a graph.
