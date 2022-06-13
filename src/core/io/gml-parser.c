@@ -74,6 +74,7 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
+     END = 0,
      STRING = 258,
      NUM = 259,
      KEYWORD = 260,
@@ -84,6 +85,7 @@
    };
 #endif
 /* Tokens.  */
+#define END 0
 #define STRING 258
 #define NUM 259
 #define KEYWORD 260
@@ -185,7 +187,7 @@ typedef union YYSTYPE
    double real;
 }
 /* Line 193 of yacc.c.  */
-#line 189 "yy.tab.c"
+#line 191 "yy.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -210,7 +212,7 @@ typedef struct YYLTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 214 "yy.tab.c"
+#line 216 "yy.tab.c"
 
 #ifdef short
 # undef short
@@ -498,8 +500,8 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   119,   119,   120,   123,   124,   126,   128,   130,   132,
-     136,   139,   142
+       0,   120,   120,   121,   124,   125,   127,   129,   131,   133,
+     137,   140,   143
 };
 #endif
 
@@ -508,9 +510,9 @@ static const yytype_uint8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "STRING", "NUM", "KEYWORD", "LISTOPEN",
-  "LISTCLOSE", "EOFF", "ERROR", "$accept", "input", "list", "keyvalue",
-  "key", "num", "string", 0
+  "\"end of file\"", "error", "$undefined", "STRING", "NUM", "KEYWORD",
+  "LISTOPEN", "LISTCLOSE", "EOFF", "ERROR", "$accept", "input", "list",
+  "keyvalue", "key", "num", "string", 0
 };
 #endif
 
@@ -1112,29 +1114,29 @@ yydestruct (yymsg, yytype, yyvaluep, yylocationp, context)
   switch (yytype)
     {
       case 5: /* "KEYWORD" */
-#line 114 "src/core/io/gml-parser.y"
+#line 115 "src/core/io/gml-parser.y"
 	{ IGRAPH_FREE((yyvaluep->str).s); };
-#line 1118 "yy.tab.c"
+#line 1120 "yy.tab.c"
 	break;
       case 12: /* "list" */
-#line 115 "src/core/io/gml-parser.y"
+#line 116 "src/core/io/gml-parser.y"
 	{ igraph_gml_tree_destroy((yyvaluep->tree)); };
-#line 1123 "yy.tab.c"
+#line 1125 "yy.tab.c"
 	break;
       case 13: /* "keyvalue" */
-#line 115 "src/core/io/gml-parser.y"
+#line 116 "src/core/io/gml-parser.y"
 	{ igraph_gml_tree_destroy((yyvaluep->tree)); };
-#line 1128 "yy.tab.c"
+#line 1130 "yy.tab.c"
 	break;
       case 14: /* "key" */
-#line 114 "src/core/io/gml-parser.y"
+#line 115 "src/core/io/gml-parser.y"
 	{ IGRAPH_FREE((yyvaluep->str).s); };
-#line 1133 "yy.tab.c"
+#line 1135 "yy.tab.c"
 	break;
       case 16: /* "string" */
-#line 114 "src/core/io/gml-parser.y"
+#line 115 "src/core/io/gml-parser.y"
 	{ IGRAPH_FREE((yyvaluep->str).s); };
-#line 1138 "yy.tab.c"
+#line 1140 "yy.tab.c"
 	break;
 
       default:
@@ -1457,60 +1459,60 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 119 "src/core/io/gml-parser.y"
+#line 120 "src/core/io/gml-parser.y"
     { context->tree=(yyvsp[(1) - (1)].tree); ;}
     break;
 
   case 3:
-#line 120 "src/core/io/gml-parser.y"
+#line 121 "src/core/io/gml-parser.y"
     { context->tree=(yyvsp[(1) - (2)].tree); ;}
     break;
 
   case 4:
-#line 123 "src/core/io/gml-parser.y"
+#line 124 "src/core/io/gml-parser.y"
     { (yyval.tree)=(yyvsp[(1) - (1)].tree); ;}
     break;
 
   case 5:
-#line 124 "src/core/io/gml-parser.y"
+#line 125 "src/core/io/gml-parser.y"
     { (yyval.tree)=igraph_i_gml_merge((yyvsp[(1) - (2)].tree), (yyvsp[(2) - (2)].tree)); ;}
     break;
 
   case 6:
-#line 127 "src/core/io/gml-parser.y"
+#line 128 "src/core/io/gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_numeric((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].real)); ;}
     break;
 
   case 7:
-#line 129 "src/core/io/gml-parser.y"
+#line 130 "src/core/io/gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_string((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].str).s, (yyvsp[(2) - (2)].str).len); ;}
     break;
 
   case 8:
-#line 131 "src/core/io/gml-parser.y"
+#line 132 "src/core/io/gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_list((yyvsp[(1) - (4)].str).s, (yyvsp[(1) - (4)].str).len, (yyvsp[(3) - (4)].tree)); ;}
     break;
 
   case 9:
-#line 133 "src/core/io/gml-parser.y"
+#line 134 "src/core/io/gml-parser.y"
     { (yyval.tree)=igraph_i_gml_make_numeric2((yyvsp[(1) - (2)].str).s, (yyvsp[(1) - (2)].str).len, (yyvsp[(2) - (2)].str).s, (yyvsp[(2) - (2)].str).len); ;}
     break;
 
   case 10:
-#line 136 "src/core/io/gml-parser.y"
+#line 137 "src/core/io/gml-parser.y"
     { igraph_i_gml_get_keyword(igraph_gml_yyget_text(scanner),
                                         igraph_gml_yyget_leng(scanner),
                                         &(yyval.str)); USE((yyvsp[(1) - (1)].str)); ;}
     break;
 
   case 11:
-#line 139 "src/core/io/gml-parser.y"
+#line 140 "src/core/io/gml-parser.y"
     { (yyval.real)=igraph_i_gml_get_real(igraph_gml_yyget_text(scanner),
                                      igraph_gml_yyget_leng(scanner)); ;}
     break;
 
   case 12:
-#line 142 "src/core/io/gml-parser.y"
+#line 143 "src/core/io/gml-parser.y"
     { igraph_i_gml_get_string(igraph_gml_yyget_text(scanner),
                                          igraph_gml_yyget_leng(scanner),
                                          &(yyval.str)); ;}
@@ -1518,7 +1520,7 @@ yyreduce:
 
 
 /* Line 1267 of yacc.c.  */
-#line 1522 "yy.tab.c"
+#line 1524 "yy.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1738,7 +1740,7 @@ yyreturn:
 }
 
 
-#line 146 "src/core/io/gml-parser.y"
+#line 147 "src/core/io/gml-parser.y"
 
 
 int igraph_gml_yyerror(YYLTYPE* locp, igraph_i_gml_parsedata_t *context,

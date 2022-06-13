@@ -47,10 +47,14 @@ estimate_betweenness <- function(graph, vids=V(graph), directed=TRUE, cutoff, we
 #' 
 #' The edge betweenness of edge \code{e} is defined by
 #' 
-#' \deqn{\sum_{i\ne j} g{iej}/g_{ij}.}{sum( g_iej / g_ij, i!=j).}
+#' \deqn{\sum_{i\ne j} g_{iej}/g_{ij}.}{sum( g_iej / g_ij, i!=j).}
 #' 
 #' \code{betweenness} calculates vertex betweenness, \code{edge_betweenness}
 #' calculates edge betweenness.
+#'
+#' Here \eqn{g_{ij}}{g_ij} is the total number of shortest paths between vertices
+#' \eqn{i} and \eqn{j} while \eqn{g_{ivj}} is the number of those shortest paths
+#' which pass though vertex \eqn{v}.
 #' 
 #' Both functions allow you to consider only paths of length \code{cutoff} or
 #' smaller; this can be run for larger graphs, as the running time is not
@@ -128,7 +132,7 @@ betweenness <- function(graph, v=V(graph), directed=TRUE, weights=NULL,
   }
   cutoff <- as.numeric(cutoff)
   if (cutoff == 0) {
-    warning("`cutoff' == 0 will be treated literally from igraph 1.4. If you want unrestricted edge betweenness, set it to -1")
+    warning("`cutoff' == 0 will be treated literally from igraph 1.4. If you want unrestricted betweenness, set it to -1")
     cutoff <- -1
   }
   if (!missing(nobigint)) {
@@ -192,18 +196,17 @@ estimate_edge_betweenness <- function(graph, e=E(graph),
 #' Closeness centrality measures how many steps is required to access every other
 #' vertex from a given vertex.
 #' 
-#' The closeness centrality of a vertex is defined by the inverse of the
-#' average length of the shortest paths to/from all the other vertices in the
-#' graph:
+#' The closeness centrality of a vertex is defined as the inverse of the
+#' sum of distances to all the other vertices in the graph:
 #' 
-#' \deqn{\frac{1}{\sum_{i\ne v} d_vi}}{1/sum( d(v,i), i != v)}
+#' \deqn{\frac{1}{\sum_{i\ne v} d_{vi}}}{1/sum( d(v,i), i != v)}
 #' 
 #' If there is no (directed) path between vertex \code{v} and \code{i}, then
-#' the total number of vertices is used in the formula instead of the path
-#' length.
+#' \code{i} is omitted from the calculation. If no other vertices are reachable
+#' from \code{v}, then its closeness is returned as NaN.
 #' 
 #" You may use the \code{cutoff} argument to consider only paths of length
-#' \code{cutoff} or smaller. this can be run for larger graphs, as the running
+#' \code{cutoff} or smaller. This can be run for larger graphs, as the running
 #' time is not quadratic (if \code{cutoff} is small). If \code{cutoff} is zero
 #' or negative (which is the default), then the function calculates the exact
 #' closeness scores. Using zero as a cutoff is \emph{deprecated} and future
@@ -226,14 +229,15 @@ estimate_edge_betweenness <- function(graph, e=E(graph),
 #' \emph{all} uses undirected paths. This argument is ignored for undirected
 #' graphs.
 #' @param normalized Logical scalar, whether to calculate the normalized
-#' closeness. Normalization is performed by multiplying the raw closeness by
-#' \eqn{n-1}, where \eqn{n} is the number of vertices in the graph.
+#' closeness, i.e. the inverse average distance to all reachable vertices.
+#' The non-normalized closeness is the inverse of the sum of distances to
+#' all reachable vertices.
 #' @param weights Optional positive weight vector for calculating weighted
 #' closeness. If the graph has a \code{weight} edge attribute, then this is
 #' used by default. Weights are used for calculating weighted shortest
 #' paths, so they are interpreted as distances.
 #' @param cutoff The maximum path length to consider when calculating the
-#' betweenness. If zero or negative then there is no such limit.
+#' closeness. If zero or negative then there is no such limit.
 #' @return Numeric vector with the closeness values of all the vertices in
 #' \code{v}.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
@@ -269,7 +273,7 @@ closeness <- function(graph, vids=V(graph),
   normalized <- as.logical(normalized)
   cutoff <- as.numeric(cutoff)
   if (cutoff == 0) {
-    warning("`cutoff' == 0 will be treated literally from igraph 1.4. If you want unrestricted edge betweenness, set it to -1")
+    warning("`cutoff' == 0 will be treated literally from igraph 1.4. If you want unrestricted closeness, set it to -1")
     cutoff <- -1
   }
 
@@ -1025,7 +1029,7 @@ page_rank <- page_rank
 #' this is used by default. Weights are used for calculating weighted shortest
 #' paths, so they are interpreted as distances.
 #' @param cutoff The maximum path length to consider when calculating the
-#' betweenness. There is no such limit when the cutoff is negative. Note that
+#' harmonic centrality. There is no such limit when the cutoff is negative. Note that
 #' zero cutoff means that only paths of at most length 0 are considered.
 #' @return Numeric vector with the harmonic centrality scores of all the vertices in
 #' \code{v}.

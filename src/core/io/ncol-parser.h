@@ -39,12 +39,14 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
+     END = 0,
      ALNUM = 258,
      NEWLINE = 259,
      ERROR = 260
    };
 #endif
 /* Tokens.  */
+#define END 0
 #define ALNUM 258
 #define NEWLINE 259
 #define ERROR 260
@@ -60,7 +62,7 @@ typedef union YYSTYPE
   double weightnum;
 }
 /* Line 1529 of yacc.c.  */
-#line 64 "yy.tab.h"
+#line 66 "yy.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

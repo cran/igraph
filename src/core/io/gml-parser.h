@@ -39,6 +39,7 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
+     END = 0,
      STRING = 258,
      NUM = 259,
      KEYWORD = 260,
@@ -49,6 +50,7 @@
    };
 #endif
 /* Tokens.  */
+#define END 0
 #define STRING 258
 #define NUM 259
 #define KEYWORD 260
@@ -72,7 +74,7 @@ typedef union YYSTYPE
    double real;
 }
 /* Line 1529 of yacc.c.  */
-#line 76 "yy.tab.h"
+#line 78 "yy.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

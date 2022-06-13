@@ -39,6 +39,7 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
+     END = 0,
      NUM = 258,
      NEWLINE = 259,
      DL = 260,
@@ -56,6 +57,7 @@
    };
 #endif
 /* Tokens.  */
+#define END 0
 #define NUM 258
 #define NEWLINE 259
 #define DL 260
@@ -82,7 +84,7 @@ typedef union YYSTYPE
   igraph_real_t real;
 }
 /* Line 1529 of yacc.c.  */
-#line 86 "yy.tab.h"
+#line 88 "yy.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
