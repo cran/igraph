@@ -514,10 +514,10 @@ shortest_paths <- function(graph, from, to=V(graph),
 
   if (igraph_opt("return.vs.es")) {
     if (!is.null(res$vpath)) {
-      res$vpath <- lapply(res$vpath, create_vs, graph = graph)
+      res$vpath <- lapply(res$vpath, unsafe_create_vs, graph = graph, verts = V(graph))
     }
     if (!is.null(res$epath)) {
-      res$epath <- lapply(res$epath, create_es, graph = graph)
+      res$epath <- lapply(res$epath, unsafe_create_es, graph = graph, es = E(graph))
     }
     if (!is.null(res$predecessors)) {
       res$predecessors <- create_vs(res$predecessors, graph = graph,
@@ -570,7 +570,7 @@ all_shortest_paths <- function(graph, from,
   }       
 
   if (igraph_opt("return.vs.es")) {
-    res$res <- lapply(res$res, create_vs, graph = graph)
+    res$res <- lapply(res$res, unsafe_create_vs, graph = graph, verts = V(graph))
   }
 
   res
@@ -1062,13 +1062,15 @@ ego_size <- function(graph, order = 1, nodes=V(graph),
 #' steps are counted. \sQuote{"all"} ignores the direction of the edges. This
 #' argument is ignored for undirected graphs.
 #' @param mindist The minimum distance to include the vertex in the result.
-#' @return \code{ego_size} returns with an integer vector.
-#' 
-#' \code{ego} returns with a list of integer vectors.
-#' 
-#' \code{make_ego_graph} returns with a list of graphs.
-#' 
-#' \code{connect} returns with a new graph object.
+#' @return
+#' \itemize{
+#'   \item{\code{ego_size} returns with an integer vector.}
+#'   \item{\code{ego} returns A list of \code{igraph.vs} or a list of numeric
+#'         vectors depending on the value of \code{igraph_opt("return.vs.es")},
+#'         see details for performance characteristics.}
+#'   \item{\code{make_ego_graph} returns with a list of graphs.}
+#'   \item{\code{connect} returns with a new graph object.}
+#' }
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}, the first version was
 #' done by Vincent Matossian
 #' @export
@@ -1108,7 +1110,7 @@ ego <- function(graph, order = 1, nodes=V(graph),
   res <- lapply(res, function(x) x+1)
 
   if (igraph_opt("return.vs.es")) {
-    res <- lapply(res, create_vs, graph = graph)
+    res <- lapply(res, unsafe_create_vs, graph = graph, verts = V(graph))
   }
 
   res
@@ -1675,8 +1677,8 @@ dfs <- function(graph, root, mode=c("out", "in", "all", "total"),
   if (father)    res$father    <- res$father+1
 
   if (igraph_opt("return.vs.es")) {
-    if (order)     res$order      <- V(graph)[res$order, na_ok = TRUE]
-    if (order.out) res$order.out  <- V(graph)[res$order.out, na_ok = TRUE]
+    if (order)     res$order      <- V(graph)[.env$res$order, na_ok = TRUE]
+    if (order.out) res$order.out  <- V(graph)[.env$res$order.out, na_ok = TRUE]
     if (father)    res$father     <- create_vs(graph, res$father, na_ok = TRUE)
   }
 

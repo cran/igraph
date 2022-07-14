@@ -59,8 +59,15 @@ negative numeric vectors, logical vectors, character vectors:
 
 When indexing edge sequences, edge attributes can be referred
 to simply by using their names. E.g. if a graph has a \code{weight} edge
-attribute, then \code{E(G)[weight > 1]} selects all edges with a larger
-than one weight. See more examples below.
+attribute, then \code{E(G)[weight > 1]} selects all edges with a weight
+larger than one. See more examples below. Note that attribute names mask the
+names of variables present in the calling environment; if you need to look up
+a variable and you do not want a similarly named edge attribute to mask it,
+use the \code{.env} pronoun to perform the name lookup in the calling
+environment. In other words, use \code{E(g)[.env$weight > 1]} to make sure
+that \code{weight} is looked up from the calling environment even if there is
+an edge attribute with the same name. Similarly, you can use \code{.data} to
+match attribute names only.
 }
 
 \section{Special functions}{
@@ -92,21 +99,31 @@ examples below.
 }
 
 \examples{
-# special operators for indexing based on graph structure
+# -----------------------------------------------------------------
+# Special operators for indexing based on graph structure
 g <- sample_pa(100, power = 0.3)
 E(g) [ 1:3 \%--\% 2:6 ]
 E(g) [ 1:5 \%->\% 1:6 ]
 E(g) [ 1:3 \%<-\% 2:6 ]
 
-# the edges along the diameter
+# -----------------------------------------------------------------
+# The edges along the diameter
 g <- sample_pa(100, directed = FALSE)
 d <- get_diameter(g)
 E(g, path = d)
 
-# select edges based on attributes
+# -----------------------------------------------------------------
+# Select edges based on attributes
 g <- sample_gnp(20, 3/20) \%>\%
   set_edge_attr("weight", value = rnorm(gsize(.)))
 E(g)[[ weight < 0 ]]
+
+# Indexing with a variable whose name matches the name of an attribute
+# may fail; use .env to force the name lookup in the parent environment
+E(g)$x <- E(g)$weight
+x <- 2
+E(g)[.env$x]
+
 }
 \seealso{
 Other vertex and edge sequences: 

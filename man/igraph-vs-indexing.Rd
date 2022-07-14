@@ -61,7 +61,14 @@ negative numeric vectors, logical vectors, character vectors:
 When indexing vertex sequences, vertex attributes can be referred
 to simply by using their names. E.g. if a graph has a \code{name} vertex
 attribute, then \code{V(g)[name == "foo"]} is equivalent to
-\code{V(g)[V(g)$name == "foo"]}. See examples below.
+\code{V(g)[V(g)$name == "foo"]}. See more examples below. Note that attribute
+names mask the names of variables present in the calling environment; if
+you need to look up a variable and you do not want a similarly named
+vertex attribute to mask it, use the \code{.env} pronoun to perform the
+name lookup in the calling environment. In other words, use
+\code{V(g)[.env$name == "foo"]} to make sure that \code{name} is looked up
+from the calling environment even if there is a vertex attribute with the
+same name. Similarly, you can use \code{.data} to match attribute names only.
 }
 
 \section{Special functions}{
@@ -118,6 +125,19 @@ g <- graph(~ A -+ B, B -+ C:D, D -+ B)
 V(g)[ .nei( c('B', 'D') ) ]
 V(g)[ .nei( c('B', 'D'), "in" ) ]
 V(g)[ .nei( c('B', 'D'), "out" ) ]
+
+# -----------------------------------------------------------------
+# Resolving attributes
+g <- graph(~ A -+ B, B -+ C:D, D -+ B)
+V(g)$color <- c("red", "red", "green", "green")
+V(g)[ color == "red" ]
+
+# Indexing with a variable whose name matches the name of an attribute
+# may fail; use .env to force the name lookup in the parent environment
+V(g)$x <- 10:13
+x <- 2
+V(g)[.env$x]
+
 }
 \seealso{
 Other vertex and edge sequences: 

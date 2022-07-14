@@ -219,6 +219,31 @@ create_vs <- function(graph, idx, na_ok = FALSE) {
   add_vses_graph_ref(res, graph)
 }
 
+# Internal function to quickly convert integer vectors to igraph.vs
+# for use after C code, when NA and bounds checking is unnecessary.
+# Also allows us to construct V(graph) outside the function call in
+# lapply() so it's created only once.
+unsafe_create_vs <- function(graph, idx, verts = NULL){
+  if (is.null(verts)) {
+    verts <- V(graph)
+  }
+  res <- simple_vs_index(verts, idx, na_ok = TRUE)
+  add_vses_graph_ref(res, graph)  
+}
+
+# Internal function to quickly convert integer vectors to igraph.es
+# for use after C code, when NA and bounds checking is unnecessary
+# Also allows us to construct V(graph) outside the function call in
+# lapply() so it's created only once.
+unsafe_create_es <- function(graph, idx, es = NULL){
+  if (is.null(es)) {
+    es <- E(graph)
+  }
+  res <- simple_es_index(es, idx, na_ok = TRUE)
+  add_vses_graph_ref(res, graph)
+}
+
+
 #' Edges of a graph
 #'
 #' An edge sequence is a vector containing numeric edge ids, with a special
@@ -361,7 +386,14 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
 #' When indexing vertex sequences, vertex attributes can be referred
 #' to simply by using their names. E.g. if a graph has a \code{name} vertex
 #' attribute, then \code{V(g)[name == "foo"]} is equivalent to
-#' \code{V(g)[V(g)$name == "foo"]}. See examples below.
+#' \code{V(g)[V(g)$name == "foo"]}. See more examples below. Note that attribute
+#' names mask the names of variables present in the calling environment; if
+#' you need to look up a variable and you do not want a similarly named
+#' vertex attribute to mask it, use the \code{.env} pronoun to perform the
+#' name lookup in the calling environment. In other words, use
+#' \code{V(g)[.env$name == "foo"]} to make sure that \code{name} is looked up
+#' from the calling environment even if there is a vertex attribute with the
+#' same name. Similarly, you can use \code{.data} to match attribute names only.
 #'
 #' @section Special functions:
 #' There are some special igraph functions that can be used only
@@ -427,6 +459,19 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
 #' V(g)[ .nei( c('B', 'D') ) ]
 #' V(g)[ .nei( c('B', 'D'), "in" ) ]
 #' V(g)[ .nei( c('B', 'D'), "out" ) ]
+#'
+#' # -----------------------------------------------------------------
+#' # Resolving attributes
+#' g <- graph(~ A -+ B, B -+ C:D, D -+ B)
+#' V(g)$color <- c("red", "red", "green", "green")
+#' V(g)[ color == "red" ]
+#'
+#' # Indexing with a variable whose name matches the name of an attribute
+#' # may fail; use .env to force the name lookup in the parent environment
+#' V(g)$x <- 10:13
+#' x <- 2
+#' V(g)[.env$x]
+#'
 
 `[.igraph.vs` <- function(x, ..., na_ok = FALSE) {
 
@@ -472,15 +517,15 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
                  as.numeric(mode))
     tmp[as.numeric(x)]
   }
-  nei <- function(...) { .nei(...) }
+  nei <- function(...) { .Deprecated(".nei") ; .nei(...) }
   .innei <- function(v, mode=c("in", "all", "out", "total")) {
     .nei(v, mode = mode[1])
   }
-  innei <- function(...) { .innei(...) }
+  innei <- function(...) { .Deprecated(".innei") ; .innei(...) }
   .outnei <- function(v, mode=c("out", "all", "in", "total")) {
     .nei(v, mode = mode[1])
   }
-  outnei <- function(...) { .outnei(...) }
+  outnei <- function(...) { .Deprecated(".outnei") ; .outnei(...) }
   .inc <- function(e) {
     ## TRUE iff the vertex (in the vs) is incident
     ## to at least one edge in e
@@ -492,8 +537,8 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
                  as.numeric(3))
     tmp[as.numeric(x)]
   }
-  inc <- function(...) { .inc(...) }
-  adj <- function(...) { .inc(...) }
+  inc <- function(...) { .Deprecated(".inc") ; .inc(...) }
+  adj <- function(...) { .Deprecated(".inc") ; .inc(...) }
   .from <- function(e) {
     ## TRUE iff the vertex is the source of at least one edge in e
     if (is.logical(e)) {
@@ -504,7 +549,7 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
                  as.numeric(1))
     tmp[as.numeric(x)]
   }
-  from <- function(...) { .from(...) }
+  from <- function(...) { .Deprecated(".from") ; .from(...) }
   .to <- function(e) {
     ## TRUE iff the vertex is the target of at least one edge in e
     if (is.logical(e)) {
@@ -515,7 +560,7 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
                  as.numeric(2))
     tmp[as.numeric(x)]
   }
-  to <- function(...) { .to(...) }
+  to <- function(...) { .Deprecated(".to") ; .to(...) }
 
   graph <- get_vs_graph(x)
 
@@ -528,13 +573,22 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
     xvec <- as.vector(x)
     for (i in seq_along(attrs)) attrs[[i]] <- attrs[[i]][xvec]
 
+    env <- parent.frame()
     res <- lazy_eval(
       args,
-      data =  c(attrs, .nei = .nei, nei = nei, .innei = .innei,
-        innei = innei, .outnei = .outnei,  outnei = outnei, adj = adj,
-        .inc = .inc, inc = inc, .from = .from, from = from, .to = .to,
-        to = to)
+      data = c(
+        attrs,
+        .nei = .nei, nei = nei,
+        .innei = .innei, innei = innei,
+        .outnei = .outnei, outnei = outnei,
+        .inc = .inc, inc = inc, adj = adj,
+        .from = .from, from = from,
+        .to = .to, to = to,
+        .env = env,
+        .data = list(attrs)
+      )
     )
+
     res <- lapply(res, function(ii) {
       if (is.null(ii)) return(NULL)
       ii <- simple_vs_index(x, ii, na_ok)
@@ -628,7 +682,7 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
   res
 }
 
-simple_es_index <- function(x, i) {
+simple_es_index <- function(x, i, na_ok = FALSE) {
   if (!is.null(attr(x, "vnames"))) {
     wh1 <- structure(seq_along(x), names = names(x))[i]
     wh2 <- structure(seq_along(x), names = attr(x, "vnames"))[i]
@@ -639,8 +693,7 @@ simple_es_index <- function(x, i) {
   } else {
     res <- unclass(x)[i]
   }
-  if (any(is.na(res))) stop('Unknown edge selected')
-
+  if (!na_ok && any(is.na(res))) stop('Unknown edge selected')
   attr(res, "env") <- attr(x, "env")
   attr(res, "graph") <- attr(x, "graph")
   class(res) <- "igraph.es"
@@ -684,8 +737,15 @@ simple_es_index <- function(x, i) {
 #' @section Edge attributes:
 #' When indexing edge sequences, edge attributes can be referred
 #' to simply by using their names. E.g. if a graph has a \code{weight} edge
-#' attribute, then \code{E(G)[weight > 1]} selects all edges with a larger
-#' than one weight. See more examples below.
+#' attribute, then \code{E(G)[weight > 1]} selects all edges with a weight
+#' larger than one. See more examples below. Note that attribute names mask the
+#' names of variables present in the calling environment; if you need to look up
+#' a variable and you do not want a similarly named edge attribute to mask it,
+#' use the \code{.env} pronoun to perform the name lookup in the calling
+#' environment. In other words, use \code{E(g)[.env$weight > 1]} to make sure
+#' that \code{weight} is looked up from the calling environment even if there is
+#' an edge attribute with the same name. Similarly, you can use \code{.data} to
+#' match attribute names only.
 #'
 #' @section Special functions:
 #' There are some special igraph functions that can be used
@@ -725,21 +785,31 @@ simple_es_index <- function(x, i) {
 #' @family vertex and edge sequences
 #' @family vertex and edge sequence operations
 #' @examples
-#' # special operators for indexing based on graph structure
+#' # -----------------------------------------------------------------
+#' # Special operators for indexing based on graph structure
 #' g <- sample_pa(100, power = 0.3)
 #' E(g) [ 1:3 %--% 2:6 ]
 #' E(g) [ 1:5 %->% 1:6 ]
 #' E(g) [ 1:3 %<-% 2:6 ]
 #'
-#' # the edges along the diameter
+#' # -----------------------------------------------------------------
+#' # The edges along the diameter
 #' g <- sample_pa(100, directed = FALSE)
 #' d <- get_diameter(g)
 #' E(g, path = d)
 #'
-#' # select edges based on attributes
+#' # -----------------------------------------------------------------
+#' # Select edges based on attributes
 #' g <- sample_gnp(20, 3/20) %>%
 #'   set_edge_attr("weight", value = rnorm(gsize(.)))
 #' E(g)[[ weight < 0 ]]
+#'
+#' # Indexing with a variable whose name matches the name of an attribute
+#' # may fail; use .env to force the name lookup in the parent environment
+#' E(g)$x <- E(g)$weight
+#' x <- 2
+#' E(g)[.env$x]
+#'
 
 `[.igraph.es` <- function(x, ...) {
 
@@ -761,8 +831,8 @@ simple_es_index <- function(x, i) {
                  as.numeric(3))
     tmp[ as.numeric(x) ]
   }
-  adj <- function(...) { .inc(...) }
-  inc <- function(...) { .inc(...) }
+  adj <- function(...) { .Deprecated(".inc") ; .inc(...) }
+  inc <- function(...) { .Deprecated(".inc") ; .inc(...) }
   .from <- function(v) {
     ## TRUE iff the edge originates from at least one vertex in v
     on.exit(.Call(C_R_igraph_finalizer) )
@@ -770,7 +840,7 @@ simple_es_index <- function(x, i) {
                  as.numeric(1))
     tmp[ as.numeric(x) ]
   }
-  from <- function(...) { .from(...) }
+  from <- function(...) { .Deprecated(".from") ; .from(...) }
   .to <- function(v) {
     ## TRUE iff the edge points to at least one vertex in v
     on.exit(.Call(C_R_igraph_finalizer) )
@@ -778,7 +848,7 @@ simple_es_index <- function(x, i) {
                  as.numeric(2))
     tmp[ as.numeric(x) ]
   }
-  to <- function(...) { .to(...) }
+  to <- function(...) { .Deprecated(".to") ; .to(...) }
 
   graph <- get_es_graph(x)
 
@@ -791,17 +861,23 @@ simple_es_index <- function(x, i) {
     xvec <- as.vector(x)
     for (i in seq_along(attrs)) attrs[[i]] <- attrs[[i]][xvec]
 
+    env <- parent.frame()
     res <- lazy_eval(
-        args,
-      data = c(attrs, .inc = .inc, inc = inc, adj = adj, .from = .from,
-        from = from, .to = .to, to = to,
-        .igraph.from = list(.Call(C_R_igraph_mybracket,
-          graph, 3L)[ as.numeric(x) ]),
-        .igraph.to = list(.Call(C_R_igraph_mybracket,
-          graph, 4L)[as.numeric(x)]),
+      args,
+      data = c(
+        attrs,
+        .inc = .inc, inc = inc, adj = adj,
+        .from = .from, from = from,
+        .to = .to, to = to,
+        .igraph.from = list(.Call(C_R_igraph_mybracket, graph, 3L)[ as.numeric(x) ]),
+        .igraph.to = list(.Call(C_R_igraph_mybracket, graph, 4L)[as.numeric(x)]),
         .igraph.graph = list(graph),
-        `%--%`=`%--%`, `%->%`=`%->%`, `%<-%`=`%<-%`)
+        `%--%`=`%--%`, `%->%`=`%->%`, `%<-%`=`%<-%`,
+        .env = env,
+        .data = list(attrs)
+      )
     )
+    
     res <- lapply(res, function(ii) {
       if (is.null(ii)) return(NULL)
       ii <- simple_es_index(x, ii)
