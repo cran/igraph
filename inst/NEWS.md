@@ -1,3 +1,25 @@
+# igraph 1.3.4
+
+Added:
+
+- `sample_asym_pref()` now returns the generated types of the vertices in the
+  vertex attributes named `outtype` and `intype`.
+
+Fixed:
+
+- `layout_nicely()` does not recurse infinitely any more if it is assigned to
+  the `layout` attribute of a graph
+
+- `layout_nicely()` now ignores edge weights when there are non-positive
+  edge weights. This is needed because igraph 1.3.3 started validating edge
+  weights in `layout_with_fr()` and `layout_with_drl()`, resulting in
+  errors when `layout_nicely()` was used on weighted graphs with negative
+  weights. Since `layout_nicely()` is the default layout algorithm for
+  `plot()`, most users were not even aware that they were using the FR or
+  DrL layouts behind the scenes. Now the policy is that `layout_nicely()`
+  attempts to get the job done without errors if possible, even if that means
+  that edge weights must be ignored. A warning is printed if this is the case.
+
 # igraph 1.3.3
 
 Added:

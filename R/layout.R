@@ -540,6 +540,20 @@ layout.circle <- function(..., params = list()) {
 #' Fruchterman-Reingold layout is used, by calling \code{layout_with_fr}.
 #' \item Otherwise the DrL layout is used, \code{layout_with_drl} is called.  }
 #'
+#' In layout algorithm implementations, an argument named \sQuote{weights} is
+#' typically used to specify the weights of the edges if the layout algorithm
+#' supports them. In this case, omitting \sQuote{weights} or setting it to
+#' \code{NULL} will make igraph use the 'weight' edge attribute from the graph
+#' if it is present. However, most layout algorithms do not support non-positive
+#' weights, so \code{layout_nicely} would fail if you simply called it on
+#' your graph without specifying explicit weights and the weights happened to
+#' include non-positive numbers. We strive to ensure that \code{layout_nicely}
+#' works out-of-the-box for most graphs, so the rule is that if you omit
+#' \sQuote{weights} or set it to \code{NULL} and \code{layout_nicely} would
+#' end up calling \code{layout_with_fr} or \code{layout_with_drl}, we do not
+#' forward the weights to these functions and issue a warning about this. You
+#' can use \code{weights = NA} to silence the warning.
+#' 
 #' @aliases layout.auto
 #' @param graph The input graph
 #' @param dim Dimensions, should be 2 or 3.
@@ -560,28 +574,49 @@ layout_nicely <- function(graph, dim=2, ...) {
   ##    we use those (and the 'z' vertex attribute as well, if present).
   ## 3. Otherwise, if the graph is small (<1000) we use
   ##    the Fruchterman-Reingold layout.
-  ## 5. Otherwise we use the DrL layout generator.
+  ## 4. Otherwise we use the DrL layout generator.
 
   if ("layout" %in% graph_attr_names(graph)) {
     lay <- graph_attr(graph, "layout")
     if (is.function(lay)) {
-      lay(graph, ...)
+      if (!identical(lay, layout_nicely)) {
+        return(lay(graph, ...))
+      } else {
+        # nop, we'll deal with it later below
+      }
     } else {
-      lay
+      return(lay)
     }
-
-  } else if ( all(c("x", "y") %in% vertex_attr_names(graph)) ) {
+  }
+  
+  if ( all(c("x", "y") %in% vertex_attr_names(graph)) ) {
     if ("z" %in% vertex_attr_names(graph)) {
       cbind(V(graph)$x, V(graph)$y, V(graph)$z)
     } else {
       cbind(V(graph)$x, V(graph)$y)
     }
 
-  } else if (vcount(graph) < 1000) {
-    layout_with_fr(graph, dim=dim, ...)
-
   } else {
-    layout_with_drl(graph, dim=dim, ...)
+
+    args <- list(...)
+    if (!("weights" %in% names(args)) || is.null(args$weights)) {
+      if ("weight" %in% edge_attr_names(graph)) {
+        weights <- E(graph)$weight
+        if (any(weights <= 0, na.rm=TRUE)) {
+          warning("Non-positive edge weight found, ignoring all weights during graph layout.")
+          args$weights <- NA
+        }
+      }
+    }
+
+    args$graph <- graph
+    args$dim <- dim
+  
+    if (vcount(graph) < 1000) {
+      do.call(layout_with_fr, args)
+    } else {
+      do.call(layout_with_drl, args)
+    }
   }
 
 }
@@ -960,7 +995,7 @@ with_dh <- function(...) layout_spec(layout_with_dh, ...)
 #' attribute is used by default, if present. If weights are given, then the
 #' attraction along the edges will be multiplied by the given edge weights.
 #' This places vertices connected with a highly weighted edge closer to
-#' each other.
+#' each other. Weights must be positive.
 #' @param minx If not \code{NULL}, then it must be a numeric vector that gives
 #' lower boundaries for the \sQuote{x} coordinates of the vertices. The length
 #' of the vector must match the number of vertices in the graph.
@@ -1242,7 +1277,7 @@ with_graphopt <- function(...) layout_spec(layout_with_graphopt, ...)
 
 #' The Kamada-Kawai layout algorithm
 #'
-#' Place the vertices on the plane, or in the 3d space, based on a physical
+#' Place the vertices on the plane, or in 3D space, based on a physical
 #' model of springs.
 #'
 #' See the referenced paper below for the details of the algorithm.
@@ -1266,7 +1301,8 @@ with_graphopt <- function(...) layout_spec(layout_with_graphopt, ...)
 #' @param kkconst Numeric scalar, the Kamada-Kawai vertex attraction constant.
 #' Typical (and default) value is the number of vertices.
 #' @param weights Edge weights, larger values will result longer edges.
-#' Note that this is opposite to \code{\link{layout_with_fr}}.
+#' Note that this is opposite to \code{\link{layout_with_fr}}. Weights must
+#' be positive.
 #' @param minx If not \code{NULL}, then it must be a numeric vector that gives
 #' lower boundaries for the \sQuote{x} coordinates of the vertices. The length
 #' of the vector must match the number of vertices in the graph.

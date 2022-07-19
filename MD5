@@ -1,6 +1,6 @@
-adb161b133e24792d71b31cb5c12a4b6 *DESCRIPTION
+8f0be13bb76a0f9474c2569d30441b29 *DESCRIPTION
 0a0edddc37ea67accd8cbcc88e96ac4e *NAMESPACE
-131dc756035e98ea442d30e5970972e9 *NEWS.md
+1cf57cd69201f6461a5d0ffac685c8f6 *NEWS.md
 b75e606811d8ef977dc39c9245919442 *R/adjacency.R
 c63b7ebecabf033848c48e14000f5411 *R/assortativity.R
 22b7ff91f1402562b141768a9514186a *R/attributes.R
@@ -29,7 +29,7 @@ b4f8e9dee03078925f524c1d17468fb0 *R/demo.R
 2dc2f0b6ce56a17a8b6bb559dd170c4b *R/fit.R
 bb8866706ce101329e9674603ba92771 *R/flow.R
 9ca43b78ffb2d66430890951c2514d0c *R/foreign.R
-470bd4244b475cd23dde752956fe1140 *R/games.R
+c87e51c8b8e271c39cbb37126e8e5964 *R/games.R
 e19b328c2621fe0db27bc9622a1003b1 *R/glet.R
 ed61c866edd75dcf72c032ee7949dc57 *R/hrg.R
 8cf2519e2bcb43665d24e7b2787a34c1 *R/igraph-package.R
@@ -37,7 +37,7 @@ ed61c866edd75dcf72c032ee7949dc57 *R/hrg.R
 f2c93f3271e415083be6525d8be5c94e *R/indexing.R
 d049e200de5d5b1d6f1aeb49a3bb83f9 *R/interface.R
 6ff78cc2ccae51a24a90eace38fca9a4 *R/iterators.R
-7a902b16e766583e70f06bf841495ffb *R/layout.R
+e2b15637ce2c6a590a9dca3a6c4c801f *R/layout.R
 bf0e38df97fe6737f6895b9f36731e28 *R/layout_drl.R
 95366f1e91f837bd730f943ee8c005b8 *R/lazyeval.R
 449d56f31179ce58073b8af78bc618e5 *R/make.R
@@ -93,7 +93,7 @@ cfd13d8a0024f747f70093e3f9f42890 *demo/community.R
 771ca356197ee2b54c40ceccb4c2419c *demo/smallworld.R
 533841a60d999179e935f79c4820ceb5 *inst/AUTHORS
 85aedebfc2b8ee7226005dc1b4779e9c *inst/CITATION
-131dc756035e98ea442d30e5970972e9 *inst/NEWS.md
+1cf57cd69201f6461a5d0ffac685c8f6 *inst/NEWS.md
 9ec56117fbc5485ce24f85ba141bdc84 *inst/README.md
 9318bc2aeb60f4f79eac2357da0d9b84 *inst/benchmarks/correlated.R
 4f938e92ca259e3259a5223e87e51bb0 *inst/benchmarks/local.scan.R
@@ -313,16 +313,16 @@ cd028ca4b9a1b37e97f775886fecc35d *man/layout.spring.Rd
 add0ace2c7d519fd083a37e4b69b03f5 *man/layout_as_star.Rd
 2917539a17881909720d9dbb98bd5696 *man/layout_as_tree.Rd
 d682b2559754fdf017709684925cc107 *man/layout_in_circle.Rd
-707b88ab89aab681ae6e2d4b538b1cec *man/layout_nicely.Rd
+38cf60a3bfeb2cf19efca2693e9d6199 *man/layout_nicely.Rd
 bc3eedf66196ee19e15a9009d45d910f *man/layout_on_grid.Rd
 e1ceb69c0f9a5bca17954ac50b7e3d29 *man/layout_on_sphere.Rd
 7a60d8509ccf9bc48837b63c967e06ee *man/layout_randomly.Rd
 3b461f081e8eb9d53bc9d10d6e1d4268 *man/layout_with_dh.Rd
 abcb2d6dadaa50b523be138059815733 *man/layout_with_drl.Rd
-ee931ee4f4da0b0f4007d0c647f47575 *man/layout_with_fr.Rd
+bb81afa8be375a538728167d5e000b7a *man/layout_with_fr.Rd
 57b9355acbe25d41e14d726552bd4ae6 *man/layout_with_gem.Rd
 8990a6293a596b4714bce8b4cf1a86c3 *man/layout_with_graphopt.Rd
-1785554b357da6b4a4110366c5750a73 *man/layout_with_kk.Rd
+7b4d35e67a28608ecddc2839e2d26346 *man/layout_with_kk.Rd
 8c0dc800d7f30233e41357e29a2d738a *man/layout_with_lgl.Rd
 62f6c4bd4b1817113f6cc6315ea137f3 *man/layout_with_mds.Rd
 fd6dc0270d922837f03a70dc46e77ad3 *man/layout_with_sugiyama.Rd
@@ -392,7 +392,7 @@ a9ecba9ac762fb7bf8afbc2d34767356 *man/rewire.Rd
 72c8b2d0260fbd80f7b1a1968fdba1ee *man/rglplot.Rd
 ce204a0fec214014be7be38aa7fe9624 *man/running_mean.Rd
 b4c849b235316f063fbb6b683c5c4f23 *man/sample_.Rd
-79a0b57077c721ee733c5b810397b7a3 *man/sample_bipartite.Rd
+02bdf790d154a20e94e965156521a470 *man/sample_bipartite.Rd
 3959f160cfa1092cd2ba40b509405da3 *man/sample_correlated_gnp.Rd
 cc696ca4cbb1c9da18f57d9d3c9d2f54 *man/sample_correlated_gnp_pair.Rd
 085b5753b5cad1847a51e270fcd7e312 *man/sample_degseq.Rd
@@ -413,7 +413,7 @@ d83dc72a06f90ebc68618fdf7a3babd5 *man/sample_islands.Rd
 883e0648a18af149be02cfaf9b8a2353 *man/sample_motifs.Rd
 c9541fe6ed32b7a0bd567fe7bb98de05 *man/sample_pa.Rd
 a9d6617d033ca2c76882c317eccd2df7 *man/sample_pa_age.Rd
-b2ef5d25071fafc9249d43fec64e9080 *man/sample_pref.Rd
+48afe46cbfc6df769ee7728710c79652 *man/sample_pref.Rd
 6decf1fd31594e8fa4b03a33bda0e2aa *man/sample_sbm.Rd
 dcccb371f2b36f9b5818edf61f18639a *man/sample_seq.Rd
 baf738b3c956878848725084f4fbc704 *man/sample_smallworld.Rd
@@ -565,7 +565,7 @@ f7d82a87399c81467b67aad90e1742c8 *src/core/community/walktrap/walktrap_graph.cpp
 e906932ec9414c441a56ba9f586a0915 *src/core/community/walktrap/walktrap_heap.cpp
 3fb0845d636a853ae65214f7840637d8 *src/core/community/walktrap/walktrap_heap.h
 c7a731624933d8aa2cd8d3553735f7e6 *src/core/connectivity/cohesive_blocks.c
-a7c2016e3b802ae4af78cb12f2f17e7b *src/core/connectivity/components.c
+6785c284086d2fe98414d8530613dca7 *src/core/connectivity/components.c
 980d906d3b47274597e9faae3d805105 *src/core/connectivity/separators.c
 4f1c6327ba05ff51e14ae0e970d531d5 *src/core/constructors/adjacency.c
 3c109268ddd0458081268dfa49aee140 *src/core/constructors/atlas-edges.h
@@ -658,7 +658,7 @@ f36f13a28a6d343a61f078b6076a3cb6 *src/core/games/degree_sequence_vl/gengraph_ver
 3a3d0fd4d9344bfde2379bd7eebaf79f *src/core/games/growing_random.c
 4b325f33c2a48d4c77876dc82e92de7b *src/core/games/islands.c
 cae38481031fe81cac7adb1aed0ff7a1 *src/core/games/k_regular.c
-5a69337d409bf05df0c5a623b5695b7f *src/core/games/preference.c
+2ec2521a2ad4765c92038e8bf652031e *src/core/games/preference.c
 a124d89b3b5c90124bdb4b0302016943 *src/core/games/recent_degree.c
 adceac5a56b7b55dbb5a2d1a99f1d8db *src/core/games/sbm.c
 e5979d45d83a2ad3994fb3c996fb2013 *src/core/games/static_fitness.c
@@ -965,7 +965,7 @@ fc85f88e706ec014c6c3012b335d7e21 *src/include/igraph_version.h.in
 b2782363c5cdbf31d263a6e9e1c83528 *src/include/igraph_visitor.h
 c544e5cba2e795d78ad147886c01c16b *src/init.c
 ef9170b9e7c2d1bedf611cedcc79fd20 *src/lazyeval.c
-ec2be13643866fb84bdcf407598a0539 *src/rinterface.c
+a88735ceb6d2e21e6697a3cf2b9522f1 *src/rinterface.c
 55c344dc2daf18e33b5e11a248013759 *src/rinterface.h
 a40791b2fae11e292b3f32e07459b452 *src/rinterface_extra.c
 5077e286d9e62e63b95cfad89d3aae37 *src/rrandom.c
@@ -1254,6 +1254,7 @@ f154c79c4294fbfce8c425a72a633af8 *tests/testthat/test_layout.fr.R
 6a2aed874635751a944a0f28f08f2c9a *tests/testthat/test_layout.mds.R
 d8ea5f9636f090c7ffe4398bc4b7c7b9 *tests/testthat/test_layout.merge.R
 8153a59df94ecc0b07c32e918e712dd3 *tests/testthat/test_layout.sugiyama.R
+0a59db01ffa5a19bb86176b506bc673a *tests/testthat/test_layout_nicely.R
 dea0f7483ea375c42c7a00e6217a09eb *tests/testthat/test_leading.eigenvector.community.R
 62fdde0d893caa81fd6dc1d0631d87c7 *tests/testthat/test_leiden.R
 c9566a9507638050221c315ce11770a2 *tests/testthat/test_matching.R

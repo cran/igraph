@@ -883,6 +883,10 @@ grg <- function(...) constructor_spec(sample_grg, ...)
 #' asymmetric. The joint distribution for the in- and out-types is given in the
 #' \sQuote{type.dist.matrix} argument.
 #' 
+#' The types of the generated vertices can be retrieved from the
+#' \code{type} vertex attribute for \code{sample_pref} and from the
+#' \code{intype} and \code{outtype} vertex attribute for \code{sample_asym_pref}.
+#'
 #' @aliases sample_pref sample_asym_pref preference.game asymmetric.preference.game
 #' @param nodes The number of vertices in the graphs.
 #' @param types The number of different vertex types.
@@ -930,8 +934,7 @@ sample_pref <- function(nodes, types, type.dist=rep(1, types),
   }
 
   on.exit( .Call(C_R_igraph_finalizer) )
-  res <- .Call(C_R_igraph_preference_game, as.double(nodes),
-               as.double(types),
+  res <- .Call(C_R_igraph_preference_game, as.integer(nodes), as.integer(types),
                as.double(type.dist), as.logical(fixed.sizes),
                matrix(as.double(pref.matrix), types, types),
                as.logical(directed), as.logical(loops))
@@ -971,19 +974,21 @@ sample_asym_pref <- function(nodes, types,
   
   on.exit( .Call(C_R_igraph_finalizer) )
   res <- .Call(C_R_igraph_asymmetric_preference_game,
-               as.double(nodes), as.double(types), as.double(types),
+               as.integer(nodes), as.integer(types), as.integer(types),
                matrix(as.double(type.dist.matrix), types, types),
                matrix(as.double(pref.matrix), types, types),
                as.logical(loops))
+  V(res[[1]])$outtype <- res[[2]] + 1
+  V(res[[1]])$intype  <- res[[3]] + 1
   if (igraph_opt("add.params")) {
-    res$name <- "Asymmetric preference random graph"
-    res$types <- types
-    res$type.dist.matrix <- type.dist.matrix
-    res$pref.matrix <- pref.matrix
-    res$loops <- loops
+    res[[1]]$name <- "Asymmetric preference random graph"
+    res[[1]]$types <- types
+    res[[1]]$type.dist.matrix <- type.dist.matrix
+    res[[1]]$pref.matrix <- pref.matrix
+    res[[1]]$loops <- loops
   }
 
-  res
+  res[[1]]
 }
 
 #' @rdname sample_pref
@@ -1177,21 +1182,21 @@ cit_cit_types <- function(...) constructor_spec(sample_cit_cit_types, ...)
 #' 
 #' Generate bipartite graphs using the Erdos-Renyi model
 #' 
-#' Similarly to unipartite (one-mode) networks, we can define the $G(n,p)$, and
-#' $G(n,m)$ graph classes for bipartite graphs, via their generating process.
-#' In $G(n,p)$ every possible edge between top and bottom vertices is realized
-#' with probability $p$, independently of the rest of the edges. In $G(n,m)$, we
-#' uniformly choose $m$ edges to realize.
+#' Similarly to unipartite (one-mode) networks, we can define the \eqn{G(n,p)}, and
+#' \eqn{G(n,m)} graph classes for bipartite graphs, via their generating process.
+#' In \eqn{G(n,p)} every possible edge between top and bottom vertices is realized
+#' with probability \eqn{p}, independently of the rest of the edges. In \eqn{G(n,m)}, we
+#' uniformly choose \eqn{m} edges to realize.
 #'
 #' @aliases bipartite.random.game
 #' @param n1 Integer scalar, the number of bottom vertices.
 #' @param n2 Integer scalar, the number of top vertices.
 #' @param type Character scalar, the type of the graph, \sQuote{gnp} creates a
-#' $G(n,p)$ graph, \sQuote{gnm} creates a $G(n,m)$ graph. See details below.
-#' @param p Real scalar, connection probability for $G(n,p)$ graphs. Should not
-#' be given for $G(n,m)$ graphs.
-#' @param m Integer scalar, the number of edges for $G(n,p)$ graphs. Should not
-#' be given for $G(n,p)$ graphs.
+#' \eqn{G(n,p)} graph, \sQuote{gnm} creates a \eqn{G(n,m)} graph. See details below.
+#' @param p Real scalar, connection probability for \eqn{G(n,p)} graphs. Should not
+#' be given for \eqn{G(n,m)} graphs.
+#' @param m Integer scalar, the number of edges for \eqn{G(n,p)} graphs. Should not
+#' be given for \eqn{G(n,p)} graphs.
 #' @param directed Logical scalar, whether to create a directed graph. See also
 #' the \code{mode} argument.
 #' @param mode Character scalar, specifies how to direct the edges in directed
