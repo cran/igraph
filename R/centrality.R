@@ -308,8 +308,7 @@ arpack_defaults <- list(bmat="I", n=0, which="XX", nev=1, tol=0.0,
 #' eigenvectors of a general \eqn{n} by \eqn{n} matrix \eqn{A}. It is most
 #' appropriate for large sparse or structured matrices \eqn{A} where structured
 #' means that a matrix-vector product \code{w <- Av} requires order \eqn{n}
-#' rather than the usual order \eqn{n^2} floating point operations. Please see
-#' \url{http://www.caam.rice.edu/software/ARPACK/} for details.
+#' rather than the usual order \eqn{n^2} floating point operations.
 #' 
 #' This function is an interface to ARPACK. igraph does not contain all ARPACK
 #' routines, only the ones dealing with symmetric and non-symmetric eigenvalue
@@ -435,8 +434,7 @@ arpack_defaults <- list(bmat="I", n=0, which="XX", nev=1, tol=0.0,
 #' ARPACK, Gabor Csardi \email{csardi.gabor@@gmail.com} for the R interface.
 #' @seealso \code{\link{eigen_centrality}}, \code{\link{page_rank}},
 #' \code{\link{hub_score}}, \code{\link{cluster_leading_eigen}} are some of the
-#' functions in igraph which use ARPACK. The ARPACK homepage is at
-#' \url{http://www.caam.rice.edu/software/ARPACK/}.
+#' functions in igraph that use ARPACK.
 #' @references D.C. Sorensen, Implicit Application of Polynomial Filters in a
 #' k-Step Arnoldi Method. \emph{SIAM J. Matr. Anal. Apps.}, 13 (1992), pp
 #' 357-385.
@@ -687,6 +685,24 @@ eigen_defaults <- list(pos="LM", howmany=1L, il=-1L, iu=-1L,
 #' that loop edges are counted \emph{twice}; this is because each loop edge has
 #' \emph{two} endpoints that are both connected to the same vertex, and you
 #' could traverse the loop edge via either endpoint.
+#' 
+#' In the directed case, the left eigenvector of the adjacency matrix is
+#' calculated. In other words, the centrality of a vertex is proportional to
+#' the sum of centralities of vertices pointing to it.
+#'
+#' Eigenvector centrality is meaningful only for connected graphs. Graphs that
+#' are not connected should be decomposed into connected components, and the
+#' eigenvector centrality calculated for each separately. This function does
+#' not verify that the graph is connected. If it is not, in the undirected case
+#' the scores of all but one component will be zeros.
+#'
+#' Also note that the adjacency matrix of a directed acyclic graph or the
+#' adjacency matrix of an empty graph does not possess positive eigenvalues,
+#' therefore the eigenvector centrality is not defined for these graphs.
+#' igraph will return an eigenvalue of zero in such cases. The eigenvector
+#' centralities will all be equal for an empty graph and will all be zeros for
+#' a directed acyclic graph. Such pathological cases can be detected by checking
+#' whether the eigenvalue is very close to zero. 
 #'
 #' From igraph version 0.5 this function uses ARPACK for the underlying
 #' computation, see \code{\link{arpack}} for more about ARPACK in igraph.
@@ -715,10 +731,7 @@ eigen_defaults <- list(pos="LM", howmany=1L, il=-1L, iu=-1L,
 #' centrality scores.} \item{value}{The eigenvalue corresponding to the
 #' calculated eigenvector, i.e. the centrality scores.} \item{options}{A named
 #' list, information about the underlying ARPACK computation. See
-#' \code{\link{arpack}} for the details.  }
-#' @section WARNING : \code{eigen_centrality} will not symmetrize your data
-#' before extracting eigenvectors; don't send this routine asymmetric matrices
-#' unless you really mean to do so.
+#' \code{\link{arpack}} for the details.}
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com} and Carter T. Butts
 #' (\url{http://www.faculty.uci.edu/profile.cfm?faculty_id=5057}) for the
 #' manual page.
@@ -1092,7 +1105,7 @@ bonpow.sparse <- function(graph, nodes=V(graph), loops=FALSE,
   d <- as_adj(graph, sparse=TRUE)
 
   ## sparse identity matrix
-  id <- Matrix::Diagonal(vg)
+  id <- as(Matrix::Matrix(diag(vg), doDiag=FALSE), "generalMatrix")
 
   ## solve it
   ev <- Matrix::solve(id - exponent * d, degree(graph, mode="out"), tol=tol)
@@ -1301,11 +1314,9 @@ alpha.centrality.sparse <- function(graph, nodes=V(graph), alpha=1,
   }
 
   M <- Matrix::t(as_adj(graph, attr = attr, sparse = TRUE))
-  M <- as(M, "dgCMatrix")
   
   ## Create an identity matrix
   M2 <- Matrix::sparseMatrix(dims=c(vc, vc), i=1:vc, j=1:vc, x=rep(1, vc))
-  M2 <- as(M2, "dgCMatrix")
 
   ## exo
   exo <- cbind(rep(exo, length.out=vc))

@@ -21,9 +21,10 @@
 ##
 ## -----------------------------------------------------------------
 
-#' Generate scale-free graphs according to the Barabasi-Albert model
+#' Generate random graphs using preferential attachment
 #' 
-#' The BA-model is a very simple stochastic algorithm for building a graph.
+#' Preferential attachment is a family of simple stochastic algorithms for building
+#' a graph. Variants include the Barabási-Abert model and the Price model.
 #' 
 #' This is a simple stochastic algorithm to generate a graph. It is a discrete
 #' time step model and in each time step a single vertex is added.
@@ -102,6 +103,9 @@
 #' @seealso \code{\link{sample_gnp}}
 #' @references Barabasi, A.-L. and Albert R. 1999. Emergence of scaling in
 #' random networks \emph{Science}, 286 509--512.
+#' 
+#' de Solla Price, D. J. 1965. Networks of Scientific Papers \emph{Science},
+#' 149 510--515.
 #' @export
 #' @keywords graphs
 #' @examples
@@ -131,9 +135,6 @@ sample_pa <- function(n, power=1, m=NULL, out.dist=NULL, out.seq=NULL,
   }
   if (!is.null(m) && m==0) {
     warning("`m' is zero, graph will be empty")
-  }
-  if (power < 0) {
-    warning("`power' is negative")
   }
   
   if (is.null(m) && is.null(out.dist) && is.null(out.seq)) {
@@ -647,9 +648,6 @@ sample_pa_age <- function(n, pa.exp, aging.exp, m=NULL, aging.bin=300,
   if (!is.null(m) && m==0) {
     warning("`m' is zero, graph will be empty")
   }
-  if (pa.exp < 0) {
-    warning("preferential attachment is negative")
-  }
   if (aging.exp > 0) {
     warning("aging exponent is positive")
   }
@@ -998,6 +996,9 @@ asym_pref <- function(...) constructor_spec(sample_asym_pref, ...)
 
 ## -----------------------------------------------------------------
 
+
+#' @rdname ego
+#' @export
 
 connect <- function(graph, order, mode=c("all", "out", "in", "total")) {
   if (!is_igraph(graph)) {

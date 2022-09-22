@@ -349,6 +349,11 @@ as_bipartite <- function(...) layout_spec(layout_as_bipartite, ...)
 layout_as_star <- function(graph, center=V(graph)[1], order=NULL) {
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
+  if (vcount(graph) == 0) {
+    # Any other layout will do so just pick one that supports graphs with no
+    # vertices
+    return(layout_in_circle(graph))
+  }
   center <- as.igraph.vs(graph, center)
   if (length(center)==0) {
     center <- 1
@@ -445,7 +450,7 @@ layout_as_tree <- function(graph, root=numeric(), circular=FALSE,
   on.exit(.Call(C_R_igraph_finalizer) )
   res <- .Call(C_R_igraph_layout_reingold_tilford, graph, root, mode,
                rootlevel, circular)
-  if (flip.y) { res[,2] <- max(res[,2])-res[,2] }
+  if (flip.y && vcount(graph) > 0) { res[,2] <- max(res[,2])-res[,2] }
   res
 }
 
@@ -1161,8 +1166,8 @@ layout.fruchterman.reingold <- function(..., params = list()) {
 #' plot(g, layout=layout_with_gem)
 #'
 layout_with_gem <- function(graph, coords=NULL, maxiter=40*vcount(graph)^2,
-                       temp.max=vcount(graph), temp.min=1/10,
-                       temp.init=sqrt(vcount(graph))) {
+                       temp.max=max(vcount(graph), 1), temp.min=1/10,
+                       temp.init=sqrt(max(vcount(graph), 1))) {
 
   # Argument checks
   if (!is_igraph(graph)) { stop("Not a graph object") }
@@ -1337,7 +1342,7 @@ with_graphopt <- function(...) layout_spec(layout_with_graphopt, ...)
 #'
 layout_with_kk <- function(graph, coords=NULL, dim=2,
                                 maxiter=50*vcount(graph),
-                                epsilon=0.0, kkconst=vcount(graph),
+                                epsilon=0.0, kkconst=max(vcount(graph), 1),
                                 weights=NULL, minx=NULL, maxx=NULL,
                                 miny=NULL, maxy=NULL, minz=NULL, maxz=NULL,
                                 niter, sigma, initemp, coolexp, start) {
@@ -1759,10 +1764,12 @@ with_mds <- function(...) layout_spec(layout_with_mds, ...)
                vgap, maxiter, weights)
 
   # Flip the y coordinates, more natural this way
-  res$res[,2] <- max(res$res[,2]) - res$res[,2] + 1
+  vc <- vcount(graph)
+  if (vc > 0) {
+    res$res[,2] <- max(res$res[,2]) - res$res[,2] + 1
+  }
 
   # Separate real and dummy vertices
-  vc <- vcount(graph)
   if (nrow(res$res)==vc) {
     res$layout <- res$res
     res$layout.dummy <- matrix(NA_real_, nrow=0, ncol=2)

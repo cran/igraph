@@ -147,7 +147,10 @@ add_vertices <- function(graph, nv, ..., attr=list()) {
 #' Delete edges from a graph
 #'
 #' @param graph The input graph.
-#' @param edges The edges to remove, specified as an edge sequence.
+#' @param edges The edges to remove, specified as an edge sequence. Typically
+#' this is either a numeric vector containing edge IDs, or a character vector
+#' containing the IDs or names of the source and target vertices, separated by
+#' \code{|}
 #' @return The graph, with the edges removed.
 #'
 #' @aliases delete.edges
@@ -161,6 +164,10 @@ add_vertices <- function(graph, nv, ..., attr=list()) {
 #'
 #' g <- make_ring(10) %>%
 #'   delete_edges("10|1")
+#' g
+#'
+#' g <- make_ring(5)
+#' g <- delete_edges(g, get.edge.ids(g, c(1,5, 4,5)))
 #' g
 
 delete_edges <- function(graph, edges) {
@@ -206,7 +213,7 @@ delete_vertices <- function(graph, v) {
 
 #' The size of the graph (number of edges)
 #'
-#' \code{ecount} of an alias of this function.
+#' \code{ecount} is an alias of this function.
 #' 
 #' @param graph The graph.
 #' @return Numeric scalar, the number of edges.
@@ -218,6 +225,7 @@ delete_vertices <- function(graph, v) {
 #' @examples
 #' g <- sample_gnp(100, 2/100)
 #' gsize(g)
+#' ecount(g)
 #' 
 #' # Number of edges in a G(n,p) graph
 #' replicate(100, sample_gnp(10, 1/2), simplify = FALSE) %>%
@@ -427,7 +435,22 @@ get.edges <- function(graph, es) {
 #' 
 #' ## non-existant edge
 #' get.edge.ids(g, c(2,1, 1,4, 5,4))
+#'
+#' ## multiple edges
+#' ## multi = FALSE, a single edge id is returned,
+#' ## as many times as corresponding pairs in the vertex series.
+#' g <-  make_graph(rep(c(1,2), 5))
+#' eis <- get.edge.ids(g, c(1,2, 1,2), multi=FALSE)
+#' eis
+#' E(g)[eis]
 #' 
+#' ## multi = TRUE, as many different edges, if any,
+#' ## are returned as pairs in the vertex series.
+#' eim <- get.edge.ids(g, c(1,2, 1,2, 1,2), multi=TRUE)
+#' eim
+#' E(g)[eim]
+#' 
+
 get.edge.ids <- function(graph, vp, directed=TRUE, error=FALSE, multi=FALSE) {
   if (!is_igraph(graph)) {
     stop("Not a graph object")
@@ -440,6 +463,8 @@ get.edge.ids <- function(graph, vp, directed=TRUE, error=FALSE, multi=FALSE) {
 
 #' Order (number of vertices) of a graph
 #'
+#' \code{vcount} is an alias of this function.
+#'
 #' @param graph The graph
 #' @return Number of vertices, numeric scalar.
 #'
@@ -450,6 +475,7 @@ get.edge.ids <- function(graph, vp, directed=TRUE, error=FALSE, multi=FALSE) {
 #' @examples
 #' g <- make_ring(10)
 #' gorder(g)
+#' vcount(g)
 
 gorder <- gorder
 
