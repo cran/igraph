@@ -13,12 +13,12 @@ topo_sort(graph, mode = c("out", "all", "in"))
 \item{mode}{Specifies how to use the direction of the edges.  For
 \dQuote{\code{out}}, the sorting order ensures that each node comes before
 all nodes to which it has edges, so nodes with no incoming edges go first.
-For \dQuote{\code{in}}, it is quite the opposite: each node comes before all
+For \dQuote{\verb{in}}, it is quite the opposite: each node comes before all
 nodes from which it receives edges. Nodes with no outgoing edges go first.}
 }
 \value{
 A vertex sequence (by default, but see the \code{return.vs.es}
-option of \code{\link{igraph_options}}) containing vertices in
+option of \code{\link[=igraph_options]{igraph_options()}}) containing vertices in
 topologically sorted order.
 }
 \description{
@@ -37,8 +37,34 @@ g <- barabasi.game(100)
 topo_sort(g)
 
 }
+\seealso{
+Other structural.properties: 
+\code{\link{bfs}()},
+\code{\link{component_distribution}()},
+\code{\link{connect}()},
+\code{\link{constraint}()},
+\code{\link{coreness}()},
+\code{\link{degree}()},
+\code{\link{dfs}()},
+\code{\link{diameter}()},
+\code{\link{distance_table}()},
+\code{\link{edge_density}()},
+\code{\link{feedback_arc_set}()},
+\code{\link{girth}()},
+\code{\link{is_matching}()},
+\code{\link{knn}()},
+\code{\link{laplacian_matrix}()},
+\code{\link{reciprocity}()},
+\code{\link{subcomponent}()},
+\code{\link{subgraph}()},
+\code{\link{transitivity}()},
+\code{\link{unfold_tree}()},
+\code{\link{which_multiple}()},
+\code{\link{which_mutual}()}
+}
 \author{
 Tamas Nepusz \email{ntamas@gmail.com} and Gabor Csardi
 \email{csardi.gabor@gmail.com} for the R interface
 }
+\concept{structural.properties}
 \keyword{graphs}

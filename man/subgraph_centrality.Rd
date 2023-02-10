@@ -33,7 +33,7 @@ effectively means that the measure can only be calculated for small graphs.
 }
 \examples{
 
-g <- sample_pa(100, m=4, dir=FALSE)
+g <- sample_pa(100, m = 4, dir = FALSE)
 sc <- subgraph_centrality(g)
 cor(degree(g), sc)
 
@@ -43,10 +43,24 @@ Ernesto Estrada, Juan A. Rodriguez-Velazquez: Subgraph
 centrality in Complex Networks. \emph{Physical Review E} 71, 056103 (2005).
 }
 \seealso{
-\code{\link{eigen_centrality}}, \code{\link{page_rank}}
+\code{\link[=eigen_centrality]{eigen_centrality()}}, \code{\link[=page_rank]{page_rank()}}
+
+Other centrality: 
+\code{\link{alpha_centrality}()},
+\code{\link{arpack_defaults}},
+\code{\link{closeness}()},
+\code{\link{diversity}()},
+\code{\link{eigen_centrality}()},
+\code{\link{estimate_betweenness}()},
+\code{\link{harmonic_centrality}()},
+\code{\link{page_rank}()},
+\code{\link{power_centrality}()},
+\code{\link{spectrum}()},
+\code{\link{strength}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com} based on the Matlab
 code by Ernesto Estrada
 }
+\concept{centrality}
 \keyword{graphs}

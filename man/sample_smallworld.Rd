@@ -26,7 +26,7 @@ generated graph.}
 \item{multiple}{Logical scalar, whether multiple edges are allowed int the
 generated graph.}
 
-\item{...}{Passed to \code{sample_smallworld}.}
+\item{...}{Passed to \code{sample_smallworld()}.}
 }
 \value{
 A graph object.
@@ -40,13 +40,13 @@ First a lattice is created with the given \code{dim}, \code{size} and
 randomly with probability \code{p}.
 
 Note that this function might create graphs with loops and/or multiple
-edges. You can use \code{\link{simplify}} to get rid of these.
+edges. You can use \code{\link[=simplify]{simplify()}} to get rid of these.
 }
 \examples{
 
 g <- sample_smallworld(1, 100, 5, 0.05)
 mean_distance(g)
-transitivity(g, type="average")
+transitivity(g, type = "average")
 
 }
 \references{
@@ -54,9 +54,50 @@ Duncan J Watts and Steven H Strogatz: Collective dynamics of
 \sQuote{small world} networks, Nature 393, 440-442, 1998.
 }
 \seealso{
-\code{\link{make_lattice}}, \code{\link{rewire}}
+\code{\link[=make_lattice]{make_lattice()}}, \code{\link[=rewire]{rewire()}}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_last_cit}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_traits_callaway}()}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_last_cit}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_traits_callaway}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{games}
 \keyword{graphs}

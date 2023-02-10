@@ -10,34 +10,36 @@ edge_density(graph, loops = FALSE)
 \arguments{
 \item{graph}{The input graph.}
 
-\item{loops}{Logical constant, whether to allow loop edges in the graph. If
-this is TRUE then self loops are considered to be possible. If this is FALSE
-then we assume that the graph does not contain any loop edges and that loop
-edges are not meaningful.}
+\item{loops}{Logical constant, whether loop edges may exist in the graph.
+This affects the calculation of the largest possible number of edges in the
+graph. If this parameter is set to FALSE yet the graph contains self-loops,
+the result will not be meaningful.}
 }
 \value{
 A real constant. This function returns \code{NaN} (=0.0/0.0) for an
 empty graph with zero vertices.
 }
 \description{
-The density of a graph is the ratio of the number of edges and the number of
-possible edges.
+The density of a graph is the ratio of the actual number of edges and the
+largest possible number of edges in the graph, assuming that no multi-edges
+are present.
 }
 \details{
-Note that this function may return strange results for graph with multiple
-edges, density is ill-defined for graphs with multiple edges.
+The concept of density is ill-defined for multigraphs. Note that this function
+does not check whether the graph has multi-edges and will return meaningless
+results for such graphs.
 }
 \examples{
 
-g1 <- make_empty_graph(n=10)
-g2 <- make_full_graph(n=10)
-g3 <- sample_gnp(n=10, 0.4)
+g1 <- make_empty_graph(n = 10)
+g2 <- make_full_graph(n = 10)
+g3 <- sample_gnp(n = 10, 0.4)
 
 # loop edges
-g <- graph( c(1,2, 2,2, 2,3) )
-edge_density(g, loops=FALSE)              # this is wrong!!!
-edge_density(g, loops=TRUE)               # this is right!!!
-edge_density(simplify(g), loops=FALSE)    # this is also right, but different
+g <- graph(c(1, 2, 2, 2, 2, 3)) # graph with a self-loop
+edge_density(g, loops = FALSE) # this is wrong!!!
+edge_density(g, loops = TRUE) # this is right!!!
+edge_density(simplify(g), loops = FALSE) # this is also right, but different
 
 }
 \references{
@@ -45,10 +47,35 @@ Wasserman, S., and Faust, K.  (1994).  Social Network Analysis:
 Methods and Applications.  Cambridge: Cambridge University Press.
 }
 \seealso{
-\code{\link{vcount}}, \code{\link{ecount}}, \code{\link{simplify}}
+\code{\link[=vcount]{vcount()}}, \code{\link[=ecount]{ecount()}}, \code{\link[=simplify]{simplify()}}
 to get rid of the multiple and/or loop edges.
+
+Other structural.properties: 
+\code{\link{bfs}()},
+\code{\link{component_distribution}()},
+\code{\link{connect}()},
+\code{\link{constraint}()},
+\code{\link{coreness}()},
+\code{\link{degree}()},
+\code{\link{dfs}()},
+\code{\link{diameter}()},
+\code{\link{distance_table}()},
+\code{\link{feedback_arc_set}()},
+\code{\link{girth}()},
+\code{\link{is_matching}()},
+\code{\link{knn}()},
+\code{\link{laplacian_matrix}()},
+\code{\link{reciprocity}()},
+\code{\link{subcomponent}()},
+\code{\link{subgraph}()},
+\code{\link{topo_sort}()},
+\code{\link{transitivity}()},
+\code{\link{unfold_tree}()},
+\code{\link{which_multiple}()},
+\code{\link{which_mutual}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{structural.properties}
 \keyword{graphs}

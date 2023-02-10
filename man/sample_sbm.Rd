@@ -26,7 +26,7 @@ group. The sum of the vector must match the number of vertices.}
 
 \item{loops}{Logical scalar, whether self-loops are allowed in the graph.}
 
-\item{...}{Passed to \code{sample_sbm}.}
+\item{...}{Passed to \code{sample_sbm()}.}
 }
 \value{
 An igraph graph.
@@ -38,14 +38,14 @@ Sampling from the stochastic block model of networks
 This function samples graphs from a stochastic block model by (doing the
 equivalent of) Bernoulli trials for each potential edge with the
 probabilities given by the Bernoulli rate matrix, \code{pref.matrix}.
-The order of the vertices in the generated graph corresponds to the 
+The order of the vertices in the generated graph corresponds to the
 \code{block.sizes} argument.
 }
 \examples{
 
 ## Two groups with not only few connection between groups
-pm <- cbind( c(.1, .001), c(.001, .05) )
-g <- sample_sbm(1000, pref.matrix=pm, block.sizes=c(300,700))
+pm <- cbind(c(.1, .001), c(.001, .05))
+g <- sample_sbm(1000, pref.matrix = pm, block.sizes = c(300, 700))
 g
 }
 \references{
@@ -53,9 +53,50 @@ Faust, K., & Wasserman, S. (1992a). Blockmodels: Interpretation
 and evaluation. \emph{Social Networks}, 14, 5--61.
 }
 \seealso{
-\code{\link{sample_gnp}}, \code{\link{sample_gnm}}
+\code{\link[=sample_gnp]{sample_gnp()}}, \code{\link[=sample_gnm]{sample_gnm()}}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_last_cit}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_smallworld}()},
+\code{\link{sample_traits_callaway}()}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_last_cit}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_smallworld}()},
+\code{\link{sample_traits_callaway}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{games}
 \keyword{graphs}

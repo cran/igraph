@@ -25,7 +25,7 @@ algorithm from Eades, Lin and Smyth. \dQuote{\code{exact}} is an alias to
 }
 \value{
 An edge sequence (by default, but see the \code{return.vs.es} option
-of \code{\link{igraph_options}}) containing the feedback arc set.
+of \code{\link[=igraph_options]{igraph_options()}}) containing the feedback arc set.
 }
 \description{
 A feedback arc set of a graph is a subset of edges whose removal breaks all
@@ -40,13 +40,39 @@ component is a tree).
 }
 \examples{
 
-g <- sample_gnm(20, 40, directed=TRUE)
+g <- sample_gnm(20, 40, directed = TRUE)
 feedback_arc_set(g)
-feedback_arc_set(g, algo="approx")
+feedback_arc_set(g, algo = "approx")
 }
 \references{
 Peter Eades, Xuemin Lin and W.F.Smyth: A fast and effective
 heuristic for the feedback arc set problem. \emph{Information Processing Letters}
 47:6, pp. 319-323, 1993
 }
+\seealso{
+Other structural.properties: 
+\code{\link{bfs}()},
+\code{\link{component_distribution}()},
+\code{\link{connect}()},
+\code{\link{constraint}()},
+\code{\link{coreness}()},
+\code{\link{degree}()},
+\code{\link{dfs}()},
+\code{\link{diameter}()},
+\code{\link{distance_table}()},
+\code{\link{edge_density}()},
+\code{\link{girth}()},
+\code{\link{is_matching}()},
+\code{\link{knn}()},
+\code{\link{laplacian_matrix}()},
+\code{\link{reciprocity}()},
+\code{\link{subcomponent}()},
+\code{\link{subgraph}()},
+\code{\link{topo_sort}()},
+\code{\link{transitivity}()},
+\code{\link{unfold_tree}()},
+\code{\link{which_multiple}()},
+\code{\link{which_mutual}()}
+}
+\concept{structural.properties}
 \keyword{graphs}

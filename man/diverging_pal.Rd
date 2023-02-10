@@ -18,13 +18,12 @@ This is the \sQuote{PuOr} palette from \url{https://colorbrewer2.org/}.
 It has at most eleven colors.
 }
 \details{
-This is similar to \code{\link{sequential_pal}}, but it also puts
+This is similar to \code{\link[=sequential_pal]{sequential_pal()}}, but it also puts
 emphasis on the mid-range values, plus the the two extreme ends.
 Use this palette, if you have such a quantity to mark with vertex
 colors.
 }
 \examples{
-\dontrun{
 library(igraphdata)
 data(foodwebs)
 fw <- foodwebs[[1]] \%>\%
@@ -44,7 +43,6 @@ karate <- karate \%>\%
 
 V(karate)$color <- scales::dscale(degree(karate) \%>\% cut(5), diverging_pal)
 plot(karate)
-}
 }
 \seealso{
 Other palettes: 

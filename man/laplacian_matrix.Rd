@@ -53,11 +53,37 @@ of the weights of its adjacent edges.
 
 g <- make_ring(10)
 laplacian_matrix(g)
-laplacian_matrix(g, norm=TRUE)
-laplacian_matrix(g, norm=TRUE, sparse=FALSE)
+laplacian_matrix(g, norm = TRUE)
+laplacian_matrix(g, norm = TRUE, sparse = FALSE)
 
+}
+\seealso{
+Other structural.properties: 
+\code{\link{bfs}()},
+\code{\link{component_distribution}()},
+\code{\link{connect}()},
+\code{\link{constraint}()},
+\code{\link{coreness}()},
+\code{\link{degree}()},
+\code{\link{dfs}()},
+\code{\link{diameter}()},
+\code{\link{distance_table}()},
+\code{\link{edge_density}()},
+\code{\link{feedback_arc_set}()},
+\code{\link{girth}()},
+\code{\link{is_matching}()},
+\code{\link{knn}()},
+\code{\link{reciprocity}()},
+\code{\link{subcomponent}()},
+\code{\link{subgraph}()},
+\code{\link{topo_sort}()},
+\code{\link{transitivity}()},
+\code{\link{unfold_tree}()},
+\code{\link{which_multiple}()},
+\code{\link{which_mutual}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{structural.properties}
 \keyword{graphs}

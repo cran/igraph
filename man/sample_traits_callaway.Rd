@@ -46,8 +46,8 @@ types. These should be probabilities, ie. numbers between zero and one.}
 
 \item{directed}{Logical constant, whether to generate directed graphs.}
 
-\item{...}{Passed to the constructor, \code{sample_traits} or
-\code{sample_traits_callaway}.}
+\item{...}{Passed to the constructor, \code{sample_traits()} or
+\code{sample_traits_callaway()}.}
 
 \item{k}{The number of trials per time step, see details below.}
 }
@@ -59,7 +59,7 @@ These functions implement evolving network models based on different vertex
 types.
 }
 \details{
-For \code{sample_traits_callaway} the simulation goes like this: in each
+For \code{sample_traits_callaway()} the simulation goes like this: in each
 discrete time step a new vertex is added to the graph. The type of this
 vertex is generated based on \code{type.dist}. Then two vertices are
 selected uniformly randomly from the graph. The probability that they will
@@ -67,7 +67,7 @@ be connected depends on the types of these vertices and is taken from
 \code{pref.matrix}. Then another two vertices are selected and this is
 repeated \code{edges.per.step} times in each time step.
 
-For \code{sample_traits} the simulation goes like this: a single vertex is
+For \code{sample_traits()} the simulation goes like this: a single vertex is
 added at each time step. This new vertex tries to connect to \code{k}
 vertices in the graph. The probability that such a connection is realized
 depends on the types of the vertices involved and is taken from
@@ -76,10 +76,92 @@ depends on the types of the vertices involved and is taken from
 \examples{
 
 # two types of vertices, they like only themselves
-g1 <- sample_traits_callaway(1000, 2, pref.matrix=matrix( c(1,0,0,1), ncol=2))
-g2 <- sample_traits(1000, 2, k=2, pref.matrix=matrix( c(1,0,0,1), ncol=2))
+g1 <- sample_traits_callaway(1000, 2, pref.matrix = matrix(c(1, 0, 0, 1), ncol = 2))
+g2 <- sample_traits(1000, 2, k = 2, pref.matrix = matrix(c(1, 0, 0, 1), ncol = 2))
+}
+\seealso{
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_last_cit}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_last_cit}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_last_cit}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_last_cit}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{games}
 \keyword{graphs}

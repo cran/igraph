@@ -79,35 +79,38 @@ linear running time and memory load.
 }
 \examples{
 
-
+\dontrun{
 ## We are not running these examples any more, because they
 ## take a long time to run and this is against the CRAN repository
 ## policy. Copy and paste them by hand to your R prompt if
 ## you want to run them.
 
-\dontrun{
 # eigenvectors of a random symmetric matrix
 M <- matrix(rexp(10^6), 10^3, 10^3)
-M <- (M + t(M))/2
-V <- eigen(M, symmetric=TRUE)$vectors[,c(1,2)]
+M <- (M + t(M)) / 2
+V <- eigen(M, symmetric = TRUE)$vectors[, c(1, 2)]
 
 # displays size of the groups in the final partition
-gr <- scg_group(V, nt=c(2,3))
+gr <- scg_group(V, nt = c(2, 3))
 col <- rainbow(max(gr))
-plot(table(gr), col=col, main="Group size", xlab="group", ylab="size")
+plot(table(gr), col = col, main = "Group size", xlab = "group", ylab = "size")
 
 ## comparison with the grouping obtained by kmeans
 ## for a partition of same size
-gr.km <- kmeans(V,centers=max(gr), iter.max=100, nstart=100)$cluster
-op <- par(mfrow=c(1,2))
-plot(V[,1], V[,2], col=col[gr],
-	main = "SCG grouping",
-	xlab = "1st eigenvector",
-	ylab = "2nd eigenvector")
-plot(V[,1], V[,2], col=col[gr.km],
-	main = "K-means grouping",
-	xlab = "1st eigenvector",
-	ylab = "2nd eigenvector")
+gr.km <- kmeans(V, centers = max(gr), iter.max = 100, nstart = 100)$cluster
+op <- par(mfrow = c(1, 2))
+plot(V[, 1], V[, 2],
+  col = col[gr],
+  main = "SCG grouping",
+  xlab = "1st eigenvector",
+  ylab = "2nd eigenvector"
+)
+plot(V[, 1], V[, 2],
+  col = col[gr.km],
+  main = "K-means grouping",
+  xlab = "1st eigenvector",
+  ylab = "2nd eigenvector"
+)
 par(op)
 ## kmeans disregards the first eigenvector as it
 ## spreads a much smaller range of values than the second one
@@ -130,11 +133,17 @@ Matrix Analysis and Applications}, 2008.
 \url{http://people.epfl.ch/david.morton}
 }
 \seealso{
-\link{scg-method} for a detailed introduction. \code{\link{scg}},
-\code{\link{scg_eps}}
+\link{scg-method} for a detailed introduction. \code{\link[=scg]{scg()}},
+\code{\link[=scg_eps]{scg_eps()}}
+
+Other scg: 
+\code{\link{scg_semi_proj}()},
+\code{\link{scg}()},
+\code{\link{stochastic_matrix}()}
 }
 \author{
 David Morton de Lachapelle \email{david.morton@epfl.ch},
 \email{david.mortondelachapelle@swissquote.ch}
 }
+\concept{scg}
 \keyword{graphs}

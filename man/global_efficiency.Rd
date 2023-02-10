@@ -41,9 +41,9 @@ directed graphs. \dQuote{out} considers out-neighbors only, \dQuote{in}
 considers in-neighbors only, \dQuote{all} considers both.}
 }
 \value{
-For \code{global_efficiency}, the global efficiency of the graph as a
-single number. For \code{average_local_efficiency}, the average local
-efficiency of the graph as a single number. For \code{local_efficiency}, the
+For \code{global_efficiency()}, the global efficiency of the graph as a
+single number. For \code{average_local_efficiency()}, the average local
+efficiency of the graph as a single number. For \code{local_efficiency()}, the
 local efficiency of each vertex in a vector.
 }
 \description{
@@ -102,4 +102,5 @@ Networks, Phys. Rev. Lett. 87, 198701 (2001).
 I. Vragović, E. Louis, and A. Díaz-Guilera, Efficiency of informational
 transfer in regular and complex networks, Phys. Rev. E 71, 1 (2005).
 }
+\concept{efficiency}
 \keyword{graphs}

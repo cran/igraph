@@ -1,6 +1,6 @@
 
 #' Efficiency of a graph
-#' 
+#'
 #' These functions calculate the global or average local efficiency of a network,
 #' or the local efficiency of every vertex in the network. See below for
 #' definitions.
@@ -18,8 +18,8 @@
 #' where \eqn{n}{n} is the number of vertices.
 #'
 #' The inverse distance between pairs that are not reachable from each other is
-#' considered to be zero. For graphs with fewer than 2 vertices, NaN is returned. 
-#' 
+#' considered to be zero. For graphs with fewer than 2 vertices, NaN is returned.
+#'
 #' @section Local efficiency:
 #'
 #' The local efficiency of a network around a vertex is defined as follows: We
@@ -39,30 +39,31 @@
 #'
 #' @param graph The graph to analyze.
 #' @param weights The edge weights. All edge weights must be non-negative;
-#' additionally, no edge weight may be NaN. If it is \code{NULL} (the default)
-#' and the graph has a \code{weight} edge attribute, then it is used automatically.
+#'   additionally, no edge weight may be NaN. If it is `NULL` (the default)
+#'   and the graph has a `weight` edge attribute, then it is used automatically.
 #' @param vids The vertex ids of the vertices for which the calculation will be done.
-#' Applies to the local efficiency calculation only.
+#'   Applies to the local efficiency calculation only.
 #' @param directed Logical scalar, whether to consider directed paths. Ignored
-#' for undirected graphs.
+#'   for undirected graphs.
 #' @param mode Specifies how to define the local neighborhood of a vertex in
-#' directed graphs. \dQuote{out} considers out-neighbors only, \dQuote{in}
-#' considers in-neighbors only, \dQuote{all} considers both.
-#' @return For \code{global_efficiency}, the global efficiency of the graph as a
-#' single number. For \code{average_local_efficiency}, the average local
-#' efficiency of the graph as a single number. For \code{local_efficiency}, the
-#' local efficiency of each vertex in a vector.
-#' 
+#'   directed graphs. \dQuote{out} considers out-neighbors only, \dQuote{in}
+#'   considers in-neighbors only, \dQuote{all} considers both.
+#' @return For `global_efficiency()`, the global efficiency of the graph as a
+#'   single number. For `average_local_efficiency()`, the average local
+#'   efficiency of the graph as a single number. For `local_efficiency()`, the
+#'   local efficiency of each vertex in a vector.
+#'
 #' @references V. Latora and M. Marchiori: Efficient Behavior of Small-World
 #' Networks, Phys. Rev. Lett. 87, 198701 (2001).
 #'
 #' I. Vragović, E. Louis, and A. Díaz-Guilera, Efficiency of informational
 #' transfer in regular and complex networks, Phys. Rev. E 71, 1 (2005).
 #'
+#' @family efficiency
 #' @export
 #' @keywords graphs
 #' @examples
-#' 
+#'
 #' g <- make_graph("zachary")
 #' global_efficiency(g)
 #' average_local_efficiency(g)

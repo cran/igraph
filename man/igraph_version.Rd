@@ -11,24 +11,24 @@ igraph_version()
 A character scalar, the igraph version string.
 }
 \description{
-Queries igraph's original version string. See details below.
+Returns the package version.
 }
 \details{
-The igraph version string is the same as the version of the R package for
-all released igraph versions. For development versions and nightly builds,
-they might differ however.
-
-The reason for this is, that R package version numbers are not flexible
-enough to cover in-between releases versions, e.g. alpha and beta versions,
-release candidates, etc.
+The igraph version string is always the same as the version of the R package.
 }
 \examples{
 
 ## Compare to the package version
 packageDescription("igraph")$Version
 igraph_version()
+
+}
+\seealso{
+Other test: 
+\code{\link{igraph_test}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{test}
 \keyword{graphs}

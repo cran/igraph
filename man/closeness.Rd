@@ -64,21 +64,21 @@ closeness scores. Using zero as a cutoff is \emph{deprecated} and future
 versions (from 1.4.0) will treat zero cutoff literally (i.e. no paths
 considered at all). If you want no cutoff, use a negative number.
 
-\code{estimate_closeness} is an alias for \code{closeness} with a different
+\code{estimate_closeness()} is an alias for \code{closeness()} with a different
 argument order, for sake of compatibility with older versions of igraph.
 
 Closeness centrality is meaningful only for connected graphs. In disconnected
 graphs, consider using the harmonic centrality with
-\code{\link{harmonic_centrality}}
+\code{\link[=harmonic_centrality]{harmonic_centrality()}}
 }
 \examples{
 
 g <- make_ring(10)
 g2 <- make_star(10)
 closeness(g)
-closeness(g2, mode="in")
-closeness(g2, mode="out")
-closeness(g2, mode="all")
+closeness(g2, mode = "in")
+closeness(g2, mode = "out")
+closeness(g2, mode = "all")
 
 }
 \references{
@@ -86,9 +86,23 @@ Freeman, L.C. (1979). Centrality in Social Networks I:
 Conceptual Clarification. \emph{Social Networks}, 1, 215-239.
 }
 \seealso{
-\code{\link{betweenness}}, \code{\link{degree}}, \code{\link{harmonic_centrality}}
+\code{\link[=betweenness]{betweenness()}}, \code{\link[=degree]{degree()}}, \code{\link[=harmonic_centrality]{harmonic_centrality()}}
+
+Other centrality: 
+\code{\link{alpha_centrality}()},
+\code{\link{arpack_defaults}},
+\code{\link{diversity}()},
+\code{\link{eigen_centrality}()},
+\code{\link{estimate_betweenness}()},
+\code{\link{harmonic_centrality}()},
+\code{\link{page_rank}()},
+\code{\link{power_centrality}()},
+\code{\link{spectrum}()},
+\code{\link{strength}()},
+\code{\link{subgraph_centrality}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{centrality}
 \keyword{graphs}

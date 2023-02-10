@@ -1,3 +1,46 @@
+<!-- NEWS.md is maintained by https://cynkra.github.io/fledge, do not edit -->
+
+# igraph 1.4.0
+
+## Breaking changes
+
+ - Breaking change: Allow change of attribute type when setting attribute for all vertices or edges; only attributes of length 1 or the length of the target set allowed (#633).
+
+
+## Added
+
+ - `tkplot()` gained a `palette` argument and it is now using the same palette as `plot()` by default, for sake of consistency.
+ - `plot.igraph()` gained a `loop.size` argument that can be used to scale the common radius of the loop edges.
+
+## Fixed
+
+ - The default maximum number of iterations for ARPACK has been increased to 3000 to match that of the igraph C core.
+ - Rare convergence problems have been corrected in `cluster_leading_eigen()`.
+ - All ARPACK-based functions now respect random seeds set in R when generating a random starting vector.
+ - `igraph_version()` returned an invalid value in 1.3.4, this is now corrected.
+ - The value of `par(xpd=...)` is now restored after plotting a graph.
+ - Fixed a bug in `as.dendrogram.communities()` for large dendrograms, thanks
+   to @pkharchenko (see PR #292).
+ - Fixed two bugs in `graph_from_incidence_matrix()` that prevented the creation of directed graphs with `mode="all"` from dense or sparse matrices.
+ - `dfs()` accidentally returned zero-based root vertex indices in the result object; this is now fixed and the indices are now 1-based.
+ - `as_graphnel()` does not duplicate loop edges any more.
+ - `convex_hull()` now returns the vertices of the convex hull with 1-based indexing.
+ - Some `rgl.*()` function calls in the codebase were replaced with equivalent `*3d()` function calls in preparation for upcoming deprecations in `rgl` (see PR #619)
+ - `plot.igraph()` does not use the `frame=...` partial argument any more when calling `plot.default()`. The default `NULL` value of `frame.plot` is now also handled correctly.
+ - `hub_score()` and `authority_score()` considered self-loops only once on the diagonal of the adjacency matrix of undirected graphs, thus the result was not identical to that obtained by `eigen_centrality()` on loopy undirected graphs. This is now corrected.
+ - `distances()` no longer ignores the `mode` parameter when `algorithm='johnson'`.
+
+## Deprecated
+
+ - `automorphisms()` was renamed to `count_automorphisms()`; the old name is still available, but it is deprecated.
+
+## Other
+
+ - Documentation improvements.
+ - The Github repository was now moved to a single-branch setup where the package can be built from the `main` branch directly.
+ - Added igraph extended tutorial as an R vignette (#587).
+ - igraph now has a homepage based on `pkgdown` thanks to @maelle (see #645). This will eventually become the official homepage.
+
 # igraph 1.3.5
 
 Added:

@@ -16,13 +16,17 @@ Runs all package tests.
 }
 \details{
 The \code{testthat} package is needed to run all tests. The location tests
-themselves can be extracted from the package via \code{system.file("tests",
-package="igraph")}.
+themselves can be extracted from the package via \code{system.file("tests", package="igraph")}.
 
 This function simply calls the \code{test_dir} function from the
 \code{testthat} package on the test directory.
 }
+\seealso{
+Other test: 
+\code{\link{igraph_version}()}
+}
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{test}
 \keyword{graphs}

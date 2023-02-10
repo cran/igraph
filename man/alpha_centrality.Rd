@@ -17,7 +17,8 @@ alpha_centrality(
 )
 }
 \arguments{
-\item{graph}{The input graph, can be directed or undirected}
+\item{graph}{The input graph, can be directed or undirected. In undirected
+graphs, edges are treated as if they were reciprocal directed ones.}
 
 \item{nodes}{Vertex sequence, the vertices for which the alpha centrality
 values are returned. (For technical reasons they will be calculated for all
@@ -42,7 +43,7 @@ Otherwise, or if it is \code{NA}, then the calculation uses the standard
 adjacency matrix.}
 
 \item{tol}{Tolerance for near-singularities during matrix inversion, see
-\code{\link{solve}}.}
+\code{\link[=solve]{solve()}}.}
 
 \item{sparse}{Logical scalar, whether to use sparse matrices for the
 calculation. The \sQuote{Matrix} package is required for sparse matrix
@@ -53,12 +54,12 @@ A numeric vector contaning the centrality scores for the selected
 vertices.
 }
 \description{
-\code{alpha_centrality} calculates the alpha centrality of some (or all)
+\code{alpha_centrality()} calculates the alpha centrality of some (or all)
 vertices in a graph.
 }
 \details{
 The alpha centrality measure can be considered as a generalization of
-eigenvector centerality to directed graphs. It was proposed by Bonacich in
+eigenvector centrality to directed graphs. It was proposed by Bonacich in
 2001 (see reference below).
 
 The alpha centrality of the vertices in a graph is defined as the solution
@@ -76,12 +77,12 @@ algorithm, the routine may fail is certain cases.
 \examples{
 
 # The examples from Bonacich's paper
-g.1 <- graph( c(1,3,2,3,3,4,4,5) )
-g.2 <- graph( c(2,1,3,1,4,1,5,1) )
-g.3 <- graph( c(1,2,2,3,3,4,4,1,5,1) )
+g.1 <- graph(c(1, 3, 2, 3, 3, 4, 4, 5))
+g.2 <- graph(c(2, 1, 3, 1, 4, 1, 5, 1))
+g.3 <- graph(c(1, 2, 2, 3, 3, 4, 4, 1, 5, 1))
 alpha_centrality(g.1)
 alpha_centrality(g.2)
-alpha_centrality(g.3,alpha=0.5)
+alpha_centrality(g.3, alpha = 0.5)
 
 }
 \references{
@@ -90,9 +91,23 @@ measures of centrality for asymmetric relations'' \emph{Social Networks},
 23, 191-201.
 }
 \seealso{
-\code{\link{eigen_centrality}} and \code{\link{power_centrality}}
+\code{\link[=eigen_centrality]{eigen_centrality()}} and \code{\link[=power_centrality]{power_centrality()}}
+
+Other centrality: 
+\code{\link{arpack_defaults}},
+\code{\link{closeness}()},
+\code{\link{diversity}()},
+\code{\link{eigen_centrality}()},
+\code{\link{estimate_betweenness}()},
+\code{\link{harmonic_centrality}()},
+\code{\link{page_rank}()},
+\code{\link{power_centrality}()},
+\code{\link{spectrum}()},
+\code{\link{strength}()},
+\code{\link{subgraph_centrality}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{centrality}
 \keyword{graphs}

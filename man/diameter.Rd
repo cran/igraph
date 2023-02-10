@@ -27,11 +27,11 @@ distances. If the graph has a \code{weight} edge attribute, then this is
 used by default.}
 }
 \value{
-A numeric constant for \code{diameter}, a numeric vector for
-\code{get_diameter}. \code{farthest_vertices} returns a list with two
+A numeric constant for \code{diameter()}, a numeric vector for
+\code{get_diameter()}. \code{farthest_vertices()} returns a list with two
 entries: \itemize{
-  \item \code{vertices} The two vertices that are the farthest.
-  \item \code{distance} Their distance.
+\item \code{vertices} The two vertices that are the farthest.
+\item \code{distance} Their distance.
 }
 }
 \description{
@@ -40,19 +40,19 @@ The diameter of a graph is the length of the longest geodesic.
 \details{
 The diameter is calculated by using a breadth-first search like method.
 
-\code{get_diameter} returns a path with the actual diameter. If there are
+\code{get_diameter()} returns a path with the actual diameter. If there are
 many shortest paths of the length of the diameter, then it returns the first
 one found.
 
-\code{farthest_vertices} returns two vertex ids, the vertices which are
+\code{farthest_vertices()} returns two vertex ids, the vertices which are
 connected by the diameter path.
 }
 \examples{
 
 g <- make_ring(10)
-g2 <- delete_edges(g, c(1,2,1,10))
-diameter(g2, unconnected=TRUE)
-diameter(g2, unconnected=FALSE)
+g2 <- delete_edges(g, c(1, 2, 1, 10))
+diameter(g2, unconnected = TRUE)
+diameter(g2, unconnected = FALSE)
 
 ## Weighted diameter
 set.seed(1)
@@ -60,14 +60,39 @@ g <- make_ring(10)
 E(g)$weight <- sample(seq_len(ecount(g)))
 diameter(g)
 get_diameter(g)
-diameter(g, weights=NA)
-get_diameter(g, weights=NA)
+diameter(g, weights = NA)
+get_diameter(g, weights = NA)
 
 }
 \seealso{
-\code{\link{distances}}
+\code{\link[=distances]{distances()}}
+
+Other structural.properties: 
+\code{\link{bfs}()},
+\code{\link{component_distribution}()},
+\code{\link{connect}()},
+\code{\link{constraint}()},
+\code{\link{coreness}()},
+\code{\link{degree}()},
+\code{\link{dfs}()},
+\code{\link{distance_table}()},
+\code{\link{edge_density}()},
+\code{\link{feedback_arc_set}()},
+\code{\link{girth}()},
+\code{\link{is_matching}()},
+\code{\link{knn}()},
+\code{\link{laplacian_matrix}()},
+\code{\link{reciprocity}()},
+\code{\link{subcomponent}()},
+\code{\link{subgraph}()},
+\code{\link{topo_sort}()},
+\code{\link{transitivity}()},
+\code{\link{unfold_tree}()},
+\code{\link{which_multiple}()},
+\code{\link{which_mutual}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{structural.properties}
 \keyword{graphs}

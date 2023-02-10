@@ -511,13 +511,11 @@ int igraph_read_graph_gml(igraph_t *graph, FILE *instream) {
 }
 
 static int igraph_i_gml_convert_to_key(const char *orig, char **key) {
-    int no = 1;
     char strno[50];
     size_t i, len = strlen(orig), newlen = 0, plen = 0;
 
     /* do we need a prefix? */
     if (len == 0 || !isalpha(orig[0])) {
-        no++;
         snprintf(strno, sizeof(strno) - 1, "igraph");
         plen = newlen = strlen(strno);
     }
@@ -613,8 +611,8 @@ int igraph_write_graph_gml(const igraph_t *graph, FILE *outstream,
     timestr[strlen(timestr) - 1] = '\0'; /* nicely remove \n */
 
     CHECK(fprintf(outstream,
-                  "Creator \"igraph version %s %s\"\nVersion 1\ngraph\n[\n",
-                  IGRAPH_VERSION, creator ? creator : timestr));
+                  "Creator \"igraph %s\"\nVersion 1\ngraph\n[\n",
+                  creator ? creator : timestr));
 
     IGRAPH_STRVECTOR_INIT_FINALLY(&gnames, 0);
     IGRAPH_STRVECTOR_INIT_FINALLY(&vnames, 0);

@@ -11,7 +11,7 @@ coreness(graph, mode = c("all", "out", "in"))
 \item{graph}{The input graph, it can be directed or undirected}
 
 \item{mode}{The type of the core in directed graphs. Character constant,
-possible values: \code{in}: in-cores are computed, \code{out}: out-cores are
+possible values: \verb{in}: in-cores are computed, \code{out}: out-cores are
 computed, \code{all}: the corresponding undirected graph is considered. This
 argument is ignored for undirected graphs.}
 }
@@ -34,8 +34,8 @@ This function calculates the coreness for each vertex.
 \examples{
 
 g <- make_ring(10)
-g <- add_edges(g, c(1,2, 2,3, 1,3))
-coreness(g) 		# small core triangle in a ring
+g <- add_edges(g, c(1, 2, 2, 3, 1, 3))
+coreness(g) # small core triangle in a ring
 
 }
 \references{
@@ -46,9 +46,34 @@ Seidman S. B. (1983) Network structure and minimum degree, \emph{Social
 Networks}, 5, 269--287.
 }
 \seealso{
-\code{\link{degree}}
+\code{\link[=degree]{degree()}}
+
+Other structural.properties: 
+\code{\link{bfs}()},
+\code{\link{component_distribution}()},
+\code{\link{connect}()},
+\code{\link{constraint}()},
+\code{\link{degree}()},
+\code{\link{dfs}()},
+\code{\link{diameter}()},
+\code{\link{distance_table}()},
+\code{\link{edge_density}()},
+\code{\link{feedback_arc_set}()},
+\code{\link{girth}()},
+\code{\link{is_matching}()},
+\code{\link{knn}()},
+\code{\link{laplacian_matrix}()},
+\code{\link{reciprocity}()},
+\code{\link{subcomponent}()},
+\code{\link{subgraph}()},
+\code{\link{topo_sort}()},
+\code{\link{transitivity}()},
+\code{\link{unfold_tree}()},
+\code{\link{which_multiple}()},
+\code{\link{which_mutual}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{structural.properties}
 \keyword{graphs}

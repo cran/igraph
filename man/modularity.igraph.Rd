@@ -34,10 +34,10 @@ modularity. Ignored for undirected graphs.}
 \item{\dots}{Additional arguments, none currently.}
 }
 \value{
-For \code{modularity} a numeric scalar, the modularity score of the
+For \code{modularity()} a numeric scalar, the modularity score of the
 given configuration.
 
-For \code{modularity_matrix} a numeric square matrix, its order is the number of
+For \code{modularity_matrix()} a numeric square matrix, its order is the number of
 vertices in the graph.
 }
 \description{
@@ -45,7 +45,7 @@ This function calculates how modular is a given division of a graph into
 subgraphs.
 }
 \details{
-\code{modularity} calculates the modularity of a graph with respect to the
+\code{modularity()} calculates the modularity of a graph with respect to the
 given \code{membership} vector.
 
 The modularity of a graph with respect to some division (or vertex types)
@@ -60,7 +60,7 @@ of \eqn{j}, \eqn{c_i}{ci} is the type (or component) of \eqn{i},
 pairs of vertices, and \eqn{\delta(x,y)}{delta(x,y)} is 1 if \eqn{x=y} and 0
 otherwise. For directed graphs, it is defined as
 \deqn{Q = \frac{1}{m} \sum_{i,j} (A_{ij}-\gamma
-\frac{k_i^{out} k_j^{in}}{m})\delta(c_i,c_j).}{Q=1/(m) * sum( 
+\frac{k_i^{out} k_j^{in}}{m})\delta(c_i,c_j).}{Q=1/(m) * sum(
 (Aij-gamma*ki^out*kj^in/(m) ) delta(ci,cj),i,j).}
 
 The resolution parameter \eqn{\gamma}{gamma} allows weighting the random
@@ -75,7 +75,7 @@ If edge weights are given, then these are considered as the element of the
 \eqn{A} adjacency matrix, and \eqn{k_i}{ki} is the sum of weights of
 adjacent edges for vertex \eqn{i}.
 
-\code{modularity_matrix} calculates the modularity matrix. This is a dense matrix,
+\code{modularity_matrix()} calculates the modularity matrix. This is a dense matrix,
 and it is defined as the difference of the adjacency matrix and the
 configuration model null model matrix. In other words element
 \eqn{M_{ij}}{M[i,j]} is given as \eqn{A_{ij}-d_i
@@ -87,7 +87,7 @@ is weighed).
 \examples{
 
 g <- make_full_graph(5) \%du\% make_full_graph(5) \%du\% make_full_graph(5)
-g <- add_edges(g, c(1,6, 1,11, 6, 11))
+g <- add_edges(g, c(1, 6, 1, 11, 6, 11))
 wtc <- cluster_walktrap(g)
 modularity(wtc)
 modularity(g, membership(wtc))
@@ -98,13 +98,56 @@ Clauset, A.; Newman, M. E. J. & Moore, C. Finding community
 structure in very large networks, \emph{Physical Review E} 2004, 70, 066111
 }
 \seealso{
-\code{\link{cluster_walktrap}},
-\code{\link{cluster_edge_betweenness}},
-\code{\link{cluster_fast_greedy}}, \code{\link{cluster_spinglass}},
-\code{\link{cluster_louvain}} and \code{\link{cluster_leiden}} for
+\code{\link[=cluster_walktrap]{cluster_walktrap()}},
+\code{\link[=cluster_edge_betweenness]{cluster_edge_betweenness()}},
+\code{\link[=cluster_fast_greedy]{cluster_fast_greedy()}}, \code{\link[=cluster_spinglass]{cluster_spinglass()}},
+\code{\link[=cluster_louvain]{cluster_louvain()}} and \code{\link[=cluster_leiden]{cluster_leiden()}} for
 various community detection methods.
+
+Other community: 
+\code{\link{as_membership}()},
+\code{\link{cluster_edge_betweenness}()},
+\code{\link{cluster_fast_greedy}()},
+\code{\link{cluster_fluid_communities}()},
+\code{\link{cluster_infomap}()},
+\code{\link{cluster_label_prop}()},
+\code{\link{cluster_leading_eigen}()},
+\code{\link{cluster_leiden}()},
+\code{\link{cluster_louvain}()},
+\code{\link{cluster_optimal}()},
+\code{\link{cluster_spinglass}()},
+\code{\link{cluster_walktrap}()},
+\code{\link{compare}()},
+\code{\link{contract}()},
+\code{\link{groups}()},
+\code{\link{make_clusters}()},
+\code{\link{membership}()},
+\code{\link{plot_dendrogram}()},
+\code{\link{split_join_distance}()}
+
+Other community: 
+\code{\link{as_membership}()},
+\code{\link{cluster_edge_betweenness}()},
+\code{\link{cluster_fast_greedy}()},
+\code{\link{cluster_fluid_communities}()},
+\code{\link{cluster_infomap}()},
+\code{\link{cluster_label_prop}()},
+\code{\link{cluster_leading_eigen}()},
+\code{\link{cluster_leiden}()},
+\code{\link{cluster_louvain}()},
+\code{\link{cluster_optimal}()},
+\code{\link{cluster_spinglass}()},
+\code{\link{cluster_walktrap}()},
+\code{\link{compare}()},
+\code{\link{contract}()},
+\code{\link{groups}()},
+\code{\link{make_clusters}()},
+\code{\link{membership}()},
+\code{\link{plot_dendrogram}()},
+\code{\link{split_join_distance}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{community}
 \keyword{graphs}

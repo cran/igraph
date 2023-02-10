@@ -19,13 +19,17 @@ that were created (and possibly saved to a file) with an older
 igraph version.
 }
 \details{
-\code{\link{graph_version}} queries the current data format,
+\code{\link[=graph_version]{graph_version()}} queries the current data format,
 or the data format of a possibly older igraph graph.
 
-\code{upgrade_graph} can convert an older data format
+\code{upgrade_graph()} can convert an older data format
 to the current one.
 }
 \seealso{
 graph_version to check the current data format version
 or the version of a graph.
+
+Other versions: 
+\code{\link{graph_version}()}
 }
+\concept{versions}

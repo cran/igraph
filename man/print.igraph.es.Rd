@@ -4,13 +4,15 @@
 \alias{print.igraph.es}
 \title{Print an edge sequence to the screen}
 \usage{
-\method{print}{igraph.es}(x, full = igraph_opt("print.full"), ...)
+\method{print}{igraph.es}(x, full = igraph_opt("print.full"), id = igraph_opt("print.id"), ...)
 }
 \arguments{
 \item{x}{An edge sequence.}
 
 \item{full}{Whether to show the full sequence, or truncate the output
 to the screen size.}
+
+\item{id}{Whether to print the graph ID.}
 
 \item{...}{Currently ignored.}
 }
@@ -19,7 +21,7 @@ The edge sequence, invisibly.
 }
 \description{
 For long edge sequences, the printing is truncated to fit to the
-screen. Use \code{print} explicitly and the code{full} argument to
+screen. Use \code{\link[=print]{print()}} explicitly and the code{full} argument to
 see the full sequence.
 }
 \details{

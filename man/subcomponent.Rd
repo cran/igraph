@@ -30,15 +30,40 @@ A breadth-first search is conducted starting from vertex \code{v}.
 }
 \examples{
 
-g <- sample_gnp(100, 1/200)
+g <- sample_gnp(100, 1 / 200)
 subcomponent(g, 1, "in")
 subcomponent(g, 1, "out")
 subcomponent(g, 1, "all")
 }
 \seealso{
-\code{\link{components}}
+\code{\link[=components]{components()}}
+
+Other structural.properties: 
+\code{\link{bfs}()},
+\code{\link{component_distribution}()},
+\code{\link{connect}()},
+\code{\link{constraint}()},
+\code{\link{coreness}()},
+\code{\link{degree}()},
+\code{\link{dfs}()},
+\code{\link{diameter}()},
+\code{\link{distance_table}()},
+\code{\link{edge_density}()},
+\code{\link{feedback_arc_set}()},
+\code{\link{girth}()},
+\code{\link{is_matching}()},
+\code{\link{knn}()},
+\code{\link{laplacian_matrix}()},
+\code{\link{reciprocity}()},
+\code{\link{subgraph}()},
+\code{\link{topo_sort}()},
+\code{\link{transitivity}()},
+\code{\link{unfold_tree}()},
+\code{\link{which_multiple}()},
+\code{\link{which_mutual}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{structural.properties}
 \keyword{graphs}

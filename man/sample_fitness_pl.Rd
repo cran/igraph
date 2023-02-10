@@ -23,7 +23,7 @@ sample_fitness_pl(
 \item{exponent.out}{Numeric scalar, the power law exponent of the degree
 distribution. For directed graphs, this specifies the exponent of the
 out-degree distribution. It must be greater than or equal to 2. If you pass
-\code{Inf} here, you will get back an Erdos-Renyi random network.}
+\code{Inf} here, you will get back an Erdős-Rényi random network.}
 
 \item{exponent.in}{Numeric scalar. If negative, the generated graph will be
 undirected. If greater than or equal to 2, this argument specifies the
@@ -52,20 +52,20 @@ of vertices follow power-law distributions with prescribed exponents. For
 directed graphs, the exponents of the in- and out-degree distributions may
 be specified separately.
 
-The game simply uses \code{\link{sample_fitness}} with appropriately
+The game simply uses \code{\link[=sample_fitness]{sample_fitness()}} with appropriately
 constructed fitness vectors. In particular, the fitness of vertex \eqn{i} is
-\eqn{i^{-alpha}}{i^(-alpha)}, where \eqn{alpha = 1/(gamma-1)} and gamma is
-the exponent given in the arguments.
+\eqn{i^{-\alpha}}{i^(-alpha)}, where \eqn{\alpha = 1/(\gamma-1)}{alpha = 1/(gamma - 1)}
+and \eqn{\gamma}{gamma} is the exponent given in the arguments.
 
 To remove correlations between in- and out-degrees in case of directed
 graphs, the in-fitness vector will be shuffled after it has been set up and
-before \code{\link{sample_fitness}} is called.
+before \code{\link[=sample_fitness]{sample_fitness()}} is called.
 
 Note that significant finite size effects may be observed for exponents
 smaller than 3 in the original formulation of the game. This function
 provides an argument that lets you remove the finite size effects by
 assuming that the fitness of vertex \eqn{i} is
-\eqn{(i+i_0-1)^{-alpha}}{(i+i0-1)^(-alpha)} where \eqn{i_0}{i0} is a
+\eqn{(i+i_0-1)^{-\alpha}}{(i+i0-1)^(-alpha)} where \eqn{i_0}{i0} is a
 constant chosen appropriately to ensure that the maximum degree is less than
 the square root of the number of edges times the average degree; see the
 paper of Chung and Lu, and Cho et al for more details.
@@ -73,7 +73,7 @@ paper of Chung and Lu, and Cho et al for more details.
 \examples{
 
 g <- sample_fitness_pl(10000, 30000, 2.2, 2.3)
-\dontrun{plot(degree_distribution(g, cumulative=TRUE, mode="out"), log="xy")}
+plot(degree_distribution(g, cumulative = TRUE, mode = "out"), log = "xy")
 }
 \references{
 Goh K-I, Kahng B, Kim D: Universal behaviour of load

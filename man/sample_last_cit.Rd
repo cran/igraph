@@ -51,8 +51,8 @@ cit_cit_types(...)
 
 \item{agebins}{Number of aging bins.}
 
-\item{pref}{Vector (\code{sample_last_cit} and \code{sample_cit_types} or
-matrix (\code{sample_cit_cit_types}) giving the (unnormalized) citation
+\item{pref}{Vector (\code{sample_last_cit()} and \code{sample_cit_types()} or
+matrix (\code{sample_cit_cit_types()}) giving the (unnormalized) citation
 probabilities for the different vertex types.}
 
 \item{directed}{Logical scalar, whether to generate directed networks.}
@@ -69,19 +69,141 @@ graph as a vertex attribute called \sQuote{\code{type}}.}
 A new graph.
 }
 \description{
-\code{sample_last_cit} creates a graph, where vertices age, and
+\code{sample_last_cit()} creates a graph, where vertices age, and
 gain new connections based on how long ago their last citation
 happened.
 }
 \details{
-\code{sample_cit_cit_types} is a stochastic block model where the
+\code{sample_cit_cit_types()} is a stochastic block model where the
 graph is growing.
 
-\code{sample_cit_types} is similarly a growing stochastic block model,
+\code{sample_cit_types()} is similarly a growing stochastic block model,
 but the probability of an edge depends on the (potentially) cited
 vertex only.
+}
+\seealso{
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()},
+\code{\link{sample_traits_callaway}()}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()},
+\code{\link{sample_traits_callaway}()}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()},
+\code{\link{sample_traits_callaway}()}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()},
+\code{\link{sample_traits_callaway}()}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()},
+\code{\link{sample_traits_callaway}()}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()},
+\code{\link{sample_traits_callaway}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{games}
 \keyword{graphs}

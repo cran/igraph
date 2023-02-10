@@ -15,7 +15,7 @@ correspond to the vertices, and for each element the id in the new graph is
 given.}
 
 \item{vertex.attr.comb}{Specifies how to combine the vertex attributes in
-the new graph. Please see \code{\link{attribute.combination}} for details.}
+the new graph. Please see \code{\link[=attribute.combination]{attribute.combination()}} for details.}
 }
 \value{
 A new graph object.
@@ -36,15 +36,39 @@ g$name <- "Ring"
 V(g)$name <- letters[1:vcount(g)]
 E(g)$weight <- runif(ecount(g))
 
-g2 <- contract(g, rep(1:5, each=2),
-                        vertex.attr.comb=toString)
+g2 <- contract(g, rep(1:5, each = 2),
+  vertex.attr.comb = toString
+)
 
 ## graph and edge attributes are kept, vertex attributes are
 ## combined using the 'toString' function.
-print(g2, g=TRUE, v=TRUE, e=TRUE)
+print(g2, g = TRUE, v = TRUE, e = TRUE)
 
+}
+\seealso{
+Other community: 
+\code{\link{as_membership}()},
+\code{\link{cluster_edge_betweenness}()},
+\code{\link{cluster_fast_greedy}()},
+\code{\link{cluster_fluid_communities}()},
+\code{\link{cluster_infomap}()},
+\code{\link{cluster_label_prop}()},
+\code{\link{cluster_leading_eigen}()},
+\code{\link{cluster_leiden}()},
+\code{\link{cluster_louvain}()},
+\code{\link{cluster_optimal}()},
+\code{\link{cluster_spinglass}()},
+\code{\link{cluster_walktrap}()},
+\code{\link{compare}()},
+\code{\link{groups}()},
+\code{\link{make_clusters}()},
+\code{\link{membership}()},
+\code{\link{modularity.igraph}()},
+\code{\link{plot_dendrogram}()},
+\code{\link{split_join_distance}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{community}
 \keyword{graphs}

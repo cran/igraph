@@ -28,8 +28,8 @@ makes sense only if you provided an initial state, otherwise this element
 will be ignored. Also note that vertices without labels cannot be fixed.}
 }
 \value{
-\code{cluster_label_prop} returns a
-\code{\link{communities}} object, please see the \code{\link{communities}}
+\code{cluster_label_prop()} returns a
+\code{\link[=communities]{communities()}} object, please see the \code{\link[=communities]{communities()}}
 manual page for details.
 }
 \description{
@@ -53,9 +53,9 @@ communities.}
 }
 \examples{
 
-  g <- sample_gnp(10, 5/10) \%du\% sample_gnp(9, 5/9)
-  g <- add_edges(g, c(1, 12))
-  cluster_label_prop(g)
+g <- sample_gnp(10, 5 / 10) \%du\% sample_gnp(9, 5 / 9)
+g <- add_edges(g, c(1, 12))
+cluster_label_prop(g)
 
 }
 \references{
@@ -64,14 +64,36 @@ algorithm to detect community structures in large-scale networks. \emph{Phys
 Rev E} 76, 036106. (2007)
 }
 \seealso{
-\code{\link{communities}} for extracting the actual results.
+\code{\link[=communities]{communities()}} for extracting the actual results.
 
-\code{\link{cluster_fast_greedy}}, \code{\link{cluster_walktrap}},
-\code{\link{cluster_spinglass}}, \code{\link{cluster_louvain}} and
-\code{\link{cluster_leiden}} for other community detection methods.
+\code{\link[=cluster_fast_greedy]{cluster_fast_greedy()}}, \code{\link[=cluster_walktrap]{cluster_walktrap()}},
+\code{\link[=cluster_spinglass]{cluster_spinglass()}}, \code{\link[=cluster_louvain]{cluster_louvain()}} and
+\code{\link[=cluster_leiden]{cluster_leiden()}} for other community detection methods.
+
+Other community: 
+\code{\link{as_membership}()},
+\code{\link{cluster_edge_betweenness}()},
+\code{\link{cluster_fast_greedy}()},
+\code{\link{cluster_fluid_communities}()},
+\code{\link{cluster_infomap}()},
+\code{\link{cluster_leading_eigen}()},
+\code{\link{cluster_leiden}()},
+\code{\link{cluster_louvain}()},
+\code{\link{cluster_optimal}()},
+\code{\link{cluster_spinglass}()},
+\code{\link{cluster_walktrap}()},
+\code{\link{compare}()},
+\code{\link{contract}()},
+\code{\link{groups}()},
+\code{\link{make_clusters}()},
+\code{\link{membership}()},
+\code{\link{modularity.igraph}()},
+\code{\link{plot_dendrogram}()},
+\code{\link{split_join_distance}()}
 }
 \author{
 Tamas Nepusz \email{ntamas@gmail.com} for the C implementation,
 Gabor Csardi \email{csardi.gabor@gmail.com} for this manual page.
 }
+\concept{community}
 \keyword{graphs}

@@ -66,20 +66,45 @@ Sometimes it is useful to work with a standard representation of a
 graph, like an adjacency matrix.
 }
 \details{
-\code{as_adjacency_matrix} returns the adjacency matrix of a graph, a
+\code{as_adjacency_matrix()} returns the adjacency matrix of a graph, a
 regular matrix if \code{sparse} is \code{FALSE}, or a sparse matrix, as
 defined in the \sQuote{\code{Matrix}} package, if \code{sparse} if
 \code{TRUE}.
 }
 \examples{
 
-g <- sample_gnp(10, 2/10)
+g <- sample_gnp(10, 2 / 10)
 as_adjacency_matrix(g)
 V(g)$name <- letters[1:vcount(g)]
 as_adjacency_matrix(g)
 E(g)$weight <- runif(ecount(g))
-as_adjacency_matrix(g, attr="weight")
+as_adjacency_matrix(g, attr = "weight")
 }
 \seealso{
-\code{\link{graph_from_adjacency_matrix}}, \code{\link{read_graph}}
+\code{\link[=graph_from_adjacency_matrix]{graph_from_adjacency_matrix()}}, \code{\link[=read_graph]{read_graph()}}
+
+Other conversion: 
+\code{\link{as.directed}()},
+\code{\link{as.matrix.igraph}()},
+\code{\link{as_adj_list}()},
+\code{\link{as_data_frame}()},
+\code{\link{as_edgelist}()},
+\code{\link{as_graphnel}()},
+\code{\link{as_incidence_matrix}()},
+\code{\link{as_long_data_frame}()},
+\code{\link{graph_from_adj_list}()},
+\code{\link{graph_from_graphnel}()}
+
+Other conversion: 
+\code{\link{as.directed}()},
+\code{\link{as.matrix.igraph}()},
+\code{\link{as_adj_list}()},
+\code{\link{as_data_frame}()},
+\code{\link{as_edgelist}()},
+\code{\link{as_graphnel}()},
+\code{\link{as_incidence_matrix}()},
+\code{\link{as_long_data_frame}()},
+\code{\link{graph_from_adj_list}()},
+\code{\link{graph_from_graphnel}()}
 }
+\concept{conversion}

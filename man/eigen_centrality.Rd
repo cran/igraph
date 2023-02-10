@@ -36,17 +36,17 @@ This function interprets weights as connection strength. Higher
 weights spread the centrality better.}
 
 \item{options}{A named list, to override some ARPACK options. See
-\code{\link{arpack}} for details.}
+\code{\link[=arpack]{arpack()}} for details.}
 }
 \value{
 A named list with components: \item{vector}{A vector containing the
 centrality scores.} \item{value}{The eigenvalue corresponding to the
 calculated eigenvector, i.e. the centrality scores.} \item{options}{A named
 list, information about the underlying ARPACK computation. See
-\code{\link{arpack}} for the details.}
+\code{\link[=arpack]{arpack()}} for the details.}
 }
 \description{
-\code{eigen_centrality} takes a graph (\code{graph}) and returns the
+\code{eigen_centrality()} takes a graph (\code{graph}) and returns the
 eigenvector centralities of positions \code{v} within it
 }
 \details{
@@ -86,25 +86,40 @@ therefore the eigenvector centrality is not defined for these graphs.
 igraph will return an eigenvalue of zero in such cases. The eigenvector
 centralities will all be equal for an empty graph and will all be zeros for
 a directed acyclic graph. Such pathological cases can be detected by checking
-whether the eigenvalue is very close to zero. 
+whether the eigenvalue is very close to zero.
 
 From igraph version 0.5 this function uses ARPACK for the underlying
-computation, see \code{\link{arpack}} for more about ARPACK in igraph.
+computation, see \code{\link[=arpack]{arpack()}} for more about ARPACK in igraph.
 }
 \examples{
 
-#Generate some test data
-g <- make_ring(10, directed=FALSE)
-#Compute eigenvector centrality scores
+# Generate some test data
+g <- make_ring(10, directed = FALSE)
+# Compute eigenvector centrality scores
 eigen_centrality(g)
 }
 \references{
 Bonacich, P.  (1987).  Power and Centrality: A Family of
 Measures. \emph{American Journal of Sociology}, 92, 1170-1182.
 }
+\seealso{
+Other centrality: 
+\code{\link{alpha_centrality}()},
+\code{\link{arpack_defaults}},
+\code{\link{closeness}()},
+\code{\link{diversity}()},
+\code{\link{estimate_betweenness}()},
+\code{\link{harmonic_centrality}()},
+\code{\link{page_rank}()},
+\code{\link{power_centrality}()},
+\code{\link{spectrum}()},
+\code{\link{strength}()},
+\code{\link{subgraph_centrality}()}
+}
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com} and Carter T. Butts
 (\url{http://www.faculty.uci.edu/profile.cfm?faculty_id=5057}) for the
 manual page.
 }
+\concept{centrality}
 \keyword{graphs}

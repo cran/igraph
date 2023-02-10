@@ -106,31 +106,59 @@ use the callback function.
 \examples{
 
 ## Two rings
-bfs(make_ring(10) \%du\% make_ring(10), root=1, "out",
-          order=TRUE, rank=TRUE, father=TRUE, pred=TRUE,
-          succ=TRUE, dist=TRUE)
+bfs(make_ring(10) \%du\% make_ring(10),
+  root = 1, "out",
+  order = TRUE, rank = TRUE, father = TRUE, pred = TRUE,
+  succ = TRUE, dist = TRUE
+)
 
 ## How to use a callback
 f <- function(graph, data, extra) {
   print(data)
   FALSE
 }
-tmp <- bfs(make_ring(10) \%du\% make_ring(10), root=1, "out",
-                 callback=f)
+tmp <- bfs(make_ring(10) \%du\% make_ring(10),
+  root = 1, "out",
+  callback = f
+)
 
 ## How to use a callback to stop the search
 ## We stop after visiting all vertices in the initial component
 f <- function(graph, data, extra) {
- data['succ'] == -1
+  data["succ"] == -1
 }
-bfs(make_ring(10) \%du\% make_ring(10), root=1, callback=f)
-
+bfs(make_ring(10) \%du\% make_ring(10), root = 1, callback = f)
 
 }
 \seealso{
-\code{\link{dfs}} for depth-first search.
+\code{\link[=dfs]{dfs()}} for depth-first search.
+
+Other structural.properties: 
+\code{\link{component_distribution}()},
+\code{\link{connect}()},
+\code{\link{constraint}()},
+\code{\link{coreness}()},
+\code{\link{degree}()},
+\code{\link{dfs}()},
+\code{\link{diameter}()},
+\code{\link{distance_table}()},
+\code{\link{edge_density}()},
+\code{\link{feedback_arc_set}()},
+\code{\link{girth}()},
+\code{\link{is_matching}()},
+\code{\link{knn}()},
+\code{\link{laplacian_matrix}()},
+\code{\link{reciprocity}()},
+\code{\link{subcomponent}()},
+\code{\link{subgraph}()},
+\code{\link{topo_sort}()},
+\code{\link{transitivity}()},
+\code{\link{unfold_tree}()},
+\code{\link{which_multiple}()},
+\code{\link{which_mutual}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{structural.properties}
 \keyword{graphs}

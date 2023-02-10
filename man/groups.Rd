@@ -23,10 +23,10 @@ structure.
 }
 \details{
 Currently two methods are defined for this function. The default method
-works on the output of \code{\link{components}}. (In fact it works on any
+works on the output of \code{\link[=components]{components()}}. (In fact it works on any
 object that is a list with an entry called \code{membership}.)
 
-The second method works on \code{\link{communities}} objects.
+The second method works on \code{\link[=communities]{communities()}} objects.
 }
 \examples{
 g <- make_graph("Zachary")
@@ -37,6 +37,28 @@ g2 <- make_ring(10) + make_full_graph(5)
 groups(components(g2))
 }
 \seealso{
-\code{\link{components}} and the various community finding
+\code{\link[=components]{components()}} and the various community finding
 functions.
+
+Other community: 
+\code{\link{as_membership}()},
+\code{\link{cluster_edge_betweenness}()},
+\code{\link{cluster_fast_greedy}()},
+\code{\link{cluster_fluid_communities}()},
+\code{\link{cluster_infomap}()},
+\code{\link{cluster_label_prop}()},
+\code{\link{cluster_leading_eigen}()},
+\code{\link{cluster_leiden}()},
+\code{\link{cluster_louvain}()},
+\code{\link{cluster_optimal}()},
+\code{\link{cluster_spinglass}()},
+\code{\link{cluster_walktrap}()},
+\code{\link{compare}()},
+\code{\link{contract}()},
+\code{\link{make_clusters}()},
+\code{\link{membership}()},
+\code{\link{modularity.igraph}()},
+\code{\link{plot_dendrogram}()},
+\code{\link{split_join_distance}()}
 }
+\concept{community}

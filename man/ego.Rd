@@ -57,12 +57,12 @@ argument is ignored for undirected graphs.}
 }
 \value{
 \itemize{
-  \item{\code{ego_size} returns with an integer vector.}
-  \item{\code{ego} returns A list of \code{igraph.vs} or a list of numeric
-        vectors depending on the value of \code{igraph_opt("return.vs.es")},
-        see details for performance characteristics.}
-  \item{\code{make_ego_graph} returns with a list of graphs.}
-  \item{\code{connect} returns with a new graph object.}
+\item{\code{ego_size()} returns with an integer vector.}
+\item{\code{ego()} returns A list of \code{igraph.vs} or a list of numeric
+vectors depending on the value of \code{igraph_opt("return.vs.es")},
+see details for performance characteristics.}
+\item{\code{make_ego_graph()} returns with a list of graphs.}
+\item{\code{connect()} returns with a new graph object.}
 }
 }
 \description{
@@ -75,17 +75,17 @@ vertices which are closer to \code{v} than the order. Ie. order 0 is always
 \code{v} itself, order 1 is \code{v} plus its immediate neighbors, order 2
 is order 1 plus the immediate neighbors of the vertices in order 1, etc.
 
-\code{ego_size} calculates the size of the neighborhoods for the
+\code{ego_size()} calculates the size of the neighborhoods for the
 given vertices with the given order.
 
-\code{ego} calculates the neighborhoods of the given vertices with
+\code{ego()} calculates the neighborhoods of the given vertices with
 the given order parameter.
 
-\code{make_ego_graph} is creates (sub)graphs from all neighborhoods of
+\code{make_ego_graph()} is creates (sub)graphs from all neighborhoods of
 the given vertices with the given order parameter. This function preserves
 the vertex, edge and graph attributes.
 
-\code{connect} creates a new graph by connecting each vertex to
+\code{connect()} creates a new graph by connecting each vertex to
 all other vertices in its neighborhood.
 }
 \examples{
@@ -107,8 +107,103 @@ g <- make_ring(10)
 g <- connect(g, 2)
 
 }
+\seealso{
+Other games: 
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_last_cit}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()},
+\code{\link{sample_traits_callaway}()}
+
+Other structural.properties: 
+\code{\link{bfs}()},
+\code{\link{component_distribution}()},
+\code{\link{constraint}()},
+\code{\link{coreness}()},
+\code{\link{degree}()},
+\code{\link{dfs}()},
+\code{\link{diameter}()},
+\code{\link{distance_table}()},
+\code{\link{edge_density}()},
+\code{\link{feedback_arc_set}()},
+\code{\link{girth}()},
+\code{\link{is_matching}()},
+\code{\link{knn}()},
+\code{\link{laplacian_matrix}()},
+\code{\link{reciprocity}()},
+\code{\link{subcomponent}()},
+\code{\link{subgraph}()},
+\code{\link{topo_sort}()},
+\code{\link{transitivity}()},
+\code{\link{unfold_tree}()},
+\code{\link{which_multiple}()},
+\code{\link{which_mutual}()}
+
+Other structural.properties: 
+\code{\link{bfs}()},
+\code{\link{component_distribution}()},
+\code{\link{constraint}()},
+\code{\link{coreness}()},
+\code{\link{degree}()},
+\code{\link{dfs}()},
+\code{\link{diameter}()},
+\code{\link{distance_table}()},
+\code{\link{edge_density}()},
+\code{\link{feedback_arc_set}()},
+\code{\link{girth}()},
+\code{\link{is_matching}()},
+\code{\link{knn}()},
+\code{\link{laplacian_matrix}()},
+\code{\link{reciprocity}()},
+\code{\link{subcomponent}()},
+\code{\link{subgraph}()},
+\code{\link{topo_sort}()},
+\code{\link{transitivity}()},
+\code{\link{unfold_tree}()},
+\code{\link{which_multiple}()},
+\code{\link{which_mutual}()}
+
+Other structural.properties: 
+\code{\link{bfs}()},
+\code{\link{component_distribution}()},
+\code{\link{constraint}()},
+\code{\link{coreness}()},
+\code{\link{degree}()},
+\code{\link{dfs}()},
+\code{\link{diameter}()},
+\code{\link{distance_table}()},
+\code{\link{edge_density}()},
+\code{\link{feedback_arc_set}()},
+\code{\link{girth}()},
+\code{\link{is_matching}()},
+\code{\link{knn}()},
+\code{\link{laplacian_matrix}()},
+\code{\link{reciprocity}()},
+\code{\link{subcomponent}()},
+\code{\link{subgraph}()},
+\code{\link{topo_sort}()},
+\code{\link{transitivity}()},
+\code{\link{unfold_tree}()},
+\code{\link{which_multiple}()},
+\code{\link{which_mutual}()}
+}
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}, the first version was
 done by Vincent Matossian
 }
+\concept{games}
+\concept{structural.properties}
 \keyword{graphs}

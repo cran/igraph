@@ -15,6 +15,7 @@
   edge.attributes = igraph_opt("print.edge.attributes"),
   names = TRUE,
   max.lines = igraph_opt("auto.print.lines"),
+  id = igraph_opt("print.id"),
   ...
 )
 
@@ -39,6 +40,8 @@ the \code{name} vertex attribute) or vertex ids.}
 \item{max.lines}{The maximum number of lines to use. The rest of the
 output will be truncated.}
 
+\item{id}{Whether to print the graph ID.}
+
 \item{\dots}{Additional agruments.}
 
 \item{object}{The graph of which the summary will be printed.}
@@ -54,15 +57,15 @@ form.
 \code{summary.igraph} prints the number of vertices, edges and whether the
 graph is directed.
 
-\code{print_all} prints the same information, and also lists the edges, and
+\code{print_all()} prints the same information, and also lists the edges, and
 optionally graph, vertex and/or edge attributes.
 
-\code{print.igraph} behaves either as \code{summary.igraph} or
-\code{print_all} depending on the \code{full} argument. See also the
-\sQuote{print.full} igraph option and \code{\link{igraph_opt}}.
+\code{print.igraph()} behaves either as \code{summary.igraph} or
+\code{print_all()} depending on the \code{full} argument. See also the
+\sQuote{print.full} igraph option and \code{\link[=igraph_opt]{igraph_opt()}}.
 
-The graph summary printed by \code{summary.igraph} (and \code{print.igraph}
-and \code{print_all}) consists one or more lines. The first line contains
+The graph summary printed by \code{summary.igraph} (and \code{print.igraph()}
+and \code{print_all()}) consists of one or more lines. The first line contains
 the basic properties of the graph, and the rest contains its attributes.
 Here is an example, a small star graph with weighted directed edges and named
 vertices: \preformatted{    IGRAPH badcafe DNW- 10 9 -- In-star
@@ -71,7 +74,7 @@ vertices: \preformatted{    IGRAPH badcafe DNW- 10 9 -- In-star
 The first line always
 starts with \code{IGRAPH}, showing you that the object is an igraph graph.
 Then a seven character code is printed, this the first seven characters
-of the unique id of the graph. See \code{\link{graph_id}} for more.
+of the unique id of the graph. See \code{\link[=graph_id]{graph_id()}} for more.
 Then a four letter long code string is printed. The first letter
 distinguishes between directed (\sQuote{\code{D}}) and undirected
 (\sQuote{\code{U}}) graphs. The second letter is \sQuote{\code{N}} for named
@@ -80,7 +83,9 @@ letter is \sQuote{\code{W}} for weighted graphs, i.e. graphs with the
 \code{weight} edge attribute set. The fourth letter is \sQuote{\code{B}} for
 bipartite graphs, i.e. for graphs with the \code{type} vertex attribute set.
 
-Then, after two dashes, the name of the graph is printed, if it has one,
+This is followed by the number of vertices and edges, then two dashes.
+
+Finally, after two dashes, the name of the graph is printed, if it has one,
 i.e. if the \code{name} graph attribute is set.
 
 From the second line, the attributes of the graph are listed, separated by a
@@ -90,8 +95,8 @@ comma. After the attribute names, the kind of the attribute -- graph
 (\sQuote{\code{c}}), numeric (\sQuote{\code{n}}), logical
 (\sQuote{\code{l}}), or other (\sQuote{\code{x}}).
 
-As of igraph 0.4 \code{print_all} and \code{print.igraph} use the
-\code{max.print} option, see \code{\link[base]{options}} for details.
+As of igraph 0.4 \code{print_all()} and \code{print.igraph()} use the
+\code{max.print} option, see \code{\link[base:options]{base::options()}} for details.
 
 As of igraph 1.1.1, the \code{str.igraph} function is defunct, use
 \code{print_all()}.
@@ -106,4 +111,5 @@ summary(g)
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{print}
 \keyword{graphs}

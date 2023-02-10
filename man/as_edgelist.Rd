@@ -22,11 +22,11 @@ Sometimes it is useful to work with a standard representation of a
 graph, like an edge list.
 }
 \details{
-\code{as_edgelist} returns the list of edges in a graph.
+\code{as_edgelist()} returns the list of edges in a graph.
 }
 \examples{
 
-g <- sample_gnp(10, 2/10)
+g <- sample_gnp(10, 2 / 10)
 as_edgelist(g)
 
 V(g)$name <- LETTERS[seq_len(gorder(g))]
@@ -34,6 +34,19 @@ as_edgelist(g)
 
 }
 \seealso{
-\code{\link{graph_from_adjacency_matrix}}, \code{\link{read_graph}}
+\code{\link[=graph_from_adjacency_matrix]{graph_from_adjacency_matrix()}}, \code{\link[=read_graph]{read_graph()}}
+
+Other conversion: 
+\code{\link{as.directed}()},
+\code{\link{as.matrix.igraph}()},
+\code{\link{as_adj_list}()},
+\code{\link{as_adjacency_matrix}()},
+\code{\link{as_data_frame}()},
+\code{\link{as_graphnel}()},
+\code{\link{as_incidence_matrix}()},
+\code{\link{as_long_data_frame}()},
+\code{\link{graph_from_adj_list}()},
+\code{\link{graph_from_graphnel}()}
 }
+\concept{conversion}
 \keyword{graphs}

@@ -29,7 +29,7 @@ differ in different blocks.}
 \item{p}{Numeric scalar, the Bernoulli rate of connections between vertices
 in different blocks.}
 
-\item{...}{Passed to \code{sample_hierarchical_sbm}.}
+\item{...}{Passed to \code{sample_hierarchical_sbm()}.}
 }
 \value{
 An igraph graph.
@@ -44,17 +44,62 @@ stochastic block model.
 \examples{
 
 ## Ten blocks with three clusters each
-C <- matrix(c(1  , 3/4,   0,
-              3/4,   0, 3/4,
-              0  , 3/4, 3/4), nrow=3)
-g <- sample_hierarchical_sbm(100, 10, rho=c(3, 3, 4)/10, C=C, p=1/20)
+C <- matrix(c(
+  1, 3 / 4, 0,
+  3 / 4, 0, 3 / 4,
+  0, 3 / 4, 3 / 4
+), nrow = 3)
+g <- sample_hierarchical_sbm(100, 10, rho = c(3, 3, 4) / 10, C = C, p = 1 / 20)
 g
-if (require(Matrix)) { image(g[]) }
+if (require(Matrix)) {
+  image(g[])
+}
 }
 \seealso{
-\code{\link{sbm.game}}
+\code{\link[=sbm.game]{sbm.game()}}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_last_cit}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()},
+\code{\link{sample_traits_callaway}()}
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_k_regular}()},
+\code{\link{sample_last_cit}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()},
+\code{\link{sample_traits_callaway}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{games}
 \keyword{graphs}

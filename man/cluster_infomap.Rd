@@ -36,8 +36,8 @@ integer value equal or larger than 1).}
 of the detected community structure.}
 }
 \value{
-\code{cluster_infomap} returns a \code{\link{communities}} object,
-please see the \code{\link{communities}} manual page for details.
+\code{cluster_infomap()} returns a \code{\link[=communities]{communities()}} object,
+please see the \code{\link[=communities]{communities()}} manual page for details.
 }
 \description{
 Find community structure that minimizes the expected description length of a
@@ -66,11 +66,33 @@ equation, \emph{Eur. Phys. J. Special Topics} 178, 13 (2009).
 \doi{10.1140/epjst/e2010-01179-1}, \url{https://arxiv.org/abs/0906.1405}.
 }
 \seealso{
-Other community finding methods and \code{\link{communities}}.
+Other community finding methods and \code{\link[=communities]{communities()}}.
+
+Other community: 
+\code{\link{as_membership}()},
+\code{\link{cluster_edge_betweenness}()},
+\code{\link{cluster_fast_greedy}()},
+\code{\link{cluster_fluid_communities}()},
+\code{\link{cluster_label_prop}()},
+\code{\link{cluster_leading_eigen}()},
+\code{\link{cluster_leiden}()},
+\code{\link{cluster_louvain}()},
+\code{\link{cluster_optimal}()},
+\code{\link{cluster_spinglass}()},
+\code{\link{cluster_walktrap}()},
+\code{\link{compare}()},
+\code{\link{contract}()},
+\code{\link{groups}()},
+\code{\link{make_clusters}()},
+\code{\link{membership}()},
+\code{\link{modularity.igraph}()},
+\code{\link{plot_dendrogram}()},
+\code{\link{split_join_distance}()}
 }
 \author{
 Martin Rosvall wrote the original C++ code. This was ported to
 be more igraph-like by Emmanuel Navarro.  The R interface and
 some cosmetics was done by Gabor Csardi \email{csardi.gabor@gmail.com}.
 }
+\concept{community}
 \keyword{graphs}

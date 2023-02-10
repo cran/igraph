@@ -34,8 +34,8 @@ attribute, but you don't want to use it for community detection. A larger
 edge weight means a stronger connection for this function.}
 }
 \value{
-\code{cluster_fast_greedy} returns a \code{\link{communities}}
-object, please see the \code{\link{communities}} manual page for details.
+\code{cluster_fast_greedy()} returns a \code{\link[=communities]{communities()}}
+object, please see the \code{\link[=communities]{communities()}} manual page for details.
 }
 \description{
 This function tries to find dense subgraph, also called communities in
@@ -50,7 +50,7 @@ http://www.arxiv.org/abs/cond-mat/0408187 for the details.
 \examples{
 
 g <- make_full_graph(5) \%du\% make_full_graph(5) \%du\% make_full_graph(5)
-g <- add_edges(g, c(1,6, 1,11, 6, 11))
+g <- add_edges(g, c(1, 6, 1, 11, 6, 11))
 fc <- cluster_fast_greedy(g)
 membership(fc)
 sizes(fc)
@@ -61,16 +61,38 @@ A Clauset, MEJ Newman, C Moore: Finding community structure in
 very large networks, http://www.arxiv.org/abs/cond-mat/0408187
 }
 \seealso{
-\code{\link{communities}} for extracting the results.
+\code{\link[=communities]{communities()}} for extracting the results.
 
-See also \code{\link{cluster_walktrap}},
-\code{\link{cluster_spinglass}},
-\code{\link{cluster_leading_eigen}} and
-\code{\link{cluster_edge_betweenness}}, \code{\link{cluster_louvain}}
-\code{\link{cluster_leiden}} for other methods.
+See also \code{\link[=cluster_walktrap]{cluster_walktrap()}},
+\code{\link[=cluster_spinglass]{cluster_spinglass()}},
+\code{\link[=cluster_leading_eigen]{cluster_leading_eigen()}} and
+\code{\link[=cluster_edge_betweenness]{cluster_edge_betweenness()}}, \code{\link[=cluster_louvain]{cluster_louvain()}}
+\code{\link[=cluster_leiden]{cluster_leiden()}} for other methods.
+
+Other community: 
+\code{\link{as_membership}()},
+\code{\link{cluster_edge_betweenness}()},
+\code{\link{cluster_fluid_communities}()},
+\code{\link{cluster_infomap}()},
+\code{\link{cluster_label_prop}()},
+\code{\link{cluster_leading_eigen}()},
+\code{\link{cluster_leiden}()},
+\code{\link{cluster_louvain}()},
+\code{\link{cluster_optimal}()},
+\code{\link{cluster_spinglass}()},
+\code{\link{cluster_walktrap}()},
+\code{\link{compare}()},
+\code{\link{contract}()},
+\code{\link{groups}()},
+\code{\link{make_clusters}()},
+\code{\link{membership}()},
+\code{\link{modularity.igraph}()},
+\code{\link{plot_dendrogram}()},
+\code{\link{split_join_distance}()}
 }
 \author{
 Tamas Nepusz \email{ntamas@gmail.com} and Gabor Csardi
 \email{csardi.gabor@gmail.com} for the R interface.
 }
+\concept{community}
 \keyword{graphs}

@@ -19,19 +19,19 @@ or also a possible root (\code{TRUE})}
 }
 \value{
 When \code{details} is \code{FALSE}, a logical value that indicates
-  whether the graph is a tree. When \code{details} is \code{TRUE}, a named
-  list with two entries: \item{res}{Logical value that indicates whether the
-  graph is a tree.} \item{root}{The root vertex of the tree; undefined if
-  the graph is not a tree.}
+whether the graph is a tree. When \code{details} is \code{TRUE}, a named
+list with two entries: \item{res}{Logical value that indicates whether the
+graph is a tree.} \item{root}{The root vertex of the tree; undefined if
+the graph is not a tree.}
 }
 \description{
-\code{is_tree} decides whether a graph is a tree, and optionally returns a
+\code{is_tree()} decides whether a graph is a tree, and optionally returns a
 possible root vertex if the graph is a tree.
 }
 \details{
 An undirected graph is a tree if it is connected and has no cycles.
 In the directed case, a possible additional requirement is that all edges
-are oriented away from a root (out-tree or arborescence) or all edges are 
+are oriented away from a root (out-tree or arborescence) or all edges are
 oriented towards a root (in-tree or anti-arborescence). This test can be
 controlled using the mode parameter.
 
@@ -42,7 +42,13 @@ not to be a tree.
 
 g <- make_tree(7, 2)
 is_tree(g)
-is_tree(g, details=TRUE)
+is_tree(g, details = TRUE)
 
 }
+\seealso{
+Other trees: 
+\code{\link{sample_spanning_tree}()},
+\code{\link{to_prufer}()}
+}
+\concept{trees}
 \keyword{graphs}

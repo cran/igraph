@@ -15,8 +15,8 @@ be collected and returned as part of the result.}
 \item{root}{The id of the root (or source) vertex, this will be the root of
 the tree.}
 
-\item{mode}{Constant, must be \sQuote{\code{in}} or \sQuote{\code{out}}. If
-it is \sQuote{\code{in}}, then all directions are considered as opposite to
+\item{mode}{Constant, must be \sQuote{\verb{in}} or \sQuote{\code{out}}. If
+it is \sQuote{\verb{in}}, then all directions are considered as opposite to
 the original one in the input graph.}
 }
 \value{
@@ -50,20 +50,35 @@ dominator tree of a directed graph. For details see the reference below.
 \examples{
 
 ## The example from the paper
-g <- graph_from_literal(R-+A:B:C, A-+D, B-+A:D:E, C-+F:G, D-+L,
-               E-+H, F-+I, G-+I:J, H-+E:K, I-+K, J-+I,
-               K-+I:R, L-+H)
-dtree <- dominator_tree(g, root="R")
-layout <- layout_as_tree(dtree$domtree, root="R")
-layout[,2] <- -layout[,2]
-plot(dtree$domtree, layout=layout, vertex.label=V(dtree$domtree)$name)
+g <- graph_from_literal(
+  R -+ A:B:C, A -+ D, B -+ A:D:E, C -+ F:G, D -+ L,
+  E -+ H, F -+ I, G -+ I:J, H -+ E:K, I -+ K, J -+ I,
+  K -+ I:R, L -+ H
+)
+dtree <- dominator_tree(g, root = "R")
+layout <- layout_as_tree(dtree$domtree, root = "R")
+layout[, 2] <- -layout[, 2]
+plot(dtree$domtree, layout = layout, vertex.label = V(dtree$domtree)$name)
 }
 \references{
 Thomas Lengauer, Robert Endre Tarjan: A fast algorithm for
 finding dominators in a flowgraph, \emph{ACM Transactions on Programming
 Languages and Systems (TOPLAS)} I/1, 121--141, 1979.
 }
+\seealso{
+Other flow: 
+\code{\link{edge_connectivity}()},
+\code{\link{is_min_separator}()},
+\code{\link{is_separator}()},
+\code{\link{max_flow}()},
+\code{\link{min_cut}()},
+\code{\link{min_separators}()},
+\code{\link{st_cuts}()},
+\code{\link{st_min_cuts}()},
+\code{\link{vertex_connectivity}()}
+}
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{flow}
 \keyword{graphs}

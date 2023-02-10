@@ -2,7 +2,7 @@
 #   IGraph R package
 #   Copyright (C) 2014  Gabor Csardi <csardi.gabor@gmail.com>
 #   334 Harvard street, Cambridge, MA 02139 USA
-#   
+#
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
 #   the Free Software Foundation; either version 2 of the License, or
@@ -12,7 +12,7 @@
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA
@@ -20,21 +20,9 @@
 #
 ###################################################################
 
-#' @include attributes.R auto.R basic.R bipartite.R centrality.R
-#' @include cliques.R cocitation.R cohesive.blocks.R community.R
-#' @include components.R console.R conversion.R decomposition.R demo.R
-#' @include epi.R fit.R flow.R foreign.R games.R glet.R hrg.R indexing.R
-#' @include interface.R iterators.R layout.R minimum.spanning.tree.R
-#' @include motifs.R nexus.R operators.R other.R package.R par.R plot.R
-#' @include plot.common.R plot.shapes.R pp.R print.R scg.R socnet.R
-#' @include sparsedf.R structural.properties.R
-#' @include structure.info.R test.R tkplot.R topology.R layout_drl.R
-NULL
-
 ## For the future, right now, we do not warn or even message
 
 #' @importFrom utils packageName
-
 deprecated <- function(old, new) {
   assign(old, new, envir = asNamespace(packageName()))
 }
@@ -73,6 +61,8 @@ deprecated("assortativity.nominal", assortativity_nominal)
 deprecated("asymmetric.preference.game", sample_asym_pref)
 #' @export authority.score
 deprecated("authority.score", authority_score)
+#' @export automorphisms
+deprecated("automorphisms", count_automorphisms)
 #' @export autocurve.edges
 deprecated("autocurve.edges", curve_multiple)
 #' @export average.path.length
@@ -222,7 +212,7 @@ deprecated("graph.adjlist", graph_from_adj_list)
 #' @export graph.atlas
 deprecated("graph.atlas", graph_from_atlas)
 #' @export graph.automorphisms
-deprecated("graph.automorphisms", automorphisms)
+deprecated("graph.automorphisms", count_automorphisms)
 #' @export graph.bfs
 deprecated("graph.bfs", bfs)
 #' @export graph.bipartite

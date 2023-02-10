@@ -23,9 +23,24 @@ they contain the numeric ids of the incident vertices. The rows are
 listed in the order of numeric vertex ids.
 }
 \examples{
-g <- make_(ring(10),
-        with_vertex_(name = letters[1:10], color = "red"),
-        with_edge_(weight = 1:10, color = "green")
-      )
+g <- make_(
+  ring(10),
+  with_vertex_(name = letters[1:10], color = "red"),
+  with_edge_(weight = 1:10, color = "green")
+)
 as_long_data_frame(g)
 }
+\seealso{
+Other conversion: 
+\code{\link{as.directed}()},
+\code{\link{as.matrix.igraph}()},
+\code{\link{as_adj_list}()},
+\code{\link{as_adjacency_matrix}()},
+\code{\link{as_data_frame}()},
+\code{\link{as_edgelist}()},
+\code{\link{as_graphnel}()},
+\code{\link{as_incidence_matrix}()},
+\code{\link{graph_from_adj_list}()},
+\code{\link{graph_from_graphnel}()}
+}
+\concept{conversion}

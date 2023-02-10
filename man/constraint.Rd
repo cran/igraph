@@ -20,7 +20,7 @@ attribute all edges will have the same weight.}
 A numeric vector of constraint scores
 }
 \description{
-Given a graph, \code{constraint} calculates Burt's constraint for each
+Given a graph, \code{constraint()} calculates Burt's constraint for each
 vertex.
 }
 \details{
@@ -34,7 +34,7 @@ constraint, \eqn{C_i}{C[i]}, of vertex \eqn{i}'s ego network
   V[i], j != i).
 }
 for a graph of order (ie. number of vertices) \eqn{N}, where
-proportional tie strengths are defined as 
+proportional tie strengths are defined as
 \deqn{p_{ij} = \frac{a_{ij}+a_{ji}}{\sum_{k \in V_i \setminus \{i\}}(a_{ik}+a_{ki})},}{
   p[i,j]=(a[i,j]+a[j,i]) / sum(a[i,k]+a[k,i], k in V[i], k != i),
 }
@@ -43,7 +43,7 @@ graph adjacency matrix. For isolated vertices, constraint is undefined.
 }
 \examples{
 
-g <- sample_gnp(20, 5/20)
+g <- sample_gnp(20, 5 / 20)
 constraint(g)
 
 }
@@ -51,9 +51,35 @@ constraint(g)
 Burt, R.S. (2004). Structural holes and good ideas.
 \emph{American Journal of Sociology} 110, 349-399.
 }
+\seealso{
+Other structural.properties: 
+\code{\link{bfs}()},
+\code{\link{component_distribution}()},
+\code{\link{connect}()},
+\code{\link{coreness}()},
+\code{\link{degree}()},
+\code{\link{dfs}()},
+\code{\link{diameter}()},
+\code{\link{distance_table}()},
+\code{\link{edge_density}()},
+\code{\link{feedback_arc_set}()},
+\code{\link{girth}()},
+\code{\link{is_matching}()},
+\code{\link{knn}()},
+\code{\link{laplacian_matrix}()},
+\code{\link{reciprocity}()},
+\code{\link{subcomponent}()},
+\code{\link{subgraph}()},
+\code{\link{topo_sort}()},
+\code{\link{transitivity}()},
+\code{\link{unfold_tree}()},
+\code{\link{which_multiple}()},
+\code{\link{which_mutual}()}
+}
 \author{
 Jeroen Bruggeman
 (\url{https://sites.google.com/site/jebrug/jeroen-bruggeman-social-science})
 and Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{structural.properties}
 \keyword{graphs}

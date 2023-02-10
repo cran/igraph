@@ -29,7 +29,7 @@ This game generates a directed or undirected random graph where the degrees
 of vertices are equal to a predefined constant k. For undirected graphs, at
 least one of k and the number of vertices must be even.
 
-The game simply uses \code{\link{sample_degseq}} with appropriately
+The game simply uses \code{\link[=sample_degseq]{sample_degseq()}} with appropriately
 constructed degree sequences.
 }
 \examples{
@@ -39,16 +39,37 @@ ring <- sample_k_regular(10, 2)
 plot(ring)
 
 ## k-regular graphs on 10 vertices, with k=1:9
-k10 <- lapply(1:9, sample_k_regular, no.of.nodes=10)
+k10 <- lapply(1:9, sample_k_regular, no.of.nodes = 10)
 
-layout(matrix(1:9, nrow=3, byrow=TRUE))
-sapply(k10, plot, vertex.label=NA)
+layout(matrix(1:9, nrow = 3, byrow = TRUE))
+sapply(k10, plot, vertex.label = NA)
 }
 \seealso{
-\code{\link{sample_degseq}} for a generator with prescribed degree
+\code{\link[=sample_degseq]{sample_degseq()}} for a generator with prescribed degree
 sequence.
+
+Other games: 
+\code{\link{connect}()},
+\code{\link{erdos.renyi.game}()},
+\code{\link{sample_bipartite}()},
+\code{\link{sample_degseq}()},
+\code{\link{sample_dot_product}()},
+\code{\link{sample_gnm}()},
+\code{\link{sample_gnp}()},
+\code{\link{sample_grg}()},
+\code{\link{sample_growing}()},
+\code{\link{sample_hierarchical_sbm}()},
+\code{\link{sample_islands}()},
+\code{\link{sample_last_cit}()},
+\code{\link{sample_pa_age}()},
+\code{\link{sample_pa}()},
+\code{\link{sample_pref}()},
+\code{\link{sample_sbm}()},
+\code{\link{sample_smallworld}()},
+\code{\link{sample_traits_callaway}()}
 }
 \author{
 Tamas Nepusz \email{ntamas@gmail.com}
 }
+\concept{games}
 \keyword{graphs}
