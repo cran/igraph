@@ -1,4 +1,37 @@
-<!-- NEWS.md is maintained by https://cynkra.github.io/fledge, do not edit -->
+<!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
+
+# igraph 1.4.1
+
+## Bug fixes
+
+- `console()` now works again and provides a Tcl/Tk based UI where igraph can post status messages and progress info (#664).
+
+- Fix errors when printing long vertex names (#677, @ahmohamed).
+
+- Fix regression that broke builds on some systems (e.g., GCC version 5 or earlier), introduced in igraph 1.4.0 (#670, #671).
+
+- `fit_hrg()` does not crash any more when called with a graph that has less than three vertices.
+
+## Documentation
+
+- Various improvements (#663, @maelle; #667).
+
+## Internal
+
+- Fix warning about `yyget_leng()` returning wrong type when using LTO (#676).
+
+- Don't mention C++11 or C++17 for best compatibility with both newest R and older compilers, while still requesting a C++ compiler for linking.
+
+- Don't ignore `build/` when building the package because the vignette index is built there.
+
+- Skip plot test entirely on R-devel.
+
+- Avoid submodules for building igraph (#674).
+
+- Makevars cleanup (#671).
+
+- Add Zenodo configuration file.
+
 
 # igraph 1.4.0
 
@@ -1494,5 +1527,3 @@ After about a year of development this is the first "official" release
 of the igraph library. This release should be considered as beta
 software, but it should be useful in general. Please send your
 questions and comments.
-
-

@@ -1,5 +1,5 @@
 Package: igraph
-Version: 1.4.0
+Version: 1.4.1
 Title: Network Analysis and Visualization
 Author: See AUTHORS file.
 Maintainer: Tamás Nepusz <ntamas@gmail.com>
@@ -26,6 +26,6 @@ Config/testthat/start-first: vs-es, scan, vs-operators, weakref,
 RoxygenNote: 7.2.3
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2023-02-09 08:27:13 UTC; tamas
+Packaged: 2023-02-23 20:03:21 UTC; tamas
 Repository: CRAN
-Date/Publication: 2023-02-10 09:50:07 UTC
+Date/Publication: 2023-02-24 10:50:04 UTC
