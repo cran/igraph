@@ -1,5 +1,69 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# igraph 1.4.2
+
+## Breaking changes
+
+- Remove `igraph.eigen.default()` and `eigen_defaults`, introduce internal `eigen_defaults()` as a function (#741).
+
+- Remove broken `nexus*()` functions (#705), and `srand()` (#701).
+
+
+## C core
+
+- Update C core.
+
+- ARPACK-based calculations are now interruptible.
+
+- `shortest_paths()` and `all_shortest_paths()` no longer crash when an invalid `from` vertex is passed and weights are being used.
+
+See [diff](https://github.com/igraph/igraph/compare/87c70998344a39b44218f7af903bf62b8bbf3e71...98304787bc811bf709be5aeddea7b570c370988e) for details.
+
+
+## Printing
+
+- Use true vertex names for printing vertex sets. If a vertex set captures a relationship between vertices (e.g., the `father` component of `bfs()`), the vertex set is printed as a named vector (#754).
+
+- Suggest restarting R session after fatal error (#745).
+
+
+## Bug fixes
+
+- `as_long_data_frame()` now correctly processes vertex attributes and works with graphs without vertex attributes (#748).
+
+- `as.hclust(hrg.fit(g))` works again (#721).
+
+
+## Documentation
+
+- The documentation is now available at <https://igraph.org/> (#743).
+
+- Reorganize function reference (#662).
+
+- Replace `graph()` with `make_graph()` in examples (#738).
+
+- Add docs for `as.hclust.igraphHRG()` (#733).
+
+- Merged man page of `hub_score()` and `authority_score()` (#698).
+
+- Refactor contributors listing (#647).
+
+- Improve "family" titles (#679).
+
+- Improve docs of ego/neighborhood functions.
+
+- Improve `transitivity()` docs.
+
+
+## Internal
+
+- Introduce cpp11 package to improve error handling in the long run (#720).
+
+- Avoid longjmp for error handling and interrupts (#751).
+
+- `as.hclust.igraphHRG` uses `.Call()` interface (#727).
+
+
 # igraph 1.4.1
 
 ## Bug fixes

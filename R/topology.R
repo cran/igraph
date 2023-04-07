@@ -72,10 +72,10 @@ graph.get.isomorphisms.vf2 <- function(graph1, graph2, vertex.color1,
     edge.color2 <- as.integer(edge.color2) - 1L
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
   res <- .Call(
-    C_R_igraph_get_isomorphisms_vf2, graph1, graph2, vertex.color1,
+    R_igraph_get_isomorphisms_vf2, graph1, graph2, vertex.color1,
     vertex.color2, edge.color1, edge.color2
   )
 
@@ -134,10 +134,10 @@ graph.get.subisomorphisms.vf2 <- function(graph1, graph2, vertex.color1,
     edge.color2 <- as.integer(edge.color2) - 1L
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
   res <- .Call(
-    C_R_igraph_get_subisomorphisms_vf2, graph1, graph2,
+    R_igraph_get_subisomorphisms_vf2, graph1, graph2,
     vertex.color1, vertex.color2, edge.color1, edge.color2
   )
 
@@ -152,9 +152,9 @@ graph.isoclass.subgraph <- function(graph, vids) {
   }
   vids <- as.igraph.vs(graph, vids) - 1
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
-  res <- .Call(C_R_igraph_isoclass_subgraph, graph, vids)
+  res <- .Call(R_igraph_isoclass_subgraph, graph, vids)
   res
 }
 
@@ -187,10 +187,10 @@ graph.subisomorphic.lad <- function(pattern, target, domains = NULL,
     domains <- lapply(domains, function(x) as.igraph.vs(target, x) - 1)
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
   res <- .Call(
-    C_R_igraph_subisomorphic_lad, pattern, target, domains,
+    R_igraph_subisomorphic_lad, pattern, target, domains,
     induced, time.limit, map, all.maps
   )
 
@@ -324,17 +324,26 @@ isomorphic <- function(graph1, graph2, method = c(
   method <- igraph.match.arg(method)
 
   if (method == "auto") {
-    on.exit(.Call(C_R_igraph_finalizer))
-    .Call(C_R_igraph_isomorphic, graph1, graph2)
+    on.exit(.Call(R_igraph_finalizer))
+    .Call(R_igraph_isomorphic, graph1, graph2)
   } else if (method == "direct") {
-    on.exit(.Call(C_R_igraph_finalizer))
-    .Call(C_R_igraph_isomorphic_34, graph1, graph2)
+    on.exit(.Call(R_igraph_finalizer))
+    .Call(R_igraph_isomorphic_34, graph1, graph2)
   } else if (method == "vf2") {
     graph.isomorphic.vf2(graph1, graph2, ...)$iso
   } else if (method == "bliss") {
     graph.isomorphic.bliss(graph1, graph2, ...)$iso
   }
 }
+
+#' @export
+graph.isomorphic.34 <- isomorphic_34_impl
+#' @export
+graph.isomorphic.bliss <- isomorphic_bliss_impl
+#' @export
+graph.isomorphic.vf2 <- isomorphic_vf2_impl
+#' @export
+graph.subisomorphic.vf2 <- subisomorphic_vf2_impl
 
 #' @export
 #' @rdname isomorphic
@@ -492,6 +501,8 @@ count_isomorphisms <- function(graph1, graph2, method = "vf2", ...) {
   }
 }
 
+#' @export
+graph.count.isomorphisms.vf2 <- count_isomorphisms_vf2_impl
 
 #' Count the isomorphic mappings between a graph and the subgraphs of
 #' another graph
@@ -565,6 +576,8 @@ count_subgraph_isomorphisms <- function(pattern, target,
   }
 }
 
+#' @export
+graph.count.subisomorphisms.vf2 <- count_subisomorphisms_vf2_impl
 
 #' Calculate all isomorphic mappings between the vertices of two graphs
 #'
@@ -685,6 +698,8 @@ isomorphism_class <- function(graph, v) {
   }
 }
 
+#' @export
+graph.isoclass <- isoclass_impl
 
 #' Create a graph from an isomorphism class
 #'
@@ -703,7 +718,8 @@ isomorphism_class <- function(graph, v) {
 #' @aliases graph.isocreate
 #'
 #' @family graph isomorphism
-graph_from_isomorphism_class <- graph_from_isomorphism_class
+#' @export
+graph_from_isomorphism_class <- isoclass_create_impl
 
 
 #' Canonical permutation of a graph
@@ -778,8 +794,9 @@ graph_from_isomorphism_class <- graph_from_isomorphism_class
 #' el1 <- el1[order(el1[, 1], el1[, 2]), ]
 #' el2 <- el2[order(el2[, 1], el2[, 2]), ]
 #' all(el1 == el2)
+#' @family graph isomorphism
 #' @export
-canonical_permutation <- canonical_permutation
+canonical_permutation <- canonical_permutation_impl
 
 
 #' Permute the vertices of a graph
@@ -820,8 +837,11 @@ canonical_permutation <- canonical_permutation
 #' E(g2)$weight
 #' all(sort(E(g2)$weight) == sort(E(g)$weight))
 #' @export
-permute <- permute
+#' @family functions for manipulating graph structure
+permute <- permute_vertices_impl
 
+#' @export
+graph.isomorphic <- isomorphic_impl
 
 #' Number of automorphisms
 #'
@@ -881,8 +901,9 @@ permute <- permute
 #' ## matching by colors, leading to only 4 automorphisms
 #' g <- make_full_graph(4)
 #' count_automorphisms(g, colors = c(1, 2, 1, 2))
+#' @family graph automorphism
 #' @export
-count_automorphisms <- count_automorphisms
+count_automorphisms <- automorphisms_impl
 
 
 #' Generating set of the automorphism group of a graph
@@ -939,5 +960,6 @@ count_automorphisms <- count_automorphisms
 #' ## "turns" the ring by one vertex to the left or right
 #' g <- make_ring(10)
 #' automorphism_group(g)
+#' @family graph automorphism
 #' @export
-automorphism_group <- automorphism_group
+automorphism_group <- automorphism_group_impl

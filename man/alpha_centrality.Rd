@@ -77,9 +77,9 @@ algorithm, the routine may fail is certain cases.
 \examples{
 
 # The examples from Bonacich's paper
-g.1 <- graph(c(1, 3, 2, 3, 3, 4, 4, 5))
-g.2 <- graph(c(2, 1, 3, 1, 4, 1, 5, 1))
-g.3 <- graph(c(1, 2, 2, 3, 3, 4, 4, 1, 5, 1))
+g.1 <- make_graph(c(1, 3, 2, 3, 3, 4, 4, 5))
+g.2 <- make_graph(c(2, 1, 3, 1, 4, 1, 5, 1))
+g.3 <- make_graph(c(1, 2, 2, 3, 3, 4, 4, 1, 5, 1))
 alpha_centrality(g.1)
 alpha_centrality(g.2)
 alpha_centrality(g.3, alpha = 0.5)
@@ -93,13 +93,13 @@ measures of centrality for asymmetric relations'' \emph{Social Networks},
 \seealso{
 \code{\link[=eigen_centrality]{eigen_centrality()}} and \code{\link[=power_centrality]{power_centrality()}}
 
-Other centrality: 
-\code{\link{arpack_defaults}},
+Centrality measures
 \code{\link{closeness}()},
 \code{\link{diversity}()},
 \code{\link{eigen_centrality}()},
 \code{\link{estimate_betweenness}()},
 \code{\link{harmonic_centrality}()},
+\code{\link{hub_score}()},
 \code{\link{page_rank}()},
 \code{\link{power_centrality}()},
 \code{\link{spectrum}()},

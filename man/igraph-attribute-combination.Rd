@@ -72,7 +72,7 @@ function. This results almost always a complex attribute.} }
 
 \examples{
 
-g <- graph(c(1, 2, 1, 2, 1, 2, 2, 3, 3, 4))
+g <- make_graph(c(1, 2, 1, 2, 1, 2, 2, 3, 3, 4))
 E(g)$weight <- 1:5
 
 ## print attribute values with the graph
@@ -105,8 +105,28 @@ simplify(g, edge.attr.comb = list(
 \code{\link[=graph_attr]{graph_attr()}}, \code{\link[=vertex_attr]{vertex_attr()}},
 \code{\link[=edge_attr]{edge_attr()}} on how to use graph/vertex/edge attributes in
 general. \code{\link[=igraph_options]{igraph_options()}} on igraph parameters.
+
+Vertex, edge and graph attributes
+\code{\link{delete_edge_attr}()},
+\code{\link{delete_graph_attr}()},
+\code{\link{delete_vertex_attr}()},
+\code{\link{edge_attr<-}()},
+\code{\link{edge_attr_names}()},
+\code{\link{edge_attr}()},
+\code{\link{graph_attr<-}()},
+\code{\link{graph_attr_names}()},
+\code{\link{graph_attr}()},
+\code{\link{igraph-dollar}},
+\code{\link{igraph-vs-attributes}},
+\code{\link{set_edge_attr}()},
+\code{\link{set_graph_attr}()},
+\code{\link{set_vertex_attr}()},
+\code{\link{vertex_attr<-}()},
+\code{\link{vertex_attr_names}()},
+\code{\link{vertex_attr}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}
 }
+\concept{attributes}
 \keyword{graphs}

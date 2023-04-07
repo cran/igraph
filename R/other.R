@@ -51,8 +51,8 @@ running_mean <- function(v, binwidth) {
     stop("Vector too short for this binwidth.")
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
-  .Call(C_R_igraph_running_mean, v, binwidth)
+  on.exit(.Call(R_igraph_finalizer))
+  .Call(R_igraph_running_mean, v, binwidth)
 }
 
 
@@ -88,9 +88,9 @@ sample_seq <- function(low, high, length) {
     stop("length too big for this interval")
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   .Call(
-    C_R_igraph_random_sample, as.numeric(low), as.numeric(high),
+    R_igraph_random_sample, as.numeric(low), as.numeric(high),
     as.numeric(length)
   )
 }
@@ -155,23 +155,6 @@ igraph.i.spMatrix <- function(M) {
   }
 }
 
-
-
-#' Deprecated function, used to set random seed of the C library's RNG
-#'
-#' @param seed Ignored.
-#' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @family other
-#' @export
-srand <- function(seed) {
-  warning(
-    "This function does nothing, as calling srand from R packages\n",
-    "is now not allowed. If you want to reproduce your past\n",
-    "results, use an older version of igraph, e.g. 0.7.1"
-  )
-}
-
-
 #' Convex hull of a set of vertices
 #'
 #' Calculate the convex hull of a set of points, i.e. the covering polygon that
@@ -195,4 +178,4 @@ srand <- function(seed) {
 #' convex_hull(M)
 #' @family other
 #' @export
-convex_hull <- convex_hull
+convex_hull <- convex_hull_impl

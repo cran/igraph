@@ -33,9 +33,9 @@ get.adjacency.dense <- function(graph, type = c("both", "upper", "lower"),
   )
 
   if (edges || is.null(attr)) {
-    on.exit(.Call(C_R_igraph_finalizer))
+    on.exit(.Call(R_igraph_finalizer))
     res <- .Call(
-      C_R_igraph_get_adjacency, graph, as.numeric(type),
+      R_igraph_get_adjacency, graph, as.numeric(type),
       as.logical(edges)
     )
   } else {
@@ -261,8 +261,8 @@ as_edgelist <- function(graph, names = TRUE) {
   if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
-  on.exit(.Call(C_R_igraph_finalizer))
-  res <- matrix(.Call(C_R_igraph_get_edgelist, graph, TRUE),
+  on.exit(.Call(R_igraph_finalizer))
+  res <- matrix(.Call(R_igraph_get_edgelist, graph, TRUE),
     ncol = 2
   )
   res <- res + 1
@@ -342,7 +342,7 @@ as_edgelist <- function(graph, names = TRUE) {
 #' plot(ug3, layout = layout_in_circle, edge.label = E(ug3)$weight)
 #' }
 #'
-#' g4 <- graph(c(
+#' g4 <- make_graph(c(
 #'   1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 4,
 #'   6, 7, 7, 6, 7, 8, 7, 8, 8, 7, 8, 9, 8, 9,
 #'   9, 8, 9, 8, 9, 9, 10, 10, 10, 10
@@ -354,7 +354,7 @@ as_edgelist <- function(graph, names = TRUE) {
 #' )
 #' print(ug4, e = TRUE)
 #'
-as.directed <- as.directed
+as.directed <- to_directed_impl
 
 #' @rdname as.directed
 #' @param edge.attr.comb Specifies what to do with edge attributes, if
@@ -376,9 +376,9 @@ as.undirected <- function(graph, mode = c("collapse", "each", "mutual"), edge.at
   )
   edge.attr.comb <- igraph.i.attribute.combination(edge.attr.comb)
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
-  res <- .Call(C_R_igraph_to_undirected, graph, mode, edge.attr.comb)
+  res <- .Call(R_igraph_to_undirected, graph, mode, edge.attr.comb)
 
   res
 }
@@ -452,8 +452,8 @@ as_adj_list <- function(graph,
   }
 
   multiple <- if (multiple) 1 else 0
-  on.exit(.Call(C_R_igraph_finalizer))
-  res <- .Call(C_R_igraph_get_adjlist, graph, mode, loops, multiple)
+  on.exit(.Call(R_igraph_finalizer))
+  res <- .Call(R_igraph_get_adjlist, graph, mode, loops, multiple)
   res <- lapply(res, `+`, 1)
   if (igraph_opt("return.vs.es")) {
     res <- lapply(res, unsafe_create_vs, graph = graph, verts = V(graph))
@@ -491,8 +491,8 @@ as_adj_edge_list <- function(graph,
     loops <- 2
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
-  res <- .Call(C_R_igraph_get_adjedgelist, graph, mode, loops)
+  on.exit(.Call(R_igraph_finalizer))
+  res <- .Call(R_igraph_get_adjedgelist, graph, mode, loops)
   res <- lapply(res, function(.x) E(graph)[.x + 1])
   if (is_named(graph)) names(res) <- V(graph)$name
   res
@@ -722,9 +722,9 @@ as_graphnel <- function(graph) {
 
 get.incidence.dense <- function(graph, types, names, attr) {
   if (is.null(attr)) {
-    on.exit(.Call(C_R_igraph_finalizer))
+    on.exit(.Call(R_igraph_finalizer))
     ## Function call
-    res <- .Call(C_R_igraph_get_incidence, graph, types)
+    res <- .Call(R_igraph_get_incidence, graph, types)
 
     if (names && "name" %in% vertex_attr_names(graph)) {
       rownames(res$res) <- V(graph)$name[res$row_ids + 1]
@@ -890,7 +890,7 @@ as_data_frame <- function(x, what = c("edges", "vertices", "both")) {
   what <- igraph.match.arg(what)
 
   if (what %in% c("vertices", "both")) {
-    ver <- .Call(C_R_igraph_mybracket2, x, igraph_t_idx_attr, igraph_attr_idx_vertex)
+    ver <- .Call(R_igraph_mybracket2, x, igraph_t_idx_attr, igraph_attr_idx_vertex)
     class(ver) <- "data.frame"
     rn <- if (is_named(x)) {
       V(x)$name
@@ -903,8 +903,8 @@ as_data_frame <- function(x, what = c("edges", "vertices", "both")) {
   if (what %in% c("edges", "both")) {
     el <- as_edgelist(x)
     edg <- c(
-      list(from = el[, 1]), list(to = el[, 2]),
-      .Call(C_R_igraph_mybracket2, x, igraph_t_idx_attr, igraph_attr_idx_edge)
+      list(from = el[, 1], to = el[, 2]),
+      .Call(R_igraph_mybracket2, x, igraph_t_idx_attr, igraph_attr_idx_edge)
     )
     class(edg) <- "data.frame"
     rownames(edg) <- seq_len(ecount(x))
@@ -971,7 +971,7 @@ as_data_frame <- function(x, what = c("edges", "vertices", "both")) {
 #' which_multiple(g3)
 #' @family conversion
 #' @export
-graph_from_adj_list <- graph_from_adj_list
+graph_from_adj_list <- adjlist_impl
 
 
 #' Convert a graph to a long data frame
@@ -1002,7 +1002,7 @@ as_long_data_frame <- function(graph) {
     stop("Not a graph object")
   }
 
-  ver <- .Call(C_R_igraph_mybracket2, graph, igraph_t_idx_attr, igraph_attr_idx_vertex)
+  ver <- .Call(R_igraph_mybracket2, graph, igraph_t_idx_attr, igraph_attr_idx_vertex)
   class(ver) <- "data.frame"
   rn <- if (is_named(graph)) {
     V(graph)$name
@@ -1014,16 +1014,17 @@ as_long_data_frame <- function(graph) {
   el <- as_edgelist(graph, names = FALSE)
   edg <- c(
     list(from = el[, 1]), list(to = el[, 2]),
-    .Call(C_R_igraph_mybracket2, graph, igraph_t_idx_attr, igraph_attr_idx_edge)
+    .Call(R_igraph_mybracket2, graph, igraph_t_idx_attr, igraph_attr_idx_edge)
   )
   class(edg) <- "data.frame"
   rownames(edg) <- seq_len(ecount(graph))
 
   ver2 <- ver
-  names(ver) <- paste0("from_", names(ver))
-  names(ver2) <- paste0("to_", names(ver2))
-
-  edg <- cbind(edg, ver[el[, 1], ], ver2[el[, 2], ])
+  if (length(ver) > 0) {
+    names(ver) <- paste0("from_", names(ver))
+    names(ver2) <- paste0("to_", names(ver2))
+    edg <- cbind(edg, ver[el[, 1], , drop = FALSE], ver2[el[, 2], , drop = FALSE])
+  }
 
   edg
 }

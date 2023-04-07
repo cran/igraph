@@ -52,7 +52,8 @@ NULL
 #' `steps` number of MCMC steps to perform the fitting, or a convergence
 #' criteria if the specified number of steps is zero. `fit_hrg()` can start
 #' from a given HRG, if this is given in the `hrg()` argument and the
-#' `start` argument is `TRUE`.
+#' `start` argument is `TRUE`. It can be converted to the `hclust` class using
+#' `as.hclust()` provided in this package.
 #'
 #' @aliases hrg.fit
 #' @param graph The graph to fit the model to. Edge directions are ignored in
@@ -100,6 +101,7 @@ NULL
 #' g <- sample_gnp(10, p = 1 / 2) + sample_gnp(10, p = 1 / 2)
 #' hrg <- fit_hrg(g)
 #' hrg
+#' summary(as.hclust(hrg))
 #'
 #' ## The consensus tree for it
 #' consensus_tree(g, hrg = hrg, start = TRUE)
@@ -128,9 +130,9 @@ fit_hrg <- function(graph, hrg = NULL, start = FALSE, steps = 0) {
   start <- as.logical(start)
   steps <- as.integer(steps)
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
-  res <- .Call(C_R_igraph_hrg_fit, graph, hrg, start, steps)
+  res <- .Call(R_igraph_hrg_fit, graph, hrg, start, steps)
 
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
     res$names <- V(graph)$name
@@ -172,7 +174,7 @@ fit_hrg <- function(graph, hrg = NULL, start = FALSE, steps = 0) {
 #'     vertices. The order is the same as in the `parents` vector.}
 #' @family hierarchical random graph functions
 #' @export
-consensus_tree <- consensus_tree
+consensus_tree <- hrg_consensus_impl
 
 
 #' Create a hierarchical random graph from an igraph graph
@@ -190,7 +192,7 @@ consensus_tree <- consensus_tree
 #'
 #' @family hierarchical random graph functions
 #' @export
-hrg <- hrg
+hrg <- hrg_create_impl
 
 
 #' Create an igraph graph from a hierarchical random graph model
@@ -203,7 +205,7 @@ hrg <- hrg
 #'
 #' @family hierarchical random graph functions
 #' @export
-hrg_tree <- hrg_tree
+hrg_tree <- hrg_dendrogram_impl
 
 
 #' Sample from a hierarchical random graph model
@@ -217,7 +219,7 @@ hrg_tree <- hrg_tree
 #'
 #' @family hierarchical random graph functions
 #' @export
-sample_hrg <- sample_hrg
+sample_hrg <- hrg_game_impl
 
 #' Predict edges based on a hierarchical random graph model
 #'
@@ -297,10 +299,10 @@ predict_edges <- function(graph, hrg = NULL, start = FALSE, num.samples = 10000,
   num.samples <- as.integer(num.samples)
   num.bins <- as.integer(num.bins)
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
   res <- .Call(
-    C_R_igraph_hrg_predict, graph, hrg, start, num.samples,
+    R_igraph_hrg_predict, graph, hrg, start, num.samples,
     num.bins
   )
   res$edges <- matrix(res$edges, ncol = 2, byrow = TRUE)
@@ -344,7 +346,7 @@ as.igraph.igraphHRG <- function(x, ...) {
   ll <- ifelse(x$left < 0, -x$left + ovc, x$left + 1)
   rr <- ifelse(x$right < 0, -x$right + ovc, x$right + 1)
   edges <- c(rbind(seq_len(ivc) + ovc, ll), rbind(seq_len(ivc) + ovc, rr))
-  res <- graph(edges)
+  res <- make_graph(edges)
 
   V(res)$name <- c(
     if (!is.null(x$names)) x$names else as.character(1:ovc),
@@ -454,7 +456,8 @@ as.dendrogram.igraphHRG <- function(object, hang = 0.01, ...) {
 }
 
 #' @importFrom stats as.hclust
-#' @method as.hclust igraphHRG
+#' @export
+#'
 as.hclust.igraphHRG <- function(x, ...) {
   merge3 <- buildMerges(x)
 
@@ -479,16 +482,15 @@ as.hclust.igraphHRG <- function(x, ...) {
     map2[i] <- -mr[1]
   }
   n <- nrow(merge) + 1
-  hcass <- .C("igraphhcass2",
+  order <- igraph_hcass2(
     n = as.integer(n),
     ia = as.integer(mergeInto[, 1]),
-    ib = as.integer(mergeInto[, 2]),
-    order = integer(n), iia = integer(n), iib = integer(n)
+    ib = as.integer(mergeInto[, 2])
   )
 
   mynames <- if (is.null(x$names)) 1:n else x$names
   res <- list(
-    merge = merge, height = 1:nrow(merge), order = hcass$order,
+    merge = merge, height = 1:nrow(merge), order = order,
     labels = mynames, method = NA_character_,
     dist.method = NA_character_
   )

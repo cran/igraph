@@ -115,21 +115,21 @@ plot(g)
 
 # -----------------------------------------------------------------
 # nei() special function
-g <- graph(c(1, 2, 2, 3, 2, 4, 4, 2))
+g <- make_graph(c(1, 2, 2, 3, 2, 4, 4, 2))
 V(g)[.nei(c(2, 4))]
 V(g)[.nei(c(2, 4), "in")]
 V(g)[.nei(c(2, 4), "out")]
 
 # -----------------------------------------------------------------
 # The same with vertex names
-g <- graph(~ A -+ B, B -+ C:D, D -+ B)
+g <- make_graph(~ A -+ B, B -+ C:D, D -+ B)
 V(g)[.nei(c("B", "D"))]
 V(g)[.nei(c("B", "D"), "in")]
 V(g)[.nei(c("B", "D"), "out")]
 
 # -----------------------------------------------------------------
 # Resolving attributes
-g <- graph(~ A -+ B, B -+ C:D, D -+ B)
+g <- make_graph(~ A -+ B, B -+ C:D, D -+ B)
 V(g)$color <- c("red", "red", "green", "green")
 V(g)[color == "red"]
 
@@ -144,6 +144,7 @@ V(g)[.env$x]
 Other vertex and edge sequences: 
 \code{\link{E}()},
 \code{\link{V}()},
+\code{\link{as_ids}()},
 \code{\link{igraph-es-attributes}},
 \code{\link{igraph-es-indexing2}},
 \code{\link{igraph-es-indexing}},

@@ -36,7 +36,7 @@ g2 <- make_full_graph(n = 10)
 g3 <- sample_gnp(n = 10, 0.4)
 
 # loop edges
-g <- graph(c(1, 2, 2, 2, 2, 3)) # graph with a self-loop
+g <- make_graph(c(1, 2, 2, 2, 2, 3)) # graph with a self-loop
 edge_density(g, loops = FALSE) # this is wrong!!!
 edge_density(g, loops = TRUE) # this is right!!!
 edge_density(simplify(g), loops = FALSE) # this is also right, but different
@@ -58,10 +58,10 @@ Other structural.properties:
 \code{\link{coreness}()},
 \code{\link{degree}()},
 \code{\link{dfs}()},
-\code{\link{diameter}()},
 \code{\link{distance_table}()},
 \code{\link{feedback_arc_set}()},
 \code{\link{girth}()},
+\code{\link{is_dag}()},
 \code{\link{is_matching}()},
 \code{\link{knn}()},
 \code{\link{laplacian_matrix}()},

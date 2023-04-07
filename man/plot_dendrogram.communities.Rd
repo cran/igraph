@@ -101,7 +101,7 @@ plot_dendrogram(fc)
 
 }
 \seealso{
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -115,14 +115,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{membership}()},
 \code{\link{modularity.igraph}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -136,7 +135,6 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{membership}()},

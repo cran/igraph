@@ -80,7 +80,7 @@ groups(clu)
 \seealso{
 \code{\link[=decompose]{decompose()}}, \code{\link[=subcomponent]{subcomponent()}}, \code{\link[=groups]{groups()}}
 
-Other components: 
+Connected components
 \code{\link{articulation_points}()},
 \code{\link{biconnected_components}()},
 \code{\link{decompose}()}
@@ -92,11 +92,11 @@ Other structural.properties:
 \code{\link{coreness}()},
 \code{\link{degree}()},
 \code{\link{dfs}()},
-\code{\link{diameter}()},
 \code{\link{distance_table}()},
 \code{\link{edge_density}()},
 \code{\link{feedback_arc_set}()},
 \code{\link{girth}()},
+\code{\link{is_dag}()},
 \code{\link{is_matching}()},
 \code{\link{knn}()},
 \code{\link{laplacian_matrix}()},

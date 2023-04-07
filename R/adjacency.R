@@ -53,9 +53,9 @@ graph.adjacency.dense <- function(adjmatrix,
       stop("not a square matrix")
     }
 
-    on.exit(.Call(C_R_igraph_finalizer))
+    on.exit(.Call(R_igraph_finalizer))
     res <- .Call(
-      C_R_igraph_weighted_adjacency, adjmatrix,
+      R_igraph_weighted_adjacency, adjmatrix,
       as.numeric(mode), weighted, diag
     )
   } else {
@@ -68,8 +68,8 @@ graph.adjacency.dense <- function(adjmatrix,
       diag(adjmatrix) <- 0
     }
 
-    on.exit(.Call(C_R_igraph_finalizer))
-    res <- .Call(C_R_igraph_graph_adjacency, adjmatrix, as.numeric(mode))
+    on.exit(.Call(R_igraph_finalizer))
+    res <- .Call(R_igraph_graph_adjacency, adjmatrix, as.numeric(mode))
   }
 
   res
@@ -239,7 +239,7 @@ graph.adjacency.sparse <- function(adjmatrix, mode = c(
     res <- add_edges(res, edges = t(as.matrix(el[, 1:2])), attr = weight)
   } else {
     edges <- unlist(apply(el, 1, function(x) rep(unname(x[1:2]), x[3])))
-    res <- graph(n = vc, edges, directed = (mode == "directed"))
+    res <- make_graph(n = vc, edges, directed = (mode == "directed"))
   }
   res
 }
@@ -377,6 +377,7 @@ graph.adjacency.sparse <- function(adjmatrix, mode = c(
 #' g10 <- graph_from_adjacency_matrix(adjm, weighted = TRUE, add.rownames = "code")
 #' summary(g10)
 #'
+#' @export
 graph_from_adjacency_matrix <- function(adjmatrix,
                                         mode = c(
                                           "directed", "undirected", "max",

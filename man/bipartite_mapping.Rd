@@ -52,8 +52,9 @@ g3 <- add_edges(g3, c(1, 3))
 bipartite_mapping(g3)
 }
 \seealso{
-Other bipartite: 
-\code{\link{bipartite_projection}()}
+Bipartite graphs
+\code{\link{bipartite_projection}()},
+\code{\link{is_bipartite}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}

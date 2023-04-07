@@ -88,11 +88,11 @@
 #' # To have a bit less maximal cliques, about 100-200 usually
 #' g <- sample_gnp(100, 0.03)
 #' max_cliques(g)
-cliques <- cliques
+cliques <- cliques_impl
 
 #' @family cliques
 #' @export
-largest_cliques <- largest_cliques
+largest_cliques <- largest_cliques_impl
 
 #' @rdname cliques
 #' @param subset If not `NULL`, then it must be a vector of vertex ids,
@@ -133,9 +133,9 @@ max_cliques <- function(graph, min = NULL, max = NULL, subset = NULL, file = NUL
     } else {
       tmpfile <- FALSE
     }
-    on.exit(.Call(C_R_igraph_finalizer))
+    on.exit(.Call(R_igraph_finalizer))
     res <- .Call(
-      C_R_igraph_maximal_cliques_file, graph, subset, file,
+      R_igraph_maximal_cliques_file, graph, subset, file,
       as.numeric(min), as.numeric(max)
     )
     if (tmpfile) {
@@ -144,9 +144,9 @@ max_cliques <- function(graph, min = NULL, max = NULL, subset = NULL, file = NUL
     }
     invisible(NULL)
   } else {
-    on.exit(.Call(C_R_igraph_finalizer))
+    on.exit(.Call(R_igraph_finalizer))
     res <- .Call(
-      C_R_igraph_maximal_cliques, graph, subset,
+      R_igraph_maximal_cliques, graph, subset,
       as.numeric(min), as.numeric(max)
     )
     res <- lapply(res, function(x) x + 1)
@@ -181,16 +181,16 @@ count_max_cliques <- function(graph, min = NULL, max = NULL,
     subset <- as.integer(as.igraph.vs(graph, subset) - 1)
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
-  res <- .Call(C_R_igraph_maximal_cliques_count, graph, subset, min, max)
+  res <- .Call(R_igraph_maximal_cliques_count, graph, subset, min, max)
 
   res
 }
 
 #' @family cliques
 #' @export
-clique_num <- clique_num
+clique_num <- clique_number_impl
 
 
 #' Functions to find weighted cliques, i.e. weighted complete subgraphs in a graph
@@ -253,9 +253,11 @@ clique_num <- clique_num
 #' weighted_cliques(g, maximal = TRUE)
 #' largest_weighted_cliques(g)
 #' weighted_clique_num(g)
-weighted_cliques <- weighted_cliques
-largest_weighted_cliques <- largest_weighted_cliques
-weighted_clique_num <- weighted_clique_num
+weighted_cliques <- weighted_cliques_impl
+#' @export
+largest_weighted_cliques <- largest_weighted_cliques_impl
+#' @export
+weighted_clique_num <- weighted_clique_number_impl
 
 #' Independent vertex sets
 #'
@@ -335,9 +337,9 @@ ivs <- function(graph, min = NULL, max = NULL) {
     max <- 0
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    C_R_igraph_independent_vertex_sets, graph, as.numeric(min),
+    R_igraph_independent_vertex_sets, graph, as.numeric(min),
     as.numeric(max)
   )
   res <- lapply(res, `+`, 1)
@@ -356,8 +358,8 @@ largest_ivs <- function(graph) {
     stop("Not a graph object")
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
-  res <- .Call(C_R_igraph_largest_independent_vertex_sets, graph)
+  on.exit(.Call(R_igraph_finalizer))
+  res <- .Call(R_igraph_largest_independent_vertex_sets, graph)
   res <- lapply(res, `+`, 1)
 
   if (igraph_opt("return.vs.es")) {
@@ -374,8 +376,8 @@ maximal_ivs <- function(graph) {
     stop("Not a graph object")
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
-  res <- .Call(C_R_igraph_maximal_independent_vertex_sets, graph)
+  on.exit(.Call(R_igraph_finalizer))
+  res <- .Call(R_igraph_maximal_independent_vertex_sets, graph)
   res <- lapply(res, `+`, 1)
 
   if (igraph_opt("return.vs.es")) {
@@ -392,16 +394,16 @@ ivs_size <- function(graph) {
     stop("Not a graph object")
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
-  .Call(C_R_igraph_independence_number, graph)
+  on.exit(.Call(R_igraph_finalizer))
+  .Call(R_igraph_independence_number, graph)
 }
 
 #' @family cliques
 #' @export
 clique_size_counts <- function(graph, min = 0, max = 0, maximal = FALSE, ...) {
   if (maximal) {
-    maximal_clique_size_counts(graph, min, max, ...)
+    maximal_cliques_hist_impl(graph, min, max, ...)
   } else {
-    all_clique_size_counts(graph, min, max, ...)
+    clique_size_hist_impl(graph, min, max, ...)
   }
 }

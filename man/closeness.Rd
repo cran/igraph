@@ -88,13 +88,13 @@ Conceptual Clarification. \emph{Social Networks}, 1, 215-239.
 \seealso{
 \code{\link[=betweenness]{betweenness()}}, \code{\link[=degree]{degree()}}, \code{\link[=harmonic_centrality]{harmonic_centrality()}}
 
-Other centrality: 
+Centrality measures
 \code{\link{alpha_centrality}()},
-\code{\link{arpack_defaults}},
 \code{\link{diversity}()},
 \code{\link{eigen_centrality}()},
 \code{\link{estimate_betweenness}()},
 \code{\link{harmonic_centrality}()},
+\code{\link{hub_score}()},
 \code{\link{page_rank}()},
 \code{\link{power_centrality}()},
 \code{\link{spectrum}()},

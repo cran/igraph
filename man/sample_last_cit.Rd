@@ -82,12 +82,16 @@ but the probability of an edge depends on the (potentially) cited
 vertex only.
 }
 \seealso{
-Other games: 
-\code{\link{connect}()},
+Random graph models (games)
 \code{\link{erdos.renyi.game}()},
 \code{\link{sample_bipartite}()},
+\code{\link{sample_correlated_gnp_pair}()},
+\code{\link{sample_correlated_gnp}()},
 \code{\link{sample_degseq}()},
 \code{\link{sample_dot_product}()},
+\code{\link{sample_fitness_pl}()},
+\code{\link{sample_fitness}()},
+\code{\link{sample_forestfire}()},
 \code{\link{sample_gnm}()},
 \code{\link{sample_gnp}()},
 \code{\link{sample_grg}()},
@@ -100,14 +104,20 @@ Other games:
 \code{\link{sample_pref}()},
 \code{\link{sample_sbm}()},
 \code{\link{sample_smallworld}()},
-\code{\link{sample_traits_callaway}()}
+\code{\link{sample_traits_callaway}()},
+\code{\link{sample_tree}()},
+\code{\link{sample_}()}
 
-Other games: 
-\code{\link{connect}()},
+Random graph models (games)
 \code{\link{erdos.renyi.game}()},
 \code{\link{sample_bipartite}()},
+\code{\link{sample_correlated_gnp_pair}()},
+\code{\link{sample_correlated_gnp}()},
 \code{\link{sample_degseq}()},
 \code{\link{sample_dot_product}()},
+\code{\link{sample_fitness_pl}()},
+\code{\link{sample_fitness}()},
+\code{\link{sample_forestfire}()},
 \code{\link{sample_gnm}()},
 \code{\link{sample_gnp}()},
 \code{\link{sample_grg}()},
@@ -120,14 +130,20 @@ Other games:
 \code{\link{sample_pref}()},
 \code{\link{sample_sbm}()},
 \code{\link{sample_smallworld}()},
-\code{\link{sample_traits_callaway}()}
+\code{\link{sample_traits_callaway}()},
+\code{\link{sample_tree}()},
+\code{\link{sample_}()}
 
-Other games: 
-\code{\link{connect}()},
+Random graph models (games)
 \code{\link{erdos.renyi.game}()},
 \code{\link{sample_bipartite}()},
+\code{\link{sample_correlated_gnp_pair}()},
+\code{\link{sample_correlated_gnp}()},
 \code{\link{sample_degseq}()},
 \code{\link{sample_dot_product}()},
+\code{\link{sample_fitness_pl}()},
+\code{\link{sample_fitness}()},
+\code{\link{sample_forestfire}()},
 \code{\link{sample_gnm}()},
 \code{\link{sample_gnp}()},
 \code{\link{sample_grg}()},
@@ -140,14 +156,20 @@ Other games:
 \code{\link{sample_pref}()},
 \code{\link{sample_sbm}()},
 \code{\link{sample_smallworld}()},
-\code{\link{sample_traits_callaway}()}
+\code{\link{sample_traits_callaway}()},
+\code{\link{sample_tree}()},
+\code{\link{sample_}()}
 
-Other games: 
-\code{\link{connect}()},
+Random graph models (games)
 \code{\link{erdos.renyi.game}()},
 \code{\link{sample_bipartite}()},
+\code{\link{sample_correlated_gnp_pair}()},
+\code{\link{sample_correlated_gnp}()},
 \code{\link{sample_degseq}()},
 \code{\link{sample_dot_product}()},
+\code{\link{sample_fitness_pl}()},
+\code{\link{sample_fitness}()},
+\code{\link{sample_forestfire}()},
 \code{\link{sample_gnm}()},
 \code{\link{sample_gnp}()},
 \code{\link{sample_grg}()},
@@ -160,14 +182,20 @@ Other games:
 \code{\link{sample_pref}()},
 \code{\link{sample_sbm}()},
 \code{\link{sample_smallworld}()},
-\code{\link{sample_traits_callaway}()}
+\code{\link{sample_traits_callaway}()},
+\code{\link{sample_tree}()},
+\code{\link{sample_}()}
 
-Other games: 
-\code{\link{connect}()},
+Random graph models (games)
 \code{\link{erdos.renyi.game}()},
 \code{\link{sample_bipartite}()},
+\code{\link{sample_correlated_gnp_pair}()},
+\code{\link{sample_correlated_gnp}()},
 \code{\link{sample_degseq}()},
 \code{\link{sample_dot_product}()},
+\code{\link{sample_fitness_pl}()},
+\code{\link{sample_fitness}()},
+\code{\link{sample_forestfire}()},
 \code{\link{sample_gnm}()},
 \code{\link{sample_gnp}()},
 \code{\link{sample_grg}()},
@@ -180,14 +208,20 @@ Other games:
 \code{\link{sample_pref}()},
 \code{\link{sample_sbm}()},
 \code{\link{sample_smallworld}()},
-\code{\link{sample_traits_callaway}()}
+\code{\link{sample_traits_callaway}()},
+\code{\link{sample_tree}()},
+\code{\link{sample_}()}
 
-Other games: 
-\code{\link{connect}()},
+Random graph models (games)
 \code{\link{erdos.renyi.game}()},
 \code{\link{sample_bipartite}()},
+\code{\link{sample_correlated_gnp_pair}()},
+\code{\link{sample_correlated_gnp}()},
 \code{\link{sample_degseq}()},
 \code{\link{sample_dot_product}()},
+\code{\link{sample_fitness_pl}()},
+\code{\link{sample_fitness}()},
+\code{\link{sample_forestfire}()},
 \code{\link{sample_gnm}()},
 \code{\link{sample_gnp}()},
 \code{\link{sample_grg}()},
@@ -200,7 +234,9 @@ Other games:
 \code{\link{sample_pref}()},
 \code{\link{sample_sbm}()},
 \code{\link{sample_smallworld}()},
-\code{\link{sample_traits_callaway}()}
+\code{\link{sample_traits_callaway}()},
+\code{\link{sample_tree}()},
+\code{\link{sample_}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}

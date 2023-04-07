@@ -69,13 +69,13 @@ M. Marchiori and V. Latora, Harmony in the small-world,
 \seealso{
 \code{\link[=betweenness]{betweenness()}}, \code{\link[=closeness]{closeness()}}
 
-Other centrality: 
+Centrality measures
 \code{\link{alpha_centrality}()},
-\code{\link{arpack_defaults}},
 \code{\link{closeness}()},
 \code{\link{diversity}()},
 \code{\link{eigen_centrality}()},
 \code{\link{estimate_betweenness}()},
+\code{\link{hub_score}()},
 \code{\link{page_rank}()},
 \code{\link{power_centrality}()},
 \code{\link{spectrum}()},

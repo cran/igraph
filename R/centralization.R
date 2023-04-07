@@ -82,11 +82,11 @@ NULL
 #' centralize(deg, tmax)
 #'
 #' # The most centralized graph according to eigenvector centrality
-#' g0 <- graph(c(2, 1), n = 10, dir = FALSE)
+#' g0 <- make_graph(c(2, 1), n = 10, dir = FALSE)
 #' g1 <- make_star(10, mode = "undirected")
 #' centr_eigen(g0)$centralization
 #' centr_eigen(g1)$centralization
-centralize <- centralize
+centralize <- centralization_impl
 
 #' Centralize a graph according to the degrees of vertices
 #'
@@ -119,7 +119,7 @@ centralize <- centralize
 #' centr_clo(g, mode = "all")$centralization
 #' centr_betw(g, directed = FALSE)$centralization
 #' centr_eigen(g, directed = FALSE)$centralization
-centr_degree <- centr_degree
+centr_degree <- centralization_degree_impl
 
 #' Theoretical maximum for degree centralization
 #'
@@ -165,9 +165,9 @@ centr_degree_tmax <- function(graph = NULL, nodes = 0, mode = c("all", "out", "i
   )
   loops <- as.logical(loops)
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
-  res <- .Call(C_R_igraph_centralization_degree_tmax, graph, nodes, mode, loops)
+  res <- .Call(R_igraph_centralization_degree_tmax, graph, nodes, mode, loops)
 
   res
 }
@@ -217,9 +217,9 @@ centr_betw <- function(graph, directed = TRUE, nobigint = TRUE, normalized = TRU
     warning("'nobigint' is deprecated since igraph 1.3 and will be removed in igraph 1.4")
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
-  res <- .Call(C_R_igraph_centralization_betweenness, graph, directed, normalized)
+  res <- .Call(R_igraph_centralization_betweenness, graph, directed, normalized)
 
   res
 }
@@ -249,7 +249,7 @@ centr_betw <- function(graph, directed = TRUE, nobigint = TRUE, normalized = TRU
 #' centr_betw(g, normalized = FALSE)$centralization %>%
 #'   `/`(centr_betw_tmax(g))
 #' centr_betw(g, normalized = TRUE)$centralization
-centr_betw_tmax <- centr_betw_tmax
+centr_betw_tmax <- centralization_betweenness_tmax_impl
 
 #' Centralize a graph according to the closeness of vertices
 #'
@@ -280,7 +280,7 @@ centr_betw_tmax <- centr_betw_tmax
 #' centr_clo(g, mode = "all")$centralization
 #' centr_betw(g, directed = FALSE)$centralization
 #' centr_eigen(g, directed = FALSE)$centralization
-centr_clo <- centr_clo
+centr_clo <- centralization_closeness_impl
 
 #' Theoretical maximum for closeness centralization
 #'
@@ -307,7 +307,7 @@ centr_clo <- centr_clo
 #' centr_clo(g, normalized = FALSE)$centralization %>%
 #'   `/`(centr_clo_tmax(g))
 #' centr_clo(g, normalized = TRUE)$centralization
-centr_clo_tmax <- centr_clo_tmax
+centr_clo_tmax <- centralization_closeness_tmax_impl
 
 #' Centralize a graph according to the eigenvector centrality of vertices
 #'
@@ -349,7 +349,7 @@ centr_clo_tmax <- centr_clo_tmax
 #' g1 <- make_star(10, mode = "undirected")
 #' centr_eigen(g0)$centralization
 #' centr_eigen(g1)$centralization
-centr_eigen <- centr_eigen
+centr_eigen <- centralization_eigenvector_centrality_impl
 
 #' Theoretical maximum for betweenness centralization
 #'
@@ -378,4 +378,4 @@ centr_eigen <- centr_eigen
 #' centr_eigen(g, normalized = FALSE)$centralization %>%
 #'   `/`(centr_eigen_tmax(g))
 #' centr_eigen(g, normalized = TRUE)$centralization
-centr_eigen_tmax <- centr_eigen_tmax
+centr_eigen_tmax <- centralization_eigenvector_centrality_tmax_impl

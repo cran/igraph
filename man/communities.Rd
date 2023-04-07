@@ -275,7 +275,7 @@ The different methods for finding communities, they all return a
 \code{\link[=cluster_optimal]{cluster_optimal()}}, \code{\link[=cluster_spinglass]{cluster_spinglass()}},
 \code{\link[=cluster_walktrap]{cluster_walktrap()}}.
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -289,14 +289,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -310,14 +309,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -331,14 +329,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -352,14 +349,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -373,14 +369,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -394,14 +389,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -415,14 +409,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -436,14 +429,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -457,14 +449,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -478,14 +469,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -499,14 +489,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -520,14 +509,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -541,14 +529,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -562,14 +549,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -583,14 +569,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -604,14 +589,13 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},
 \code{\link{plot_dendrogram}()},
 \code{\link{split_join_distance}()}
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -625,7 +609,6 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{modularity.igraph}()},

@@ -28,7 +28,6 @@
   "vertex.attr.comb" = list(name = "concat", "ignore"),
   "edge.attr.comb" = list(weight = "sum", name = "concat", "ignore"),
   "sparsematrices" = TRUE,
-  "nexus.url" = "http://nexus.igraph.org",
   "add.params" = TRUE,
   "add.vertex.names" = TRUE,
   "dend.plot.type" = "auto",
@@ -41,7 +40,7 @@
 
 igraph.pars.set.verbose <- function(verbose) {
   if (is.logical(verbose)) {
-    .Call(C_R_igraph_set_verbose, verbose)
+    .Call(R_igraph_set_verbose, verbose)
   } else if (is.character(verbose)) {
     if (!verbose %in% c("tk", "tkconsole")) {
       stop("Unknown 'verbose' value")
@@ -54,7 +53,7 @@ igraph.pars.set.verbose <- function(verbose) {
         stop("tcltk package not available")
       }
     }
-    .Call(C_R_igraph_set_verbose, TRUE)
+    .Call(R_igraph_set_verbose, TRUE)
   } else {
     stop("'verbose' should be a logical or character scalar")
   }

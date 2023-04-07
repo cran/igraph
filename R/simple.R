@@ -64,22 +64,25 @@
 #' @keywords graphs
 #' @examples
 #'
-#' g <- graph(c(1, 2, 1, 2, 3, 3))
+#' g <- make_graph(c(1, 2, 1, 2, 3, 3))
 #' is_simple(g)
 #' is_simple(simplify(g, remove.loops = FALSE))
 #' is_simple(simplify(g, remove.multiple = FALSE))
 #' is_simple(simplify(g))
 #' @family simple
+#' @family functions for manipulating graph structure
 #' @export
-simplify <- simplify
+simplify <- simplify_impl
 
 #' @family simple
+#' @family functions for manipulating graph structure
 #' @export
 #' @rdname simplify
-is_simple <- is_simple
+is_simple <- is_simple_impl
 
 #' @family isomorphism
 #' @family simple
+#' @family functions for manipulating graph structure
 #' @export
 #' @rdname simplify
 simplify_and_colorize <- function(graph) {
@@ -88,9 +91,9 @@ simplify_and_colorize <- function(graph) {
     stop("Not a graph object")
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
-  res <- .Call(C_R_igraph_simplify_and_colorize, graph)
+  res <- .Call(R_igraph_simplify_and_colorize, graph)
 
   V(res$res)$color <- res$vertex_color
   E(res$res)$color <- res$edge_color

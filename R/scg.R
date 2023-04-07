@@ -26,6 +26,7 @@
 #' graphs.
 #'
 #' @name scg-method
+#' @family scg
 #' @section Introduction: The SCG functions provide a framework, called
 #' Spectral Coarse Graining (SCG), for reducing large graphs while preserving
 #' their *spectral-related features*, that is features closely related
@@ -118,12 +119,12 @@ stochastic_matrix <- function(graph, column.wise = FALSE,
     stop("`sparse' must be a logical scalar")
   }
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   if (sparse) {
-    res <- .Call(C_R_igraph_get_stochastic_sparsemat, graph, column.wise)
+    res <- .Call(R_igraph_get_stochastic_sparsemat, graph, column.wise)
     res <- igraph.i.spMatrix(res)
   } else {
-    res <- .Call(C_R_igraph_get_stochastic, graph, column.wise)
+    res <- .Call(R_igraph_get_stochastic, graph, column.wise)
   }
 
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
@@ -276,10 +277,10 @@ scg_group <- function(V, nt,
   if (!is.null(p)) p <- as.numeric(p)
   maxiter <- as.integer(maxiter)
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
   res <- .Call(
-    C_R_igraph_scg_grouping, V, as.integer(nt[1]),
+    R_igraph_scg_grouping, V, as.integer(nt[1]),
     if (length(nt) == 1) NULL else nt,
     mtype, algo, p, maxiter
   )
@@ -389,10 +390,10 @@ scg_semi_proj <- function(groups,
   )
   sparse <- as.logical(sparse)
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   # Function call
   res <- .Call(
-    C_R_igraph_scg_semiprojectors, groups, mtype, p, norm,
+    R_igraph_scg_semiprojectors, groups, mtype, p, norm,
     sparse
   )
 
@@ -743,14 +744,14 @@ myscg <- function(graph, matrix, sparsemat, ev, nt, groups = NULL,
   semproj <- as.logical(semproj)
   epairs <- as.logical(epairs)
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
 
   if (mtype == "symmetric") {
     if (!is.null(evec)) {
       storage.mode(evec) <- "double"
     }
     res <- .Call(
-      C_R_igraph_scg_adjacency, graph, matrix, sparsemat, ev,
+      R_igraph_scg_adjacency, graph, matrix, sparsemat, ev,
       nt, algo, evec, groups,
       use.arpack, maxiter, sparse, output, semproj, epairs
     )
@@ -768,7 +769,7 @@ myscg <- function(graph, matrix, sparsemat, ev, nt, groups = NULL,
       "right" = 3
     )
     res <- .Call(
-      C_R_igraph_scg_laplacian, graph, matrix, sparsemat, ev,
+      R_igraph_scg_laplacian, graph, matrix, sparsemat, ev,
       nt, algo, norm, direction,
       evec, groups, use.arpack, maxiter, sparse, output,
       semproj, epairs
@@ -786,7 +787,7 @@ myscg <- function(graph, matrix, sparsemat, ev, nt, groups = NULL,
     }
     stat.prob <- as.logical(stat.prob)
     res <- .Call(
-      C_R_igraph_scg_stochastic, graph, matrix, sparsemat, ev,
+      R_igraph_scg_stochastic, graph, matrix, sparsemat, ev,
       nt, algo, norm, evec, groups, p, use.arpack,
       maxiter, sparse, output, semproj, epairs, stat.prob
     )
@@ -837,10 +838,12 @@ myscg <- function(graph, matrix, sparsemat, ev, nt, groups = NULL,
 #' Spectral Coarse Graining of Graphs. Submitted to *SIAM Journal on
 #' Matrix Analysis and Applications*, 2008.
 #' <http://people.epfl.ch/david.morton>
+#' @export
 #' @examples
 #'
 #' v <- rexp(20)
 #' km <- kmeans(v, 5)
 #' sum(km$withinss)
 #' scg_eps(cbind(v), km$cluster)^2
-scg_eps <- scg_eps
+#' @family scg
+scg_eps <- scg_norm_eps_impl

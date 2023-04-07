@@ -74,8 +74,8 @@ add_edges <- function(graph, edges, ..., attr = list()) {
   }
 
   edges.orig <- ecount(graph)
-  on.exit(.Call(C_R_igraph_finalizer))
-  graph <- .Call(C_R_igraph_add_edges, graph, as.igraph.vs(graph, edges) - 1)
+  on.exit(.Call(R_igraph_finalizer))
+  graph <- .Call(R_igraph_add_edges, graph, as.igraph.vs(graph, edges) - 1)
   edges.new <- ecount(graph)
 
   if (edges.new - edges.orig != 0) {
@@ -140,8 +140,8 @@ add_vertices <- function(graph, nv, ..., attr = list()) {
   }
 
   vertices.orig <- vcount(graph)
-  on.exit(.Call(C_R_igraph_finalizer))
-  graph <- .Call(C_R_igraph_add_vertices, graph, as.numeric(nv))
+  on.exit(.Call(R_igraph_finalizer))
+  graph <- .Call(R_igraph_add_vertices, graph, as.numeric(nv))
   vertices.new <- vcount(graph)
 
   if (vertices.new - vertices.orig != 0) {
@@ -189,8 +189,8 @@ delete_edges <- function(graph, edges) {
   if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
-  on.exit(.Call(C_R_igraph_finalizer))
-  .Call(C_R_igraph_delete_edges, graph, as.igraph.es(graph, edges) - 1)
+  on.exit(.Call(R_igraph_finalizer))
+  .Call(R_igraph_delete_edges, graph, as.igraph.es(graph, edges) - 1)
 }
 
 #' Delete vertices from a graph
@@ -217,8 +217,8 @@ delete_vertices <- function(graph, v) {
   if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
-  on.exit(.Call(C_R_igraph_finalizer))
-  .Call(C_R_igraph_delete_vertices, graph, as.igraph.vs(graph, v) - 1)
+  on.exit(.Call(R_igraph_finalizer))
+  .Call(R_igraph_delete_vertices, graph, as.igraph.vs(graph, v) - 1)
 }
 
 ###################################################################
@@ -227,7 +227,7 @@ delete_vertices <- function(graph, v) {
 
 #' The size of the graph (number of edges)
 #'
-#' `ecount()` is an alias of this function.
+#' `ecount()` and `gsize()` are aliases.
 #'
 #' @param graph The graph.
 #' @return Numeric scalar, the number of edges.
@@ -249,9 +249,12 @@ gsize <- function(graph) {
   if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
-  on.exit(.Call(C_R_igraph_finalizer))
-  .Call(C_R_igraph_ecount, graph)
+  on.exit(.Call(R_igraph_finalizer))
+  .Call(R_igraph_ecount, graph)
 }
+#' @rdname gsize
+#' @export
+ecount <- gsize
 
 #' Neighboring (adjacent) vertices in a graph
 #'
@@ -290,8 +293,8 @@ neighbors <- function(graph, v, mode = c("out", "in", "all", "total")) {
   if (length(v) == 0) {
     stop("No vertex was specified")
   }
-  on.exit(.Call(C_R_igraph_finalizer))
-  res <- .Call(C_R_igraph_neighbors, graph, v - 1, as.numeric(mode)) + 1L
+  on.exit(.Call(R_igraph_finalizer))
+  res <- .Call(R_igraph_neighbors, graph, v - 1, as.numeric(mode)) + 1L
 
   if (igraph_opt("return.vs.es")) res <- create_vs(graph, res)
 
@@ -334,8 +337,8 @@ incident <- function(graph, v, mode = c("all", "out", "in", "total")) {
   if (length(v) == 0) {
     stop("No vertex was specified")
   }
-  on.exit(.Call(C_R_igraph_finalizer))
-  res <- .Call(C_R_igraph_incident, graph, v - 1, as.numeric(mode)) + 1L
+  on.exit(.Call(R_igraph_finalizer))
+  res <- .Call(R_igraph_incident, graph, v - 1, as.numeric(mode)) + 1L
 
   if (igraph_opt("return.vs.es")) res <- create_es(graph, res)
 
@@ -361,8 +364,8 @@ is_directed <- function(graph) {
   if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
-  on.exit(.Call(C_R_igraph_finalizer))
-  .Call(C_R_igraph_is_directed, graph)
+  on.exit(.Call(R_igraph_finalizer))
+  .Call(R_igraph_is_directed, graph)
 }
 
 #' Incident vertices of some graph edges
@@ -389,12 +392,12 @@ ends <- function(graph, es, names = TRUE) {
   es2 <- as.igraph.es(graph, na.omit(es)) - 1
   res <- matrix(NA_integer_, ncol = length(es), nrow = 2)
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
 
   if (length(es) == 1) {
-    res[, !is.na(es)] <- .Call(C_R_igraph_get_edge, graph, es2) + 1
+    res[, !is.na(es)] <- .Call(R_igraph_get_edge, graph, es2) + 1
   } else {
-    res[, !is.na(es)] <- .Call(C_R_igraph_edges, graph, es2) + 1
+    res[, !is.na(es)] <- .Call(R_igraph_edges, graph, es2) + 1
   }
 
   if (names && is_named(graph)) {
@@ -470,9 +473,9 @@ get.edge.ids <- function(graph, vp, directed = TRUE, error = FALSE, multi = FALS
   if (!is_igraph(graph)) {
     stop("Not a graph object")
   }
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
   .Call(
-    C_R_igraph_get_eids, graph, as.igraph.vs(graph, vp) - 1,
+    R_igraph_get_eids, graph, as.igraph.vs(graph, vp) - 1,
     as.logical(directed), as.logical(error), as.logical(multi)
   ) + 1
 }
@@ -480,7 +483,7 @@ get.edge.ids <- function(graph, vp, directed = TRUE, error = FALSE, multi = FALS
 
 #' Order (number of vertices) of a graph
 #'
-#' `vcount()` is an alias of this function.
+#' @description `vcount()` and `gorder()` are aliases.
 #'
 #' @param graph The graph
 #' @return Number of vertices, numeric scalar.
@@ -493,7 +496,10 @@ get.edge.ids <- function(graph, vp, directed = TRUE, error = FALSE, multi = FALS
 #' g <- make_ring(10)
 #' gorder(g)
 #' vcount(g)
-gorder <- gorder
+gorder <- vcount_impl
+#' @rdname gorder
+#' @export
+vcount <- vcount_impl
 
 #' Adjacent vertices of multiple vertices in a graph
 #'
@@ -524,9 +530,9 @@ adjacent_vertices <- function(graph, v,
     "total" = 3
   )
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
 
-  res <- .Call(C_R_igraph_adjacent_vertices, graph, vv, mode)
+  res <- .Call(R_igraph_adjacent_vertices, graph, vv, mode)
 
   if (igraph_opt("return.vs.es")) {
     res <- lapply(res, `+`, 1)
@@ -567,9 +573,9 @@ incident_edges <- function(graph, v,
     "total" = 3
   )
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
 
-  res <- .Call(C_R_igraph_incident_edges, graph, vv, mode)
+  res <- .Call(R_igraph_incident_edges, graph, vv, mode)
 
   if (igraph_opt("return.vs.es")) {
     res <- lapply(res, `+`, 1)

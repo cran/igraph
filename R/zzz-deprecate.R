@@ -159,8 +159,6 @@ deprecated("dominator.tree", dominator_tree)
 #' @export dyad.census
 deprecated("dyad.census", dyad_census)
 
-#' @export ecount
-deprecated("ecount", gsize)
 #' @export edge.betweenness
 deprecated("edge.betweenness", edge_betweenness)
 #' @export edge.betweenness.community
@@ -323,8 +321,6 @@ deprecated("hub.score", hub_score)
 deprecated("igraph.arpack.default", arpack_defaults)
 #' @export igraph.console
 deprecated("igraph.console", console)
-#' @export igraph.eigen.default
-deprecated("igraph.eigen.default", eigen_defaults)
 #' @export igraph.sample
 deprecated("igraph.sample", sample_seq)
 #' @export igraph.version
@@ -455,14 +451,6 @@ deprecated("multilevel.community", cluster_louvain)
 deprecated("neighborhood", ego)
 #' @export neighborhood.size
 deprecated("neighborhood.size", ego_size)
-#' @export nexus.get
-deprecated("nexus.get", nexus_get)
-#' @export nexus.info
-deprecated("nexus.info", nexus_info)
-#' @export nexus.list
-deprecated("nexus.list", nexus_list)
-#' @export nexus.search
-deprecated("nexus.search", nexus_search)
 #' @export no.clusters
 deprecated("no.clusters", count_components)
 
@@ -555,8 +543,6 @@ deprecated("triad.census", triad_census)
 #' @export unfold.tree
 deprecated("unfold.tree", unfold_tree)
 
-#' @export vcount
-deprecated("vcount", gorder)
 #' @export vertex.connectivity
 deprecated("vertex.connectivity", vertex_connectivity)
 #' @export vertex.disjoint.paths

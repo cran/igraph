@@ -68,7 +68,7 @@ equation, \emph{Eur. Phys. J. Special Topics} 178, 13 (2009).
 \seealso{
 Other community finding methods and \code{\link[=communities]{communities()}}.
 
-Other community: 
+Community detection
 \code{\link{as_membership}()},
 \code{\link{cluster_edge_betweenness}()},
 \code{\link{cluster_fast_greedy}()},
@@ -81,7 +81,6 @@ Other community:
 \code{\link{cluster_spinglass}()},
 \code{\link{cluster_walktrap}()},
 \code{\link{compare}()},
-\code{\link{contract}()},
 \code{\link{groups}()},
 \code{\link{make_clusters}()},
 \code{\link{membership}()},

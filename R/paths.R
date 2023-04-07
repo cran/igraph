@@ -69,11 +69,11 @@ all_simple_paths <- function(graph, from, to = V(graph),
     "total" = 3
   )
 
-  on.exit(.Call(C_R_igraph_finalizer))
+  on.exit(.Call(R_igraph_finalizer))
 
   ## Function call
   res <- .Call(
-    C_R_igraph_get_all_simple_paths, graph, from - 1, to - 1,
+    R_igraph_get_all_simple_paths, graph, from - 1, to - 1,
     as.integer(cutoff), mode
   )
   res <- get.all.simple.paths.pp(res)
@@ -106,9 +106,10 @@ all_simple_paths <- function(graph, from, to = V(graph),
 #' is_dag(g)
 #' g2 <- g + edge(5, 1)
 #' is_dag(g2)
-#' @family paths
+#' @family cycles
+#' @family structural.properties
 #' @export
-is_dag <- is_dag
+is_dag <- is_dag_impl
 
 
 #' Maximum cardinality search
@@ -139,6 +140,7 @@ is_dag <- is_dag
 #' hypergraphs, and selectively reduce acyclic hypergraphs.  *SIAM Journal
 #' of Computation* 13, 566--579.
 #' @keywords graphs
+#' @export
 #' @examples
 #'
 #' ## The examples from the Tarjan-Yannakakis paper
@@ -157,7 +159,8 @@ is_dag <- is_dag
 #' )
 #' max_cardinality(g2)
 #' is_chordal(g2, fillin = TRUE)
-max_cardinality <- max_cardinality
+#' @family chordal
+max_cardinality <- maximum_cardinality_search_impl
 
 
 #' Eccentricity of the vertices in a graph
@@ -191,7 +194,7 @@ max_cardinality <- max_cardinality
 #' eccentricity(g)
 #' @family paths
 #' @export
-eccentricity <- eccentricity
+eccentricity <- eccentricity_impl
 
 
 #' Radius of a graph
@@ -226,11 +229,11 @@ eccentricity <- eccentricity
 #' radius(g)
 #' @family paths
 #' @export
-radius <- radius
+radius <- radius_impl
 
 #' @rdname distances
 #' @param directed Whether to consider directed paths in directed graphs,
 #'   this argument is ignored for undirected graphs.
 #' @family paths
 #' @export
-distance_table <- distance_table
+distance_table <- path_length_hist_impl

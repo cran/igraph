@@ -54,7 +54,7 @@ original multiplicity as an edge attribute.
 \examples{
 
 # Loops
-g <- graph(c(1, 1, 2, 2, 3, 3, 4, 5))
+g <- make_graph(c(1, 1, 2, 2, 3, 3, 4, 5))
 any_loop(g)
 which_loop(g)
 
@@ -89,11 +89,11 @@ Other structural.properties:
 \code{\link{coreness}()},
 \code{\link{degree}()},
 \code{\link{dfs}()},
-\code{\link{diameter}()},
 \code{\link{distance_table}()},
 \code{\link{edge_density}()},
 \code{\link{feedback_arc_set}()},
 \code{\link{girth}()},
+\code{\link{is_dag}()},
 \code{\link{is_matching}()},
 \code{\link{knn}()},
 \code{\link{laplacian_matrix}()},
