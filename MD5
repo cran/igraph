@@ -1,6 +1,6 @@
-2e3ab8f01e192f7ea79d8c9575c95ad4 *DESCRIPTION
+aa94eeb442e7715888028220151aba36 *DESCRIPTION
 e9bc540822464f6872574d449fc1c12f *NAMESPACE
-e2d36467ac4167e692a26abce382dd73 *NEWS.md
+402804c523bd143b02e86a7547931b52 *NEWS.md
 0b1761e27f4bfc9667608c2915af9168 *R/aaa-auto.R
 0aaac1e1d79cc3b1967185ba736801fc *R/adjacency.R
 04b42807ab49cf57f348a54422117aa2 *R/assortativity.R
@@ -29,7 +29,7 @@ e2843b2f60df2721145a6c3920bba56a *R/embedding.R
 86f8973d1ec33f12907d6cc85b7e6a74 *R/eulerian.R
 4664b0b9336d9da2240f1c7734fdf23d *R/fit.R
 f4403c467b16031917bbdbaa5cc7723b *R/flow.R
-05138a639c31cf054ac8fe8a6ad20672 *R/foreign.R
+c8e105cd4e7234f882d0322008fada31 *R/foreign.R
 41fe9d3a42c1d396edd0da5a6682453c *R/games.R
 75f9d1c6cb8310260979d2aff608ca33 *R/glet.R
 9bfe39d75ea14fe4914798bc20b71e0d *R/has.R
@@ -80,8 +80,8 @@ e938461b115a2e9e1120d2b4e5b5adea *R/uuid.R
 942542b93d4b176bc96dfe1b059ca718 *R/versions.R
 29018a054e3abf783ad2da108f37a789 *R/weakref.R
 d1dc04674fd25bcb5c835380dd48680d *R/zzz-deprecate.R
-ea124a494ad7922985532ad3b308e4d5 *build/partial.rdb
-8963964045d6060c720533dd14d197c4 *build/vignette.rds
+7f2094c7b4d5faa522b624cffc621f8b *build/partial.rdb
+df8101155778fc0e0bd6b5f9e1350a61 *build/vignette.rds
 f89c7780070ec8f00ba8069a744208b5 *cleanup
 f89c7780070ec8f00ba8069a744208b5 *cleanup.win
 85721e7edde2ad5f6bac4e5523236dd5 *configure
@@ -107,9 +107,9 @@ f864ca3d5dcd66af6f75b31fd00223a4 *inst/benchmarks/time_print.R
 56cacf3291bedc3596f2af9f2e664fa9 *inst/benchmarks/time_sir.R
 1a6d75ab32b8efbc32b103772c99ba10 *inst/doc/igraph.R
 4437789218de749a2dd5bd52c275b1a9 *inst/doc/igraph.Rmd
-9cd11d16106ed839e07dcd0db4af4224 *inst/doc/igraph.html
+f3085e774a75849fabf81dce32d45ae8 *inst/doc/igraph.html
 d536f1a138f1fd59b1a917729305a6b8 *inst/doc/igraph_ES.R
-1fea1ff9010c711c009ea33459e56fa6 *inst/doc/igraph_ES.html
+cdaa0710ab72b1c58d01790b4dbec183 *inst/doc/igraph_ES.html
 27ce9df8cf709d9e9c9fe0cfe7b81d17 *inst/doc/igraph_ES.rmd
 9f15757aae0fc33c5e1c8fd7546173a1 *inst/html_library.license.terms
 9a1b851f5373287728fa8fbe7b3f67f0 *inst/html_library.tcl
@@ -384,7 +384,7 @@ e7d50521f70733289b0b157d290d1ffc *man/printr.Rd
 94afe352d71079bcd3ad389eb71e24c3 *man/r_pal.Rd
 7832bdf4608efb9920178dc3cefe3679 *man/radius.Rd
 be2ec2516e3f44eae25800effb3f11e0 *man/random_walk.Rd
-56febfe1e43b2ec2c3099f7819b27489 *man/read_graph.Rd
+deecbf758afbf6098a2d6f63be97e529 *man/read_graph.Rd
 28678ed23a2c60d9053e66aa204e129a *man/realize_degseq.Rd
 88a7995b16992118b17a95287f247416 *man/reciprocity.Rd
 6efeba206c2a11e4e68504e13110923c *man/rep.igraph.Rd
@@ -487,7 +487,7 @@ d99ad9b0eb3e57684c484ec55fddc914 *man/with_graph_.Rd
 d398153647fbea8d3be42d31f419653b *man/without_multiples.Rd
 c071602e187718ee43c56372225a9f1c *man/write_graph.Rd
 1511cb6380a3d8545870dfc47b0d0519 *src/Makevars.in
-16e7655916b8eea17ec87f5df12dd681 *src/Makevars.ucrt
+9e1f8d2efb5007570d67d0b12bdd81cc *src/Makevars.ucrt
 b95cec4167e3b194d7c80a6b5d170337 *src/Makevars.win
 ca16a766ce8ee79442b2829ccf285562 *src/README.md
 d41d8cd98f00b204e9800998ecf8427e *src/config.h
@@ -1214,7 +1214,7 @@ b1063a12020c2b6979d118ce6bf112e6 *tests/testthat/test-girth.R
 d0501f2b32b24255af7fc507bcd986bb *tests/testthat/test-graph.adjacency.R
 8e5e59c65c716d25930831732b90215a *tests/testthat/test-graph.adjlist.R
 62ce01060e1ce5653330fb7d8813932e *tests/testthat/test-graph.atlas.R
-2c1d72b5fa5f6a7276f47f8428fe58a0 *tests/testthat/test-graph.bfs.R
+71522c2fa2dd44144830f4d8bcf6638d *tests/testthat/test-graph.bfs.R
 9e52c7d4450168bbdeb30c55141148f5 *tests/testthat/test-graph.bipartite.R
 ee556aae8c47d1b13054719b6916e093 *tests/testthat/test-graph.complementer.R
 24cd80638e327143dcdfe63eeae2311b *tests/testthat/test-graph.compose.R
