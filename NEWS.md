@@ -1,5 +1,64 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# igraph 1.5.0
+
+## Breaking changes
+
+The internal format of graph objects has changed in a mostly backward-compatible way, to prepare for upgrading the C core to 0.10. Details are described at <https://github.com/igraph/rigraph/wiki/The-igraph-object-format>. Accessing graph objects that have been created with an older igraph version give a clean error message with instructions (#832). The new format cannot be read by igraph 1.4.3 or older, the following error is raised when trying to do so:
+
+```
+This graph was created by an old(er) igraph version.
+  Call upgrade_graph() on it to use with the current igraph version
+  For now we convert it on the fly...
+Error in is_directed(object) : 
+  REAL() can only be applied to a 'numeric', not a 'NULL'
+```
+
+The only supported remedy is to upgrade the igraph package to version 1.5.0 or later.
+
+`graph_version()` now returns an integer scalar (#832, #847), `4` as of igraph 1.5.0 (#835).
+
+## Features
+
+- Vertex and edge sequences are converted to numeric vectors when used in attributes (#808).
+
+- New `largest_component()` returns the largest connected component (#786, @ngmaclaren).
+
+## Bug fixes
+
+  - Fix error message in `make_graph()` when `simplify = ...` is used with a non-formula (#834).
+
+## Testing
+
+- Add more tests for `graph_from_literal()` (#826).
+
+- Reenable serialization test and tests for `dyad_census()`, stabilize tests (#809, #822, #823).
+
+## Documentation
+
+- The documentation for the R package is now hosted at <https://r.igraph.org/> (#780).
+
+- Update `vignette("installation-troubleshooting")`.
+
+- Fix use of deprecated functions in examples, e.g., replace `gsize()` by `ecount()` (#827).
+
+- Fix typos in `?eigen_centrality` docs (@JJ).
+
+- Update CONTRIBUTING.md and ORCID information (#791, #774).
+
+- Add DOI to CITATION (#773).
+
+## Internal
+
+- Add data for old igraph versions as constructed objects, and tests (#838).
+
+- Ensure we're always using named indexes to access the internal data structure (#784).
+
+- Prepare migration to igraph/C 0.10 (#781).
+
+- Update generated interface (#765).
+
+
 # igraph 1.4.3
 
 ## Internal

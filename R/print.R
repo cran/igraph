@@ -56,9 +56,7 @@
 }
 
 .print.header <- function(object, id = igraph_opt("print.id")) {
-  if (!is_igraph(object)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(object)
 
   title <- paste0(
     "IGRAPH ",
@@ -525,9 +523,7 @@ print.igraph <- function(x, full = igraph_opt("print.full"),
                          names = TRUE, max.lines = igraph_opt("auto.print.lines"),
                          id = igraph_opt("print.id"),
                          ...) {
-  if (!is_igraph(x)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(x)
 
   head_lines <- .print.header(x, id)
   if (is.logical(full) && full) {
@@ -542,14 +538,19 @@ print.igraph <- function(x, full = igraph_opt("print.full"),
     } else if (edge.attributes && length(edge_attr_names(x)) != 0) {
       .print.edges.edgelist(x, names = names)
     } else if (median(degree(x, mode = "out")) < 3) {
-      .print.edges.compressed(x, names = names, max.lines = NULL)
+      .print.edges.compressed(x, names = names, max.lines = NULL, id = id)
     } else if (is_named(x)) {
       .print.edges.adjlist.named(x)
     } else {
       .print.edges.adjlist(x)
     }
   } else if (full == "auto") {
-    .print.edges.compressed(x, names = names, max.lines = max(0, max.lines - head_lines))
+    .print.edges.compressed(
+      x,
+      names = names,
+      max.lines = max(0, max.lines - head_lines),
+      id = id
+    )
   }
 
   invisible(x)

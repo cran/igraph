@@ -17,6 +17,7 @@ extern "C" {
 /* .Call calls */
 extern SEXP R_igraph_add_edges(SEXP, SEXP);
 extern SEXP R_igraph_add_env(SEXP);
+extern SEXP R_igraph_add_myid_to_env(SEXP);
 extern SEXP R_igraph_add_version_to_env(SEXP);
 extern SEXP R_igraph_add_vertices(SEXP, SEXP);
 extern SEXP R_igraph_address(SEXP);
@@ -92,6 +93,9 @@ extern SEXP R_igraph_connect_neighborhood(SEXP, SEXP, SEXP);
 extern SEXP R_igraph_constraint(SEXP, SEXP, SEXP);
 extern SEXP R_igraph_contract_vertices(SEXP, SEXP, SEXP);
 extern SEXP R_igraph_convex_hull(SEXP);
+extern SEXP R_igraph_copy_env(SEXP);
+extern SEXP R_igraph_copy_from(SEXP);
+extern SEXP R_igraph_copy_to(SEXP);
 extern SEXP R_igraph_coreness(SEXP, SEXP);
 extern SEXP R_igraph_correlated_game(SEXP, SEXP, SEXP, SEXP);
 extern SEXP R_igraph_correlated_pair_game(SEXP, SEXP, SEXP, SEXP, SEXP);
@@ -276,7 +280,6 @@ extern SEXP R_igraph_modularity_matrix(SEXP, SEXP, SEXP, SEXP);
 extern SEXP R_igraph_motifs_randesu(SEXP, SEXP, SEXP);
 extern SEXP R_igraph_motifs_randesu_estimate(SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP R_igraph_motifs_randesu_no(SEXP, SEXP, SEXP);
-extern SEXP R_igraph_mybracket(SEXP, SEXP);
 extern SEXP R_igraph_mybracket2(SEXP, SEXP, SEXP);
 extern SEXP R_igraph_mybracket2_copy(SEXP, SEXP, SEXP);
 extern SEXP R_igraph_mybracket2_names(SEXP, SEXP, SEXP);
@@ -396,6 +399,7 @@ extern SEXP promise_expr_(SEXP);
 static const R_CallMethodDef CallEntries[] = {
     {"R_igraph_add_edges",                                  (DL_FUNC) &R_igraph_add_edges,                                   2},
     {"R_igraph_add_env",                                    (DL_FUNC) &R_igraph_add_env,                                     1},
+    {"R_igraph_add_myid_to_env",                            (DL_FUNC) &R_igraph_add_myid_to_env,                             1},
     {"R_igraph_add_version_to_env",                         (DL_FUNC) &R_igraph_add_version_to_env,                          1},
     {"R_igraph_add_vertices",                               (DL_FUNC) &R_igraph_add_vertices,                                2},
     {"R_igraph_address",                                    (DL_FUNC) &R_igraph_address,                                     1},
@@ -471,6 +475,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_igraph_constraint",                                 (DL_FUNC) &R_igraph_constraint,                                  3},
     {"R_igraph_contract_vertices",                          (DL_FUNC) &R_igraph_contract_vertices,                           3},
     {"R_igraph_convex_hull",                                (DL_FUNC) &R_igraph_convex_hull,                                 1},
+    {"R_igraph_copy_env",                                   (DL_FUNC) &R_igraph_copy_env,                                    1},
+    {"R_igraph_copy_from",                                  (DL_FUNC) &R_igraph_copy_from,                                   1},
+    {"R_igraph_copy_to",                                    (DL_FUNC) &R_igraph_copy_to,                                     1},
     {"R_igraph_coreness",                                   (DL_FUNC) &R_igraph_coreness,                                    2},
     {"R_igraph_correlated_game",                            (DL_FUNC) &R_igraph_correlated_game,                             4},
     {"R_igraph_correlated_pair_game",                       (DL_FUNC) &R_igraph_correlated_pair_game,                        5},
@@ -655,7 +662,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_igraph_motifs_randesu",                             (DL_FUNC) &R_igraph_motifs_randesu,                              3},
     {"R_igraph_motifs_randesu_estimate",                    (DL_FUNC) &R_igraph_motifs_randesu_estimate,                     5},
     {"R_igraph_motifs_randesu_no",                          (DL_FUNC) &R_igraph_motifs_randesu_no,                           3},
-    {"R_igraph_mybracket",                                  (DL_FUNC) &R_igraph_mybracket,                                   2},
     {"R_igraph_mybracket2",                                 (DL_FUNC) &R_igraph_mybracket2,                                  3},
     {"R_igraph_mybracket2_copy",                            (DL_FUNC) &R_igraph_mybracket2_copy,                             3},
     {"R_igraph_mybracket2_names",                           (DL_FUNC) &R_igraph_mybracket2_names,                            3},

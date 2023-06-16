@@ -59,9 +59,9 @@ all_simple_paths <- function(graph, from, to = V(graph),
                              mode = c("out", "in", "all", "total"),
                              cutoff = -1) {
   ## Argument checks
-  if (!is_igraph(graph)) stop("Not a graph object")
-  from <- as.igraph.vs(graph, from)
-  to <- as.igraph.vs(graph, to)
+  ensure_igraph(graph)
+  from <- as_igraph_vs(graph, from)
+  to <- as_igraph_vs(graph, to)
   mode <- switch(igraph.match.arg(mode),
     "out" = 1,
     "in" = 2,

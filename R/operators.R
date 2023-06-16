@@ -116,9 +116,7 @@ disjoint_union <- function(...) {
   graphs <- unlist(recursive = FALSE, lapply(list(...), function(l) {
     if (is_igraph(l)) list(l) else l
   }))
-  if (!all(sapply(graphs, is_igraph))) {
-    stop("Not a graph object")
-  }
+  lapply(graphs, ensure_igraph)
 
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(R_igraph_disjoint_union, graphs)
@@ -187,9 +185,7 @@ disjoint_union <- function(...) {
   graphs <- unlist(recursive = FALSE, lapply(list(...), function(l) {
     if (is_igraph(l)) list(l) else l
   }))
-  if (!all(sapply(graphs, is_igraph))) {
-    stop("Not a graph object")
-  }
+  lapply(graphs, ensure_igraph)
   if (byname != "auto" && !is.logical(byname)) {
     stop("`bynam' must be \"auto\", or logical")
   }
@@ -524,9 +520,8 @@ difference <- function(...) {
 #' print_all(G)
 #' plot(G, layout = layout_nicely(wheel))
 difference.igraph <- function(big, small, byname = "auto", ...) {
-  if (!is_igraph(big) || !is_igraph(small)) {
-    stop("argument is not a graph")
-  }
+  ensure_igraph(big)
+  ensure_igraph(small)
   if (byname != "auto" && !is.logical(byname)) {
     stop("`bynam' must be \"auto\", or logical")
   }
@@ -604,9 +599,8 @@ difference.igraph <- function(big, small, byname = "auto", ...) {
 #' graph.isomorphic(gu, make_full_graph(vcount(g)))
 #'
 complementer <- function(graph, loops = FALSE) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(graph)
+
   on.exit(.Call(R_igraph_finalizer))
   .Call(R_igraph_complementer, graph, as.logical(loops))
 }
@@ -675,9 +669,8 @@ complementer <- function(graph, loops = FALSE) {
 #' print_all(simplify(gc))
 #'
 compose <- function(g1, g2, byname = "auto") {
-  if (!is_igraph(g1) || !is_igraph(g2)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(g1)
+  ensure_igraph(g2)
 
   if (byname != "auto" && !is.logical(byname)) {
     stop("`byname' must be \"auto\", or logical")
@@ -993,7 +986,7 @@ path <- function(...) {
       toadd <- unlist(e2[names(e2) == ""])
       attr <- e2[names(e2) != ""]
     }
-    res <- add_edges(e1, as.igraph.vs(e1, toadd), attr = attr)
+    res <- add_edges(e1, as_igraph_vs(e1, toadd), attr = attr)
   } else if ("igraph.vertex" %in% class(e2)) {
     ## Adding vertices, possibly with attributes
     ## If there is a single unnamed argument, that contains the vertex names
@@ -1023,7 +1016,7 @@ path <- function(...) {
       toadd <- unlist(e2[names(e2) == ""])
       attr <- e2[names(e2) != ""]
     }
-    toadd <- as.igraph.vs(e1, toadd)
+    toadd <- as_igraph_vs(e1, toadd)
     lt <- length(toadd)
     if (lt > 2) {
       toadd <- c(toadd[1], rep(toadd[2:(lt - 1)], each = 2), toadd[lt])

@@ -31,7 +31,7 @@ update_es_ref <- update_vs_ref <- function(graph) {
 
 get_es_ref <- get_vs_ref <- function(graph) {
   if (is_igraph(graph) && !warn_version(graph)) {
-    .Call(R_igraph_mybracket, graph, igraph_t_idx_env)
+    .Call(R_igraph_copy_env, graph)
   } else {
     NULL
   }
@@ -205,9 +205,7 @@ set_complete_iterator <- function(x, value = TRUE) {
 #'   set_vertex_attr("name", value = letters[1:10])
 #' V(g2)
 V <- function(graph) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(graph)
 
   update_vs_ref(graph)
 
@@ -304,9 +302,7 @@ unsafe_create_es <- function(graph, idx, es = NULL) {
 #'   set_vertex_attr("name", value = letters[1:10])
 #' E(g2)
 E <- function(graph, P = NULL, path = NULL, directed = TRUE) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(graph)
 
   update_es_ref(graph)
 
@@ -321,13 +317,13 @@ E <- function(graph, P = NULL, path = NULL, directed = TRUE) {
   } else if (!is.null(P)) {
     on.exit(.Call(R_igraph_finalizer))
     res <- .Call(
-      R_igraph_es_pairs, graph, as.igraph.vs(graph, P) - 1,
+      R_igraph_es_pairs, graph, as_igraph_vs(graph, P) - 1,
       as.logical(directed)
     ) + 1
   } else {
     on.exit(.Call(R_igraph_finalizer))
     res <- .Call(
-      R_igraph_es_path, graph, as.igraph.vs(graph, path) - 1,
+      R_igraph_es_path, graph, as_igraph_vs(graph, path) - 1,
       as.logical(directed)
     ) + 1
   }
@@ -527,7 +523,7 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
     }
     on.exit(.Call(R_igraph_finalizer))
     tmp <- .Call(
-      R_igraph_vs_nei, graph, x, as.igraph.vs(graph, v) - 1,
+      R_igraph_vs_nei, graph, x, as_igraph_vs(graph, v) - 1,
       as.numeric(mode)
     )
     tmp[as.numeric(x)]
@@ -558,7 +554,7 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
     }
     on.exit(.Call(R_igraph_finalizer))
     tmp <- .Call(
-      R_igraph_vs_adj, graph, x, as.igraph.es(graph, e) - 1,
+      R_igraph_vs_adj, graph, x, as_igraph_es(graph, e) - 1,
       as.numeric(3)
     )
     tmp[as.numeric(x)]
@@ -578,7 +574,7 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
     }
     on.exit(.Call(R_igraph_finalizer))
     tmp <- .Call(
-      R_igraph_vs_adj, graph, x, as.igraph.es(graph, e) - 1,
+      R_igraph_vs_adj, graph, x, as_igraph_es(graph, e) - 1,
       as.numeric(1)
     )
     tmp[as.numeric(x)]
@@ -594,7 +590,7 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
     }
     on.exit(.Call(R_igraph_finalizer))
     tmp <- .Call(
-      R_igraph_vs_adj, graph, x, as.igraph.es(graph, e) - 1,
+      R_igraph_vs_adj, graph, x, as_igraph_es(graph, e) - 1,
       as.numeric(2)
     )
     tmp[as.numeric(x)]
@@ -875,7 +871,7 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
     ## TRUE iff the edge is incident to at least one vertex in v
     on.exit(.Call(R_igraph_finalizer))
     tmp <- .Call(
-      R_igraph_es_adj, graph, x, as.igraph.vs(graph, v) - 1,
+      R_igraph_es_adj, graph, x, as_igraph_vs(graph, v) - 1,
       as.numeric(3)
     )
     tmp[as.numeric(x)]
@@ -892,7 +888,7 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
     ## TRUE iff the edge originates from at least one vertex in v
     on.exit(.Call(R_igraph_finalizer))
     tmp <- .Call(
-      R_igraph_es_adj, graph, x, as.igraph.vs(graph, v) - 1,
+      R_igraph_es_adj, graph, x, as_igraph_vs(graph, v) - 1,
       as.numeric(1)
     )
     tmp[as.numeric(x)]
@@ -905,7 +901,7 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
     ## TRUE iff the edge points to at least one vertex in v
     on.exit(.Call(R_igraph_finalizer))
     tmp <- .Call(
-      R_igraph_es_adj, graph, x, as.igraph.vs(graph, v) - 1,
+      R_igraph_es_adj, graph, x, as_igraph_vs(graph, v) - 1,
       as.numeric(2)
     )
     tmp[as.numeric(x)]
@@ -932,8 +928,8 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
         .inc = .inc, inc = inc, adj = adj,
         .from = .from, from = from,
         .to = .to, to = to,
-        .igraph.from = list(.Call(R_igraph_mybracket, graph, igraph_t_idx_from)[as.numeric(x)]),
-        .igraph.to = list(.Call(R_igraph_mybracket, graph, igraph_t_idx_to)[as.numeric(x)]),
+        .igraph.from = list(.Call(R_igraph_copy_from, graph)[as.numeric(x)]),
+        .igraph.to = list(.Call(R_igraph_copy_to, graph)[as.numeric(x)]),
         .igraph.graph = list(graph),
         `%--%` = `%--%`, `%->%` = `%->%`, `%<-%` = `%<-%`,
         .env = env,
@@ -968,8 +964,8 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
   from <- get(".igraph.from", parent.frame())
   to <- get(".igraph.to", parent.frame())
   graph <- get(".igraph.graph", parent.frame())
-  f <- as.igraph.vs(graph, f) - 1
-  t <- as.igraph.vs(graph, t) - 1
+  f <- as_igraph_vs(graph, f) - 1
+  t <- as_igraph_vs(graph, t) - 1
   (from %in% f & to %in% t) | (to %in% f & from %in% t)
 }
 
@@ -978,8 +974,8 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
   from <- get(".igraph.from", parent.frame())
   to <- get(".igraph.to", parent.frame())
   graph <- get(".igraph.graph", parent.frame())
-  f <- as.igraph.vs(graph, f) - 1
-  t <- as.igraph.vs(graph, t) - 1
+  f <- as_igraph_vs(graph, f) - 1
+  t <- as_igraph_vs(graph, t) - 1
   if (is_directed(graph)) {
     from %in% f & to %in% t
   } else {
@@ -992,8 +988,8 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
   from <- get(".igraph.from", parent.frame())
   to <- get(".igraph.to", parent.frame())
   graph <- get(".igraph.graph", parent.frame())
-  value <- as.igraph.vs(graph, value) - 1
-  t <- as.igraph.vs(graph, t) - 1
+  value <- as_igraph_vs(graph, value) - 1
+  t <- as_igraph_vs(graph, t) - 1
   if (is_directed(graph)) {
     from %in% value & to %in% t
   } else {
@@ -1182,9 +1178,7 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
 #' @name igraph-vs-attributes
 #' @export
 `V<-` <- function(x, value) {
-  if (!is_igraph(x)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(x)
   if (!"name" %in% names(attributes(value)) ||
     !"value" %in% names(attributes(value))) {
     stop("invalid indexing")
@@ -1203,9 +1197,7 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
 #' @name igraph-es-attributes
 #' @export
 `E<-` <- function(x, path = NULL, P = NULL, directed = NULL, value) {
-  if (!is_igraph(x)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(x)
   if (!"name" %in% names(attributes(value)) ||
     !"value" %in% names(attributes(value))) {
     stop("invalid indexing")
@@ -1374,7 +1366,7 @@ print.igraph.es <- function(x,
 
 # these are internal
 
-as.igraph.vs <- function(graph, v, na.ok = FALSE) {
+as_igraph_vs <- function(graph, v, na.ok = FALSE) {
   if (inherits(v, "igraph.vs") && !is.null(graph) &&
     !warn_version(graph)) {
     if (get_graph_id(graph) != get_vs_graph_id(v)) {
@@ -1402,7 +1394,7 @@ as.igraph.vs <- function(graph, v, na.ok = FALSE) {
   }
 }
 
-as.igraph.es <- function(graph, e) {
+as_igraph_es <- function(graph, e) {
   if (inherits(e, "igraph.es") && !is.null(graph) &&
     !warn_version(graph)) {
     if (get_graph_id(graph) != get_es_graph_id(e)) {
@@ -1498,7 +1490,7 @@ parse_op_args <- function(..., what, is_fun, as_fun, check_graph = TRUE) {
 parse_vs_op_args <- function(...) {
   parse_op_args(...,
     what = "a vertex", is_fun = is_igraph_vs,
-    as_fun = as.igraph.vs
+    as_fun = as_igraph_vs
   )
 }
 
@@ -1506,7 +1498,7 @@ parse_vs_op_args <- function(...) {
 parse_es_op_args <- function(...) {
   parse_op_args(...,
     what = "an edge", is_fun = is_igraph_es,
-    as_fun = as.igraph.es
+    as_fun = as_igraph_es
   )
 }
 

@@ -577,7 +577,7 @@ make_graph <- function(edges, ..., n = max(edges), isolates = NULL,
     graph_from_literal_i(mf)
   } else {
     if (!missing(simplify)) {
-      stop("'simplify' should not be given for graph literals")
+      stop("'simplify' should only be used for graph literals")
     }
 
     if (!missing(dir) && !missing(directed)) {
@@ -1382,9 +1382,7 @@ chordal_ring <- function(...) constructor_spec(make_chordal_ring, ...)
 #'
 #' @export
 make_line_graph <- function(graph) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(graph)
 
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(R_igraph_linegraph, graph)
@@ -1749,7 +1747,7 @@ graph_from_lcf <- lcf_vector_impl
 #' @references V. Havel,
 #' Poznámka o existenci konečných grafů (A remark on the existence of finite graphs),
 #' Časopis pro pěstování matematiky 80, 477-480 (1955).
-#' <https://eudml.org/doc/19050>
+#' https://eudml.org/doc/19050
 #'
 #' S. L. Hakimi,
 #' On Realizability of a Set of Integers as Degrees of the Vertices of a Linear Graph,

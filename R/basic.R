@@ -36,7 +36,12 @@
 #' is_igraph(g)
 #' is_igraph(numeric(10))
 is_igraph <- function(graph) {
-  "igraph" %in% class(graph)
+  if (!inherits(graph, "igraph")) {
+    return(FALSE)
+  }
+
+  warn_version(graph)
+  TRUE
 }
 
 #' @export
@@ -46,9 +51,7 @@ get.edge <- function(graph, id) {
     "'ends' instead."
   ))
 
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(graph)
 
   id <- as.numeric(id)
   ec <- ecount(graph)

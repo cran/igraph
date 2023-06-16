@@ -117,10 +117,9 @@ estimate_betweenness <- function(graph, vids = V(graph), directed = TRUE, cutoff
 #'
 betweenness <- function(graph, v = V(graph), directed = TRUE, weights = NULL,
                         nobigint = TRUE, normalized = FALSE, cutoff = -1) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
-  v <- as.igraph.vs(graph, v)
+  ensure_igraph(graph)
+
+  v <- as_igraph_vs(graph, v)
   directed <- as.logical(directed)
   if (is.null(weights) && "weight" %in% edge_attr_names(graph)) {
     weights <- E(graph)$weight
@@ -161,10 +160,9 @@ betweenness <- function(graph, v = V(graph), directed = TRUE, weights = NULL,
 edge_betweenness <- function(graph, e = E(graph),
                              directed = TRUE, weights = NULL, cutoff = -1) {
   # Argument checks
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
-  e <- as.igraph.es(graph, e)
+  ensure_igraph(graph)
+
+  e <- as_igraph_es(graph, e)
   directed <- as.logical(directed)
   if (is.null(weights) && "weight" %in% edge_attr_names(graph)) {
     weights <- E(graph)$weight
@@ -262,10 +260,9 @@ closeness <- function(graph, vids = V(graph),
                       mode = c("out", "in", "all", "total"), weights = NULL,
                       normalized = FALSE, cutoff = -1) {
   # Argument checks
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
-  vids <- as.igraph.vs(graph, vids)
+  ensure_igraph(graph)
+
+  vids <- as_igraph_vs(graph, vids)
   mode <- switch(igraph.match.arg(mode),
     "out" = 1,
     "in" = 2,
@@ -745,10 +742,10 @@ eigen_defaults <- function() {
 #' @param weights A numerical vector or `NULL`. This argument can be used
 #'   to give edge weights for calculating the weighted eigenvector centrality of
 #'   vertices. If this is `NULL` and the graph has a `weight` edge
-#'   attribute then that is used. If `weights` is a numerical vector then it
+#'   attribute then that is used. If `weights` is a numerical vector then it is
 #'   used, even if the graph has a `weight` edge attribute. If this is
 #'   `NA`, then no edge weights are used (even if the graph has a
-#'   `weight` edge attribute. Note that if there are negative edge weights
+#'   `weight` edge attribute). Note that if there are negative edge weights
 #'   and the direction of the edges is considered, then the eigenvector might be
 #'   complex. In this case only the real part is reported.
 #'   This function interprets weights as connection strength. Higher
@@ -1062,9 +1059,7 @@ harmonic_centrality <- harmonic_centrality_cutoff_impl
 bonpow.dense <- function(graph, nodes = V(graph),
                          loops = FALSE, exponent = 1,
                          rescale = FALSE, tol = 1e-7) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(graph)
 
   d <- as_adj(graph)
   if (!loops) {
@@ -1223,7 +1218,7 @@ bonpow.sparse <- function(graph, nodes = V(graph), loops = FALSE,
 power_centrality <- function(graph, nodes = V(graph),
                              loops = FALSE, exponent = 1,
                              rescale = FALSE, tol = 1e-7, sparse = TRUE) {
-  nodes <- as.igraph.vs(graph, nodes)
+  nodes <- as_igraph_vs(graph, nodes)
   if (sparse) {
     res <- bonpow.sparse(graph, nodes, loops, exponent, rescale, tol)
   } else {
@@ -1240,9 +1235,7 @@ power_centrality <- function(graph, nodes = V(graph),
 alpha.centrality.dense <- function(graph, nodes = V(graph), alpha = 1,
                                    loops = FALSE, exo = 1, weights = NULL,
                                    tol = 1e-7) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(graph)
 
   exo <- rep(exo, length.out = vcount(graph))
   exo <- matrix(exo, ncol = 1)
@@ -1280,9 +1273,7 @@ alpha.centrality.dense <- function(graph, nodes = V(graph), alpha = 1,
 alpha.centrality.sparse <- function(graph, nodes = V(graph), alpha = 1,
                                     loops = FALSE, exo = 1, weights = NULL,
                                     tol = 1e-7) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(graph)
 
   vc <- vcount(graph)
 
@@ -1391,7 +1382,7 @@ alpha.centrality.sparse <- function(graph, nodes = V(graph), alpha = 1,
 alpha_centrality <- function(graph, nodes = V(graph), alpha = 1,
                              loops = FALSE, exo = 1, weights = NULL,
                              tol = 1e-7, sparse = TRUE) {
-  nodes <- as.igraph.vs(graph, nodes)
+  nodes <- as_igraph_vs(graph, nodes)
   if (sparse) {
     res <- alpha.centrality.sparse(
       graph, nodes, alpha, loops,

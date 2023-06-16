@@ -57,10 +57,9 @@
 #' bibcoupling(g)
 #'
 cocitation <- function(graph, v = V(graph)) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
-  v <- as.igraph.vs(graph, v)
+  ensure_igraph(graph)
+
+  v <- as_igraph_vs(graph, v)
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(R_igraph_cocitation, graph, v - 1)
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
@@ -73,10 +72,9 @@ cocitation <- function(graph, v = V(graph)) {
 #' @family cocitation
 #' @export
 bibcoupling <- function(graph, v = V(graph)) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
-  v <- as.igraph.vs(graph, v)
+  ensure_igraph(graph)
+
+  v <- as_igraph_vs(graph, v)
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(R_igraph_bibcoupling, graph, v - 1)
   if (igraph_opt("add.vertex.names") && is_named(graph)) {

@@ -47,14 +47,12 @@
 #' @family graph motifs
 #'
 #' @examples
-#' g <- barabasi.game(100)
+#' g <- sample_pa(100)
 #' motifs(g, 3)
 #' count_motifs(g, 3)
 #' sample_motifs(g, 3)
 motifs <- function(graph, size = 3, cut.prob = rep(0, size)) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(graph)
   cut.prob <- as.numeric(cut.prob)
   if (length(cut.prob) != size) {
     cut.prob <- c(
@@ -93,14 +91,12 @@ motifs <- function(graph, size = 3, cut.prob = rep(0, size)) {
 #' @family graph motifs
 #'
 #' @examples
-#' g <- barabasi.game(100)
+#' g <- sample_pa(100)
 #' motifs(g, 3)
 #' count_motifs(g, 3)
 #' sample_motifs(g, 3)
 count_motifs <- function(graph, size = 3, cut.prob = rep(0, size)) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(graph)
   cut.prob <- as.numeric(cut.prob)
   if (length(cut.prob) != size) {
     cut.prob <- c(
@@ -143,15 +139,13 @@ count_motifs <- function(graph, size = 3, cut.prob = rep(0, size)) {
 #' @family graph motifs
 #'
 #' @examples
-#' g <- barabasi.game(100)
+#' g <- sample_pa(100)
 #' motifs(g, 3)
 #' count_motifs(g, 3)
 #' sample_motifs(g, 3)
 sample_motifs <- function(graph, size = 3, cut.prob = rep(0, size),
                           sample.size = vcount(graph) / 10, sample = NULL) {
-  if (!is_igraph(graph)) {
-    stop("Not a graph object")
-  }
+  ensure_igraph(graph)
   cut.prob <- as.numeric(cut.prob)
   if (length(cut.prob) != size) {
     cut.prob <- c(
