@@ -1,4 +1,4 @@
-ae646a5fcdd7159d6dd974442dc2af51 *DESCRIPTION
+f0abdd0f1c3cf0a1a3315b994e640756 *DESCRIPTION
 b8621acf68cede0be91d9ba3f7909b04 *NAMESPACE
 b9d4fb5dd72be39ea8a494aef07b85eb *NEWS.md
 a6a97f233f9879c78b9adcd519c23f21 *R/aaa-auto.R
@@ -87,7 +87,7 @@ e938461b115a2e9e1120d2b4e5b5adea *R/uuid.R
 a9b16780599bb56555df084c6b3b5d7b *R/versions.R
 29018a054e3abf783ad2da108f37a789 *R/weakref.R
 d1dc04674fd25bcb5c835380dd48680d *R/zzz-deprecate.R
-7f2094c7b4d5faa522b624cffc621f8b *build/partial.rdb
+7080893e02c49cd296d4424b9be55069 *build/partial.rdb
 df8101155778fc0e0bd6b5f9e1350a61 *build/vignette.rds
 f89c7780070ec8f00ba8069a744208b5 *cleanup
 f89c7780070ec8f00ba8069a744208b5 *cleanup.win
@@ -1013,7 +1013,7 @@ d4ead7e7ae03b16c06bc2eee64bc99fd *src/vendor/arpack/dstatn.f
 de4792cfaab6cdda8d557902c2310fcc *src/vendor/arpack/dstqrb.f
 10246dd04cc987d389f1f369f4b1813b *src/vendor/arpack/dvout.f
 e9e8f2dac33c5cc7bfe1da70a95cc05f *src/vendor/arpack/ivout.f
-86e001901ddbd58540c49d9e1440358e *src/vendor/arpack/second.f
+dd97d9d066b9f71d866ca54207396a03 *src/vendor/arpack/second.f
 b5163c86a9a4ff980ad7a02f9303d2b7 *src/vendor/arpack/stat.h
 7f4d2d68f1da7d835424e600ab462b4e *src/vendor/arpack/wrap.f
 f25fcb86725df43a5ab4ae434f1e7798 *src/vendor/cs/SuiteSparse_config.h
