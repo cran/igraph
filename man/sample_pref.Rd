@@ -2,10 +2,10 @@
 % Please edit documentation in R/games.R
 \name{sample_pref}
 \alias{sample_pref}
-\alias{sample_asym_pref}
 \alias{preference.game}
 \alias{asymmetric.preference.game}
 \alias{pref}
+\alias{sample_asym_pref}
 \alias{asym_pref}
 \title{Trait-based random generation}
 \usage{
@@ -45,7 +45,8 @@ label. The \code{type.dist} argument gives the group sizes (i.e. number of
 vertices with the different labels) in this case.}
 
 \item{pref.matrix}{A square matrix giving the preferences of the vertex
-types. The matrix has \sQuote{types} rows and columns.}
+types. The matrix has \sQuote{types} rows and columns. When generating
+an undirected graph, it must be symmetric.}
 
 \item{directed}{Logical constant, whether to create a directed graph.}
 
@@ -98,87 +99,6 @@ tkplot(g, layout = layout_in_circle)
 
 }
 \seealso{
-\code{\link[=sample_traits]{sample_traits()}}.
-\code{\link[=sample_traits_callaway]{sample_traits_callaway()}}
-
-Random graph models (games)
-\code{\link{erdos.renyi.game}()},
-\code{\link{sample_bipartite}()},
-\code{\link{sample_correlated_gnp_pair}()},
-\code{\link{sample_correlated_gnp}()},
-\code{\link{sample_degseq}()},
-\code{\link{sample_dot_product}()},
-\code{\link{sample_fitness_pl}()},
-\code{\link{sample_fitness}()},
-\code{\link{sample_forestfire}()},
-\code{\link{sample_gnm}()},
-\code{\link{sample_gnp}()},
-\code{\link{sample_grg}()},
-\code{\link{sample_growing}()},
-\code{\link{sample_hierarchical_sbm}()},
-\code{\link{sample_islands}()},
-\code{\link{sample_k_regular}()},
-\code{\link{sample_last_cit}()},
-\code{\link{sample_pa_age}()},
-\code{\link{sample_pa}()},
-\code{\link{sample_sbm}()},
-\code{\link{sample_smallworld}()},
-\code{\link{sample_traits_callaway}()},
-\code{\link{sample_tree}()},
-\code{\link{sample_}()}
-
-Random graph models (games)
-\code{\link{erdos.renyi.game}()},
-\code{\link{sample_bipartite}()},
-\code{\link{sample_correlated_gnp_pair}()},
-\code{\link{sample_correlated_gnp}()},
-\code{\link{sample_degseq}()},
-\code{\link{sample_dot_product}()},
-\code{\link{sample_fitness_pl}()},
-\code{\link{sample_fitness}()},
-\code{\link{sample_forestfire}()},
-\code{\link{sample_gnm}()},
-\code{\link{sample_gnp}()},
-\code{\link{sample_grg}()},
-\code{\link{sample_growing}()},
-\code{\link{sample_hierarchical_sbm}()},
-\code{\link{sample_islands}()},
-\code{\link{sample_k_regular}()},
-\code{\link{sample_last_cit}()},
-\code{\link{sample_pa_age}()},
-\code{\link{sample_pa}()},
-\code{\link{sample_sbm}()},
-\code{\link{sample_smallworld}()},
-\code{\link{sample_traits_callaway}()},
-\code{\link{sample_tree}()},
-\code{\link{sample_}()}
-
-Random graph models (games)
-\code{\link{erdos.renyi.game}()},
-\code{\link{sample_bipartite}()},
-\code{\link{sample_correlated_gnp_pair}()},
-\code{\link{sample_correlated_gnp}()},
-\code{\link{sample_degseq}()},
-\code{\link{sample_dot_product}()},
-\code{\link{sample_fitness_pl}()},
-\code{\link{sample_fitness}()},
-\code{\link{sample_forestfire}()},
-\code{\link{sample_gnm}()},
-\code{\link{sample_gnp}()},
-\code{\link{sample_grg}()},
-\code{\link{sample_growing}()},
-\code{\link{sample_hierarchical_sbm}()},
-\code{\link{sample_islands}()},
-\code{\link{sample_k_regular}()},
-\code{\link{sample_last_cit}()},
-\code{\link{sample_pa_age}()},
-\code{\link{sample_pa}()},
-\code{\link{sample_sbm}()},
-\code{\link{sample_smallworld}()},
-\code{\link{sample_traits_callaway}()},
-\code{\link{sample_tree}()},
-\code{\link{sample_}()}
-
 Random graph models (games)
 \code{\link{erdos.renyi.game}()},
 \code{\link{sample_bipartite}()},

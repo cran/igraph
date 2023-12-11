@@ -61,7 +61,7 @@
 #' (in- + out-) degree of the vertex, unless the `out.pref` argument is set to
 #' `TRUE`.
 #'
-#' @aliases sample_pa barabasi.game ba.game
+#' @aliases barabasi.game ba.game
 #' @param n Number of vertices.
 #' @param power The power of the preferential attachment, the default is one,
 #'   i.e. linear preferential attachment.
@@ -100,7 +100,6 @@
 #'   `start.graph`.
 #' @return A graph object.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [sample_gnp()]
 #' @references Barabasi, A.-L. and Albert R. 1999. Emergence of scaling in
 #' random networks *Science*, 286 509--512.
 #'
@@ -202,23 +201,26 @@ pa <- function(...) constructor_spec(sample_pa, ...)
 
 #' Generate random graphs according to the \eqn{G(n,p)} Erdős-Rényi model
 #'
-#' This model is very simple, every possible edge is created with the same
-#' constant probability.
+#' Every possible edge is created independently with the same probability `p`.
+#' This model is also referred to as a Bernoulli random graph since the
+#' connectivity status of vertex pairs follows a Bernoulli distribution.
 #'
-#'
-#' The graph has \sQuote{n} vertices and for each edge the
-#' probability that it is present in the graph is \sQuote{p}.
+#' The graph has `n` vertices and each pair of vertices is connected
+#' with the same probability `p`. The `loops` parameter controls whether
+#' self-connections are also considered. This model effectively constrains
+#' the average number of edges, \eqn{p m_\text{max}}, where \eqn{m_\text{max}}
+#' is the largest possible number of edges, which depends on whether the
+#' graph is directed or undirected and whether self-loops are allowed.
 #'
 #' @param n The number of vertices in the graph.
 #' @param p The probability for drawing an edge between two
 #'   arbitrary vertices (\eqn{G(n,p)} graph).
 #' @param directed Logical, whether the graph will be directed, defaults to
-#'   FALSE.
-#' @param loops Logical, whether to add loop edges, defaults to FALSE.
+#'   `FALSE`.
+#' @param loops Logical, whether to add loop edges, defaults to `FALSE`.
 #' @return A graph object.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [sample_gnm()], [sample_pa()]
-#' @references Erdos, P. and Renyi, A., On random graphs, *Publicationes
+#' @references Erdős, P. and Rényi, A., On random graphs, *Publicationes
 #' Mathematicae* 6, 290--297 (1959).
 #' @family games
 #' @export
@@ -261,23 +263,20 @@ gnp <- function(...) constructor_spec(sample_gnp, ...)
 
 #' Generate random graphs according to the \eqn{G(n,m)} Erdős-Rényi model
 #'
-#' This model is very simple, every possible edge is created with the same
-#' constant probability.
+#' Random graph with a fixed number of edges and vertices.
 #'
-#' The graph has \sQuote{n} vertices and \sQuote{m} edges,
-#' and the \sQuote{m} edges are chosen uniformly randomly from the set of all
-#' possible edges. This set includes loop edges as well if the `loops`
-#' parameter is TRUE.
+#' The graph has `n` vertices and `m` edges. The edges are chosen uniformly
+#' at random from the set of all vertex pairs. This set includes potential
+#' self-connections as well if the `loops` parameter is `TRUE`.
 #'
 #' @param n The number of vertices in the graph.
 #' @param m The number of edges in the graph.
 #' @param directed Logical, whether the graph will be directed, defaults to
-#'   FALSE.
-#' @param loops Logical, whether to add loop edges, defaults to FALSE.
+#'   `FALSE`.
+#' @param loops Logical, whether to add loop edges, defaults to `FALSE`.
 #' @return A graph object.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [sample_gnp()], [sample_pa()]
-#' @references Erdos, P. and Renyi, A., On random graphs, *Publicationes
+#' @references Erdős, P. and Rényi, A., On random graphs, *Publicationes
 #' Mathematicae* 6, 290--297 (1959).
 #' @family games
 #' @export
@@ -318,16 +317,14 @@ gnm <- function(...) constructor_spec(sample_gnm, ...)
 
 #' Generate random graphs according to the Erdős-Rényi model
 #'
-#' This model is very simple, every possible edge is created with the same
-#' constant probability.
+#' Simple random graph model, specifying the edge count either precisely
+#' (\eqn{G(n,m)} model) or on average through a connection probability
+#' (\eqn{G(n,p)} model).
 #'
-#' In \eqn{G(n,p)} graphs, the graph has \sQuote{n} vertices and for each edge the
-#' probability that it is present in the graph is \sQuote{p}.
+#' In \eqn{G(n,m)} graphs, there are precisely `m` edges.
 #'
-#' In \eqn{G(n,m)} graphs, the graph has \sQuote{n} vertices and \sQuote{m} edges,
-#' and the \sQuote{m} edges are chosen uniformly randomly from the set of all
-#' possible edges. This set includes loop edges as well if the `loops`
-#' parameter is TRUE.
+#' In \eqn{G(n,p)} graphs, all vertex pairs are connected with the same
+#' probability `p`.
 #'
 #' `random.graph.game()` is an alias to this function.
 #'
@@ -335,22 +332,21 @@ gnm <- function(...) constructor_spec(sample_gnm, ...)
 #'
 #' Since igraph version 0.8.0, both `erdos.renyi.game()` and
 #' `random.graph.game()` are deprecated, and [sample_gnp()] and
-#' [sample_gnm()] should be used instead.
+#' [sample_gnm()] should be used instead. See these for more details.
 #'
 #' @aliases erdos.renyi.game random.graph.game
 #' @param n The number of vertices in the graph.
 #' @param p.or.m Either the probability for drawing an edge between two
-#'   arbitrary vertices (\eqn{G(n,p)} graph), or the number of edges in the graph (for
-#'   \eqn{G(n,m)} graphs).
+#'   arbitrary vertices (\eqn{G(n,p)} graph), or the number of edges in
+#'   the graph (for \eqn{G(n,m)} graphs).
 #' @param type The type of the random graph to create, either `gnp()`
 #'   (\eqn{G(n,p)} graph) or `gnm()` (\eqn{G(n,m)} graph).
 #' @param directed Logical, whether the graph will be directed, defaults to
-#'   FALSE.
-#' @param loops Logical, whether to add loop edges, defaults to FALSE.
+#'   `FALSE`.
+#' @param loops Logical, whether to add loop edges, defaults to `FALSE`.
 #' @return A graph object.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [sample_pa()]
-#' @references Erdos, P. and Renyi, A., On random graphs, *Publicationes
+#' @references Erdős, P. and Rényi, A., On random graphs, *Publicationes
 #' Mathematicae* 6, 290--297 (1959).
 #' @family games
 #' @export
@@ -442,7 +438,7 @@ random.graph.game <- erdos.renyi.game
 #'   implemented.
 #' @return The new graph object.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [sample_gnp()], [sample_pa()],
+#' @seealso
 #' [simplify()] to get rid of the multiple and/or loops edges,
 #' [realize_degseq()] for a deterministic variant.
 #' @family games
@@ -537,7 +533,6 @@ degseq <- function(..., deterministic = FALSE) {
 #'   each time step the added edges are originating from the new vertex.
 #' @return A new graph object.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [sample_pa()], [sample_gnp()]
 #' @family games
 #' @export
 #' @keywords graphs
@@ -620,7 +615,7 @@ growing <- function(...) constructor_spec(sample_growing, ...)
 #'
 #' This function might generate graphs with multiple edges.
 #'
-#' @aliases sample_pa_age aging.prefatt.game aging.barabasi.game aging.ba.game
+#' @aliases aging.prefatt.game aging.barabasi.game aging.ba.game
 #' @param n The number of vertices in the graph.
 #' @param pa.exp The preferential attachment exponent, see the details below.
 #' @param aging.exp The exponent of the aging, usually a non-positive number,
@@ -652,7 +647,6 @@ growing <- function(...) constructor_spec(sample_growing, ...)
 #'   attachment. See also details below.
 #' @return A new graph.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [sample_pa()], [sample_gnp()]
 #' @family games
 #' @export
 #' @keywords graphs
@@ -788,8 +782,7 @@ pa_age <- function(...) constructor_spec(sample_pa_age, ...)
 #' depends on the types of the vertices involved and is taken from
 #' `pref.matrix`.
 #'
-#' @aliases sample_traits_callaway sample_traits callaway.traits.game
-#' establishment.game
+#' @aliases callaway.traits.game establishment.game
 #' @param nodes The number of vertices in the graph.
 #' @param types The number of different vertex types.
 #' @param edge.per.step The number of edges to add to the graph per time step.
@@ -836,12 +829,10 @@ sample_traits_callaway <- function(nodes, types, edge.per.step = 1,
 #' @rdname sample_traits_callaway
 #' @param ... Passed to the constructor, `sample_traits()` or
 #'   `sample_traits_callaway()`.
-#' @family games
 #' @export
 traits_callaway <- function(...) constructor_spec(sample_traits_callaway, ...)
 
 #' @rdname sample_traits_callaway
-#' @family games
 #' @export
 sample_traits <- function(nodes, types, k = 1, type.dist = rep(1, types),
                           pref.matrix = matrix(1, types, types),
@@ -864,7 +855,6 @@ sample_traits <- function(nodes, types, k = 1, type.dist = rep(1, types),
 }
 
 #' @rdname sample_traits_callaway
-#' @family games
 #' @export
 traits <- function(...) constructor_spec(sample_traits, ...)
 
@@ -892,7 +882,6 @@ traits <- function(...) constructor_spec(sample_traits, ...)
 #'   attributes \sQuote{`x`} and \sQuote{`y`}.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}, first version was
 #' written by Keith Briggs (<http://keithbriggs.info/>).
-#' @seealso [sample_gnp()]
 #' @family games
 #' @export
 #' @keywords graphs
@@ -950,7 +939,7 @@ grg <- function(...) constructor_spec(sample_grg, ...)
 #' `type` vertex attribute for `sample_pref()` and from the
 #' `intype` and `outtype` vertex attribute for `sample_asym_pref()`.
 #'
-#' @aliases sample_pref sample_asym_pref preference.game asymmetric.preference.game
+#' @aliases preference.game asymmetric.preference.game
 #' @param nodes The number of vertices in the graphs.
 #' @param types The number of different vertex types.
 #' @param type.dist The distribution of the vertex types, a numeric vector of
@@ -962,14 +951,13 @@ grg <- function(...) constructor_spec(sample_grg, ...)
 #' @param type.dist.matrix The joint distribution of the in- and out-vertex
 #'   types.
 #' @param pref.matrix A square matrix giving the preferences of the vertex
-#'   types. The matrix has \sQuote{types} rows and columns.
+#'   types. The matrix has \sQuote{types} rows and columns. When generating
+#'   an undirected graph, it must be symmetric.
 #' @param directed Logical constant, whether to create a directed graph.
 #' @param loops Logical constant, whether self-loops are allowed in the graph.
 #' @return An igraph graph.
 #' @author Tamas Nepusz \email{ntamas@@gmail.com} and Gabor Csardi
 #' \email{csardi.gabor@@gmail.com} for the R interface
-#' @seealso [sample_traits()].
-#' [sample_traits_callaway()]
 #' @family games
 #' @export
 #' @keywords graphs
@@ -995,11 +983,6 @@ sample_pref <- function(nodes, types, type.dist = rep(1, types),
     stop("Invalid size for preference matrix")
   }
 
-  if (!directed && !isSymmetric(pref.matrix)) {
-    warning("Undirected graphs require symmetric preference matrices, symmetrizing matrix. igraph 1.4.0 will reject non-symmetric matrices for undirected graphs.")
-    pref.matrix <- Matrix::forceSymmetric((pref.matrix + t(pref.matrix)) / 2)
-  }
-
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
     R_igraph_preference_game, as.integer(nodes), as.integer(types),
@@ -1022,12 +1005,10 @@ sample_pref <- function(nodes, types, type.dist = rep(1, types),
 #' @rdname sample_pref
 #' @param ... Passed to the constructor, `sample_pref()` or
 #'   `sample_asym_pref()`.
-#' @family games
 #' @export
 pref <- function(...) constructor_spec(sample_pref, ...)
 
 #' @rdname sample_pref
-#' @family games
 #' @export
 sample_asym_pref <- function(nodes, types,
                              type.dist.matrix = matrix(1, types, types),
@@ -1062,7 +1043,6 @@ sample_asym_pref <- function(nodes, types,
 }
 
 #' @rdname sample_pref
-#' @family games
 #' @export
 asym_pref <- function(...) constructor_spec(sample_asym_pref, ...)
 
@@ -1092,14 +1072,25 @@ connect <- function(graph, order, mode = c("all", "out", "in", "total")) {
 
 #' The Watts-Strogatz small-world model
 #'
-#' Generate a graph according to the Watts-Strogatz network model.
-#'
-#' First a lattice is created with the given `dim`, `size` and
-#' `nei` arguments. Then the edges of the lattice are rewired uniformly
-#' randomly with probability `p`.
+#' This function generates networks with the small-world property
+#' based on a variant of the Watts-Strogatz model. The network is obtained
+#' by first creating a periodic undirected lattice, then rewiring both
+#' endpoints of each edge with probability `p`, while avoiding the
+#' creation of multi-edges.
 #'
 #' Note that this function might create graphs with loops and/or multiple
 #' edges. You can use [simplify()] to get rid of these.
+#'
+#' @details
+#' This process differs from the original model of Watts and Strogatz
+#' (see reference) in that it rewires **both** endpoints of edges. Thus in
+#' the limit of `p=1`, we obtain a G(n,m) random graph with the
+#' same number of vertices and edges as the original lattice. In comparison,
+#' the original Watts-Strogatz model only rewires a single endpoint of each edge,
+#' thus the network does not become fully random even for `p=1`.
+#' For appropriate choices of `p`, both models exhibit the property of
+#' simultaneously having short path lengths and high clustering.
+#'
 #'
 #' @aliases watts.strogatz.game
 #' @param dim Integer constant, the dimension of the starting lattice.
@@ -1166,8 +1157,7 @@ smallworld <- function(...) constructor_spec(sample_smallworld, ...)
 #' but the probability of an edge depends on the (potentially) cited
 #' vertex only.
 #'
-#' @aliases cited.type.game sample_cit_types citing.cited.type.game
-#' sample_cit_cit_types sample_last_cit lastcit.game
+#' @aliases cited.type.game citing.cited.type.game lastcit.game
 #' @param n Number of vertices.
 #' @param edges Number of edges per step.
 #' @param agebins Number of aging bins.
@@ -1202,12 +1192,10 @@ sample_last_cit <- function(n, edges = 1, agebins = n / 7100, pref = (1:(agebins
 
 #' @rdname sample_last_cit
 #' @param ... Passed to the actual constructor.
-#' @family games
 #' @export
 last_cit <- function(...) constructor_spec(sample_last_cit, ...)
 
 #' @rdname sample_last_cit
-#' @family games
 #' @export
 sample_cit_types <- function(n, edges = 1, types = rep(0, n),
                              pref = rep(1, length(types)),
@@ -1228,12 +1216,10 @@ sample_cit_types <- function(n, edges = 1, types = rep(0, n),
 }
 
 #' @rdname sample_last_cit
-#' @family games
 #' @export
 cit_types <- function(...) constructor_spec(sample_cit_types, ...)
 
 #' @rdname sample_last_cit
-#' @family games
 #' @export
 sample_cit_cit_types <- function(n, edges = 1, types = rep(0, n),
                                  pref = matrix(1,
@@ -1259,7 +1245,6 @@ sample_cit_cit_types <- function(n, edges = 1, types = rep(0, n),
 }
 
 #' @rdname sample_last_cit
-#' @family games
 #' @export
 cit_cit_types <- function(...) constructor_spec(sample_cit_cit_types, ...)
 
@@ -1296,7 +1281,6 @@ cit_cit_types <- function(...) constructor_spec(sample_cit_cit_types, ...)
 #'   is ignored for undirected graphs.
 #' @return A bipartite igraph graph.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [sample_gnp()] and [sample_gnm()] for the unipartite version.
 #' @family games
 #' @export
 #' @keywords graphs
@@ -1378,7 +1362,7 @@ bipartite <- function(...) constructor_spec(sample_bipartite, ...)
 #' The order of the vertices in the generated graph corresponds to the
 #' `block.sizes` argument.
 #'
-#' @aliases sample_sbm sbm.game sbm
+#' @aliases sbm.game
 #' @param n Number of vertices in the graph.
 #' @param pref.matrix The matrix giving the Bernoulli rates.  This is a
 #'   \eqn{K\times K}{KxK} matrix, where \eqn{K} is the number of groups. The
@@ -1391,7 +1375,6 @@ bipartite <- function(...) constructor_spec(sample_bipartite, ...)
 #' @param loops Logical scalar, whether self-loops are allowed in the graph.
 #' @return An igraph graph.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [sample_gnp()], [sample_gnm()]
 #' @references Faust, K., & Wasserman, S. (1992a). Blockmodels: Interpretation
 #' and evaluation. *Social Networks*, 14, 5--61.
 #' @keywords graphs
@@ -1407,7 +1390,6 @@ sample_sbm <- sbm_game_impl
 
 #' @rdname sample_sbm
 #' @param ... Passed to `sample_sbm()`.
-#' @family games
 #' @export
 sbm <- function(...) constructor_spec(sample_sbm, ...)
 
@@ -1420,7 +1402,6 @@ sbm <- function(...) constructor_spec(sample_sbm, ...)
 #' The function generates a random graph according to the hierarchical
 #' stochastic block model.
 #'
-#' @aliases sample_hierarchical_sbm hierarchical_sbm
 #' @param n Integer scalar, the number of vertices.
 #' @param m Integer scalar, the number of vertices per block. `n / m` must
 #'   be integer. Alternatively, an integer vector of block sizes, if not all the
@@ -1437,7 +1418,6 @@ sbm <- function(...) constructor_spec(sample_sbm, ...)
 #'   in different blocks.
 #' @return An igraph graph.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [sbm.game()]
 #' @keywords graphs
 #' @examples
 #'
@@ -1485,7 +1465,6 @@ sample_hierarchical_sbm <- function(n, m, rho, C, p) {
 
 #' @rdname sample_hierarchical_sbm
 #' @param ... Passed to `sample_hierarchical_sbm()`.
-#' @family games
 #' @export
 hierarchical_sbm <- function(...) {
   constructor_spec(sample_hierarchical_sbm, ...)
@@ -1504,7 +1483,6 @@ hierarchical_sbm <- function(...) {
 #' interval, otherwise a warning is given. For negative dot products, no edges
 #' are added; dot products that are larger than one always add an edge.
 #'
-#' @aliases sample_dot_product dot_product
 #' @param vecs A numeric matrix in which each latent position vector is a
 #'   column.
 #' @param directed A logical scalar, TRUE if the generated graph should be
@@ -1538,7 +1516,6 @@ sample_dot_product <- dot_product_game_impl
 
 #' @rdname sample_dot_product
 #' @param ... Passed to `sample_dot_product()`.
-#' @family games
 #' @export
 dot_product <- function(...) constructor_spec(sample_dot_product, ...)
 
@@ -1555,7 +1532,7 @@ dot_product <- function(...) constructor_spec(sample_dot_product, ...)
 #' oc
 #' }
 #'
-#' @aliases interconnected.islands.game sample_islands
+#' @aliases interconnected.islands.game
 #' @param islands.n The number of islands in the graph.
 #' @param islands.size The size of islands in the graph.
 #' @param islands.pin The probability to create each possible edge into each
@@ -1581,7 +1558,7 @@ sample_islands <- simple_interconnected_islands_game_impl
 #' The game simply uses [sample_degseq()] with appropriately
 #' constructed degree sequences.
 #'
-#' @aliases sample_k_regular k.regular.game
+#' @aliases k.regular.game
 #' @param no.of.nodes Integer scalar, the number of vertices in the generated
 #'   graph.
 #' @param k Integer scalar, the degree of each vertex in the graph, or the
@@ -1641,7 +1618,7 @@ sample_k_regular <- k_regular_game_impl
 #' distribution. Alternatively, you may use [sample_fitness_pl()]
 #' which generates the fitnesses for you with a given exponent.
 #'
-#' @aliases sample_fitness static.fitness.game
+#' @aliases static.fitness.game
 #' @param no.of.edges The number of edges in the generated graph.
 #' @param fitness.out A numeric vector containing the fitness of each vertex.
 #'   For directed graphs, this specifies the out-fitness of each vertex.
@@ -1699,7 +1676,7 @@ sample_fitness <- static_fitness_game_impl
 #' the square root of the number of edges times the average degree; see the
 #' paper of Chung and Lu, and Cho et al for more details.
 #'
-#' @aliases sample_fitness_pl static.power.law.game
+#' @aliases static.power.law.game
 #' @param no.of.nodes The number of vertices in the generated graph.
 #' @param no.of.edges The number of edges in the generated graph.
 #' @param exponent.out Numeric scalar, the power law exponent of the degree
@@ -1762,7 +1739,7 @@ sample_fitness_pl <- static_power_law_game_impl
 #' available then we cite all of them.  \item The same procedure is applied to
 #' all the newly cited vertices.  }
 #'
-#' @aliases sample_forestfire forest.fire.game
+#' @aliases forest.fire.game
 #' @param nodes The number of vertices in the graph.
 #' @param fw.prob The forward burning probability, see details below.
 #' @param bw.factor The backward burning ratio. The backward burning
@@ -1821,8 +1798,6 @@ sample_forestfire <- forest_fire_game_impl
 #'   adjacency matrices is `corr`.  Note each pair of corresponding
 #'   matrix entries is a pair of correlated Bernoulli random variables.
 #'
-#' @seealso [sample_correlated_gnp_pair()],
-#'   [sample_gnp()]
 #' @references Lyzinski, V., Fishkind, D. E., Priebe, C. E. (2013).  Seeded
 #' graph matching for correlated Erdos-Renyi graphs.
 #' <https://arxiv.org/abs/1304.7844>
@@ -1858,8 +1833,6 @@ sample_correlated_gnp <- correlated_game_impl
 #'   `graph2`, which are two graphs whose adjacency matrix entries are
 #'   correlated with `corr`.
 #'
-#' @seealso [sample_correlated_gnp()],
-#'   [sample_gnp()].
 #' @references Lyzinski, V., Fishkind, D. E., Priebe, C. E. (2013).  Seeded
 #' graph matching for correlated Erdos-Renyi graphs.
 #' <https://arxiv.org/abs/1304.7844>

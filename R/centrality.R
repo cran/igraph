@@ -29,7 +29,6 @@
 #' @keywords internal
 #' @export
 estimate_betweenness <- function(graph, vids = V(graph), directed = TRUE, cutoff, weights = NULL) {
-
   lifecycle::deprecate_soft(
     "1.6.0",
     "estimate_betweenness()",
@@ -67,16 +66,15 @@ betweenness.estimate <- estimate_betweenness
 #'
 #' Both functions allow you to consider only paths of length `cutoff` or
 #' smaller; this can be run for larger graphs, as the running time is not
-#' quadratic (if `cutoff` is small). If `cutoff` is zero or negative,
-#' then the function calculates the exact betweenness scores. Using zero as a
-#' cutoff is *deprecated* and future versions (from 1.4.0) will treat zero
-#' cutoff literally (i.e. no paths considered at all). If you want no cutoff,
-#' use a negative number.
+#' quadratic (if `cutoff` is small). If `cutoff` is negative (the default),
+#' then the function calculates the exact betweenness scores. Since igraph 1.6.0,
+#' a `cutoff` value of zero is treated literally, i.e. paths of length larger
+#' than zero are ignored.
 #'
 #' For calculating the betweenness a similar algorithm to the one proposed by
 #' Brandes (see References) is used.
 #'
-#' @aliases betweenness edge.betweenness betweenness.estimate
+#' @aliases edge.betweenness betweenness.estimate
 #' edge.betweenness.estimate edge_betweenness
 #' @param graph The graph to analyze.
 #' @param v The vertices for which the vertex betweenness will be calculated.
@@ -86,8 +84,6 @@ betweenness.estimate <- estimate_betweenness
 #'   betweenness. If the graph has a `weight` edge attribute, then this is
 #'   used by default. Weights are used to calculate weighted shortest paths,
 #'   so they are interpreted as distances.
-#' @param nobigint Logical scalar, whether to use big integers during the
-#'   calculation. Deprecated since igraph 1.3 and will be removed in igraph 1.4.
 #' @param normalized Logical scalar, whether to normalize the betweenness
 #'   scores. If `TRUE`, then the results are normalized by the number of ordered
 #'   or unordered vertex pairs in directed and undirected graphs, respectively.
@@ -122,7 +118,7 @@ betweenness.estimate <- estimate_betweenness
 #' @param cutoff The maximum path length to consider when calculating the
 #'   betweenness. If zero or negative then there is no such limit.
 betweenness <- function(graph, v = V(graph), directed = TRUE, weights = NULL,
-                        nobigint = TRUE, normalized = FALSE, cutoff = -1) {
+                        normalized = FALSE, cutoff = -1) {
   ensure_igraph(graph)
 
   v <- as_igraph_vs(graph, v)
@@ -136,13 +132,6 @@ betweenness <- function(graph, v = V(graph), directed = TRUE, weights = NULL,
     weights <- NULL
   }
   cutoff <- as.numeric(cutoff)
-  if (cutoff == 0) {
-    warning("`cutoff' == 0 will be treated literally from igraph 1.4. If you want unrestricted betweenness, set it to -1")
-    cutoff <- -1
-  }
-  if (!missing(nobigint)) {
-    warning("'nobigint' is deprecated since igraph 1.3 and will be removed in igraph 1.4")
-  }
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(R_igraph_betweenness_cutoff, graph, v - 1, directed, weights, cutoff)
   if (normalized) {
@@ -161,7 +150,6 @@ betweenness <- function(graph, v = V(graph), directed = TRUE, weights = NULL,
 
 #' @rdname betweenness
 #' @param e The edges for which the edge betweenness will be calculated.
-#' @family centrality
 #' @export
 edge_betweenness <- function(graph, e = E(graph),
                              directed = TRUE, weights = NULL, cutoff = -1) {
@@ -179,10 +167,6 @@ edge_betweenness <- function(graph, e = E(graph),
     weights <- NULL
   }
   cutoff <- as.numeric(cutoff)
-  if (cutoff == 0) {
-    warning("`cutoff' == 0 will be treated literally from igraph 1.4. If you want unrestricted edge betweenness, set it to -1")
-    cutoff <- -1
-  }
 
   on.exit(.Call(R_igraph_finalizer))
   # Function call
@@ -229,17 +213,16 @@ edge.betweenness.estimate <- estimate_edge_betweenness
 #'
 # " You may use the \code{cutoff} argument to consider only paths of length
 #' `cutoff` or smaller. This can be run for larger graphs, as the running
-#' time is not quadratic (if `cutoff` is small). If `cutoff` is zero
-#' or negative (which is the default), then the function calculates the exact
-#' closeness scores. Using zero as a cutoff is *deprecated* and future
-#' versions (from 1.4.0) will treat zero cutoff literally (i.e. no paths
-#' considered at all). If you want no cutoff, use a negative number.
+#' time is not quadratic (if `cutoff` is small). If `cutoff` is
+#' negative (which is the default), then the function calculates the exact
+#' closeness scores. Since igraph 1.6.0, a `cutoff` value of zero is treated
+#' literally, i.e. path with a length greater than zero are ignored.
 #'
 #' Closeness centrality is meaningful only for connected graphs. In disconnected
 #' graphs, consider using the harmonic centrality with
 #' [harmonic_centrality()]
 #'
-#' @aliases closeness closeness.estimate
+#' @aliases closeness.estimate
 #' @param graph The graph to analyze.
 #' @param vids The vertices for which closeness will be calculated.
 #' @param mode Character string, defined the types of the paths used for
@@ -260,7 +243,6 @@ edge.betweenness.estimate <- estimate_edge_betweenness
 #' @return Numeric vector with the closeness values of all the vertices in
 #'   `v`.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [betweenness()], [degree()], [harmonic_centrality()]
 #' @references Freeman, L.C. (1979). Centrality in Social Networks I:
 #' Conceptual Clarification. *Social Networks*, 1, 215-239.
 #' @family centrality
@@ -298,10 +280,6 @@ closeness <- function(graph, vids = V(graph),
   }
   normalized <- as.logical(normalized)
   cutoff <- as.numeric(cutoff)
-  if (cutoff == 0) {
-    warning("`cutoff' == 0 will be treated literally from igraph 1.4. If you want unrestricted closeness, set it to -1")
-    cutoff <- -1
-  }
 
   on.exit(.Call(R_igraph_finalizer))
   # Function call
@@ -338,11 +316,13 @@ closeness.estimate <- estimate_closeness
 #' @rdname arpack
 #' @family arpack
 #' @export
-arpack_defaults <- list(
-  bmat = "I", n = 0, which = "XX", nev = 1, tol = 0.0,
-  ncv = 3, ldv = 0, ishift = 1, maxiter = 3000, nb = 1,
-  mode = 1, start = 0, sigma = 0.0, sigmai = 0.0
-)
+arpack_defaults <- function() {
+  list(
+    bmat = "I", n = 0, which = "XX", nev = 1, tol = 0.0,
+    ncv = 3, ldv = 0, ishift = 1, maxiter = 3000, nb = 1,
+    mode = 1, start = 0, sigma = 0.0, sigmai = 0.0
+  )
+}
 
 #' ARPACK eigenvector calculation
 #'
@@ -451,7 +431,7 @@ arpack_defaults <- list(
 #' re-orthogonalization.} } } Please see the ARPACK documentation for
 #' additional details.
 #'
-#' @aliases arpack arpack-options igraph.arpack.default arpack.unpack.complex
+#' @aliases arpack arpack-options arpack.unpack.complex
 #' arpack_defaults
 #' @param func The function to perform the matrix-vector multiplication. ARPACK
 #'   requires to perform these by the user. The function gets the vector \eqn{x}
@@ -532,8 +512,18 @@ arpack_defaults <- list(
 #' }
 #' @family arpack
 #' @export
-arpack <- function(func, extra = NULL, sym = FALSE, options = arpack_defaults,
+arpack <- function(func, extra = NULL, sym = FALSE, options = arpack_defaults(),
                    env = parent.frame(), complex = !sym) {
+
+  if (is.function(options)) {
+    lifecycle::deprecate_soft(
+      "1.6.0",
+      "arpack(options = 'must be a list')",
+      details = c("`arpack_defaults()` is now a function, use `options = arpack_defaults()` instead of `options = arpack_defaults`.")
+    )
+    options <- options()
+  }
+
   if (!is.list(options) ||
     (is.null(names(options)) && length(options) != 0)) {
     stop("options must be a named list")
@@ -541,18 +531,18 @@ arpack <- function(func, extra = NULL, sym = FALSE, options = arpack_defaults,
   if (any(names(options) == "")) {
     stop("all options must be named")
   }
-  if (any(!names(options) %in% names(arpack_defaults))) {
+
+  defaults <- arpack_defaults()
+  if (any(!names(options) %in% names(defaults))) {
     stop(
       "unkown ARPACK option(s): ",
-      paste(setdiff(names(options), names(arpack_defaults)),
+      paste(setdiff(names(options), names(defaults)),
         collapse = ", "
       )
     )
   }
 
-  options.tmp <- arpack_defaults
-  options.tmp[names(options)] <- options
-  options <- options.tmp
+  options <- modify_list(defaults, options)
 
   if (sym && complex) {
     complex <- FALSE
@@ -712,7 +702,21 @@ subgraph_centrality <- function(graph, diag = FALSE) {
 #'
 #' @family centrality
 #' @export
-spectrum <- eigen_adjacency_impl
+spectrum <- function(graph, algorithm=c("arpack", "auto", "lapack", "comp_auto", "comp_lapack", "comp_arpack"), which=list(), options=arpack_defaults()) {
+  if (is.function(options)) {
+    lifecycle::deprecate_soft(
+      "1.6.0",
+      "spectrum(options = 'must be a list')",
+      details = c("`arpack_defaults()` is now a function, use `options = arpack_defaults()` instead of `options = arpack_defaults`.")
+    )
+    options <- options()
+  }
+
+  eigen_adjacency_impl(graph,
+                       algorithm = algorithm,
+                       which = which,
+                       options = options)
+}
 
 eigen_defaults <- function() {
   list(
@@ -768,7 +772,7 @@ eigen_defaults <- function() {
 #' From igraph version 0.5 this function uses ARPACK for the underlying
 #' computation, see [arpack()] for more about ARPACK in igraph.
 #'
-#' @aliases evcent eigen_centrality
+#' @aliases evcent
 #' @param graph Graph to be analyzed.
 #' @param directed Logical scalar, whether to consider direction of the edges
 #'   in directed graphs. It is ignored for undirected graphs.
@@ -807,15 +811,34 @@ eigen_defaults <- function() {
 #' eigen_centrality(g)
 #' @family centrality
 #' @export
-eigen_centrality <- eigenvector_centrality_impl
+eigen_centrality <- function(graph,
+                             directed = FALSE,
+                             scale = TRUE,
+                             weights = NULL,
+                             options = arpack_defaults()) {
 
+  if (is.function(options)) {
+    lifecycle::deprecate_soft(
+      "1.6.0",
+      "eigen_centrality(options = 'must be a list')",
+      details = c("`arpack_defaults()` is now a function, use `options = arpack_defaults()` instead of `options = arpack_defaults`.")
+    )
+    options <- options()
+  }
+
+  eigenvector_centrality_impl(graph = graph,
+                              directed = directed,
+                              scale = scale,
+                              weights = weights,
+                              options = options)
+}
 
 #' Strength or weighted vertex degree
 #'
 #' Summing up the edge weights of the adjacent edges for each vertex.
 #'
 #'
-#' @aliases graph.strength strength
+#' @aliases graph.strength
 #' @param graph The input graph.
 #' @param vids The vertices for which the strength will be calculated.
 #' @param mode Character string, \dQuote{out} for out-degree, \dQuote{in} for
@@ -825,7 +848,8 @@ eigen_centrality <- eigenvector_centrality_impl
 #' @param weights Weight vector. If the graph has a `weight` edge
 #'   attribute, then this is used by default. If the graph does not have a
 #'   `weight` edge attribute and this argument is `NULL`, then a
-#'   warning is given and [degree()] is called.
+#'   [degree()] is called. If this is `NA`, then no edge weights are used
+#'   (even if the graph has a `weight` edge attribute).
 #' @return A numeric vector giving the strength of the vertices.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
 #' @seealso [degree()] for the unweighted version.
@@ -866,7 +890,7 @@ strength <- strength_impl
 #'
 #' For vertices with degree less than two the function returns `NaN`.
 #'
-#' @aliases graph.diversity diversity
+#' @aliases graph.diversity
 #' @param graph The input graph. Edge directions are ignored.
 #' @param weights `NULL`, or the vector of edge weights to use for the
 #'   computation. If `NULL`, then the \sQuote{weight} attibute is used. Note
@@ -946,16 +970,44 @@ diversity <- diversity_impl
 #' hub_score(g2)$vector
 #' authority_score(g2)$vector
 #' @family centrality
-hub_score <- hub_score_impl
+hub_score <- function(graph, scale=TRUE, weights=NULL, options=arpack_defaults()) {
 
+  if (is.function(options)) {
+    lifecycle::deprecate_soft(
+      "1.6.0",
+      "hub_score(options = 'must be a list')",
+      details = c("`arpack_defaults()` is now a function, use `options = arpack_defaults()` instead of `options = arpack_defaults`.")
+    )
+    options <- options()
+  }
+
+  hub_score_impl(graph = graph,
+                 scale = scale,
+                 weights = weights,
+                 options = options)
+}
 
 #' @rdname hub_score
 #' @aliases authority.score
 #' @param options A named list, to override some ARPACK options. See
 #'   [arpack()] for details.
 #' @export
-authority_score <- authority_score_impl
+authority_score <- function(graph, scale=TRUE, weights=NULL, options=arpack_defaults()) {
+  if (is.function(options)) {
+    lifecycle::deprecate_soft(
+      "1.6.0",
+      I("arpack_defaults"),
+      "arpack_defaults()",
+      details = c("So the function arpack_defaults(), not an object called arpack_defaults.")
+    )
+    options <- arpack_defaults()
+  }
 
+  authority_score_impl(graph = graph,
+                       scale = scale,
+                       weights = weights,
+                       options = options)
+}
 
 #' The Page Rank algorithm
 #'
@@ -978,7 +1030,7 @@ authority_score <- authority_score_impl
 #' PageRank for only some of the vertices does not result in any performance
 #' increase at all.
 #'
-#' @aliases page.rank page_rank
+#' @aliases page.rank
 #' @param graph The graph object.
 #' @param algo Character scalar, which implementation to use to carry out the
 #'   calculation. The default is `"prpack"`, which uses the PRPACK library

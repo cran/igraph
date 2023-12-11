@@ -247,7 +247,7 @@ normalize <- function(xmin = -1, xmax = 1, ymin = xmin, ymax = xmax,
 #' edge crossings, using the Sugiyama algorithm (see
 #' [layout_with_sugiyama()]).
 #'
-#' @aliases layout_as_bipartite layout.bipartite
+#' @aliases layout.bipartite
 #' @param graph The bipartite input graph. It should have a logical
 #'   \sQuote{`type`} vertex attribute, or the `types` argument must be
 #'   given.
@@ -270,7 +270,7 @@ normalize <- function(xmin = -1, xmax = 1, ymin = xmin, ymax = xmax,
 #' @examples
 #' # Random bipartite graph
 #' inc <- matrix(sample(0:1, 50, replace = TRUE, prob = c(2, 1)), 10, 5)
-#' g <- graph_from_incidence_matrix(inc)
+#' g <- graph_from_biadjacency_matrix(inc)
 #' plot(g,
 #'   layout = layout_as_bipartite,
 #'   vertex.color = c("green", "cyan")[V(g)$type + 1]
@@ -315,7 +315,7 @@ as_bipartite <- function(...) layout_spec(layout_as_bipartite, ...)
 #' It is possible to choose the vertex that will be in the center, and the
 #' order of the vertices can be also given.
 #'
-#' @aliases layout_as_star layout.star
+#' @aliases layout.star
 #' @param graph The graph to layout.
 #' @param center The id of the vertex to put in the center. By default it is
 #'   the first vertex.
@@ -628,7 +628,7 @@ nicely <- function(...) layout_spec(layout_nicely, ...)
 #' other. If you want to change the order of the vertices, then see the
 #' [permute()] function.
 #'
-#' @aliases layout_on_grid layout.grid layout.grid.3d
+#' @aliases layout.grid layout.grid.3d
 #' @param graph The input graph.
 #' @param width The number of vertices in a single row of the grid. If this is
 #'   zero or negative, then for 2d layouts the width of the grid will be the
@@ -1517,7 +1517,17 @@ layout.lgl <- function(..., params = list()) {
 #' l <- layout_with_mds(g)
 #' plot(g, layout = l, vertex.label = NA, vertex.size = 3)
 layout_with_mds <- function(graph, dist = NULL, dim = 2,
-                            options = arpack_defaults) {
+                            options = arpack_defaults()) {
+
+  if (is.function(options)) {
+    lifecycle::deprecate_soft(
+      "1.6.0",
+      "layout_with_mds(options = 'must be a list')",
+      details = c("`arpack_defaults()` is now a function, use `options = arpack_defaults()` instead of `options = arpack_defaults`.")
+    )
+    options <- options()
+  }
+
   # Argument checks
   ensure_igraph(graph)
   if (!is.null(dist)) dist <- structure(as.double(dist), dim = dim(dist))

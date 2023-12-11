@@ -59,10 +59,6 @@
 #'   weights. Set this to `NA` if the graph was a \sQuote{weight} edge
 #'   attribute, but you don't want to use it for the layout. Larger edge weights
 #'   correspond to stronger connections.
-#' @param fixed Logical vector, it can be used to fix some vertices. Unfortunately
-#'   this has never been implemented in the C core of the igraph library and thus
-#'   it never worked. The argument is now deprecated and will be removed in
-#'   igraph 1.4.0.
 #' @param dim Either \sQuote{2} or \sQuote{3}, it specifies whether we want a
 #'   two dimensional or a three dimensional layout. Note that because of the
 #'   nature of the DrL algorithm, the three dimensional layout takes
@@ -89,7 +85,6 @@ layout_with_drl <- function(graph, use.seed = FALSE,
                             seed = matrix(runif(vcount(graph) * 2), ncol = 2),
                             options = drl_defaults$default,
                             weights = NULL,
-                            fixed = NULL,
                             dim = 2) {
   ensure_igraph(graph)
 
@@ -100,9 +95,7 @@ layout_with_drl <- function(graph, use.seed = FALSE,
   use.seed <- as.logical(use.seed)
   seed <- as.matrix(seed)
 
-  options.tmp <- drl_defaults$default
-  options.tmp[names(options)] <- options
-  options <- options.tmp
+  options <- modify_list(drl_defaults$default, options)
 
   if (is.null(weights) && "weight" %in% edge_attr_names(graph)) {
     weights <- E(graph)$weight
@@ -113,23 +106,16 @@ layout_with_drl <- function(graph, use.seed = FALSE,
     weights <- NULL
   }
 
-  if (!missing(fixed)) {
-    warning("The `fixed` argument of `layout_with_drl` has no effect and will be removed in igraph 1.4.0.")
-  }
-  if (!is.null(fixed)) {
-    fixed <- as.logical(fixed)
-  }
-
   on.exit(.Call(R_igraph_finalizer))
   if (dim == 2) {
     res <- .Call(
       R_igraph_layout_drl, graph, seed, use.seed, options,
-      weights, fixed
+      weights, FALSE
     )
   } else {
     res <- .Call(
       R_igraph_layout_drl_3d, graph, seed, use.seed, options,
-      weights, fixed
+      weights, FALSE
     )
   }
   res

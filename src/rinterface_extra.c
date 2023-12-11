@@ -252,7 +252,7 @@ SEXP R_igraph_handle_safe_eval_result_in_env(SEXP result, SEXP rho) {
       SEXP condition_message = PROTECT(Rf_install("conditionMessage"));
       SEXP condition_message_call = PROTECT(Rf_lang2(condition_message, result));
       SEXP evaluated_condition_message = PROTECT(Rf_eval(condition_message_call, rho));
-      Rf_error(CHAR(STRING_ELT(evaluated_condition_message, 0)));
+      Rf_error("%s", CHAR(STRING_ELT(evaluated_condition_message, 0)));
       UNPROTECT(3);
       return R_NilValue;
 
@@ -2348,6 +2348,10 @@ void checkInterruptFn(void *dummy) {
 }
 
 int R_igraph_interrupt_handler(void *data) {
+  /* Temporary improvement for https://github.com/igraph/rigraph/issues/940 */
+  static int iter = 0;
+  if (++iter < 16) return IGRAPH_SUCCESS;
+  iter = 0;
   /* We need to call R_CheckUserInterrupt() regularly to enable interruptions.
    * However, if an interruption is pending, R_CheckUserInterrupt() will
    * longjmp back to the top level so we cannot clean up ourselves by calling
