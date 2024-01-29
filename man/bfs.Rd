@@ -2,7 +2,6 @@
 % Please edit documentation in R/structural.properties.R
 \name{bfs}
 \alias{bfs}
-\alias{graph.bfs}
 \title{Breadth-first search}
 \usage{
 bfs(
@@ -158,6 +157,7 @@ Other structural.properties:
 \code{\link{is_acyclic}()},
 \code{\link{is_dag}()},
 \code{\link{is_matching}()},
+\code{\link{k_shortest_paths}()},
 \code{\link{knn}()},
 \code{\link{laplacian_matrix}()},
 \code{\link{reciprocity}()},

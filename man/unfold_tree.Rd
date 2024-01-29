@@ -2,7 +2,6 @@
 % Please edit documentation in R/structural.properties.R
 \name{unfold_tree}
 \alias{unfold_tree}
-\alias{unfold.tree}
 \title{Convert a general graph into a forest}
 \usage{
 unfold_tree(graph, mode = c("all", "out", "in", "total"), roots)
@@ -60,6 +59,7 @@ Other structural.properties:
 \code{\link{is_acyclic}()},
 \code{\link{is_dag}()},
 \code{\link{is_matching}()},
+\code{\link{k_shortest_paths}()},
 \code{\link{knn}()},
 \code{\link{laplacian_matrix}()},
 \code{\link{reciprocity}()},

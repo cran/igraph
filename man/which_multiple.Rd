@@ -2,10 +2,6 @@
 % Please edit documentation in R/structural.properties.R
 \name{which_multiple}
 \alias{which_multiple}
-\alias{has.multiple}
-\alias{is.loop}
-\alias{is.multiple}
-\alias{count.multiple}
 \alias{any_multiple}
 \alias{count_multiple}
 \alias{which_loop}
@@ -104,6 +100,7 @@ Other structural.properties:
 \code{\link{is_acyclic}()},
 \code{\link{is_dag}()},
 \code{\link{is_matching}()},
+\code{\link{k_shortest_paths}()},
 \code{\link{knn}()},
 \code{\link{laplacian_matrix}()},
 \code{\link{reciprocity}()},

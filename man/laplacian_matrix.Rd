@@ -2,7 +2,6 @@
 % Please edit documentation in R/structural.properties.R
 \name{laplacian_matrix}
 \alias{laplacian_matrix}
-\alias{graph.laplacian}
 \title{Graph Laplacian}
 \usage{
 laplacian_matrix(
@@ -73,6 +72,7 @@ Other structural.properties:
 \code{\link{is_acyclic}()},
 \code{\link{is_dag}()},
 \code{\link{is_matching}()},
+\code{\link{k_shortest_paths}()},
 \code{\link{knn}()},
 \code{\link{reciprocity}()},
 \code{\link{subcomponent}()},

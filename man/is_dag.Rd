@@ -2,7 +2,6 @@
 % Please edit documentation in R/paths.R
 \name{is_dag}
 \alias{is_dag}
-\alias{is.dag}
 \title{Directed acyclic graphs}
 \usage{
 is_dag(graph)
@@ -50,6 +49,7 @@ Other structural.properties:
 \code{\link{girth}()},
 \code{\link{is_acyclic}()},
 \code{\link{is_matching}()},
+\code{\link{k_shortest_paths}()},
 \code{\link{knn}()},
 \code{\link{laplacian_matrix}()},
 \code{\link{reciprocity}()},

@@ -2,7 +2,6 @@
 % Please edit documentation in R/community.R
 \name{cluster_louvain}
 \alias{cluster_louvain}
-\alias{multilevel.community}
 \title{Finding community structure by multi-level optimization of modularity}
 \usage{
 cluster_louvain(graph, weights = NULL, resolution = 1)

@@ -2,7 +2,6 @@
 % Please edit documentation in R/games.R
 \name{sample_forestfire}
 \alias{sample_forestfire}
-\alias{forest.fire.game}
 \title{Forest Fire Network Model}
 \usage{
 sample_forestfire(nodes, fw.prob, bw.factor = 1, ambs = 1, directed = TRUE)
@@ -74,13 +73,14 @@ model.
 
 Random graph models (games)
 \code{\link{erdos.renyi.game}()},
+\code{\link{sample_}()},
 \code{\link{sample_bipartite}()},
-\code{\link{sample_correlated_gnp_pair}()},
 \code{\link{sample_correlated_gnp}()},
+\code{\link{sample_correlated_gnp_pair}()},
 \code{\link{sample_degseq}()},
 \code{\link{sample_dot_product}()},
-\code{\link{sample_fitness_pl}()},
 \code{\link{sample_fitness}()},
+\code{\link{sample_fitness_pl}()},
 \code{\link{sample_gnm}()},
 \code{\link{sample_gnp}()},
 \code{\link{sample_grg}()},
@@ -89,14 +89,13 @@ Random graph models (games)
 \code{\link{sample_islands}()},
 \code{\link{sample_k_regular}()},
 \code{\link{sample_last_cit}()},
-\code{\link{sample_pa_age}()},
 \code{\link{sample_pa}()},
+\code{\link{sample_pa_age}()},
 \code{\link{sample_pref}()},
 \code{\link{sample_sbm}()},
 \code{\link{sample_smallworld}()},
 \code{\link{sample_traits_callaway}()},
-\code{\link{sample_tree}()},
-\code{\link{sample_}()}
+\code{\link{sample_tree}()}
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com}

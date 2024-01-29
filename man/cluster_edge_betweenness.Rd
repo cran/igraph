@@ -2,7 +2,6 @@
 % Please edit documentation in R/community.R
 \name{cluster_edge_betweenness}
 \alias{cluster_edge_betweenness}
-\alias{edge.betweenness.community}
 \title{Community structure detection based on edge betweenness}
 \usage{
 cluster_edge_betweenness(

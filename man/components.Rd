@@ -4,10 +4,6 @@
 \alias{component_distribution}
 \alias{largest_component}
 \alias{components}
-\alias{no.clusters}
-\alias{clusters}
-\alias{is.connected}
-\alias{cluster.distribution}
 \alias{is_connected}
 \alias{count_components}
 \title{Connected components of a graph}
@@ -109,6 +105,7 @@ Other structural.properties:
 \code{\link{is_acyclic}()},
 \code{\link{is_dag}()},
 \code{\link{is_matching}()},
+\code{\link{k_shortest_paths}()},
 \code{\link{knn}()},
 \code{\link{laplacian_matrix}()},
 \code{\link{reciprocity}()},

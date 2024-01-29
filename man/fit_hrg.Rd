@@ -2,7 +2,6 @@
 % Please edit documentation in R/hrg.R
 \name{fit_hrg}
 \alias{fit_hrg}
-\alias{hrg.fit}
 \title{Fit a hierarchical random graph model}
 \usage{
 fit_hrg(graph, hrg = NULL, start = FALSE, steps = 0)
@@ -82,12 +81,12 @@ Notes in Computer Science} 4503, 1--13. Springer-Verlag, Berlin Heidelberg
 \seealso{
 Other hierarchical random graph functions: 
 \code{\link{consensus_tree}()},
+\code{\link{hrg}()},
 \code{\link{hrg-methods}},
 \code{\link{hrg_tree}()},
-\code{\link{hrg}()},
 \code{\link{predict_edges}()},
-\code{\link{print.igraphHRGConsensus}()},
 \code{\link{print.igraphHRG}()},
+\code{\link{print.igraphHRGConsensus}()},
 \code{\link{sample_hrg}()}
 }
 \concept{hierarchical random graph functions}

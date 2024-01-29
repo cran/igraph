@@ -1,5 +1,129 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# igraph 2.0.1
+
+## Bug fixes
+
+- Use cpp11 for simpleraytracer glue to avoid `-Wlto` warnings (#1163).
+
+
+# igraph 2.0.0
+
+This major release brings development in line with the C core at <https://github.com/igraph/igraph>.
+See <https://github.com/igraph/rigraph/blob/1bd2bf79/src/vendor/cigraph/CHANGELOG.md> for a complete changelog, in particular the section "Breaking changes".
+(A permanent link to the most recent changelog of the C core used in the R package is
+<https://github.com/igraph/rigraph/blob/main/src/vendor/cigraph/CHANGELOG.md>.)
+
+Version 1.6.0 of the R package used version 0.9.9 of the C core.
+The changes in the 0.10 series of the C core are relevant for version 2.0.0 of the R package, but not all C core functions are exposed in the R interface.
+Changes to the implementation of some functions in the C core may be reflected in functions in the R package.
+
+The change log below is a summary of the additional changes in the R interface.
+
+## Breaking changes
+
+- `get.edge.ids(multi = TRUE)` and `as_adjacency_matrix(edges = )` are no longer supported (#1101, #1080).
+
+- Remove `NA` padding for `dfs(unreachable = FALSE)$order` and `$order.out` and for `bfs(unreachable = FALSE)$order`, also for `igraph_options(return.vs.es = FALSE)` (#1062, #1124).
+
+- `laplacian_matrix(normalized = TRUE)` uses a different normalization method (#1102).
+
+- `fit_power_law()` no longer returns a `KS.p` component.
+
+- Remove default value for `loops` argument of `centr_degree_tmax()` (#1114).
+
+- `as_adjacency_matrix()` no longer supports attributes of type `character` (#1072).
+
+- Remove `graph.isomorphic.34()` (#1065, #1067).
+
+- Use `lifecycle::deprecate_soft()` for most deprecated functions (#1024, #1025, #1104).
+
+- The system libraries GLPK, GMP, and libxml2 are now mandatory for compiling from source.
+
+
+## Bug fixes
+
+- Add scalar conversion checks in a few critical places (#1069).
+
+- Check that we receive a scalar when expecting a scalar in C code (#1051).
+
+- Check that matrix sizes are in the supported range before passing them to R (#1066).
+
+- `transitivity()` now produces a named vector in the local (weighted) case (#1057).
+
+- `plot()` correctly computes intersections between edges and rectangle vertices (#1021).
+
+- Fix compilation on Windows with spaces in the Rtools path (#1000).
+
+## Features
+
+- Use 30 bits of R's RNG (#1079).
+
+- Breaking change: Remove `NA` padding for `dfs(unreachable = FALSE)$order` and `$order.out` and for `bfs(unreachable = FALSE)$order`, also for `igraph_options(return.vs.es = FALSE)` (#1062, #1124).
+
+- New `k_shortest_paths()` to compute the first k shortest paths between two vertices (#1028).
+
+## Documentation
+
+- Add GitHub bug report form.
+
+- New `vignette("deprecated-dot-case")` that lists deprecated functions and their alternatives (#1013).
+
+- Move deprecation badge to top of doc pages.
+
+- Remove usage of `get.adjacency()` from intro vignettes (#1084).
+
+- Fix math formatting in `fit_power_law()` docs.
+
+- Fix incorrect usage in `subgraph.edges()` example.
+
+- Clarify that Infomap considers edge directions.
+
+- Improve edge connectivity docs (#1119).
+
+- Add some missing diacritics.
+
+## Internal
+
+- Use `[]` assignment for converting matrices (#1035).
+
+- Move towards autogenerating all bindings (#1043).
+
+- Use %\|\|% from rlang (#1112).
+
+- Replace loop by `lapply()` when returning vertex and edge sets (#1033).
+
+- Do not duplicate prototypes, use a common header for `rinterface.c` and `rinterface_extra.c` (#1055).
+
+- Clean up some auto-generation code (#1031), remove unused parts from code generation (#1032), eliminate the use of some deprecated C functions.
+
+- Use integers for mode enum in `cluster_label_prop()`.
+
+- Standardize the handling of some stimulus enum types (#1064).
+
+- Remove unused vectorlist / matrixlist destructors (#1070).
+
+- Remove unused stimulus type VERTEXSETLIST_INT (#1049).
+
+- Remove unused types (#1060).
+
+- Fix Stimulus definitions (#997).
+
+- Avoid deprecated `R_igraph_automorphisms()` (#999).
+
+- Use new ARPACK_DEFAULTS symbol from C core for default arpack options.
+
+- Ignore upstream CITATION file to avoid R CMD check NOTE (#1007).
+
+- Add Aviator configuration.
+
+## Testing
+
+- Add `as_biadjacency_matrix()` tests for named vectors (#1154, #1155).
+
+- Test transferring colors in isomorphism functions (#1050).
+
+
 # igraph 1.6.0
 
 ## Breaking changes
@@ -150,7 +274,7 @@ The only supported remedy is to upgrade the igraph package to version 1.5.0 or l
 
 ## Bug fixes
 
-  - Fix error message in `make_graph()` when `simplify = ...` is used with a non-formula (#834).
+- Fix error message in `make_graph()` when `simplify = ...` is used with a non-formula (#834).
 
 ## Testing
 
@@ -187,13 +311,13 @@ The only supported remedy is to upgrade the igraph package to version 1.5.0 or l
 
 ## Internal
 
-  - Fix tests for dev waldo (#779, @hadley).
+- Fix tests for dev waldo (#779, @hadley).
 
-  - Fix linking on Windows: gfortran needs quadmath. (#778).
+- Fix linking on Windows: gfortran needs quadmath. (#778).
 
 ## Documentation
 
-  - Mention limitation of Pajek reader (#776).
+- Mention limitation of Pajek reader (#776).
 
 
 # igraph 1.4.2

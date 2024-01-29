@@ -2,7 +2,6 @@
 % Please edit documentation in R/hrg.R
 \name{predict_edges}
 \alias{predict_edges}
-\alias{hrg.predict}
 \title{Predict edges based on a hierarchical random graph model}
 \usage{
 predict_edges(
@@ -81,11 +80,11 @@ Notes in Computer Science} 4503, 1--13. Springer-Verlag, Berlin Heidelberg
 Other hierarchical random graph functions: 
 \code{\link{consensus_tree}()},
 \code{\link{fit_hrg}()},
+\code{\link{hrg}()},
 \code{\link{hrg-methods}},
 \code{\link{hrg_tree}()},
-\code{\link{hrg}()},
-\code{\link{print.igraphHRGConsensus}()},
 \code{\link{print.igraphHRG}()},
+\code{\link{print.igraphHRGConsensus}()},
 \code{\link{sample_hrg}()}
 }
 \concept{hierarchical random graph functions}

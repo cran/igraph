@@ -14,19 +14,16 @@ A logical vector of length one.
 }
 \description{
 This function tests whether the given graph is free of cycles.
-It is only available as of igraph 2.0.0.
 }
 \details{
 This function looks for directed cycles in directed graphs and undirected
 cycles in undirected graphs.
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 
 g <- make_graph(c(1,2, 1,3, 2,4, 3,4), directed = TRUE)
 is_acyclic(g)
 is_acyclic(as.undirected(g))
-\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=is_forest]{is_forest()}} and \code{\link[=is_dag]{is_dag()}} for functions specific to undirected
@@ -52,6 +49,7 @@ Other structural.properties:
 \code{\link{girth}()},
 \code{\link{is_dag}()},
 \code{\link{is_matching}()},
+\code{\link{k_shortest_paths}()},
 \code{\link{knn}()},
 \code{\link{laplacian_matrix}()},
 \code{\link{reciprocity}()},
@@ -66,4 +64,3 @@ Other structural.properties:
 \concept{cycles}
 \concept{structural.properties}
 \keyword{graphs}
-\keyword{internal}

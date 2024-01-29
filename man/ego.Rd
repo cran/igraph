@@ -6,10 +6,7 @@
 \alias{neighborhood_size}
 \alias{ego}
 \alias{neighborhood}
-\alias{neighborhood.size}
-\alias{graph.neighborhood}
 \alias{ego_graph}
-\alias{connect.neighborhood}
 \alias{make_ego_graph}
 \alias{make_neighborhood_graph}
 \title{Neighborhood of graph vertices}
@@ -161,20 +158,20 @@ Other functions for manipulating graph structure:
 \code{\link{contract}()},
 \code{\link{delete_edges}()},
 \code{\link{delete_vertices}()},
-\code{\link{difference.igraph}()},
 \code{\link{difference}()},
+\code{\link{difference.igraph}()},
 \code{\link{disjoint_union}()},
 \code{\link{edge}()},
 \code{\link{igraph-minus}},
-\code{\link{intersection.igraph}()},
 \code{\link{intersection}()},
+\code{\link{intersection.igraph}()},
 \code{\link{path}()},
 \code{\link{permute}()},
 \code{\link{rep.igraph}()},
 \code{\link{reverse_edges}()},
 \code{\link{simplify}()},
-\code{\link{union.igraph}()},
 \code{\link{union}()},
+\code{\link{union.igraph}()},
 \code{\link{vertex}()}
 
 Other structural.properties: 
@@ -191,6 +188,7 @@ Other structural.properties:
 \code{\link{is_acyclic}()},
 \code{\link{is_dag}()},
 \code{\link{is_matching}()},
+\code{\link{k_shortest_paths}()},
 \code{\link{knn}()},
 \code{\link{laplacian_matrix}()},
 \code{\link{reciprocity}()},

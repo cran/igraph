@@ -2,9 +2,6 @@
 % Please edit documentation in R/structural.properties.R
 \name{is_matching}
 \alias{is_matching}
-\alias{is.matching}
-\alias{is.maximal.matching}
-\alias{maximum.bipartite.matching}
 \alias{max_bipartite_match}
 \alias{is_max_matching}
 \title{Matching}
@@ -128,6 +125,7 @@ Other structural.properties:
 \code{\link{girth}()},
 \code{\link{is_acyclic}()},
 \code{\link{is_dag}()},
+\code{\link{k_shortest_paths}()},
 \code{\link{knn}()},
 \code{\link{laplacian_matrix}()},
 \code{\link{reciprocity}()},

@@ -2,7 +2,6 @@
 % Please edit documentation in R/community.R
 \name{cluster_spinglass}
 \alias{cluster_spinglass}
-\alias{spinglass.community}
 \title{Finding communities in graphs based on statistical meachanics}
 \usage{
 cluster_spinglass(

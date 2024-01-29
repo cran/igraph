@@ -1,5 +1,5 @@
 Package: igraph
-Version: 1.6.0
+Version: 2.0.1
 Title: Network Analysis and Visualization
 Authors@R: c(
     person("Gábor", "Csárdi", , "csardi.gabor@gmail.com", role = "aut",
@@ -16,6 +16,7 @@ Authors@R: c(
     person("Kirill", "Müller", , "kirill@cynkra.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1416-3412")),
     person("Maëlle", "Salmon", role = "ctb"),
+    person("Michael", "Antonov", role = "ctb"),
     person("Chan Zuckerberg Initiative", role = "fnd")
   )
 Description: Routines for simple graphs and network analysis. It can
@@ -36,16 +37,16 @@ LinkingTo: cpp11 (>= 0.4.7)
 VignetteBuilder: knitr
 Config/Needs/build: roxygen2, devtools, irlba, pkgconfig
 Config/Needs/coverage: covr
+Config/Needs/website: readr
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Config/testthat/start-first: vs-es, scan, vs-operators, weakref,
         watts.strogatz.game
 Encoding: UTF-8
-RoxygenNote: 7.2.3
-SystemRequirements: gmp (optional), libxml2 (optional), glpk (>= 4.57,
-        optional)
+RoxygenNote: 7.3.0.9000
+SystemRequirements: gmp, libxml2, glpk (>= 4.57)
 NeedsCompilation: yes
-Packaged: 2023-12-09 11:51:46 UTC; kirill
+Packaged: 2024-01-27 10:46:23 UTC; kirill
 Author: Gábor Csárdi [aut] (<https://orcid.org/0000-0001-7098-9676>),
   Tamás Nepusz [aut] (<https://orcid.org/0000-0002-1451-338X>),
   Vincent Traag [aut] (<https://orcid.org/0000-0003-3170-3879>),
@@ -54,7 +55,8 @@ Author: Gábor Csárdi [aut] (<https://orcid.org/0000-0001-7098-9676>),
   Daniel Noom [aut],
   Kirill Müller [aut, cre] (<https://orcid.org/0000-0002-1416-3412>),
   Maëlle Salmon [ctb],
+  Michael Antonov [ctb],
   Chan Zuckerberg Initiative [fnd]
 Maintainer: Kirill Müller <kirill@cynkra.com>
 Repository: CRAN
-Date/Publication: 2023-12-11 07:50:02 UTC
+Date/Publication: 2024-01-29 11:50:03 UTC

@@ -2,7 +2,6 @@
 % Please edit documentation in R/community.R
 \name{make_clusters}
 \alias{make_clusters}
-\alias{create.communities}
 \title{Creates a communities object.}
 \usage{
 make_clusters(

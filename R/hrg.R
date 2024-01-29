@@ -1,3 +1,93 @@
+
+#' Predict edges based on a hierarchical random graph model
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `hrg.predict()` was renamed to `predict_edges()` to create a more
+#' consistent API.
+#' @inheritParams predict_edges
+#' @keywords internal
+#' @export
+hrg.predict <- function(graph, hrg = NULL, start = FALSE, num.samples = 10000, num.bins = 25) { # nocov start
+  lifecycle::deprecate_soft("2.0.0", "hrg.predict()", "predict_edges()")
+  predict_edges(graph = graph, hrg = hrg, start = start, num.samples = num.samples, num.bins = num.bins)
+} # nocov end
+
+#' Fit a hierarchical random graph model
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `hrg.fit()` was renamed to `fit_hrg()` to create a more
+#' consistent API.
+#' @inheritParams fit_hrg
+#' @keywords internal
+#' @export
+hrg.fit <- function(graph, hrg = NULL, start = FALSE, steps = 0) { # nocov start
+  lifecycle::deprecate_soft("2.0.0", "hrg.fit()", "fit_hrg()")
+  fit_hrg(graph = graph, hrg = hrg, start = start, steps = steps)
+} # nocov end
+
+#' Sample from a hierarchical random graph model
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `hrg.game()` was renamed to `sample_hrg()` to create a more
+#' consistent API.
+#' @inheritParams sample_hrg
+#' @keywords internal
+#' @export
+hrg.game <- function(hrg) { # nocov start
+  lifecycle::deprecate_soft("2.0.0", "hrg.game()", "sample_hrg()")
+  sample_hrg(hrg = hrg)
+} # nocov end
+
+#' Create an igraph graph from a hierarchical random graph model
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `hrg.dendrogram()` was renamed to `hrg_tree()` to create a more
+#' consistent API.
+#' @inheritParams hrg_tree
+#' @keywords internal
+#' @export
+hrg.dendrogram <- function(hrg) { # nocov start
+  lifecycle::deprecate_soft("2.0.0", "hrg.dendrogram()", "hrg_tree()")
+  hrg_tree(hrg = hrg)
+} # nocov end
+
+#' Create a hierarchical random graph from an igraph graph
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `hrg.create()` was renamed to `hrg()` to create a more
+#' consistent API.
+#' @inheritParams hrg
+#' @keywords internal
+#' @export
+hrg.create <- function(graph, prob) { # nocov start
+  lifecycle::deprecate_soft("2.0.0", "hrg.create()", "hrg()")
+  hrg(graph = graph, prob = prob)
+} # nocov end
+
+#' Create a consensus tree from several hierarchical random graph models
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `hrg.consensus()` was renamed to `consensus_tree()` to create a more
+#' consistent API.
+#' @inheritParams consensus_tree
+#' @keywords internal
+#' @export
+hrg.consensus <- function(graph, hrg = NULL, start = FALSE, num.samples = 10000) { # nocov start
+  lifecycle::deprecate_soft("2.0.0", "hrg.consensus()", "consensus_tree()")
+  consensus_tree(graph = graph, hrg = hrg, start = start, num.samples = num.samples)
+} # nocov end
 #   IGraph R package
 #   Copyright (C) 2011-2012  Gabor Csardi <csardi.gabor@gmail.com>
 #   334 Harvard street, Cambridge, MA 02139 USA
@@ -55,7 +145,6 @@ NULL
 #' `start` argument is `TRUE`. It can be converted to the `hclust` class using
 #' `as.hclust()` provided in this package.
 #'
-#' @aliases hrg.fit
 #' @param graph The graph to fit the model to. Edge directions are ignored in
 #'   directed graphs.
 #' @param hrg A hierarchical random graph model, in the form of an
@@ -126,7 +215,7 @@ fit_hrg <- function(graph, hrg = NULL, start = FALSE, steps = 0) {
     as.numeric
   )
   start <- as.logical(start)
-  steps <- as.integer(steps)
+  steps <- as.numeric(steps)
 
   on.exit(.Call(R_igraph_finalizer))
   # Function call
@@ -149,7 +238,6 @@ fit_hrg <- function(graph, hrg = NULL, start = FALSE, steps = 0) {
 #' sampling from the given HRG. Otherwise it optimizes the HRG log-likelihood
 #' first, and then samples starting from the optimum.
 #'
-#' @aliases hrg.consensus
 #' @param graph The graph the models were fitted to.
 #' @param hrg A hierarchical random graph model, in the form of an
 #'   `igraphHRG` object. `consensus_tree()` allows this to be
@@ -182,7 +270,6 @@ consensus_tree <- hrg_consensus_impl
 #' vertices. The `prob` argument contains the HRG probability labels
 #' for each vertex; these are ignored for leaf vertices.
 #'
-#' @aliases hrg.create
 #' @param graph The igraph graph to create the HRG from.
 #' @param prob A vector of probabilities, one for each vertex, in the order of
 #'   vertex ids.
@@ -199,11 +286,16 @@ hrg <- hrg_create_impl
 #' random graph model.
 #'
 #' @param hrg A hierarchical random graph model.
-#' @return An igraph graph.
+#' @return An igraph graph with a vertex attribute called `"probability"`.
 #'
 #' @family hierarchical random graph functions
 #' @export
-hrg_tree <- hrg_dendrogram_impl
+hrg_tree <- function(hrg) {
+  out <- from_hrg_dendrogram_impl(hrg)
+
+  g <- out$graph
+  set_vertex_attr(g, "probability", value = out$prob)
+}
 
 
 #' Sample from a hierarchical random graph model
@@ -211,7 +303,6 @@ hrg_tree <- hrg_dendrogram_impl
 #' `sample_hrg()` samples a graph from a given hierarchical random graph
 #' model.
 #'
-#' @aliases hrg.game
 #' @param hrg A hierarchical random graph model.
 #' @return An igraph graph.
 #'
@@ -228,7 +319,6 @@ sample_hrg <- hrg_game_impl
 #' argument is set to `TRUE`. Otherwise a HRG is fitted to the graph
 #' first.
 #'
-#' @aliases hrg.predict
 #' @param graph The graph to fit the model to. Edge directions are ignored in
 #'   directed graphs.
 #' @param hrg A hierarchical random graph model, in the form of an
@@ -292,8 +382,8 @@ predict_edges <- function(graph, hrg = NULL, start = FALSE, num.samples = 10000,
     as.numeric
   )
   start <- as.logical(start)
-  num.samples <- as.integer(num.samples)
-  num.bins <- as.integer(num.bins)
+  num.samples <- as.numeric(num.samples)
+  num.bins <- as.numeric(num.bins)
 
   on.exit(.Call(R_igraph_finalizer))
   # Function call
@@ -574,7 +664,6 @@ rlang::on_load(s3_register("ape::as.phylo", "igraphHRG"))
 #'     plot_dendrogram(x, \dots)
 #' } The extra arguments are simply passed to [as.dendrogram()].
 #'
-#' @aliases hrg.dendrogram
 #' @param x An `igraphHRG`, a hierarchical random graph, as returned by
 #'   the [fit_hrg()] function.
 #' @param mode Which dendrogram plotting function to use. See details below.

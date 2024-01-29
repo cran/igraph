@@ -2,24 +2,20 @@
 % Please edit documentation in R/community.R
 \name{membership}
 \alias{membership}
-\alias{cutat}
-\alias{is.hierarchical}
-\alias{is_hierarchical}
 \alias{print.communities}
-\alias{plot.communities}
-\alias{length.communities}
-\alias{as.dendrogram.communities}
-\alias{as.hclust.communities}
-\alias{showtrace}
-\alias{code.length}
 \alias{modularity.communities}
+\alias{length.communities}
 \alias{sizes}
 \alias{algorithm}
 \alias{merges}
 \alias{crossing}
 \alias{code_len}
+\alias{is_hierarchical}
+\alias{as.dendrogram.communities}
+\alias{as.hclust.communities}
 \alias{cut_at}
 \alias{show_trace}
+\alias{plot.communities}
 \alias{communities}
 \title{Functions to deal with the result of network community detection}
 \usage{

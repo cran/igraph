@@ -2,7 +2,6 @@
 % Please edit documentation in R/community.R
 \name{cluster_optimal}
 \alias{cluster_optimal}
-\alias{optimal.community}
 \title{Optimal community structure}
 \usage{
 cluster_optimal(graph, weights = NULL)

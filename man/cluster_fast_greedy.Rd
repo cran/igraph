@@ -2,7 +2,6 @@
 % Please edit documentation in R/community.R
 \name{cluster_fast_greedy}
 \alias{cluster_fast_greedy}
-\alias{fastgreedy.community}
 \title{Community structure via greedy optimization of modularity}
 \usage{
 cluster_fast_greedy(

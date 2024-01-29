@@ -1,4 +1,19 @@
 
+#' Create graphs from adjacency matrices
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `graph.adjacency()` was renamed to `graph_from_adjacency_matrix()` to create a more
+#' consistent API.
+#' @inheritParams graph_from_adjacency_matrix
+#' @keywords internal
+#' @export
+graph.adjacency <- function(adjmatrix, mode = c("directed", "undirected", "max", "min", "upper", "lower", "plus"), weighted = NULL, diag = TRUE, add.colnames = NULL, add.rownames = NA) { # nocov start
+  lifecycle::deprecate_soft("2.0.0", "graph.adjacency()", "graph_from_adjacency_matrix()")
+  graph_from_adjacency_matrix(adjmatrix = adjmatrix, mode = mode, weighted = weighted, diag = diag, add.colnames = add.colnames, add.rownames = add.rownames)
+} # nocov end
+
 ## ----------------------------------------------------------------
 ##
 ##   IGraph R package
@@ -22,48 +37,49 @@
 ##
 ## -----------------------------------------------------------------
 
-graph.adjacency.dense <- function(adjmatrix, mode, weighted = NULL, diag = TRUE) {
+graph.adjacency.dense <- function(
+    adjmatrix,
+    mode,
+    weighted = NULL,
+    diag = c("once", "twice", "ignore")) {
   mode <- switch(mode,
-    "directed" = 0,
-    "undirected" = 1,
-    "max" = 1,
-    "upper" = 2,
-    "lower" = 3,
-    "min" = 4,
-    "plus" = 5
+    "directed" = 0L,
+    "undirected" = 1L,
+    "upper" = 2L,
+    "lower" = 3L,
+    "min" = 4L,
+    "plus" = 5L,
+    "max" = 6L
   )
+
+  if (is.logical(diag)) {
+    diag <- ifelse(diag, "once", "ignore")
+  }
+  diag <- igraph.match.arg(diag)
+  diag <- switch(diag,
+    "ignore" = 0L,
+    "twice" = 1L,
+    "once" = 2L
+  )
+
+  if (nrow(adjmatrix) != ncol(adjmatrix)) {
+    stop("Adjacency matrices must be square.")
+  }
 
   mode(adjmatrix) <- "double"
 
-  if (!is.null(weighted)) {
-    if (is.logical(weighted) && weighted) {
-      weighted <- "weight"
-    }
-    if (!is.character(weighted)) {
-      stop("invalid value supplied for `weighted' argument, please see docs.")
-    }
+  if (isTRUE(weighted)) {
+    weighted <- "weight"
+  } else if (!is.character(weighted)) {
+    weighted <- NULL
+  }
 
-    if (nrow(adjmatrix) != ncol(adjmatrix)) {
-      stop("not a square matrix")
-    }
-
-    on.exit(.Call(R_igraph_finalizer))
-    res <- .Call(
-      R_igraph_weighted_adjacency, adjmatrix,
-      as.numeric(mode), weighted, diag
-    )
+  on.exit(.Call(R_igraph_finalizer))
+  if (is.null(weighted)) {
+    res <- .Call(R_igraph_adjacency, adjmatrix, mode, diag)
   } else {
-    adjmatrix <- as.matrix(adjmatrix)
-    attrs <- attributes(adjmatrix)
-    adjmatrix <- as.numeric(adjmatrix)
-    attributes(adjmatrix) <- attrs
-
-    if (!diag) {
-      diag(adjmatrix) <- 0
-    }
-
-    on.exit(.Call(R_igraph_finalizer))
-    res <- .Call(R_igraph_graph_adjacency, adjmatrix, as.numeric(mode))
+    res <- .Call(R_igraph_weighted_adjacency, adjmatrix, mode, diag)
+    res <- set_edge_attr(res$graph, weighted, value = res$weights)
   }
 
   res
@@ -293,7 +309,6 @@ graph.adjacency.sparse <- function(adjmatrix, mode, weighted = NULL, diag = TRUE
 #' undirected graph will be created, `A(i,j)+A(j,i)` gives the edge
 #' weights.} }
 #'
-#' @aliases graph.adjacency
 #' @param adjmatrix A square adjacency matrix. From igraph version 0.5.1 this
 #'   can be a sparse matrix created with the `Matrix` package.
 #' @param mode Character scalar, specifies how igraph should interpret the

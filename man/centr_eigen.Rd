@@ -2,7 +2,6 @@
 % Please edit documentation in R/centralization.R
 \name{centr_eigen}
 \alias{centr_eigen}
-\alias{centralization.evcent}
 \title{Centralize a graph according to the eigenvector centrality of vertices}
 \usage{
 centr_eigen(
@@ -57,12 +56,12 @@ centr_eigen(g1)$centralization
 }
 \seealso{
 Other centralization related: 
-\code{\link{centr_betw_tmax}()},
 \code{\link{centr_betw}()},
-\code{\link{centr_clo_tmax}()},
+\code{\link{centr_betw_tmax}()},
 \code{\link{centr_clo}()},
-\code{\link{centr_degree_tmax}()},
+\code{\link{centr_clo_tmax}()},
 \code{\link{centr_degree}()},
+\code{\link{centr_degree_tmax}()},
 \code{\link{centr_eigen_tmax}()},
 \code{\link{centralize}()}
 }

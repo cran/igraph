@@ -2,7 +2,6 @@
 % Please edit documentation in R/community.R
 \name{cluster_walktrap}
 \alias{cluster_walktrap}
-\alias{walktrap.community}
 \title{Community structure via short random walks}
 \usage{
 cluster_walktrap(

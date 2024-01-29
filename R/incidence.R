@@ -1,4 +1,19 @@
 
+#' Create graphs from a bipartite adjacency matrix
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `graph.incidence()` was renamed to `graph_from_biadjacency_matrix()` to create a more
+#' consistent API.
+#' @inheritParams graph_from_biadjacency_matrix
+#' @keywords internal
+#' @export
+graph.incidence <- function(incidence, directed = FALSE, mode = c("all", "out", "in", "total"), multiple = FALSE, weighted = NULL, add.names = NULL) { # nocov start
+  lifecycle::deprecate_soft("2.0.0", "graph.incidence()", "graph_from_biadjacency_matrix()")
+  graph_from_biadjacency_matrix(incidence = incidence, directed = directed, mode = mode, multiple = multiple, weighted = weighted, add.names = add.names)
+} # nocov end
+
 ## ----------------------------------------------------------------
 ##
 ##   IGraph R package
@@ -130,7 +145,7 @@ graph.incidence.dense <- function(incidence, directed, mode, multiple,
     mode(incidence) <- "double"
     on.exit(.Call(R_igraph_finalizer))
     ## Function call
-    res <- .Call(R_igraph_incidence, incidence, directed, mode, multiple)
+    res <- .Call(R_igraph_biadjacency, incidence, directed, mode, multiple)
     res <- set_vertex_attr(res$graph, "type", value = res$types)
   }
 
@@ -153,7 +168,6 @@ graph.incidence.dense <- function(incidence, directed, mode, multiple,
 #' the closest non-negative integer to get the number of edges to create
 #' between a pair of vertices.
 #'
-#' @aliases graph.incidence
 #' @param incidence The input bipartite adjacency matrix. It can also be a sparse matrix
 #'   from the `Matrix` package.
 #' @param directed Logical scalar, whether to create a directed graph.

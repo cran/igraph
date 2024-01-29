@@ -2,8 +2,6 @@
 % Please edit documentation in R/assortativity.R
 \name{assortativity}
 \alias{assortativity}
-\alias{assortativity.degree}
-\alias{assortativity.nominal}
 \alias{assortativity_nominal}
 \alias{assortativity_degree}
 \title{Assortativity coefficient}
@@ -14,11 +12,12 @@ assortativity(
   ...,
   values.in = NULL,
   directed = TRUE,
+  normalized = TRUE,
   types1 = NULL,
   types2 = NULL
 )
 
-assortativity_nominal(graph, types, directed = TRUE)
+assortativity_nominal(graph, types, directed = TRUE, normalized = TRUE)
 
 assortativity_degree(graph, directed = TRUE)
 }
@@ -44,6 +43,11 @@ Supply
 \code{TRUE} here to do the natural thing, i.e. use directed version of the
 measure for directed graphs and the undirected version for undirected
 graphs.}
+
+\item{normalized}{Boolean, whether to compute the normalized assortativity.
+The non-normalized nominal assortativity is identical to modularity.
+The non-normalized value-based assortativity is simply the covariance of the
+values at the two ends of edges.}
 
 \item{types1, types2}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
 Deprecated aliases for \code{values} and \code{values.in}, respectively.}

@@ -2,7 +2,6 @@
 % Please edit documentation in R/structure.info.R
 \name{are_adjacent}
 \alias{are_adjacent}
-\alias{are.connected}
 \title{Are two vertices adjacent?}
 \usage{
 are_adjacent(graph, v1, v2)
@@ -43,8 +42,8 @@ Other structural queries:
 \code{\link{gorder}()},
 \code{\link{gsize}()},
 \code{\link{head_of}()},
-\code{\link{incident_edges}()},
 \code{\link{incident}()},
+\code{\link{incident_edges}()},
 \code{\link{is_directed}()},
 \code{\link{neighbors}()},
 \code{\link{tail_of}()}

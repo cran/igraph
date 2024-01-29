@@ -1,7 +1,7 @@
 test_that("graphNEL conversion works", {
-  if (!requireNamespace("graph", quietly = TRUE)) skip("No graph package")
+  skip_if_not_installed("graph")
 
-  library(graph, warn.conflicts = FALSE)
+  suppressPackageStartupMessages(library(graph, warn.conflicts = FALSE))
 
   g <- sample_gnp(100, 5 / 100)
   N <- as_graphnel(g)
@@ -29,7 +29,7 @@ test_that("graphNEL conversion works", {
 })
 
 test_that("graphNEL does not duplicate loop edges", {
-  if (!requireNamespace("graph", quietly = TRUE)) skip("No graph package")
+  skip_if_not_installed("graph")
 
   mat <- matrix(c(1, 0.5, 0.5, 0), nrow = 2)
   dimnames(mat) <- list(c("A", "B"), c("A", "B"))

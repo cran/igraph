@@ -1,3 +1,48 @@
+
+#' Shortest (directed or undirected) paths between vertices
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `path.length.hist()` was renamed to `distance_table()` to create a more
+#' consistent API.
+#' @inheritParams distance_table
+#' @keywords internal
+#' @export
+path.length.hist <- function(graph, directed = TRUE) { # nocov start
+  lifecycle::deprecate_soft("2.0.0", "path.length.hist()", "distance_table()")
+  distance_table(graph = graph, directed = directed)
+} # nocov end
+
+#' Maximum cardinality search
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `maximum.cardinality.search()` was renamed to `max_cardinality()` to create a more
+#' consistent API.
+#' @inheritParams max_cardinality
+#' @keywords internal
+#' @export
+maximum.cardinality.search <- function(graph) { # nocov start
+  lifecycle::deprecate_soft("2.0.0", "maximum.cardinality.search()", "max_cardinality()")
+  max_cardinality(graph = graph)
+} # nocov end
+
+#' Directed acyclic graphs
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `is.dag()` was renamed to `is_dag()` to create a more
+#' consistent API.
+#' @inheritParams is_dag
+#' @keywords internal
+#' @export
+is.dag <- function(graph) { # nocov start
+  lifecycle::deprecate_soft("2.0.0", "is.dag()", "is_dag()")
+  is_dag(graph = graph)
+} # nocov end
 ## -----------------------------------------------------------------------
 ##
 ##   IGraph R package
@@ -74,7 +119,7 @@ all_simple_paths <- function(graph, from, to = V(graph),
   ## Function call
   res <- .Call(
     R_igraph_get_all_simple_paths, graph, from - 1, to - 1,
-    as.integer(cutoff), mode
+    as.numeric(cutoff), mode
   )
   res <- get.all.simple.paths.pp(res)
 
@@ -93,7 +138,6 @@ all_simple_paths <- function(graph, from, to = V(graph),
 #' `is_dag()` checks whether there is a directed cycle in the graph. If not,
 #' the graph is a DAG.
 #'
-#' @aliases is.dag
 #' @param graph The input graph. It may be undirected, in which case
 #'   `FALSE` is reported.
 #' @return A logical vector of length one.
@@ -111,11 +155,9 @@ all_simple_paths <- function(graph, from, to = V(graph),
 #' @export
 is_dag <- is_dag_impl
 
-
 #' Acyclic graphs
 #'
 #' This function tests whether the given graph is free of cycles.
-#' It is only available as of igraph 2.0.0.
 #'
 #' This function looks for directed cycles in directed graphs and undirected
 #' cycles in undirected graphs.
@@ -123,7 +165,7 @@ is_dag <- is_dag_impl
 #' @param graph The input graph.
 #' @return A logical vector of length one.
 #' @keywords graphs
-#' @examplesIf FALSE
+#' @examples
 #'
 #' g <- make_graph(c(1,2, 1,3, 2,4, 3,4), directed = TRUE)
 #' is_acyclic(g)
@@ -133,10 +175,7 @@ is_dag <- is_dag_impl
 #' @family cycles
 #' @family structural.properties
 #' @export
-#' @keywords internal
-is_acyclic <- function(graph) {
-  cli::cli_abort("Only implemented in igraph 2.0.0")
-}
+is_acyclic <- is_acyclic_impl
 
 #' Maximum cardinality search
 #'
@@ -150,7 +189,7 @@ is_acyclic <- function(graph) {
 #' The algorithm provides a simple basis for deciding whether a graph is
 #' chordal, see References below, and also [is_chordal()].
 #'
-#' @aliases maximum.cardinality.search max_cardinality
+#' @aliases max_cardinality
 #' @param graph The input graph. It may be directed, but edge directions are
 #'   ignored, as the algorithm is defined for undirected graphs.
 #' @return A list with two components: \item{alpha}{Numeric vector. The

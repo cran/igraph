@@ -2,7 +2,6 @@
 % Please edit documentation in R/structural.properties.R
 \name{degree}
 \alias{degree}
-\alias{degree.distribution}
 \alias{degree_distribution}
 \title{Degree and degree distribution of the vertices}
 \usage{
@@ -72,6 +71,7 @@ Other structural.properties:
 \code{\link{is_acyclic}()},
 \code{\link{is_dag}()},
 \code{\link{is_matching}()},
+\code{\link{k_shortest_paths}()},
 \code{\link{knn}()},
 \code{\link{laplacian_matrix}()},
 \code{\link{reciprocity}()},

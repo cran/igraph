@@ -704,7 +704,7 @@ make_empty_graph <- function(n = 0, directed = TRUE) {
     stop("number of vertices must be an integer")
   }
 
-  n <- suppressWarnings(as.integer(n))
+  n <- suppressWarnings(as.numeric(n))
   if (is.na(n)) {
     stop("number of vertices must be an integer")
   }
@@ -1180,7 +1180,7 @@ make_tree <- function(n, children = 2, mode = c("out", "in", "undirected")) {
 
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_tree, as.numeric(n), as.numeric(children),
+    R_igraph_kary_tree, as.numeric(n), as.numeric(children),
     as.numeric(mode1)
   )
   if (igraph_opt("add.params")) {
@@ -1334,7 +1334,7 @@ atlas <- function(...) constructor_spec(graph_from_atlas, ...)
 make_chordal_ring <- function(n, w, directed = FALSE) {
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_extended_chordal_ring, as.integer(n),
+    R_igraph_extended_chordal_ring, as.numeric(n),
     as.matrix(w), as.logical(directed)
   )
   if (igraph_opt("add.params")) {
@@ -1527,8 +1527,8 @@ kautz_graph <- function(...) constructor_spec(make_kautz_graph, ...)
 #' @export
 make_full_bipartite_graph <- function(n1, n2, directed = FALSE,
                                       mode = c("all", "out", "in")) {
-  n1 <- as.integer(n1)
-  n2 <- as.integer(n2)
+  n1 <- as.numeric(n1)
+  n2 <- as.numeric(n2)
   directed <- as.logical(directed)
   mode1 <- switch(igraph.match.arg(mode),
     "out" = 1,
@@ -1574,7 +1574,7 @@ full_bipartite_graph <- function(...) constructor_spec(make_full_bipartite_graph
 #' `is_bipartite()` checks whether the graph is bipartite or not. It just
 #' checks whether the graph has a vertex attribute called `type`.
 #'
-#' @aliases graph.bipartite is.bipartite
+#' @aliases graph.bipartite
 #' @param types A vector giving the vertex types. It will be coerced into
 #'   boolean. The length of the vector gives the number of vertices in the graph.
 #'   When the vector is a named vector, the names will be attached to the graph
@@ -1653,7 +1653,7 @@ bipartite_graph <- function(...) constructor_spec(make_bipartite_graph, ...)
 #' print_all(make_full_citation_graph(10))
 make_full_citation_graph <- function(n, directed = TRUE) {
   # Argument checks
-  n <- as.integer(n)
+  n <- as.numeric(n)
   directed <- as.logical(directed)
 
   on.exit(.Call(R_igraph_finalizer))
@@ -1753,7 +1753,7 @@ graph_from_lcf <- lcf_vector_impl
 #' S. L. Hakimi,
 #' On Realizability of a Set of Integers as Degrees of the Vertices of a Linear Graph,
 #' Journal of the SIAM 10, 3 (1962).
-#' \doi{https://doi.org/10.1137/0111010}
+#' \doi{10.1137/0111010}
 #'
 #' D. J. Kleitman and D. L. Wang,
 #' Algorithms for Constructing Graphs and Digraphs with Given Valences and Factors,
@@ -1791,3 +1791,39 @@ graph_from_lcf <- lcf_vector_impl
 #' g5 <- realize_degseq(degs, allowed.edge.types = "multi")
 #' all(degree(g5) == degs)
 realize_degseq <- realize_degree_sequence_impl
+#' @export graph.atlas
+deprecated("graph.atlas", graph_from_atlas)
+#' @export graph.bipartite
+deprecated("graph.bipartite", make_bipartite_graph)
+#' @export graph.de.bruijn
+deprecated("graph.de.bruijn", make_de_bruijn_graph)
+#' @export graph.empty
+deprecated("graph.empty", make_empty_graph)
+#' @export graph.extended.chordal.ring
+deprecated("graph.extended.chordal.ring", make_chordal_ring)
+#' @export graph.formula
+deprecated("graph.formula", graph_from_literal)
+#' @export graph.full
+deprecated("graph.full", make_full_graph)
+#' @export graph.full.bipartite
+deprecated("graph.full.bipartite", make_full_bipartite_graph)
+#' @export graph.full.citation
+deprecated("graph.full.citation", make_full_citation_graph)
+#' @export graph.kautz
+deprecated("graph.kautz", make_kautz_graph)
+#' @export graph.lattice
+deprecated("graph.lattice", make_lattice)
+#' @export graph.lcf
+deprecated("graph.lcf", graph_from_lcf)
+#' @export graph.star
+deprecated("graph.star", make_star)
+#' @export graph.tree
+deprecated("graph.tree", make_tree)
+#' @export graph.ring
+deprecated("graph.ring", make_ring)
+#' @export line.graph
+deprecated("line.graph", make_line_graph)
+#' @export graph.famous
+deprecated("graph.famous", make_graph)
+#' @export graph
+deprecated("graph", make_graph)
