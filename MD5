@@ -1,4 +1,4 @@
-827da400fb21aa40d46a64b7a7d8878a *DESCRIPTION
+e0496198bbe7501f8dd63369325cfb66 *DESCRIPTION
 2bb13191c85f10e6bfd2b7d30495634c *NAMESPACE
 07a6901a46878f425cc12e6cdf2859a3 *NEWS.md
 dcc2fc0577f6db0c1fd74ae1edee49a9 *R/aaa-a-deprecate.R
@@ -60,7 +60,7 @@ bad750492fe36826a570a97b7a8f12d6 *R/package.R
 840ac9a3eba2a6e70bd0ceb4aee84e83 *R/palette.R
 cfebd99ea8f60675a5812cc78166a25b *R/par.R
 d891f7ac5a2be474882507142c92c7af *R/paths.R
-c2fce8459aab0f926c39851d063bf093 *R/plot.R
+6ef72021ee5a6e5e5061ef46367d4561 *R/plot.R
 22adf690c62781e7027b5c355ab3d533 *R/plot.common.R
 8e78ddec3ccbe5054896c1a30f7e08fc *R/plot.shapes.R
 95a32e690a96b69bff0a4278923eabbc *R/pp.R
