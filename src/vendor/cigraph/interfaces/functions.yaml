@@ -17,6 +17,9 @@ igraph_add_edges:
     PARAMS: INOUT GRAPH graph, VERTEX_INDEX_PAIRS edges, ATTRIBUTES attr
     DEPS: edges ON graph
 
+igraph_empty_attrs:
+    PARAMS: OUT GRAPH graph, INTEGER n, BOOLEAN directed, ATTRIBUTES attr
+
 igraph_add_vertices:
     PARAMS: INOUT GRAPH graph, INTEGER nv, ATTRIBUTES attr
 
@@ -65,9 +68,6 @@ igraph_edge:
 igraph_edges:
     PARAMS: GRAPH graph, EDGE_SELECTOR eids, OUT VECTOR_INT edges
     DEPS: eids ON graph
-
-igraph_empty_attrs:
-    PARAMS: OUT GRAPH graph, INTEGER n, BOOLEAN directed, ATTRIBUTES attr
 
 igraph_get_eid:
     PARAMS: |-
@@ -200,6 +200,11 @@ igraph_full_multipartite:
 igraph_realize_degree_sequence:
     PARAMS: |-
         OUT GRAPH graph, VECTOR_INT out_deg, OPTIONAL VECTOR_INT in_deg=NULL,
+        EDGE_TYPE_SW allowed_edge_types=SIMPLE, REALIZE_DEGSEQ_METHOD method=SMALLEST
+
+igraph_realize_bipartite_degree_sequence:
+    PARAMS: |-
+        OUT GRAPH graph, VECTOR_INT degrees1, VECTOR_INT degrees2,
         EDGE_TYPE_SW allowed_edge_types=SIMPLE, REALIZE_DEGSEQ_METHOD method=SMALLEST
 
 igraph_circulant:
@@ -616,7 +621,7 @@ igraph_widest_path_widths_floyd_warshall:
 
 igraph_spanner:
     PARAMS: |-
-        GRAPH graph, OUT EDGE_INDICES spanner, REAL stretch, EDGEWEIGHTS weights
+        GRAPH graph, OUT EDGE_INDICES spanner, REAL stretch, OPTIONAL EDGEWEIGHTS weights
     DEPS: weights ON graph
 
 igraph_subcomponent:
@@ -1060,14 +1065,12 @@ igraph_radius_dijkstra:
     DEPS: weights ON graph
 
 igraph_pseudo_diameter:
-    NAME-R: pseudo_diameter
     PARAMS: |-
         GRAPH graph, OUT REAL diameter, VERTEX start_vid,
         OUT INTEGER from=NULL, OUT INTEGER to=NULL,
         BOOLEAN directed=True, BOOLEAN unconnected=True
 
 igraph_pseudo_diameter_dijkstra:
-    NAME-R: pseudo_diameter
     PARAMS: |-
         GRAPH graph, EDGEWEIGHTS weights=NULL,
         OUT REAL diameter, VERTEX start_vid,
@@ -1267,6 +1270,9 @@ igraph_biconnected_components:
 igraph_bridges:
     PARAMS: GRAPH graph, OUT EDGE_INDICES res
     DEPS: res ON graph
+
+igraph_is_biconnected:
+    PARAMS: GRAPH graph, OUT BOOLEAN res
 
 #######################################
 # Cliques

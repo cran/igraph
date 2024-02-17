@@ -1,5 +1,5 @@
 Package: igraph
-Version: 2.0.1.1
+Version: 2.0.2
 Title: Network Analysis and Visualization
 Authors@R: c(
     person("Gábor", "Csárdi", , "csardi.gabor@gmail.com", role = "aut",
@@ -29,7 +29,7 @@ URL: https://r.igraph.org/, https://igraph.org/,
 BugReports: https://github.com/igraph/rigraph/issues
 Depends: methods, R (>= 3.5.0)
 Imports: cli, graphics, grDevices, lifecycle, magrittr, Matrix,
-        pkgconfig (>= 2.0.0), rlang, stats, utils
+        pkgconfig (>= 2.0.0), rlang, stats, utils, vctrs
 Suggests: ape (>= 5.7-0.1), callr, decor, digest, graph, igraphdata,
         knitr, rgl, rmarkdown, scales, stats4, tcltk, testthat, vdiffr,
         withr
@@ -43,10 +43,10 @@ Config/testthat/parallel: true
 Config/testthat/start-first: vs-es, scan, vs-operators, weakref,
         watts.strogatz.game
 Encoding: UTF-8
-RoxygenNote: 7.3.0.9000
-SystemRequirements: gmp, libxml2, glpk (>= 4.57)
+RoxygenNote: 7.3.1
+SystemRequirements: libxml2, glpk (>= 4.57)
 NeedsCompilation: yes
-Packaged: 2024-01-29 22:11:59 UTC; ripley
+Packaged: 2024-02-15 14:49:55 UTC; kirill
 Author: Gábor Csárdi [aut] (<https://orcid.org/0000-0001-7098-9676>),
   Tamás Nepusz [aut] (<https://orcid.org/0000-0002-1451-338X>),
   Vincent Traag [aut] (<https://orcid.org/0000-0003-3170-3879>),
@@ -59,4 +59,4 @@ Author: Gábor Csárdi [aut] (<https://orcid.org/0000-0001-7098-9676>),
   Chan Zuckerberg Initiative [fnd]
 Maintainer: Kirill Müller <kirill@cynkra.com>
 Repository: CRAN
-Date/Publication: 2024-01-30 10:52:09 UTC
+Date/Publication: 2024-02-17 23:20:02 UTC

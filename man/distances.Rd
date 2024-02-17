@@ -24,7 +24,8 @@ distances(
   to = V(graph),
   mode = c("all", "out", "in"),
   weights = NULL,
-  algorithm = c("automatic", "unweighted", "dijkstra", "bellman-ford", "johnson")
+  algorithm = c("automatic", "unweighted", "dijkstra", "bellman-ford", "johnson",
+    "floyd-warshall")
 )
 
 shortest_paths(
@@ -144,8 +145,8 @@ for each vertex, or \code{NULL}, if it was not requested.}
 
 For \code{all_shortest_paths()} a list is returned, each list element
 contains a shortest path from \code{from} to a vertex in \code{to}. The
-shortest paths to the same vertex are collected into consecutive elements of
-the list.
+shortest paths to the same vertex are collected into consecutive elements
+of the list.
 
 For \code{mean_distance()} a single number is returned if \code{details=FALSE},
 or a named list with two entries: \code{res} is the mean distance as a numeric
@@ -155,8 +156,10 @@ also as a numeric scalar.
 \code{distance_table()} returns a named list with two entries: \code{res} is
 a numeric vector, the histogram of distances, \code{unconnected} is a
 numeric scalar, the number of pairs for which the first vertex is not
-reachable from the second. The sum of the two entries is always \eqn{n(n-1)}
-for directed graphs and \eqn{n(n-1)/2} for undirected graphs.
+reachable from the second. In undirected and directed graphs, unorderde
+and ordered pairs are considered, respectively. Therefore the sum of the
+two entries is always \eqn{n(n-1)} for directed graphs and \eqn{n(n-1)/2}
+for undirected graphs.
 }
 \description{
 \code{distances()} calculates the length of all the shortest paths from
@@ -176,8 +179,10 @@ the \code{weight} edge attribute of the graph. The implemented algorithms
 are breadth-first search (\sQuote{\code{unweighted}}), this only works for
 unweighted graphs; the Dijkstra algorithm (\sQuote{\code{dijkstra}}), this
 works for graphs with non-negative edge weights; the Bellman-Ford algorithm
-(\sQuote{\code{bellman-ford}}), and Johnson's algorithm
-(\sQuote{\code{johnson}}). The latter two algorithms work with arbitrary
+(\sQuote{\code{bellman-ford}}); Johnson's algorithm
+(\sQuote{\code{johnson}}); and a faster version of the Floyd-Warshall algorithm
+with expected quadratic running time (\sQuote{\code{floyd-warshall}}). The latter
+three algorithms work with arbitrary
 edge weights, but (naturally) only for graphs that don't have a negative
 cycle. Note that a negative-weight edge in an undirected graph implies
 such a cycle. Johnson's algorithm performs better than the Bellman-Ford
@@ -196,14 +201,17 @@ breadth-first search for unweighted graphs and Dijkstra's algorithm for
 weighted graphs. The latter only works if the edge weights are non-negative.
 
 \code{all_shortest_paths()} calculates \emph{all} shortest paths between
-pairs of vertices. More precisely, between the \code{from} vertex to the
-vertices given in \code{to}. It uses a breadth-first search for unweighted
-graphs and Dijkstra's algorithm for weighted ones. The latter only supports
-non-negative edge weights.
+pairs of vertices, including several shortest paths of the same length.
+More precisely, it computerd all shortest path starting at \code{from}, and
+ending at any vertex given in \code{to}. It uses a breadth-first search for
+unweighted graphs and Dijkstra's algorithm for weighted ones. The latter
+only supports non-negative edge weights. Caution: in multigraphs, the
+result size is exponentially large in the number of vertex pairs with
+multiple edges between them.
 
 \code{mean_distance()} calculates the average path length in a graph, by
 calculating the shortest paths between all pairs of vertices (both ways for
-directed graphs). It uses a breadth-=first search for unweighted graphs and
+directed graphs). It uses a breadth-first search for unweighted graphs and
 Dijkstra's algorithm for weighted ones. The latter only supports non-negative
 edge weights.
 
@@ -270,7 +278,6 @@ Other structural.properties:
 \code{\link{is_matching}()},
 \code{\link{k_shortest_paths}()},
 \code{\link{knn}()},
-\code{\link{laplacian_matrix}()},
 \code{\link{reciprocity}()},
 \code{\link{subcomponent}()},
 \code{\link{subgraph}()},

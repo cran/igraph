@@ -89,7 +89,8 @@ largest_component(g)
 Connected components
 \code{\link{articulation_points}()},
 \code{\link{biconnected_components}()},
-\code{\link{decompose}()}
+\code{\link{decompose}()},
+\code{\link{is_biconnected}()}
 
 Other structural.properties: 
 \code{\link{bfs}()},
@@ -107,7 +108,6 @@ Other structural.properties:
 \code{\link{is_matching}()},
 \code{\link{k_shortest_paths}()},
 \code{\link{knn}()},
-\code{\link{laplacian_matrix}()},
 \code{\link{reciprocity}()},
 \code{\link{subcomponent}()},
 \code{\link{subgraph}()},

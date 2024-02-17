@@ -86,6 +86,8 @@ topological.sort <- function(graph, mode = c("out", "all", "in")) { # nocov star
 #' @export
 shortest.paths <- function(graph, v = V(graph), to = V(graph), mode = c("all", "out", "in"), weights = NULL, algorithm = c("automatic", "unweighted", "dijkstra", "bellman-ford", "johnson")) { # nocov start
   lifecycle::deprecate_soft("2.0.0", "shortest.paths()", "distances()")
+  algorithm <- igraph.match.arg(algorithm)
+  mode <- igraph.match.arg(mode)
   distances(graph = graph, v = v, to = to, mode = mode, weights = weights, algorithm = algorithm)
 } # nocov end
 
@@ -677,8 +679,10 @@ degree_distribution <- function(graph, cumulative = FALSE, ...) {
 #' are breadth-first search (\sQuote{`unweighted`}), this only works for
 #' unweighted graphs; the Dijkstra algorithm (\sQuote{`dijkstra`}), this
 #' works for graphs with non-negative edge weights; the Bellman-Ford algorithm
-#' (\sQuote{`bellman-ford`}), and Johnson's algorithm
-#' (\sQuote{`johnson`}). The latter two algorithms work with arbitrary
+#' (\sQuote{`bellman-ford`}); Johnson's algorithm
+#' (\sQuote{`johnson`}); and a faster version of the Floyd-Warshall algorithm
+#' with expected quadratic running time (\sQuote{`floyd-warshall`}). The latter
+#' three algorithms work with arbitrary
 #' edge weights, but (naturally) only for graphs that don't have a negative
 #' cycle. Note that a negative-weight edge in an undirected graph implies
 #' such a cycle. Johnson's algorithm performs better than the Bellman-Ford
@@ -697,14 +701,17 @@ degree_distribution <- function(graph, cumulative = FALSE, ...) {
 #' weighted graphs. The latter only works if the edge weights are non-negative.
 #'
 #' `all_shortest_paths()` calculates *all* shortest paths between
-#' pairs of vertices. More precisely, between the `from` vertex to the
-#' vertices given in `to`. It uses a breadth-first search for unweighted
-#' graphs and Dijkstra's algorithm for weighted ones. The latter only supports
-#' non-negative edge weights.
+#' pairs of vertices, including several shortest paths of the same length.
+#' More precisely, it computerd all shortest path starting at `from`, and
+#' ending at any vertex given in `to`. It uses a breadth-first search for
+#' unweighted graphs and Dijkstra's algorithm for weighted ones. The latter
+#' only supports non-negative edge weights. Caution: in multigraphs, the
+#' result size is exponentially large in the number of vertex pairs with
+#' multiple edges between them.
 #'
 #' `mean_distance()` calculates the average path length in a graph, by
 #' calculating the shortest paths between all pairs of vertices (both ways for
-#' directed graphs). It uses a breadth-=first search for unweighted graphs and
+#' directed graphs). It uses a breadth-first search for unweighted graphs and
 #' Dijkstra's algorithm for weighted ones. The latter only supports non-negative
 #' edge weights.
 #'
@@ -772,8 +779,8 @@ degree_distribution <- function(graph, cumulative = FALSE, ...) {
 #'
 #'   For `all_shortest_paths()` a list is returned, each list element
 #'   contains a shortest path from `from` to a vertex in `to`. The
-#'   shortest paths to the same vertex are collected into consecutive elements of
-#'   the list.
+#'   shortest paths to the same vertex are collected into consecutive elements
+#'   of the list.
 #'
 #'   For `mean_distance()` a single number is returned if `details=FALSE`,
 #'   or a named list with two entries: `res` is the mean distance as a numeric
@@ -783,8 +790,10 @@ degree_distribution <- function(graph, cumulative = FALSE, ...) {
 #'   `distance_table()` returns a named list with two entries: `res` is
 #'   a numeric vector, the histogram of distances, `unconnected` is a
 #'   numeric scalar, the number of pairs for which the first vertex is not
-#'   reachable from the second. The sum of the two entries is always \eqn{n(n-1)}
-#'   for directed graphs and \eqn{n(n-1)/2} for undirected graphs.
+#'   reachable from the second. In undirected and directed graphs, unorderde
+#'   and ordered pairs are considered, respectively. Therefore the sum of the
+#'   two entries is always \eqn{n(n-1)} for directed graphs and \eqn{n(n-1)/2}
+#'   for undirected graphs.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
 #' @references West, D.B. (1996). *Introduction to Graph Theory.* Upper
 #' Saddle River, N.J.: Prentice Hall.
@@ -833,7 +842,7 @@ distances <- function(graph, v = V(graph), to = V(graph),
                       weights = NULL,
                       algorithm = c(
                         "automatic", "unweighted", "dijkstra",
-                        "bellman-ford", "johnson"
+                        "bellman-ford", "johnson", "floyd-warshall"
                       )) {
   ensure_igraph(graph)
 
@@ -858,7 +867,8 @@ distances <- function(graph, v = V(graph), to = V(graph),
     "unweighted" = 1,
     "dijkstra" = 2,
     "bellman-ford" = 3,
-    "johnson" = 4
+    "johnson" = 4,
+    "floyd-warshall" = 5
   )
 
   if (is.null(weights)) {
@@ -2309,6 +2319,9 @@ dfs <- function(graph, root, mode = c("out", "in", "all", "total"),
     if (order) res$order <- V(graph)[.env$res$order, na_ok = TRUE]
     if (order.out) res$order.out <- V(graph)[.env$res$order.out, na_ok = TRUE]
     if (father) res$father <- create_vs(graph, res$father, na_ok = TRUE)
+  } else {
+    if (order) res$order <- res$order[res$order != 0]
+    if (order.out) res$order.out <- res$order.out[res$order.out != 0]
   }
 
   if (igraph_opt("add.vertex.names") && is_named(graph)) {
@@ -2400,7 +2413,18 @@ components <- function(graph, mode = c("weak", "strong")) {
 is_connected <- is_connected_impl
 
 #' @rdname components
-count_components <- count_components
+#' @export
+count_components <- function(graph, mode = c("weak", "strong")) {
+  ensure_igraph(graph)
+  mode <- igraph.match.arg(mode)
+  mode <- switch(mode,
+    "weak" = 1L,
+    "strong" = 2L
+  )
+
+  on.exit(.Call(R_igraph_finalizer))
+  .Call(R_igraph_no_components, graph, mode)
+}
 
 #' Convert a general graph into a forest
 #'
@@ -2484,7 +2508,6 @@ unfold_tree <- function(graph, mode = c("all", "out", "in", "total"), roots) {
 #'   matrix. The `Matrix` package is required for sparse matrices.
 #' @return A numeric matrix.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @family structural.properties
 #' @export
 #' @keywords graphs
 #' @examples

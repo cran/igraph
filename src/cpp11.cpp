@@ -156,7 +156,6 @@ extern SEXP R_igraph_edges(void *, void *);
 extern SEXP R_igraph_eigen_adjacency(void *, void *, void *, void *);
 extern SEXP R_igraph_eigenvector_centrality(void *, void *, void *, void *, void *);
 extern SEXP R_igraph_empty(void *, void *);
-extern SEXP R_igraph_empty_attrs(void *, void *);
 extern SEXP R_igraph_erdos_renyi_game(void *, void *, void *, void *, void *);
 extern SEXP R_igraph_es_adj(void *, void *, void *, void *);
 extern SEXP R_igraph_es_pairs(void *, void *, void *);
@@ -247,6 +246,7 @@ extern SEXP R_igraph_induced_subgraph(void *, void *, void *);
 extern SEXP R_igraph_induced_subgraph_map(void *, void *, void *);
 extern SEXP R_igraph_intersection(void *, void *);
 extern SEXP R_igraph_is_acyclic(void *);
+extern SEXP R_igraph_is_biconnected(void *);
 extern SEXP R_igraph_is_bipartite(void *);
 extern SEXP R_igraph_is_chordal(void *, void *, void *, void *, void *);
 extern SEXP R_igraph_is_connected(void *, void *);
@@ -375,6 +375,7 @@ extern SEXP R_igraph_read_graph_graphml(void *, void *);
 extern SEXP R_igraph_read_graph_lgl(void *, void *, void *, void *);
 extern SEXP R_igraph_read_graph_ncol(void *, void *, void *, void *, void *);
 extern SEXP R_igraph_read_graph_pajek(void *);
+extern SEXP R_igraph_realize_bipartite_degree_sequence(void *, void *, void *, void *);
 extern SEXP R_igraph_realize_degree_sequence(void *, void *, void *, void *);
 extern SEXP R_igraph_recent_degree_aging_game(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
 extern SEXP R_igraph_reciprocity(void *, void *, void *);
@@ -614,7 +615,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_igraph_eigen_adjacency",                            (DL_FUNC) &R_igraph_eigen_adjacency,                             4},
     {"R_igraph_eigenvector_centrality",                     (DL_FUNC) &R_igraph_eigenvector_centrality,                      5},
     {"R_igraph_empty",                                      (DL_FUNC) &R_igraph_empty,                                       2},
-    {"R_igraph_empty_attrs",                                (DL_FUNC) &R_igraph_empty_attrs,                                 2},
     {"R_igraph_erdos_renyi_game",                           (DL_FUNC) &R_igraph_erdos_renyi_game,                            5},
     {"R_igraph_es_adj",                                     (DL_FUNC) &R_igraph_es_adj,                                      4},
     {"R_igraph_es_pairs",                                   (DL_FUNC) &R_igraph_es_pairs,                                    3},
@@ -705,6 +705,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_igraph_induced_subgraph_map",                       (DL_FUNC) &R_igraph_induced_subgraph_map,                        3},
     {"R_igraph_intersection",                               (DL_FUNC) &R_igraph_intersection,                                2},
     {"R_igraph_is_acyclic",                                 (DL_FUNC) &R_igraph_is_acyclic,                                  1},
+    {"R_igraph_is_biconnected",                             (DL_FUNC) &R_igraph_is_biconnected,                              1},
     {"R_igraph_is_bipartite",                               (DL_FUNC) &R_igraph_is_bipartite,                                1},
     {"R_igraph_is_chordal",                                 (DL_FUNC) &R_igraph_is_chordal,                                  5},
     {"R_igraph_is_connected",                               (DL_FUNC) &R_igraph_is_connected,                                2},
@@ -833,6 +834,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_igraph_read_graph_lgl",                             (DL_FUNC) &R_igraph_read_graph_lgl,                              4},
     {"R_igraph_read_graph_ncol",                            (DL_FUNC) &R_igraph_read_graph_ncol,                             5},
     {"R_igraph_read_graph_pajek",                           (DL_FUNC) &R_igraph_read_graph_pajek,                            1},
+    {"R_igraph_realize_bipartite_degree_sequence",          (DL_FUNC) &R_igraph_realize_bipartite_degree_sequence,           4},
     {"R_igraph_realize_degree_sequence",                    (DL_FUNC) &R_igraph_realize_degree_sequence,                     4},
     {"R_igraph_recent_degree_aging_game",                   (DL_FUNC) &R_igraph_recent_degree_aging_game,                   10},
     {"R_igraph_reciprocity",                                (DL_FUNC) &R_igraph_reciprocity,                                 3},
