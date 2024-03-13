@@ -1,5 +1,5 @@
 Package: igraph
-Version: 2.0.2
+Version: 2.0.3
 Title: Network Analysis and Visualization
 Authors@R: c(
     person("Gábor", "Csárdi", , "csardi.gabor@gmail.com", role = "aut",
@@ -44,9 +44,9 @@ Config/testthat/start-first: vs-es, scan, vs-operators, weakref,
         watts.strogatz.game
 Encoding: UTF-8
 RoxygenNote: 7.3.1
-SystemRequirements: libxml2, glpk (>= 4.57)
+SystemRequirements: libxml2 (optional), glpk (>= 4.57, optional)
 NeedsCompilation: yes
-Packaged: 2024-02-15 14:49:55 UTC; kirill
+Packaged: 2024-03-12 18:19:12 UTC; kirill
 Author: Gábor Csárdi [aut] (<https://orcid.org/0000-0001-7098-9676>),
   Tamás Nepusz [aut] (<https://orcid.org/0000-0002-1451-338X>),
   Vincent Traag [aut] (<https://orcid.org/0000-0003-3170-3879>),
@@ -59,4 +59,4 @@ Author: Gábor Csárdi [aut] (<https://orcid.org/0000-0001-7098-9676>),
   Chan Zuckerberg Initiative [fnd]
 Maintainer: Kirill Müller <kirill@cynkra.com>
 Repository: CRAN
-Date/Publication: 2024-02-17 23:20:02 UTC
+Date/Publication: 2024-03-13 07:30:02 UTC

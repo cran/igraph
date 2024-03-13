@@ -533,6 +533,25 @@ sample_dirichlet_impl <- function(n, alpha) {
   res
 }
 
+are_adjacent_impl <- function(graph, v1, v2) {
+  # Argument checks
+  ensure_igraph(graph)
+  v1 <- as_igraph_vs(graph, v1)
+  if (length(v1) == 0) {
+    stop("No vertex was specified")
+  }
+  v2 <- as_igraph_vs(graph, v2)
+  if (length(v2) == 0) {
+    stop("No vertex was specified")
+  }
+
+  on.exit( .Call(R_igraph_finalizer) )
+  # Function call
+  res <- .Call(R_igraph_are_adjacent, graph, v1-1, v2-1)
+
+  res
+}
+
 distances_impl <- function(graph, from=V(graph), to=V(graph), mode=c("out", "in", "all", "total")) {
   # Argument checks
   ensure_igraph(graph)
@@ -763,8 +782,9 @@ distances_floyd_warshall_impl <- function(graph, from=V(graph), to=V(graph), wei
   res
 }
 
-voronoi_impl <- function(graph, generators, weights=NULL, mode=c("out", "in", "all", "total"), tiebreaker=c("random", "first", "last")) {
+voronoi_impl <- function(graph, generators, ..., weights=NULL, mode=c("out", "in", "all", "total"), tiebreaker=c("random", "first", "last")) {
   # Argument checks
+  check_dots_empty()
   ensure_igraph(graph)
   generators <- as_igraph_vs(graph, generators)
   if (is.null(weights) && "weight" %in% edge_attr_names(graph)) {
@@ -2815,6 +2835,18 @@ list_triangles_impl <- function(graph) {
   res
 }
 
+join_impl <- function(left, right) {
+  # Argument checks
+  ensure_igraph(left)
+  ensure_igraph(right)
+
+  on.exit( .Call(R_igraph_finalizer) )
+  # Function call
+  res <- .Call(R_igraph_join, left, right)
+
+  res
+}
+
 induced_subgraph_map_impl <- function(graph, vids, impl) {
   # Argument checks
   ensure_igraph(graph)
@@ -3720,6 +3752,17 @@ tree_from_parent_vector_impl <- function(parents, type=c("out", "in", "undirecte
   on.exit( .Call(R_igraph_finalizer) )
   # Function call
   res <- .Call(R_igraph_tree_from_parent_vector, parents, type)
+
+  res
+}
+
+is_complete_impl <- function(graph) {
+  # Argument checks
+  ensure_igraph(graph)
+
+  on.exit( .Call(R_igraph_finalizer) )
+  # Function call
+  res <- .Call(R_igraph_is_complete, graph)
 
   res
 }

@@ -2794,7 +2794,7 @@ igraph_t *R_igraph_get_pointer(SEXP graph) {
     if (Rf_xlength(graph) == 11) {
       Rf_error("This graph was created by igraph < 0.2.\n  Upgrading this format is not supported, sorry.");
     }
-    Rf_error("This graph was created by a now unsupported old igraph version.\n  Call upgrade_version() before using igraph functions on that object.");
+    Rf_error("This graph was created by a now unsupported old igraph version.\n  Call upgrade_graph() before using igraph functions on that object.");
   }
 
   SEXP xp=Rf_findVar(Rf_install("igraph"), R_igraph_graph_env(graph));
@@ -4768,23 +4768,6 @@ SEXP R_igraph_get_shortest_paths(SEXP graph, SEXP pfrom, SEXP pto,
   SET_NAMES(result, names);
 
   UNPROTECT(2);
-  return result;
-}
-
-SEXP R_igraph_are_connected(SEXP graph, SEXP pv1, SEXP pv2) {
-
-  igraph_t g;
-  igraph_integer_t v1=(igraph_integer_t) REAL(pv1)[0];
-  igraph_integer_t v2=(igraph_integer_t) REAL(pv2)[0];
-  igraph_bool_t res;
-  SEXP result;
-
-  R_SEXP_to_igraph(graph, &g);
-  PROTECT(result=NEW_LOGICAL(1));
-  IGRAPH_R_CHECK(igraph_are_connected(&g, v1, v2, &res));
-  LOGICAL(result)[0]=res;
-
-  UNPROTECT(1);
   return result;
 }
 
