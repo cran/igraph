@@ -55,9 +55,14 @@ implementation is based on this.
 }
 \examples{
 
+fire <- sample_forestfire(50, fw.prob = 0.37, bw.factor = 0.32 / 0.37)
+plot(fire)
+
 g <- sample_forestfire(10000, fw.prob = 0.37, bw.factor = 0.32 / 0.37)
 dd1 <- degree_distribution(g, mode = "in")
 dd2 <- degree_distribution(g, mode = "out")
+# The forest fire model produces graphs with a heavy tail degree distribution.
+# Note that some in- or out-degrees are zero which will be excluded from the logarithmic plot.
 plot(seq(along.with = dd1) - 1, dd1, log = "xy")
 points(seq(along.with = dd2) - 1, dd2, col = 2, pch = 2)
 }
@@ -68,13 +73,14 @@ time: densification laws, shrinking diameters and possible explanations.
 conference on Knowledge discovery in data mining}, 177--187, 2005.
 }
 \seealso{
-\code{\link[=barabasi.game]{barabasi.game()}} for the basic preferential attachment
+\code{\link[=sample_pa]{sample_pa()}} for the basic preferential attachment
 model.
 
 Random graph models (games)
 \code{\link{erdos.renyi.game}()},
 \code{\link{sample_}()},
 \code{\link{sample_bipartite}()},
+\code{\link{sample_chung_lu}()},
 \code{\link{sample_correlated_gnp}()},
 \code{\link{sample_correlated_gnp_pair}()},
 \code{\link{sample_degseq}()},
@@ -102,3 +108,5 @@ Gabor Csardi \email{csardi.gabor@gmail.com}
 }
 \concept{games}
 \keyword{graphs}
+\section{Related documentation in the C library}{\href{https://igraph.org/c/html/latest/igraph-Generators.html#igraph_forest_fire_game}{\code{igraph_forest_fire_game()}}.}
+

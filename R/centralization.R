@@ -221,6 +221,7 @@ NULL
 #' g1 <- make_star(10, mode = "undirected")
 #' centr_eigen(g0)$centralization
 #' centr_eigen(g1)$centralization
+#' @cdocs igraph_centralization
 centralize <- centralization_impl
 
 #' Centralize a graph according to the degrees of vertices
@@ -253,17 +254,17 @@ centralize <- centralization_impl
 #' centr_clo(g, mode = "all")$centralization
 #' centr_betw(g, directed = FALSE)$centralization
 #' centr_eigen(g, directed = FALSE)$centralization
+#' @cdocs igraph_centralization_degree
 centr_degree <- centralization_degree_impl
 
 #' Theoretical maximum for degree centralization
 #'
 #' See [centralize()] for a summary of graph centralization.
 #'
-#' @param graph The input graph. It can also be `NULL`, if
-#'   `nodes`, `mode` and `loops` are all given.
+#' @param graph The input graph. It can also be `NULL` if `nodes` is given.
 #' @param nodes The number of vertices. This is ignored if the graph is given.
-#' @param mode This is the same as the `mode` argument of
-#'   `degree()`.
+#' @param mode This is the same as the `mode` argument of `degree()`. Ignored
+#'   if `graph` is given and the graph is undirected.
 #' @param loops Logical scalar, whether to consider loops edges when
 #'   calculating the degree.
 #' @return Real scalar, the theoretical maximum (unnormalized) graph degree
@@ -358,12 +359,13 @@ centr_betw <- function(graph, directed = TRUE, normalized = TRUE) {
 #'
 #' See [centralize()] for a summary of graph centralization.
 #'
-#' @param graph The input graph. It can also be `NULL`, if
-#'   `nodes` is given.
+#' @param graph The input graph. It can also be `NULL` if
+#'   `nodes` and `directed` are both given.
 #' @param nodes The number of vertices. This is ignored if the graph is
 #'   given.
-#' @param directed logical scalar, whether to use directed shortest paths
-#'   for calculating betweenness.
+#' @param directed Logical scalar, whether to use directed shortest paths
+#'   for calculating betweenness. Ignored if an undirected graph was
+#'   given.
 #' @return Real scalar, the theoretical maximum (unnormalized) graph
 #'   betweenness centrality score for graphs with given order and other
 #'   parameters.
@@ -378,6 +380,7 @@ centr_betw <- function(graph, directed = TRUE, normalized = TRUE) {
 #' centr_betw(g, normalized = FALSE)$centralization %>%
 #'   `/`(centr_betw_tmax(g))
 #' centr_betw(g, normalized = TRUE)$centralization
+#' @cdocs igraph_centralization_betweenness_tmax
 centr_betw_tmax <- centralization_betweenness_tmax_impl
 
 #' Centralize a graph according to the closeness of vertices
@@ -408,18 +411,19 @@ centr_betw_tmax <- centralization_betweenness_tmax_impl
 #' centr_clo(g, mode = "all")$centralization
 #' centr_betw(g, directed = FALSE)$centralization
 #' centr_eigen(g, directed = FALSE)$centralization
+#' @cdocs igraph_centralization_closeness
 centr_clo <- centralization_closeness_impl
 
 #' Theoretical maximum for closeness centralization
 #'
 #' See [centralize()] for a summary of graph centralization.
 #'
-#' @param graph The input graph. It can also be `NULL`, if
+#' @param graph The input graph. It can also be `NULL` if
 #'   `nodes` is given.
 #' @param nodes The number of vertices. This is ignored if the graph is
 #'   given.
 #' @param mode This is the same as the `mode` argument of
-#'   `closeness()`.
+#'   `closeness()`. Ignored if an undirected graph is given.
 #' @return Real scalar, the theoretical maximum (unnormalized) graph
 #'   closeness centrality score for graphs with given order and other
 #'   parameters.
@@ -434,6 +438,7 @@ centr_clo <- centralization_closeness_impl
 #' centr_clo(g, normalized = FALSE)$centralization %>%
 #'   `/`(centr_clo_tmax(g))
 #' centr_clo(g, normalized = TRUE)$centralization
+#' @cdocs igraph_centralization_closeness_tmax
 centr_clo_tmax <- centralization_closeness_tmax_impl
 
 #' Centralize a graph according to the eigenvector centrality of vertices
@@ -475,9 +480,10 @@ centr_clo_tmax <- centralization_closeness_tmax_impl
 #' g1 <- make_star(10, mode = "undirected")
 #' centr_eigen(g0)$centralization
 #' centr_eigen(g1)$centralization
+#' @cdocs igraph_centralization_eigenvector_centrality
 centr_eigen <- centralization_eigenvector_centrality_impl
 
-#' Theoretical maximum for betweenness centralization
+#' Theoretical maximum for eigenvector centralization
 #'
 #' See [centralize()] for a summary of graph centralization.
 #'
@@ -485,13 +491,13 @@ centr_eigen <- centralization_eigenvector_centrality_impl
 #'   `nodes` is given.
 #' @param nodes The number of vertices. This is ignored if the graph is
 #'   given.
-#' @param directed logical scalar, whether to use directed shortest paths
-#'   for calculating betweenness.
+#' @param directed logical scalar, whether to consider edge directions
+#'   during the calculation. Ignored in undirected graphs.
 #' @param scale Whether to rescale the eigenvector centrality scores,
 #'   such that the maximum score is one.
 #' @return Real scalar, the theoretical maximum (unnormalized) graph
-#'   betweenness centrality score for graphs with given order and other
-#'   parameters.
+#'   eigenvector centrality score for graphs with given vertex count and
+#'   other parameters.
 #'
 #' @family centralization related
 #'
@@ -503,4 +509,5 @@ centr_eigen <- centralization_eigenvector_centrality_impl
 #' centr_eigen(g, normalized = FALSE)$centralization %>%
 #'   `/`(centr_eigen_tmax(g))
 #' centr_eigen(g, normalized = TRUE)$centralization
+#' @cdocs igraph_centralization_eigenvector_centrality_tmax
 centr_eigen_tmax <- centralization_eigenvector_centrality_tmax_impl

@@ -19,7 +19,7 @@ mag_sort <- function(x) {
 
 test_that("Undirected, unweighted, D-A case works", {
   withr::local_seed(42)
-  g <- random.graph.game(10, 20, type = "gnm", directed = FALSE)
+  g <- sample_gnm(10, 20, directed = FALSE)
 
   no <- 3
   A <- as(Matrix::Matrix(diag(degree(g)), doDiag = FALSE), "generalMatrix") - g[]
@@ -41,10 +41,10 @@ test_that("Undirected, unweighted, D-A case works", {
     scaled = FALSE
   )
 
-  expect_that(au_la$D, equals(D[1:no]))
-  expect_that(std(au_la$X), equals(std(X[, 1:no])))
-  expect_that(as_la$D, equals(D[1:no]))
-  expect_that(std(as_la$X), equals(std(U[, 1:no])))
+  expect_equal(au_la$D, D[1:no])
+  expect_equal(std(au_la$X), std(X[, 1:no]))
+  expect_equal(as_la$D, D[1:no])
+  expect_equal(std(as_la$X), std(U[, 1:no]))
 
   ## LM
 
@@ -57,10 +57,10 @@ test_that("Undirected, unweighted, D-A case works", {
     scaled = FALSE
   )
 
-  expect_that(au_lm$D, equals(mag_sort(D)[1:no]))
-  expect_that(std(au_lm$X), equals(std(X[, mag_order(D)][, 1:no])))
-  expect_that(as_lm$D, equals(mag_sort(D)[1:no]))
-  expect_that(std(as_lm$X), equals(std(U[, mag_order(D)][, 1:no])))
+  expect_equal(au_lm$D, mag_sort(D)[1:no])
+  expect_equal(std(au_lm$X), std(X[, mag_order(D)][, 1:no]))
+  expect_equal(as_lm$D, mag_sort(D)[1:no])
+  expect_equal(std(as_lm$X), std(U[, mag_order(D)][, 1:no]))
 
   ## SA
 
@@ -73,15 +73,15 @@ test_that("Undirected, unweighted, D-A case works", {
     scaled = FALSE
   )
 
-  expect_that(au_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(au_sa$X), equals(std(X[, vcount(g) - 1:no + 1])))
-  expect_that(as_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(as_sa$X), equals(std(U[, vcount(g) - 1:no + 1])))
+  expect_equal(au_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(au_sa$X), std(X[, vcount(g) - 1:no + 1]))
+  expect_equal(as_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(as_sa$X), std(U[, vcount(g) - 1:no + 1]))
 })
 
 test_that("Undirected, unweighted, DAD case works", {
   withr::local_seed(42)
-  g <- random.graph.game(10, 20, type = "gnm", directed = FALSE)
+  g <- sample_gnm(10, 20, directed = FALSE)
 
   no <- 3
   D12 <- diag(1 / sqrt(degree(g)))
@@ -104,10 +104,10 @@ test_that("Undirected, unweighted, DAD case works", {
     scaled = FALSE
   )
 
-  expect_that(au_la$D, equals(abs(D[1:no])))
-  expect_that(std(au_la$X), equals(std(X[, 1:no])))
-  expect_that(as_la$D, equals(D[1:no]))
-  expect_that(std(as_la$X), equals(std(U[, 1:no])))
+  expect_equal(au_la$D, abs(D[1:no]))
+  expect_equal(std(au_la$X), std(X[, 1:no]))
+  expect_equal(as_la$D, D[1:no])
+  expect_equal(std(as_la$X), std(U[, 1:no]))
 
   ## LM
 
@@ -120,10 +120,10 @@ test_that("Undirected, unweighted, DAD case works", {
     scaled = FALSE
   )
 
-  expect_that(au_lm$D, equals(mag_sort(D)[1:no]))
-  expect_that(std(au_lm$X), equals(std(X[, mag_order(D)][, 1:no])))
-  expect_that(as_lm$D, equals(mag_sort(D)[1:no]))
-  expect_that(std(as_lm$X), equals(std(U[, mag_order(D)][, 1:no])))
+  expect_equal(au_lm$D, mag_sort(D)[1:no])
+  expect_equal(std(au_lm$X), std(X[, mag_order(D)][, 1:no]))
+  expect_equal(as_lm$D, mag_sort(D)[1:no])
+  expect_equal(std(as_lm$X), std(U[, mag_order(D)][, 1:no]))
 
   ## SA
 
@@ -136,15 +136,15 @@ test_that("Undirected, unweighted, DAD case works", {
     scaled = FALSE
   )
 
-  expect_that(au_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(au_sa$X), equals(std(X[, vcount(g) - 1:no + 1])))
-  expect_that(as_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(as_sa$X), equals(std(U[, vcount(g) - 1:no + 1])))
+  expect_equal(au_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(au_sa$X), std(X[, vcount(g) - 1:no + 1]))
+  expect_equal(as_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(as_sa$X), std(U[, vcount(g) - 1:no + 1]))
 })
 
 test_that("Undirected, unweighted, I-DAD case works", {
   withr::local_seed(42)
-  g <- random.graph.game(10, 20, type = "gnm", directed = FALSE)
+  g <- sample_gnm(10, 20, directed = FALSE)
 
   no <- 3
   D12 <- diag(1 / sqrt(degree(g)))
@@ -167,10 +167,10 @@ test_that("Undirected, unweighted, I-DAD case works", {
     scaled = FALSE
   )
 
-  expect_that(au_la$D, equals(abs(D[1:no])))
-  expect_that(std(au_la$X), equals(std(X[, 1:no])))
-  expect_that(as_la$D, equals(D[1:no]))
-  expect_that(std(as_la$X), equals(std(U[, 1:no])))
+  expect_equal(au_la$D, abs(D[1:no]))
+  expect_equal(std(au_la$X), std(X[, 1:no]))
+  expect_equal(as_la$D, D[1:no])
+  expect_equal(std(as_la$X), std(U[, 1:no]))
 
   ## LM
 
@@ -183,10 +183,10 @@ test_that("Undirected, unweighted, I-DAD case works", {
     scaled = FALSE
   )
 
-  expect_that(au_lm$D, equals(mag_sort(D)[1:no]))
-  expect_that(std(au_lm$X), equals(std(X[, mag_order(D)][, 1:no])))
-  expect_that(as_lm$D, equals(mag_sort(D)[1:no]))
-  expect_that(std(as_lm$X), equals(std(U[, mag_order(D)][, 1:no])))
+  expect_equal(au_lm$D, mag_sort(D)[1:no])
+  expect_equal(std(au_lm$X), std(X[, mag_order(D)][, 1:no]))
+  expect_equal(as_lm$D, mag_sort(D)[1:no])
+  expect_equal(std(as_lm$X), std(U[, mag_order(D)][, 1:no]))
 
   ## SA
 
@@ -199,15 +199,15 @@ test_that("Undirected, unweighted, I-DAD case works", {
     scaled = FALSE
   )
 
-  expect_that(au_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(au_sa$X), equals(std(X[, vcount(g) - 1:no + 1])))
-  expect_that(as_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(as_sa$X), equals(std(U[, vcount(g) - 1:no + 1])))
+  expect_equal(au_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(au_sa$X), std(X[, vcount(g) - 1:no + 1]))
+  expect_equal(as_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(as_sa$X), std(U[, vcount(g) - 1:no + 1]))
 })
 
 test_that("Undirected, weighted, D-A case works", {
   withr::local_seed(42 * 42)
-  g <- random.graph.game(10, 20, type = "gnm", directed = FALSE)
+  g <- sample_gnm(10, 20, directed = FALSE)
   E(g)$weight <- sample(1:5, ecount(g), replace = TRUE)
 
   no <- 3
@@ -230,10 +230,10 @@ test_that("Undirected, weighted, D-A case works", {
     scaled = FALSE
   )
 
-  expect_that(au_la$D, equals(abs(D[1:no])))
-  expect_that(std(au_la$X), equals(std(X[, 1:no])))
-  expect_that(as_la$D, equals(D[1:no]))
-  expect_that(std(as_la$X), equals(std(U[, 1:no])))
+  expect_equal(au_la$D, abs(D[1:no]))
+  expect_equal(std(au_la$X), std(X[, 1:no]))
+  expect_equal(as_la$D, D[1:no])
+  expect_equal(std(as_la$X), std(U[, 1:no]))
 
   ## LM
 
@@ -246,10 +246,10 @@ test_that("Undirected, weighted, D-A case works", {
     scaled = FALSE
   )
 
-  expect_that(au_lm$D, equals(mag_sort(D)[1:no]))
-  expect_that(std(au_lm$X), equals(std(X[, mag_order(D)][, 1:no])))
-  expect_that(as_lm$D, equals(mag_sort(D)[1:no]))
-  expect_that(std(as_lm$X), equals(std(U[, mag_order(D)][, 1:no])))
+  expect_equal(au_lm$D, mag_sort(D)[1:no])
+  expect_equal(std(au_lm$X), std(X[, mag_order(D)][, 1:no]))
+  expect_equal(as_lm$D, mag_sort(D)[1:no])
+  expect_equal(std(as_lm$X), std(U[, mag_order(D)][, 1:no]))
 
   ## SA
 
@@ -262,18 +262,16 @@ test_that("Undirected, weighted, D-A case works", {
     scaled = FALSE
   )
 
-  expect_that(au_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(au_sa$X), equals(X[, vcount(g) - 1:no + 1],
-    tolerance = .Machine$double.eps^0.25
-  ))
-  expect_that(as_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(as_sa$X), equals(std(U[, vcount(g) - 1:no + 1])))
+  expect_equal(au_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(au_sa$X), X[, vcount(g) - 1:no + 1])
+  expect_equal(as_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(as_sa$X), std(U[, vcount(g) - 1:no + 1]))
 })
 
 test_that("Undirected, unweighted, DAD case works", {
   withr::local_seed(42)
 
-  g <- random.graph.game(10, 20, type = "gnm", directed = FALSE)
+  g <- sample_gnm(10, 20, directed = FALSE)
 
   no <- 3
   D12 <- diag(1 / sqrt(degree(g)))
@@ -296,10 +294,10 @@ test_that("Undirected, unweighted, DAD case works", {
     scaled = FALSE
   )
 
-  expect_that(au_la$D, equals(abs(D[1:no])))
-  expect_that(std(au_la$X), equals(std(X[, 1:no])))
-  expect_that(as_la$D, equals(D[1:no]))
-  expect_that(std(as_la$X), equals(std(U[, 1:no])))
+  expect_equal(au_la$D, abs(D[1:no]))
+  expect_equal(std(au_la$X), std(X[, 1:no]))
+  expect_equal(as_la$D, D[1:no])
+  expect_equal(std(as_la$X), std(U[, 1:no]))
 
   ## LM
 
@@ -312,10 +310,10 @@ test_that("Undirected, unweighted, DAD case works", {
     scaled = FALSE
   )
 
-  expect_that(au_lm$D, equals(mag_sort(D)[1:no]))
-  expect_that(std(au_lm$X), equals(std(X[, mag_order(D)][, 1:no])))
-  expect_that(as_lm$D, equals(mag_sort(D)[1:no]))
-  expect_that(std(as_lm$X), equals(std(U[, mag_order(D)][, 1:no])))
+  expect_equal(au_lm$D, mag_sort(D)[1:no])
+  expect_equal(std(au_lm$X), std(X[, mag_order(D)][, 1:no]))
+  expect_equal(as_lm$D, mag_sort(D)[1:no])
+  expect_equal(std(as_lm$X), std(U[, mag_order(D)][, 1:no]))
 
   ## SA
 
@@ -328,16 +326,16 @@ test_that("Undirected, unweighted, DAD case works", {
     scaled = FALSE
   )
 
-  expect_that(au_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(au_sa$X), equals(std(X[, vcount(g) - 1:no + 1])))
-  expect_that(as_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(as_sa$X), equals(std(U[, vcount(g) - 1:no + 1])))
+  expect_equal(au_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(au_sa$X), std(X[, vcount(g) - 1:no + 1]))
+  expect_equal(as_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(as_sa$X), std(U[, vcount(g) - 1:no + 1]))
 })
 
 test_that("Undirected, unweighted, I-DAD case works", {
   withr::local_seed(42)
 
-  g <- random.graph.game(10, 20, type = "gnm", directed = FALSE)
+  g <- sample_gnm(10, 20, directed = FALSE)
 
   no <- 3
   D12 <- diag(1 / sqrt(degree(g)))
@@ -360,10 +358,10 @@ test_that("Undirected, unweighted, I-DAD case works", {
     scaled = FALSE
   )
 
-  expect_that(au_la$D, equals(abs(D[1:no])))
-  expect_that(std(au_la$X), equals(std(X[, 1:no])))
-  expect_that(as_la$D, equals(D[1:no]))
-  expect_that(std(as_la$X), equals(std(U[, 1:no])))
+  expect_equal(au_la$D, abs(D[1:no]))
+  expect_equal(std(au_la$X), std(X[, 1:no]))
+  expect_equal(as_la$D, D[1:no])
+  expect_equal(std(as_la$X), std(U[, 1:no]))
 
   ## LM
 
@@ -376,10 +374,10 @@ test_that("Undirected, unweighted, I-DAD case works", {
     scaled = FALSE
   )
 
-  expect_that(au_lm$D, equals(mag_sort(D)[1:no]))
-  expect_that(std(au_lm$X), equals(std(X[, mag_order(D)][, 1:no])))
-  expect_that(as_lm$D, equals(mag_sort(D)[1:no]))
-  expect_that(std(as_lm$X), equals(std(U[, mag_order(D)][, 1:no])))
+  expect_equal(au_lm$D, mag_sort(D)[1:no])
+  expect_equal(std(au_lm$X), std(X[, mag_order(D)][, 1:no]))
+  expect_equal(as_lm$D, mag_sort(D)[1:no])
+  expect_equal(std(as_lm$X), std(U[, mag_order(D)][, 1:no]))
 
   ## SA
 
@@ -392,16 +390,16 @@ test_that("Undirected, unweighted, I-DAD case works", {
     scaled = FALSE
   )
 
-  expect_that(au_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(au_sa$X), equals(std(X[, vcount(g) - 1:no + 1])))
-  expect_that(as_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(as_sa$X), equals(std(U[, vcount(g) - 1:no + 1])))
+  expect_equal(au_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(au_sa$X), std(X[, vcount(g) - 1:no + 1]))
+  expect_equal(as_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(as_sa$X), std(U[, vcount(g) - 1:no + 1]))
 })
 
 test_that("Directed, unweighted, OAP case works", {
   withr::local_seed(42 * 42)
 
-  g <- random.graph.game(10, 30, type = "gnm", directed = TRUE)
+  g <- sample_gnm(10, 30, directed = TRUE)
 
   no <- 3
   O12 <- diag(1 / sqrt(degree(g, mode = "out")))
@@ -424,12 +422,12 @@ test_that("Directed, unweighted, OAP case works", {
     scaled = FALSE
   )
 
-  expect_that(au_la$D, equals(D[1:no]))
-  expect_that(std(au_la$X), equals(std(X[, 1:no])))
-  expect_that(std(au_la$Y), equals(std(Y[, 1:no])))
-  expect_that(as_la$D, equals(D[1:no]))
-  expect_that(std(as_la$X), equals(std(U[, 1:no])))
-  expect_that(std(as_la$Y), equals(std(V[, 1:no])))
+  expect_equal(au_la$D, D[1:no])
+  expect_equal(std(au_la$X), std(X[, 1:no]))
+  expect_equal(std(au_la$Y), std(Y[, 1:no]))
+  expect_equal(as_la$D, D[1:no])
+  expect_equal(std(as_la$X), std(U[, 1:no]))
+  expect_equal(std(as_la$Y), std(V[, 1:no]))
 
   au_lm <- embed_laplacian_matrix(g,
     no = no, which = "lm", type = "OAP",
@@ -440,12 +438,12 @@ test_that("Directed, unweighted, OAP case works", {
     scaled = FALSE
   )
 
-  expect_that(au_lm$D, equals(D[1:no]))
-  expect_that(std(au_lm$X), equals(std(X[, 1:no])))
-  expect_that(std(au_lm$Y), equals(std(Y[, 1:no])))
-  expect_that(as_lm$D, equals(D[1:no]))
-  expect_that(std(as_lm$X), equals(std(U[, 1:no])))
-  expect_that(std(as_lm$Y), equals(std(V[, 1:no])))
+  expect_equal(au_lm$D, D[1:no])
+  expect_equal(std(au_lm$X), std(X[, 1:no]))
+  expect_equal(std(au_lm$Y), std(Y[, 1:no]))
+  expect_equal(as_lm$D, D[1:no])
+  expect_equal(std(as_lm$X), std(U[, 1:no]))
+  expect_equal(std(as_lm$Y), std(V[, 1:no]))
 
   au_sa <- embed_laplacian_matrix(g,
     no = no, which = "sa", type = "OAP",
@@ -456,20 +454,18 @@ test_that("Directed, unweighted, OAP case works", {
     scaled = FALSE
   )
 
-  expect_that(au_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(au_sa$X), equals(std(X[, vcount(g) - 1:no + 1])))
-  expect_that(std(au_sa$Y), equals(std(Y[, vcount(g) - 1:no + 1]),
-    tolerance = sqrt(sqrt(.Machine$double.eps))
-  ))
-  expect_that(as_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(as_sa$X), equals(std(U[, vcount(g) - 1:no + 1])))
-  expect_that(std(as_sa$Y), equals(std(V[, vcount(g) - 1:no + 1])))
+  expect_equal(au_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(au_sa$X), std(X[, vcount(g) - 1:no + 1]))
+  expect_equal(std(au_sa$Y), std(Y[, vcount(g) - 1:no + 1]), tolerance = 1e-6)
+  expect_equal(as_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(as_sa$X), std(U[, vcount(g) - 1:no + 1]))
+  expect_equal(std(as_sa$Y), std(V[, vcount(g) - 1:no + 1]))
 })
 
 test_that("Directed, weighted case works", {
   withr::local_seed(42 * 42)
 
-  g <- random.graph.game(10, 30, type = "gnm", directed = TRUE)
+  g <- sample_gnm(10, 30, directed = TRUE)
   E(g)$weight <- sample(1:5, ecount(g), replace = TRUE)
 
   no <- 3
@@ -493,12 +489,12 @@ test_that("Directed, weighted case works", {
     scaled = FALSE
   )
 
-  expect_that(au_la$D, equals(D[1:no]))
-  expect_that(std(au_la$X), equals(std(X[, 1:no])))
-  expect_that(std(au_la$Y), equals(std(Y[, 1:no])))
-  expect_that(as_la$D, equals(D[1:no]))
-  expect_that(std(as_la$X), equals(std(U[, 1:no])))
-  expect_that(std(as_la$Y), equals(std(V[, 1:no])))
+  expect_equal(au_la$D, D[1:no])
+  expect_equal(std(au_la$X), std(X[, 1:no]))
+  expect_equal(std(au_la$Y), std(Y[, 1:no]))
+  expect_equal(as_la$D, D[1:no])
+  expect_equal(std(as_la$X), std(U[, 1:no]))
+  expect_equal(std(as_la$Y), std(V[, 1:no]))
 
   au_lm <- embed_laplacian_matrix(g,
     no = no, which = "lm", type = "OAP",
@@ -509,12 +505,12 @@ test_that("Directed, weighted case works", {
     scaled = FALSE
   )
 
-  expect_that(au_lm$D, equals(D[1:no]))
-  expect_that(std(au_lm$X), equals(std(X[, 1:no])))
-  expect_that(std(au_lm$Y), equals(std(Y[, 1:no])))
-  expect_that(as_lm$D, equals(D[1:no]))
-  expect_that(std(as_lm$X), equals(std(U[, 1:no])))
-  expect_that(std(as_lm$Y), equals(std(V[, 1:no])))
+  expect_equal(au_lm$D, D[1:no])
+  expect_equal(std(au_lm$X), std(X[, 1:no]))
+  expect_equal(std(au_lm$Y), std(Y[, 1:no]))
+  expect_equal(as_lm$D, D[1:no])
+  expect_equal(std(as_lm$X), std(U[, 1:no]))
+  expect_equal(std(as_lm$Y), std(V[, 1:no]))
 
   au_sa <- embed_laplacian_matrix(g,
     no = no, which = "sa", type = "OAP",
@@ -525,12 +521,10 @@ test_that("Directed, weighted case works", {
     scaled = FALSE
   )
 
-  expect_that(au_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(au_sa$X), equals(std(X[, vcount(g) - 1:no + 1])))
-  expect_that(std(au_sa$Y), equals(std(Y[, vcount(g) - 1:no + 1]),
-    tolerance = sqrt(sqrt(.Machine$double.eps))
-  ))
-  expect_that(as_sa$D, equals(D[vcount(g) - 1:no + 1]))
-  expect_that(std(as_sa$X), equals(std(U[, vcount(g) - 1:no + 1])))
-  expect_that(std(as_sa$Y), equals(std(V[, vcount(g) - 1:no + 1])))
+  expect_equal(au_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(au_sa$X), std(X[, vcount(g) - 1:no + 1]))
+  expect_equal(std(au_sa$Y), std(Y[, vcount(g) - 1:no + 1]))
+  expect_equal(as_sa$D, D[vcount(g) - 1:no + 1])
+  expect_equal(std(as_sa$X), std(U[, vcount(g) - 1:no + 1]))
+  expect_equal(std(as_sa$Y), std(V[, vcount(g) - 1:no + 1]))
 })

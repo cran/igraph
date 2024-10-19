@@ -485,15 +485,15 @@ sample_pa <- function(n, power = 1, m = NULL, out.dist = NULL, out.seq = NULL,
 
   # Checks
   if (!is.null(out.seq) && (!is.null(m) || !is.null(out.dist))) {
-    warning("if `out.seq' is given `m' and `out.dist' should be NULL")
+    cli::cli_warn("if {.arg out.seq} is given {.arg m} and {.arg out.dist} should be {.code NULL}.")
     m <- out.dist <- NULL
   }
   if (is.null(out.seq) && !is.null(out.dist) && !is.null(m)) {
-    warning("if `out.dist' is given `m' will be ignored")
+    cli::cli_warn("if {.arg out.dist} is given {.arg m} will be ignored.")
     m <- NULL
   }
   if (!is.null(m) && m == 0) {
-    warning("`m' is zero, graph will be empty")
+    cli::cli_warn("{.arg m} is zero, graph will be empty.")
   }
 
   if (is.null(m) && is.null(out.dist) && is.null(out.seq)) {
@@ -585,8 +585,13 @@ pa <- function(...) constructor_spec(sample_pa, ...)
 #' @keywords graphs
 #' @examples
 #'
-#' g <- sample_gnp(1000, 1 / 1000)
+#' # Random graph with expected mean degree of 2
+#' g <- sample_gnp(1000, 2 / 1000)
+#' mean(degree(g))
 #' degree_distribution(g)
+#'
+#' # Pick a simple graph on 6 vertices uniformly at random
+#' plot(sample_gnp(6, 0.5))
 sample_gnp <- function(n, p, directed = FALSE, loops = FALSE) {
   type <- "gnp"
   type1 <- switch(type,
@@ -596,7 +601,7 @@ sample_gnp <- function(n, p, directed = FALSE, loops = FALSE) {
 
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_erdos_renyi_game, as.numeric(n), as.numeric(type1),
+    R_igraph_erdos_renyi_game_gnp, as.numeric(n),
     as.numeric(p), as.logical(directed), as.logical(loops)
   )
 
@@ -651,7 +656,7 @@ sample_gnm <- function(n, m, directed = FALSE, loops = FALSE) {
 
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_erdos_renyi_game, as.numeric(n), as.numeric(type1),
+    R_igraph_erdos_renyi_game_gnm, as.numeric(n),
     as.numeric(m), as.logical(directed), as.logical(loops)
   )
 
@@ -673,22 +678,15 @@ gnm <- function(...) constructor_spec(sample_gnm, ...)
 
 #' Generate random graphs according to the Erdős-Rényi model
 #'
-#' Simple random graph model, specifying the edge count either precisely
-#' (\eqn{G(n,m)} model) or on average through a connection probability
-#' (\eqn{G(n,p)} model).
-#'
-#' In \eqn{G(n,m)} graphs, there are precisely `m` edges.
-#'
-#' In \eqn{G(n,p)} graphs, all vertex pairs are connected with the same
-#' probability `p`.
-#'
-#' `random.graph.game()` is an alias to this function.
-#'
-#' @section Deprecated:
+#' @description
+#' `r lifecycle::badge("deprecated")`
 #'
 #' Since igraph version 0.8.0, both `erdos.renyi.game()` and
 #' `random.graph.game()` are deprecated, and [sample_gnp()] and
 #' [sample_gnm()] should be used instead. See these for more details.
+#'
+#' `random.graph.game()` is an (also deprecated) alias to this function.
+#'
 #'
 #' @aliases erdos.renyi.game random.graph.game
 #' @param n The number of vertices in the graph.
@@ -716,35 +714,30 @@ gnm <- function(...) constructor_spec(sample_gnm, ...)
 erdos.renyi.game <- function(n, p.or.m, type = c("gnp", "gnm"),
                              directed = FALSE, loops = FALSE) {
   type <- igraph.match.arg(type)
-  type1 <- switch(type,
-    "gnp" = 0,
-    "gnm" = 1
-  )
 
-  on.exit(.Call(R_igraph_finalizer))
-  res <- .Call(
-    R_igraph_erdos_renyi_game, as.numeric(n), as.numeric(type1),
-    as.numeric(p.or.m), as.logical(directed), as.logical(loops)
-  )
-
-  if (igraph_opt("add.params")) {
-    res$name <- sprintf("Erdos-Renyi (%s) graph", type)
-    res$type <- type
-    res$loops <- loops
-    if (type == "gnp") {
-      res$p <- p.or.m
-    }
-    if (type == "gnm") {
-      res$m <- p.or.m
-    }
+  if (type == "gnp") {
+    lifecycle::deprecate_soft("0.8.0", "erdos.renyi.game()", "sample_gnp()")
+    sample_gnp(n = n, p = p.or.m, directed = directed, loops = loops)
+  } else if (type == "gnm") {
+    lifecycle::deprecate_soft("0.8.0", "erdos.renyi.game()", "sample_gnm()")
+    sample_gnm(n = n, m = p.or.m, directed = directed, loops = loops)
   }
-  res
 }
 
 #' @family games
 #' @export
-random.graph.game <- erdos.renyi.game
+random.graph.game <- function(n, p.or.m, type = c("gnp", "gnm"),
+                             directed = FALSE, loops = FALSE) {
+  type <- igraph.match.arg(type)
 
+  if (type == "gnp") {
+    lifecycle::deprecate_soft("0.8.0", "random.graph.game()", "sample_gnp()")
+    sample_gnp(n = n, p = p.or.m, directed = directed, loops = loops)
+  } else if (type == "gnm") {
+    lifecycle::deprecate_soft("0.8.0", "random.graph.game()", "sample_gnm()")
+    sample_gnm(n = n, m = p.or.m, directed = directed, loops = loops)
+  }
+}
 ## -----------------------------------------------------------------
 
 #' Generate random graphs with a given degree sequence
@@ -752,35 +745,48 @@ random.graph.game <- erdos.renyi.game
 #' It is often useful to create a graph with given vertex degrees. This function
 #' creates such a graph in a randomized manner.
 #'
-#' The \dQuote{simple} method connects the out-stubs of the edges (undirected
-#' graphs) or the out-stubs and in-stubs (directed graphs) together. This way
-#' loop edges and also multiple edges may be generated. This method is not
-#' adequate if one needs to generate simple graphs with a given degree
-#' sequence. The multiple and loop edges can be deleted, but then the degree
-#' sequence is distorted and there is nothing to ensure that the graphs are
-#' sampled uniformly.
+#' The \dQuote{configuration} method (formerly called "simple") implements the
+#' configuration model. For undirected graphs, it puts all vertex IDs in a bag
+#' such that the multiplicity of a vertex in the bag is the same as its degree.
+#' Then it draws pairs from the bag until the bag becomes empty. This method may
+#'  generate both loop (self) edges and multiple edges. For directed graphs,
+#'  the algorithm is basically the same, but two separate bags are used
+#'  for the in- and out-degrees. Undirected graphs are generated
+#'  with probability proportional to \eqn{(\prod_{i<j} A_{ij} ! \prod_i A_{ii} !!)^{-1}},
+#'  where A denotes the adjacency matrix and !! denotes the double factorial.
+#'  Here A is assumed to have twice the number of self-loops on its diagonal.
+#'  The corresponding expression for directed graphs is \eqn{(\prod_{i,j} A_{ij}!)^{-1}}.
+#'   Thus the probability of all simple graphs
+#'   (which only have 0s and 1s in the adjacency matrix)
+#'   is the same, while that of non-simple ones depends on their edge and
+#'   self-loop multiplicities.
 #'
-#' The \dQuote{simple.no.multiple} method is similar to \dQuote{simple}, but
-#' tries to avoid multiple and loop edges and restarts the generation from
-#' scratch if it gets stuck. It is not guaranteed to sample uniformly from the
-#' space of all possible graphs with the given sequence, but it is relatively
-#' fast and it will eventually succeed if the provided degree sequence is
-#' graphical, but there is no upper bound on the number of iterations.
+#' The \dQuote{fast.heur.simple} method (formerly called "simple.no.multiple")
+#' generates simple graphs.
+#' It is similar to \dQuote{configuration} but tries to avoid multiple and
+#' loop edges and restarts the generation from scratch if it gets stuck.
+#' It can generate all simple realizations of a degree sequence,
+#' but it is not guaranteed to sample them uniformly.
+#' This method is relatively fast and it will eventually succeed
+#' if the provided degree sequence is graphical, but there is no upper bound on
+#' the number of iterations.
 #'
-#' The \dQuote{simple.no.multiple.uniform} method is a variant of
-#' \dQuote{simple.no.multiple} with the added benefit of sampling uniformly
-#' from the set of all possible simple graphs with the given degree sequence.
-#' Ensuring uniformity has some performance implications, though.
+#' The \dQuote{configuration.simple} method (formerly called "simple.no.multiple.uniform")
+#' is
+#' identical to \dQuote{configuration}, but if the generated graph is not simple,
+#' it rejects it and re-starts the generation.
+#' It generates all simple graphs with the same probability.
 #'
-#' The \dQuote{vl} method is a more sophisticated generator. The algorithm and
-#' the implementation was done by Fabien Viger and Matthieu Latapy. This
-#' generator always generates undirected, connected simple graphs, it is an
-#' error to pass the `in.deg` argument to it.  The algorithm relies on
-#' first creating an initial (possibly unconnected) simple undirected graph
-#' with the given degree sequence (if this is possible at all). Then some
-#' rewiring is done to make the graph connected. Finally a Monte-Carlo
-#' algorithm is used to randomize the graph. The \dQuote{vl} samples from the
-#' undirected, connected simple graphs uniformly.
+#' The \dQuote{vl} method samples undirected connected graphs approximately uniformly.
+#' It is a Monte Carlo method based on degree-preserving edge switches.
+#' This generator should be favoured if undirected and connected graphs are to be
+#'  generated and execution time is not a concern. igraph uses
+#'  the original implementation of Fabien Viger; for the algorithm, see
+#'  <https://www-complexnetworks.lip6.fr/~latapy/FV/generation.html>
+#'  and the paper <https://arxiv.org/abs/cs/0502085>.
+#'
+#' The \dQuote{edge.switching.simple} is an MCMC sampler based on
+#' degree-preserving edge switches. It generates simple undirected or directed graphs.
 #'
 #' @param out.deg Numeric vector, the sequence of degrees (for undirected
 #'   graphs) or out-degrees (for directed graphs). For undirected graphs its sum
@@ -788,9 +794,7 @@ random.graph.game <- erdos.renyi.game
 #'   `in.deg`.
 #' @param in.deg For directed graph, the in-degree sequence. By default this is
 #'   `NULL` and an undirected graph is created.
-#' @param method Character, the method for generating the graph. Right now the
-#'   \dQuote{simple}, \dQuote{simple.no.multiple} and \dQuote{vl} methods are
-#'   implemented.
+#' @param method Character, the method for generating the graph. See Details.
 #' @return The new graph object.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
 #' @seealso
@@ -802,43 +806,148 @@ random.graph.game <- erdos.renyi.game
 #' @examples
 #'
 #' ## The simple generator
-#' g <- sample_degseq(rep(2, 100))
-#' degree(g)
-#' is_simple(g) # sometimes TRUE, but can be FALSE
-#' g2 <- sample_degseq(1:10, 10:1)
-#' degree(g2, mode = "out")
-#' degree(g2, mode = "in")
+#' undirected_graph <- sample_degseq(rep(2, 100))
+#' degree(undirected_graph)
+#' is_simple(undirected_graph) # sometimes TRUE, but can be FALSE
+#'
+#'
+#' directed_graph <- sample_degseq(1:10, 10:1)
+#' degree(directed_graph, mode = "out")
+#' degree(directed_graph, mode = "in")
 #'
 #' ## The vl generator
-#' g3 <- sample_degseq(rep(2, 100), method = "vl")
-#' degree(g3)
-#' is_simple(g3) # always TRUE
+#' vl_graph <- sample_degseq(rep(2, 100), method = "vl")
+#' degree(vl_graph)
+#' is_simple(vl_graph) # always TRUE
 #'
 #' ## Exponential degree distribution
-#' ## Note, that we correct the degree sequence if its sum is odd
-#' degs <- sample(1:100, 100, replace = TRUE, prob = exp(-0.5 * (1:100)))
-#' if (sum(degs) %% 2 != 0) {
-#'   degs[1] <- degs[1] + 1
+#' ## We fix the seed as there's no guarantee
+#' ##  that randomly picked integers will form a graphical degree sequence
+#' ## (i.e. that there's a graph with these degrees)
+#' ## withr::with_seed(42, {
+#' ## exponential_degrees <- sample(1:100, 100, replace = TRUE, prob = exp(-0.5 * (1:100)))
+#' ## })
+#' exponential_degrees <- c(
+#'   5L, 6L, 1L, 4L, 3L, 2L, 3L, 1L, 3L, 3L, 2L, 3L, 6L, 1L, 2L,
+#'   6L, 8L, 1L, 2L, 2L, 5L, 1L, 10L, 6L, 1L, 2L, 1L, 5L, 2L, 4L,
+#'   3L, 4L, 1L, 3L, 1L, 4L, 1L, 1L, 5L, 2L, 1L, 2L, 1L, 8L, 2L, 7L,
+#'   5L, 3L, 8L, 2L, 1L, 1L, 2L, 4L, 1L, 3L, 3L, 1L, 1L, 2L, 3L, 9L,
+#'   3L, 2L, 4L, 1L, 1L, 4L, 3L, 1L, 1L, 1L, 1L, 2L, 1L, 3L, 1L, 1L,
+#'   2L, 1L, 2L, 1L, 1L, 3L, 3L, 2L, 1L, 1L, 1L, 1L, 3L, 1L, 1L, 6L,
+#'   6L, 3L, 1L, 2L, 3L, 2L
+#' )
+#' ## Note, that we'd have to correct the degree sequence if its sum is odd
+#' is_exponential_degrees_sum_odd <- (sum(exponential_degrees) %% 2 != 0)
+#' if (is_exponential_degrees_sum_odd) {
+#'   exponential_degrees[1] <- exponential_degrees[1] + 1
 #' }
-#' g4 <- sample_degseq(degs, method = "vl")
-#' all(degree(g4) == degs)
+#' exp_vl_graph <- sample_degseq(exponential_degrees, method = "vl")
+#' all(degree(exp_vl_graph) == exponential_degrees)
 #'
-#' ## Power-law degree distribution
-#' ## Note, that we correct the degree sequence if its sum is odd
-#' degs <- sample(1:100, 100, replace = TRUE, prob = (1:100)^-2)
-#' if (sum(degs) %% 2 != 0) {
-#'   degs[1] <- degs[1] + 1
+#' ## An example that does not work
+#' @examplesIf rlang::is_interactive()
+#' ## withr::with_seed(11, {
+#' ## exponential_degrees <- sample(1:100, 100, replace = TRUE, prob = exp(-0.5 * (1:100)))
+#' ## })
+#' exponential_degrees <- c(
+#'   1L, 1L, 2L, 1L, 1L, 7L, 1L, 1L, 5L, 1L, 1L, 2L, 5L, 4L, 3L,
+#'   2L, 2L, 1L, 1L, 2L, 1L, 3L, 1L, 1L, 1L, 2L, 2L, 1L, 1L, 2L, 2L,
+#'   1L, 2L, 1L, 4L, 3L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 3L, 1L, 4L, 3L,
+#'   1L, 2L, 4L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 4L, 1L, 2L, 1L, 3L, 1L,
+#'   2L, 3L, 1L, 1L, 2L, 1L, 2L, 3L, 2L, 2L, 1L, 6L, 2L, 1L, 1L, 1L,
+#'   1L, 1L, 2L, 2L, 1L, 4L, 2L, 1L, 3L, 4L, 1L, 1L, 3L, 1L, 2L, 4L,
+#'   1L, 3L, 1L, 2L, 1L
+#' )
+#' ## Note, that we'd have to correct the degree sequence if its sum is odd
+#' is_exponential_degrees_sum_odd <- (sum(exponential_degrees) %% 2 != 0)
+#' if (is_exponential_degrees_sum_odd) {
+#'   exponential_degrees[1] <- exponential_degrees[1] + 1
 #' }
-#' g5 <- sample_degseq(degs, method = "vl")
-#' all(degree(g5) == degs)
+#' exp_vl_graph <- sample_degseq(exponential_degrees, method = "vl")
+#'
+#' @examples
+#' ## Power-law degree distribution
+#' ## We fix the seed as there's no guarantee
+#' ##  that randomly picked integers will form a graphical degree sequence
+#' ## (i.e. that there's a graph with these degrees)
+#' ## withr::with_seed(1, {
+#' ##  powerlaw_degrees <- sample(1:100, 100, replace = TRUE, prob = (1:100)^-2)
+#' ## })
+#' powerlaw_degrees <- c(
+#'   1L, 1L, 1L, 6L, 1L, 6L, 10L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 3L,
+#'   1L, 2L, 43L, 1L, 3L, 9L, 1L, 2L, 1L, 1L, 1L, 1L, 1L, 4L, 1L,
+#'   1L, 1L, 1L, 1L, 3L, 2L, 3L, 1L, 2L, 1L, 3L, 2L, 3L, 1L, 1L, 3L,
+#'   1L, 1L, 2L, 2L, 1L, 4L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 1L, 7L, 1L,
+#'   1L, 1L, 2L, 1L, 1L, 3L, 1L, 5L, 1L, 4L, 1L, 1L, 1L, 5L, 4L, 1L,
+#'   3L, 13L, 1L, 2L, 1L, 1L, 2L, 1L, 2L, 1L, 1L, 1L, 1L, 1L, 2L,
+#'   5L, 3L, 3L, 1L, 1L, 3L, 1L
+#' )
+#' ## Note, that we correct the degree sequence if its sum is odd
+#' is_exponential_degrees_sum_odd <- (sum(powerlaw_degrees) %% 2 != 0)
+#' if (is_exponential_degrees_sum_odd) {
+#'   powerlaw_degrees[1] <- powerlaw_degrees[1] + 1
+#' }
+#' powerlaw_vl_graph <- sample_degseq(powerlaw_degrees, method = "vl")
+#' all(degree(powerlaw_vl_graph) == powerlaw_degrees)
+#'
+#' ## An example that does not work
+#' @examplesIf rlang::is_interactive()
+#' ## withr::with_seed(2, {
+#' ##  powerlaw_degrees <- sample(1:100, 100, replace = TRUE, prob = (1:100)^-2)
+#' ## })
+#' powerlaw_degrees <- c(
+#'   1L, 2L, 1L, 1L, 10L, 10L, 1L, 4L, 1L, 1L, 1L, 1L, 2L, 1L, 1L,
+#'   4L, 21L, 1L, 1L, 1L, 2L, 1L, 4L, 1L, 1L, 1L, 1L, 1L, 14L, 1L,
+#'   1L, 1L, 3L, 4L, 1L, 2L, 4L, 1L, 2L, 1L, 25L, 1L, 1L, 1L, 10L,
+#'   3L, 19L, 1L, 1L, 3L, 1L, 1L, 2L, 8L, 1L, 3L, 3L, 36L, 2L, 2L,
+#'   3L, 5L, 2L, 1L, 4L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L,
+#'   1L, 4L, 1L, 1L, 1L, 2L, 1L, 1L, 1L, 4L, 18L, 1L, 2L, 1L, 21L,
+#'   1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L
+#' )
+#' ## Note, that we correct the degree sequence if its sum is odd
+#' is_exponential_degrees_sum_odd <- (sum(powerlaw_degrees) %% 2 != 0)
+#' if (is_exponential_degrees_sum_odd) {
+#'   powerlaw_degrees[1] <- powerlaw_degrees[1] + 1
+#' }
+#' powerlaw_vl_graph <- sample_degseq(powerlaw_degrees, method = "vl")
+#' all(degree(powerlaw_vl_graph) == powerlaw_degrees)
+#'
 sample_degseq <- function(out.deg, in.deg = NULL,
-                          method = c("simple", "vl", "simple.no.multiple", "simple.no.multiple.uniform")) {
-  method <- igraph.match.arg(method)
+                          method = c("configuration", "vl", "fast.heur.simple", "configuration.simple", "edge.switching.simple")) {
+  if (missing(method)) {
+    method <- method[1]
+  }
+  method <- igraph.match.arg(
+    method,
+    values = c(
+      "configuration", "vl", "fast.heur.simple",
+      "configuration.simple", "edge.switching.simple",
+      "simple", "simple.no.multiple", "simple.no.multiple.uniform" # old names
+    )
+  )
+
+  if (method == "simple") {
+    lifecycle::deprecate_warn("2.1.0", "sample_degseq(method = 'must be configuration instead of simple')")
+    method <- "configuration"
+  }
+
+  if (method == "simple.no.multiple") {
+    lifecycle::deprecate_warn("2.1.0", "sample_degseq(method = 'must be fast.heur.simple instead of simple.no.multiple')")
+    method <- "fast.heur.simple"
+  }
+
+  if (method == "simple.no.multiple.uniform") {
+    lifecycle::deprecate_warn("2.1.0", "sample_degseq(method = 'must be configuration.simple instead of simple.no.multiple.uniform')")
+    method <- "configuration.simple"
+  }
+
+  # numbers from https://github.com/igraph/igraph/blob/640083c88bf85fd322ff7b748b9b4e16ebe32aa2/include/igraph_constants.h#L94
   method1 <- switch(method,
-    "simple" = 0,
+    "configuration" = 0,
     "vl" = 1,
-    "simple.no.multiple" = 2,
-    "simple.no.multiple.uniform" = 3
+    "fast.heur.simple" = 2,
+    "configuration.simple" = 3,
+    "edge.switching.simple" = 4
   )
   if (!is.null(in.deg)) {
     in.deg <- as.numeric(in.deg)
@@ -894,19 +1003,8 @@ degseq <- function(..., deterministic = FALSE) {
 #' g <- sample_growing(500, citation = FALSE)
 #' g2 <- sample_growing(500, citation = TRUE)
 #'
-sample_growing <- function(n, m = 1, directed = TRUE, citation = FALSE) {
-  on.exit(.Call(R_igraph_finalizer))
-  res <- .Call(
-    R_igraph_growing_random_game, as.numeric(n), as.numeric(m),
-    as.logical(directed), as.logical(citation)
-  )
-  if (igraph_opt("add.params")) {
-    res$name <- "Growing random graph"
-    res$m <- m
-    res$citation <- citation
-  }
-  res
-}
+#' @cdocs igraph_growing_random_game
+sample_growing <- growing_random_game_impl
 
 #' @rdname sample_growing
 #' @param ... Passed to `sample_growing()`.
@@ -1018,11 +1116,11 @@ sample_pa_age <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300,
                           time.window = NULL) {
   # Checks
   if (!is.null(out.seq) && (!is.null(m) || !is.null(out.dist))) {
-    warning("if `out.seq' is given `m' and `out.dist' should be NULL")
+    cli::cli_warn("if {.arg out.seq} is given {.arg m} and {.arg out.dist} should be {.code NULL}.")
     m <- out.dist <- NULL
   }
   if (is.null(out.seq) && !is.null(out.dist) && !is.null(m)) {
-    warning("if `out.dist' is given `m' will be ignored")
+    cli::cli_warn("if {.arg out.dist} is given {.arg m} will be ignored.")
     m <- NULL
   }
   if (!is.null(out.seq) && length(out.seq) != n) {
@@ -1038,13 +1136,13 @@ sample_pa_age <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300,
     stop("time window size should be positive")
   }
   if (!is.null(m) && m == 0) {
-    warning("`m' is zero, graph will be empty")
+    cli::cli_warn("{.arg m} is zero, graph will be empty.")
   }
   if (aging.exp > 0) {
-    warning("aging exponent is positive")
+    cli::cli_warn("Aging exponent {.arg aging.exp} is positive.")
   }
   if (zero.deg.appeal <= 0) {
-    warning("initial attractiveness is not positive")
+    cli::cli_warn("Initial attractiveness {.arg zero.deg.appeal} is not positive.")
   }
 
   if (is.null(m) && is.null(out.dist) && is.null(out.seq)) {
@@ -1311,15 +1409,16 @@ grg <- function(...) constructor_spec(sample_grg, ...)
 #'
 #' pf <- matrix(c(1, 0, 0, 1), nrow = 2)
 #' g <- sample_pref(20, 2, pref.matrix = pf)
-#' \dontrun{
+#' @examplesIf rlang::is_installed("tcltk") && rlang::is_interactive()
+#' # example code
+#'
 #' tkplot(g, layout = layout_with_fr)
-#' }
+#' @examples
 #'
 #' pf <- matrix(c(0, 1, 0, 0), nrow = 2)
 #' g <- sample_asym_pref(20, 2, pref.matrix = pf)
-#' \dontrun{
+#' @examplesIf rlang::is_installed("tcltk") && rlang::is_interactive()
 #' tkplot(g, layout = layout_in_circle)
-#' }
 #'
 sample_pref <- function(nodes, types, type.dist = rep(1, types),
                         fixed.sizes = FALSE,
@@ -1662,13 +1761,13 @@ sample_bipartite <- function(n1, n2, type = c("gnp", "gnm"), p, m,
     stop("Connection probability `p' is not given for Gnp graph")
   }
   if (type == "gnp" && !missing(m)) {
-    warning("Number of edges `m' is ignored for Gnp graph")
+    cli::cli_warn("Number of edges {.arg m} is ignored for Gnp graph.")
   }
   if (type == "gnm" && missing(m)) {
     stop("Number of edges `m' is not given for Gnm graph")
   }
   if (type == "gnm" && !missing(p)) {
-    warning("Connection probability `p' is ignored for Gnp graph")
+    cli::cli_warn("Connection probability {.arg p} is ignored for Gnp graph.")
   }
 
   on.exit(.Call(R_igraph_finalizer))
@@ -1726,6 +1825,7 @@ bipartite <- function(...) constructor_spec(sample_bipartite, ...)
 #' g
 #' @family games
 #' @export
+#' @cdocs igraph_sbm_game
 sample_sbm <- sbm_game_impl
 
 #' @rdname sample_sbm
@@ -1774,6 +1874,8 @@ sbm <- function(...) constructor_spec(sample_sbm, ...)
 #' }
 #' @family games
 #' @export
+#' @cdocs igraph_hsbm_game
+#' @cdocs igraph_hsbm_list_game
 sample_hierarchical_sbm <- function(n, m, rho, C, p) {
   mlen <- length(m)
   rholen <- if (is.list(rho)) length(rho) else 1
@@ -1852,6 +1954,7 @@ hierarchical_sbm <- function(...) {
 #' g2
 #' @family games
 #' @export
+#' @cdocs igraph_dot_product_game
 sample_dot_product <- dot_product_game_impl
 
 #' @rdname sample_dot_product
@@ -1883,6 +1986,7 @@ dot_product <- function(...) constructor_spec(sample_dot_product, ...)
 #' @keywords graphs
 #' @family games
 #' @export
+#' @cdocs igraph_simple_interconnected_islands_game
 sample_islands <- simple_interconnected_islands_game_impl
 
 
@@ -1921,7 +2025,171 @@ sample_islands <- simple_interconnected_islands_game_impl
 #' sapply(k10, plot, vertex.label = NA)
 #' @family games
 #' @export
+#' @cdocs igraph_k_regular_game
 sample_k_regular <- k_regular_game_impl
+
+
+#' Random graph with given expected degrees
+#'
+#' @description
+#' `r lifecycle::badge("experimental")`
+#'
+#' The Chung-Lu model is useful for generating random graphs with fixed expected
+#' degrees. This function implements both the original model of Chung and Lu, as
+#' well as some additional variants with useful properties.
+#'
+#' @details
+#' In the original Chung-Lu model, each pair of vertices \eqn{i} and \eqn{j} is
+#' connected with independent probability
+#' \deqn{p_{ij} = \frac{w_i w_j}{S},}{p_ij = w_i w_j / S,}
+#' where \eqn{w_i} is a weight associated with vertex \eqn{i} and
+#' \deqn{S = \sum_k w_k}{S = sum_k w_k}
+#' is the sum of weights. In the directed variant, vertices have both
+#' out-weights, \eqn{w^\text{out}}{w^out}, and in-weights,
+#' \eqn{w^\text{in}}{w^in}, with equal sums,
+#' \deqn{S = \sum_k w^\text{out}_k = \sum_k w^\text{in}_k.}{S = sum_k w^out_k = sum_k w^in_k.}
+#' The connection probability between \eqn{i} and \eqn{j} is
+#' \deqn{p_{ij} = \frac{w^\text{out}_i w^\text{in}_j.}{S}}{p_ij = w^out_i w^in_j / S.}
+#'
+#' This model is commonly used to create random graphs with a fixed
+#' \emph{expected} degree sequence. The expected degree of vertex \eqn{i} is
+#' approximately equal to the weight \eqn{w_i}. Specifically, if the graph is
+#' directed and self-loops are allowed, then the expected out- and in-degrees
+#' are precisely \eqn{w^\text{out}}{w^out} and \eqn{w^\text{in}}{w^in}. If
+#' self-loops are disallowed, then the expected out- and in-degrees are
+#' \eqn{\frac{w^\text{out} (S - w^\text{in})}{S}}{w^out (S - w^in) / S}
+#' and
+#' \eqn{\frac{w^\text{in} (S - w^\text{out})}{S}}{w^in (S - w^out) / S},
+#' respectively. If the graph is undirected, then the expected degrees with and
+#' without self-loops are
+#' \eqn{\frac{w (S + w)}{S}}{w (S + w) / S}
+#' and
+#' \eqn{\frac{w (S - w)}{S}}{w (S - w) / S},
+#' respectively.
+#'
+#' A limitation of the original Chung-Lu model is that when some of the weights
+#' are large, the formula for \eqn{p_{ij}}{p_ij} yields values larger than 1.
+#' Chung
+#' and Lu's original paper excludes the use of such weights. When
+#' \eqn{p_{ij} > 1}{p_ij > 1}, this function simply issues a warning and creates
+#' a connection between \eqn{i} and \eqn{j}. However, in this case the expected
+#' degrees will no longer relate to the weights in the manner stated above. Thus,
+#' the original Chung-Lu model cannot produce certain (large) expected degrees.
+#'
+#' To overcome this limitation, this function implements additional variants of
+#' the model, with modified expressions for the connection probability
+#' \eqn{p_{ij}}{p_ij} between vertices \eqn{i} and \eqn{j}. Let
+#' \eqn{q_{ij} = \frac{w_i w_j}{S}}{q_ij = w_i w_j / S}, or
+#' \eqn{q_{ij} = \frac{w^\text{out}_i w^\text{in}_j}{S}}{q_ij = w^out_i w^in_j / S}
+#' in the directed case. All model variants become equivalent in the limit of sparse
+#' graphs where \eqn{q_{ij}} approaches zero. In the original Chung-Lu model,
+#' selectable by setting \code{variant} to \dQuote{original}, \eqn{p_{ij} =
+#' \min(q_{ij}, 1)}{p_ij = min(q_ij, 1)}. The \dQuote{maxent} variant,
+#' sometimes referred to as the generalized random graph, uses \eqn{p_{ij} =
+#' \frac{q_{ij}}{1 + q_{ij}}}{p_ij = q_ij / (1 + q_ij)}, and is equivalent to a
+#' maximum entropy model (i.e., exponential random graph model) with a
+#' constraint on expected degrees;
+#' see Park and Newman (2004), Section B, setting \eqn{\exp(-\Theta_{ij}) =
+#' \frac{w_i w_j}{S}}{exp(-Theta_ij) = w_i w_j / S}. This model is also discussed
+#' by Britton, Deijfen, and Martin-Löf (2006). By virtue of being a
+#' degree-constrained maximum entropy model, it generates graphs with the same
+#' degree sequence with the same probability. A third variant can be requested
+#' with \dQuote{nr}, and uses \eqn{p_{ij} = 1 - \exp(-q_{ij})}{p_ij = 1 -
+#' exp(-q_ij)}. This is the underlying simple graph of a multigraph model
+#' introduced by Norros and Reittu (2006). For a discussion of these three model
+#' variants, see Section 16.4 of Bollobás, Janson, Riordan (2007), as well as
+#' Van Der Hofstad (2013).
+#'
+#' @references Chung, F., and Lu, L. (2002). Connected components in a random
+#'   graph with given degree sequences. Annals of Combinatorics, 6, 125-145.
+#'   \doi{10.1007/PL00012580}
+#'
+#'   Miller, J. C., and Hagberg, A. (2011). Efficient Generation of Networks
+#'   with Given Expected Degrees. \doi{10.1007/978-3-642-21286-4_10}
+#'
+#'   Park, J., and Newman, M. E. J. (2004). Statistical mechanics of networks.
+#'   Physical Review E, 70, 066117. \doi{10.1103/PhysRevE.70.066117}
+#'
+#'   Britton, T., Deijfen, M., and Martin-Löf, A. (2006). Generating Simple
+#'   Random Graphs with Prescribed Degree Distribution. Journal of Statistical
+#'   Physics, 124, 1377-1397. \doi{10.1007/s10955-006-9168-x}
+#'
+#'   Norros, I., and Reittu, H. (2006). On a conditionally Poissonian graph
+#'   process. Advances in Applied Probability, 38, 59-75.
+#'   \doi{10.1239/aap/1143936140}
+#'
+#'   Bollobás, B., Janson, S., and Riordan, O. (2007). The phase transition in
+#'   inhomogeneous random graphs. Random Structures & Algorithms, 31, 3-122.
+#'   \doi{10.1002/rsa.20168}
+#'
+#'   Van Der Hofstad, R. (2013). Critical behavior in inhomogeneous random
+#'   graphs. Random Structures & Algorithms, 42, 480-508.
+#'   \doi{10.1002/rsa.20450}
+#'
+#' @inheritParams rlang::args_dots_empty
+#' @param out.weights A vector of non-negative vertex weights (or out-weights).
+#'   In sparse graphs, these will be approximately equal to the expected
+#'   (out-)degrees.
+#' @param in.weights A vector of non-negative in-weights, approximately equal to
+#'   the expected in-degrees in sparse graphs. May be set to \code{NULL}, in
+#'   which case undirected graphs are generated.
+#' @param loops Logical, whether to allow the creation of self-loops. Since
+#'   vertex pairs are connected independently, setting this to \code{FALSE} is
+#'   equivalent to simply discarding self-loops from an existing loopy Chung-Lu
+#'   graph.
+#' @param variant The model variant to sample from, with different definitions
+#'   of the connection probability between vertices \eqn{i} and \eqn{j}. Given
+#'   \eqn{q_{ij} = \frac{w_i w_j}{S}}{q_ij = w_i w_j / S}, the following
+#'   formulations are available:
+#'   \describe{
+#'     \item{\dQuote{original}}{the original Chung-Lu model, \eqn{p_{ij} = \min(q_{ij}, 1)}{p_ij = min(q_ij, 1)}.}
+#'     \item{\dQuote{maxent}}{maximum entropy model with fixed expected degrees,
+#'       \eqn{p_{ij} = \frac{q_{ij}}{1 + q_{ij}}}{p_ij = q_ij / (1 + q_ij)}.}
+#'     \item{\dQuote{nr}}{Norros and Reittu's model, \eqn{p_{ij} = 1 - \exp(-q_{ij})}{p_ij = 1 - exp(-q_ij)}.}
+#'   }
+#' @return An igraph graph.
+#' @seealso [sample_fitness()] implements a similar model with a sharp
+#'   constraint on the number of edges. [sample_degseq()] samples random graphs
+#'   with sharply specified degrees. [sample_gnp()] creates random graphs with a
+#'   fixed connection probability \eqn{p} between all vertex pairs.
+#'
+#' @family games
+#' @examples
+#'
+#' g <- sample_chung_lu(c(3, 3, 2, 2, 2, 1, 1))
+#'
+#' rowMeans(replicate(
+#'   100,
+#'   degree(sample_chung_lu(c(1, 3, 2, 1), c(2, 1, 2, 2)), mode = "out")
+#' ))
+#'
+#' rowMeans(replicate(
+#'   100,
+#'   degree(sample_chung_lu(c(1, 3, 2, 1), c(2, 1, 2, 2), variant = "maxent"), mode='out')
+#' ))
+#' @export
+#' @cdocs igraph_chung_lu_game
+sample_chung_lu <- chung_lu_game_impl
+
+#' @rdname sample_chung_lu
+#' @export
+chung_lu <- function(
+    out.weights,
+    in.weights = NULL,
+    ...,
+    loops = TRUE,
+    variant = c("original", "maxent", "nr")
+) {
+  variant <- rlang::arg_match(variant)
+  constructor_spec(
+    sample_chung_lu,
+    out.weights,
+    in.weights,
+    ...,
+    loops = loops,
+    variant = variant
+  )
+}
 
 
 #' Random graphs from vertex fitness scores
@@ -1982,6 +2250,7 @@ sample_k_regular <- k_regular_game_impl
 #' g <- sample_fitness(5 * N, sample((1:50)^-2, N, replace = TRUE))
 #' degree_distribution(g)
 #' plot(degree_distribution(g, cumulative = TRUE), log = "xy")
+#' @cdocs igraph_static_fitness_game
 sample_fitness <- static_fitness_game_impl
 
 
@@ -2048,6 +2317,7 @@ sample_fitness <- static_fitness_game_impl
 #'
 #' g <- sample_fitness_pl(10000, 30000, 2.2, 2.3)
 #' plot(degree_distribution(g, cumulative = TRUE, mode = "out"), log = "xy")
+#' @cdocs igraph_static_power_law_game
 sample_fitness_pl <- static_power_law_game_impl
 
 
@@ -2089,7 +2359,7 @@ sample_fitness_pl <- static_power_law_game_impl
 #' <http://www.cs.cmu.edu/~jure/pubs/powergrowth-tkdd.pdf>, our
 #' implementation is based on this.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [barabasi.game()] for the basic preferential attachment
+#' @seealso [sample_pa()] for the basic preferential attachment
 #' model.
 #' @references Jure Leskovec, Jon Kleinberg and Christos Faloutsos. Graphs over
 #' time: densification laws, shrinking diameters and possible explanations.
@@ -2100,11 +2370,17 @@ sample_fitness_pl <- static_power_law_game_impl
 #' @export
 #' @examples
 #'
+#' fire <- sample_forestfire(50, fw.prob = 0.37, bw.factor = 0.32 / 0.37)
+#' plot(fire)
+#'
 #' g <- sample_forestfire(10000, fw.prob = 0.37, bw.factor = 0.32 / 0.37)
 #' dd1 <- degree_distribution(g, mode = "in")
 #' dd2 <- degree_distribution(g, mode = "out")
+#' # The forest fire model produces graphs with a heavy tail degree distribution.
+#' # Note that some in- or out-degrees are zero which will be excluded from the logarithmic plot.
 #' plot(seq(along.with = dd1) - 1, dd1, log = "xy")
 #' points(seq(along.with = dd2) - 1, dd2, col = 2, pch = 2)
+#' @cdocs igraph_forest_fire_game
 sample_forestfire <- forest_fire_game_impl
 
 
@@ -2144,6 +2420,7 @@ sample_forestfire <- forest_fire_game_impl
 #' cor(as.vector(g[]), as.vector(g2[]))
 #' g
 #' g2
+#' @cdocs igraph_correlated_game
 sample_correlated_gnp <- correlated_game_impl
 
 
@@ -2181,4 +2458,5 @@ sample_correlated_gnp <- correlated_game_impl
 #' )
 #' gg
 #' cor(as.vector(gg[[1]][]), as.vector(gg[[2]][]))
+#' @cdocs igraph_correlated_pair_game
 sample_correlated_gnp_pair <- correlated_pair_game_impl

@@ -576,6 +576,7 @@ farthest_vertices <- function(graph, directed = TRUE, unconnected = TRUE,
 
 #' @export
 #' @rdname distances
+#' @cdocs igraph_average_path_length_dijkstra
 mean_distance <- average_path_length_dijkstra_impl
 
 
@@ -595,14 +596,17 @@ mean_distance <- average_path_length_dijkstra_impl
 #' @param normalized Logical scalar, whether to normalize the degree.  If
 #'   `TRUE` then the result is divided by \eqn{n-1}, where \eqn{n} is the
 #'   number of vertices in the graph.
-#' @param \dots Additional arguments to pass to `degree()`, e.g. `mode`
-#'   is useful but also `v` and `loops` make sense.
+#' @inheritParams rlang::args_dots_empty
 #' @return For `degree()` a numeric vector of the same length as argument
 #'   `v`.
 #'
 #'   For `degree_distribution()` a numeric vector of the same length as the
 #'   maximum degree plus one. The first element is the relative frequency zero
 #'   degree vertices, the second vertices with degree one, etc.
+#'
+#'   For `max_degree()`, the largest degree in the graph. When no vertices are
+#'   selected, or when the input is the null graph, zero is returned as this
+#'   is the smallest possible degree.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
 #' @keywords graphs
 #' @family structural.properties
@@ -612,6 +616,7 @@ mean_distance <- average_path_length_dijkstra_impl
 #' g <- make_ring(10)
 #' degree(g)
 #' g2 <- sample_gnp(1000, 10 / 1000)
+#' max_degree(g2)
 #' degree_distribution(g2)
 #'
 degree <- function(graph, v = V(graph),
@@ -640,6 +645,11 @@ degree <- function(graph, v = V(graph),
   }
   res
 }
+
+#' @rdname degree
+#' @export
+#' @cdocs igraph_maxdegree
+max_degree <- maxdegree_impl
 
 #' @rdname degree
 #' @param cumulative Logical; whether the cumulative degree distribution is to
@@ -730,13 +740,14 @@ degree_distribution <- function(graph, cumulative = FALSE, ...) {
 #' @param mode Character constant, gives whether the shortest paths to or from
 #'   the given vertices should be calculated for directed graphs. If `out`
 #'   then the shortest paths *from* the vertex, if `in` then *to*
-#'   it will be considered. If `all`, the default, then the corresponding
-#'   undirected graph will be used, i.e. not directed paths are searched. This
+#'   it will be considered. If `all`, the default, then the graph is treated
+#'   as undirected, i.e. edge directions are not taken into account. This
 #'   argument is ignored for undirected graphs.
 #' @param weights Possibly a numeric vector giving edge weights. If this is
 #'   `NULL` and the graph has a `weight` edge attribute, then the
 #'   attribute is used. If this is `NA` then no weights are used (even if
-#'   the graph has a `weight` attribute).
+#'   the graph has a `weight` attribute). In a weighted graph, the length
+#'   of a path is the sum of the weights of its constituent edges.
 #' @param algorithm Which algorithm to use for the calculation. By default
 #'   igraph tries to select the fastest suitable algorithm. If there are no
 #'   weights, then an unweighted breadth-first search is used, otherwise if all
@@ -885,7 +896,7 @@ distances <- function(graph, v = V(graph), to = V(graph),
 
   if (!is.null(weights) && algorithm == 1) {
     weights <- NULL
-    warning("Unweighted algorithm chosen, weights ignored")
+    cli::cli_warn("Unweighted algorithm chosen, {.arg weights} ignored.")
   }
 
   on.exit(.Call(R_igraph_finalizer))
@@ -965,7 +976,7 @@ shortest_paths <- function(graph, from, to = V(graph),
 
   if (!is.null(weights) && algorithm == 1) {
     weights <- NULL
-    warning("Unweighted algorithm chosen, weights ignored")
+    cli::cli_warn("Unweighted algorithm chosen, {.arg weights} ignored.")
   }
 
   to <- as_igraph_vs(graph, to) - 1
@@ -1091,6 +1102,7 @@ all_shortest_paths <- function(graph, from,
 #' @family structural.properties
 #' @seealso [shortest_paths()], [all_shortest_paths()]
 #' @keywords graphs
+#' @cdocs igraph_get_k_shortest_paths
 k_shortest_paths <- get_k_shortest_paths_impl
 
 #' In- or out- component of a vertex
@@ -1149,16 +1161,16 @@ subcomponent <- function(graph, v, mode = c("all", "out", "in")) {
 #' in a graph. This means that exactly the specified vertices and all the edges
 #' between them will be kept in the result graph.
 #'
-#' `subgraph.edges()` calculates the subgraph of a graph. For this function
+#' `subgraph_from_edges()` calculates the subgraph of a graph. For this function
 #' one can specify the vertices and edges to keep. This function will be
 #' renamed to `subgraph()` in the next major version of igraph.
 #'
 #' The `subgraph()` function currently does the same as `induced_subgraph()`
 #' (assuming \sQuote{`auto`} as the `impl` argument), but this behaviour
 #' is deprecated. In the next major version, `subgraph()` will overtake the
-#' functionality of `subgraph.edges()`.
+#' functionality of `subgraph_from_edges()`.
 #'
-#' @aliases subgraph.edges
+#' @aliases subgraph_from_edges
 #' @param graph The original graph.
 #' @return A new graph object.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
@@ -1169,7 +1181,7 @@ subcomponent <- function(graph, v, mode = c("all", "out", "in")) {
 #'
 #' g <- make_ring(10)
 #' g2 <- induced_subgraph(g, 1:7)
-#' g3 <- subgraph.edges(g, 1:5)
+#' g3 <- subgraph_from_edges(g, 1:5)
 #'
 subgraph <- function(graph, vids) {
   induced_subgraph(graph, vids)
@@ -1209,7 +1221,7 @@ induced_subgraph <- function(graph, vids, impl = c("auto", "copy_and_delete", "c
 #' @param delete.vertices Logical scalar, whether to remove vertices that do
 #'   not have any adjacent edges in `eids`.
 #' @export
-subgraph.edges <- function(graph, eids, delete.vertices = TRUE) {
+subgraph_from_edges <- function(graph, eids, delete.vertices = TRUE) {
   # Argument checks
   ensure_igraph(graph)
   eids <- as_igraph_es(graph, eids)
@@ -1221,6 +1233,22 @@ subgraph.edges <- function(graph, eids, delete.vertices = TRUE) {
 
   res
 }
+
+#' Subgraph of a graph
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `subgraph.edges()` was renamed to `subgraph_from_edges()` to create a more
+#' consistent API.
+#' @inheritParams subgraph_from_edges
+#' @keywords internal
+#' @export
+subgraph.edges <- function(graph, eids, delete.vertices = TRUE) { # nocov start
+  lifecycle::deprecate_soft("2.1.0", "subgraph.edges()", "subgraph_from_edges()")
+  subgraph_from_edges(graph = graph, eids = eids, delete.vertices = delete.vertices)
+} # nocov end
+
 
 #' Transitivity of a graph
 #'
@@ -1247,7 +1275,7 @@ subgraph.edges <- function(graph, eids, delete.vertices = TRUE) {
 #'
 #' The `barrat` type of transitivity does not work for graphs with
 #' multiple and/or loop edges. If you want to calculate it for a directed
-#' graph, call [as.undirected()] with the `collapse` mode first.
+#' graph, call [as_undirected()] with the `collapse` mode first.
 #'
 #' @param graph The graph to analyze.
 #' @param type The type of the transitivity to calculate. Possible values:
@@ -1330,16 +1358,16 @@ transitivity <- function(graph, type = c(
   ensure_igraph(graph)
   type <- igraph.match.arg(type)
   type <- switch(type,
-    "undirected" = 0,
-    "global" = 0,
-    "globalundirected" = 0,
-    "localundirected" = 1,
-    "local" = 1,
-    "average" = 2,
-    "localaverage" = 2,
-    "localaverageundirected" = 2,
-    "barrat" = 3,
-    "weighted" = 3
+    "undirected" = 0L,
+    "global" = 0L,
+    "globalundirected" = 0L,
+    "localundirected" = 1L,
+    "local" = 1L,
+    "average" = 2L,
+    "localaverage" = 2L,
+    "localaverageundirected" = 2L,
+    "barrat" = 3L,
+    "weighted" = 3L
   )
 
   if (is.null(weights) && "weight" %in% edge_attr_names(graph)) {
@@ -1499,6 +1527,7 @@ constraint <- function(graph, nodes = V(graph), weights = NULL) {
 #' g <- sample_gnp(20, 5 / 20, directed = TRUE)
 #' reciprocity(g)
 #'
+#' @cdocs igraph_reciprocity
 reciprocity <- reciprocity_impl
 
 
@@ -1529,9 +1558,9 @@ reciprocity <- reciprocity_impl
 #' @keywords graphs
 #' @examples
 #'
-#' g1 <- make_empty_graph(n = 10)
-#' g2 <- make_full_graph(n = 10)
-#' g3 <- sample_gnp(n = 10, 0.4)
+#' edge_density(make_empty_graph(n = 10)) # empty graphs have density 0
+#' edge_density(make_full_graph(n = 10)) # complete graphs have density 1
+#' edge_density(sample_gnp(n = 100, p = 0.4)) # density will be close to p
 #'
 #' # loop edges
 #' g <- make_graph(c(1, 2, 2, 2, 2, 3)) # graph with a self-loop
@@ -1539,12 +1568,8 @@ reciprocity <- reciprocity_impl
 #' edge_density(g, loops = TRUE) # this is right!!!
 #' edge_density(simplify(g), loops = FALSE) # this is also right, but different
 #'
-edge_density <- function(graph, loops = FALSE) {
-  ensure_igraph(graph)
-
-  on.exit(.Call(R_igraph_finalizer))
-  .Call(R_igraph_density, graph, as.logical(loops))
-}
+#' @cdocs igraph_density
+edge_density <- density_impl
 
 #' @rdname ego
 #' @export
@@ -1849,7 +1874,8 @@ topo_sort <- function(graph, mode = c("out", "all", "in")) {
 #'
 #' g <- sample_gnm(20, 40, directed = TRUE)
 #' feedback_arc_set(g)
-#' feedback_arc_set(g, algo = "approx")
+#' feedback_arc_set(g, algo = "approx_eades")
+#' @cdocs igraph_feedback_arc_set
 feedback_arc_set <- feedback_arc_set_impl
 
 #' Girth of a graph
@@ -1970,18 +1996,23 @@ girth <- function(graph, circle = TRUE) {
 #' any(which_multiple(g))
 #' E(g)$weight
 #'
+#' @cdocs igraph_is_multiple
 which_multiple <- is_multiple_impl
 #' @rdname which_multiple
 #' @export
+#' @cdocs igraph_has_multiple
 any_multiple <- has_multiple_impl
 #' @rdname which_multiple
 #' @export
+#' @cdocs igraph_count_multiple
 count_multiple <- count_multiple_impl
 #' @rdname which_multiple
 #' @export
+#' @cdocs igraph_is_loop
 which_loop <- is_loop_impl
 #' @rdname which_multiple
 #' @export
+#' @cdocs igraph_has_loop
 any_loop <- has_loop_impl
 
 
@@ -2034,8 +2065,8 @@ any_loop <- has_loop_impl
 #'   is called whenever a vertex is visited. See details below.
 #' @param extra Additional argument to supply to the callback function.
 #' @param rho The environment in which the callback function is evaluated.
-#' @param neimode This argument is deprecated from igraph 1.3.0; use
-#'   `mode` instead.
+#' @param neimode `r lifecycle::badge("deprecated")` This argument is deprecated
+#'  from igraph 1.3.0; use `mode` instead.
 #' @return A named list with the following entries:
 #'   \item{root}{Numeric scalar.
 #'   The root vertex that was used as the starting point of the search.}
@@ -2105,11 +2136,15 @@ bfs <- function(
     callback = NULL,
     extra = NULL,
     rho = parent.frame(),
-    neimode) {
+    neimode = deprecated()) {
   ensure_igraph(graph)
 
-  if (!missing(neimode)) {
-    warning("Argument `neimode' is deprecated; use `mode' instead")
+  if (lifecycle::is_present(neimode)) {
+    lifecycle::deprecate_warn(
+      "1.3.0",
+      "bfs(neimode)",
+      "bfs(mode)"
+    )
     if (missing(mode)) {
       mode <- neimode
     }
@@ -2221,7 +2256,7 @@ bfs <- function(
 #'   algorithm. See details below.
 #' @param extra Additional argument to supply to the callback function.
 #' @param rho The environment in which the callback function is evaluated.
-#' @param neimode This argument is deprecated from igraph 1.3.0; use
+#' @param neimode `r lifecycle::badge("deprecated")` This argument is deprecated from igraph 1.3.0; use
 #'   `mode` instead.
 #' @return A named list with the following entries: \item{root}{Numeric scalar.
 #'   The root vertex that was used as the starting point of the search.}
@@ -2277,10 +2312,14 @@ dfs <- function(graph, root, mode = c("out", "in", "all", "total"),
                 unreachable = TRUE,
                 order = TRUE, order.out = FALSE, father = FALSE, dist = FALSE,
                 in.callback = NULL, out.callback = NULL, extra = NULL,
-                rho = parent.frame(), neimode) {
+                rho = parent.frame(), neimode = deprecated()) {
   ensure_igraph(graph)
-  if (!missing(neimode)) {
-    warning("Argument `neimode' is deprecated; use `mode' instead")
+  if (lifecycle::is_present(neimode)) {
+    lifecycle::deprecate_warn(
+      "1.3.0",
+      "dfs(neimode)",
+      "dfs(mode)"
+    )
     if (missing(mode)) {
       mode <- neimode
     }
@@ -2410,6 +2449,7 @@ components <- function(graph, mode = c("weak", "strong")) {
 
 #' @rdname components
 #' @export
+#' @cdocs igraph_is_connected
 is_connected <- is_connected_impl
 
 #' @rdname components
@@ -2486,9 +2526,9 @@ unfold_tree <- function(graph, mode = c("all", "out", "in", "total"), roots) {
 #' is d\[i\], the degree of vertex i if if i==j, -1 if i!=j and there is an edge
 #' between vertices i and j and 0 otherwise.
 #'
-#' A normalized version of the Laplacian Matrix is similar: element (i,j) is 1
-#' if i==j, -1/sqrt(d\[i\] d\[j\]) if i!=j and there is an edge between vertices i
-#' and j and 0 otherwise.
+#' The Laplacian matrix can also be normalized, with several
+#' conventional normalization methods.
+#' See the "Normalization methods" section on this page.
 #'
 #' The weighted version of the Laplacian simply works with the weighted degree
 #' instead of the plain degree. I.e. (i,j) is d\[i\], the weighted degree of
@@ -2497,8 +2537,9 @@ unfold_tree <- function(graph, mode = c("all", "out", "in", "total"), roots) {
 #' of the weights of its adjacent edges.
 #'
 #' @param graph The input graph.
-#' @param normalized Whether to calculate the normalized Laplacian. See
-#'   definitions below.
+#' @param normalization The normalization method to use when calculating the
+#'   Laplacian matrix. See the "Normalization methods" section on this page.
+#' @param normalized Deprecated, use `normalization` instead.
 #' @param weights An optional vector giving edge weights for weighted Laplacian
 #'   matrix. If this is `NULL` and the graph has an edge attribute called
 #'   `weight`, then it will be used automatically. Set this to `NA` if
@@ -2510,18 +2551,47 @@ unfold_tree <- function(graph, mode = c("all", "out", "in", "total"), roots) {
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
 #' @export
 #' @keywords graphs
+#' @section Normalization methods:
+#'
+#' The Laplacian matrix \eqn{L} is defined in terms of the adjacency matrix
+#' \eqn{A} and a diagonal matrix \eqn{D} containing the degrees as follows:
+#'
+#' - "unnormalized": Unnormalized Laplacian, \eqn{L = D - A}.
+#' - "symmetric": Symmetrically normalized Laplacian,
+#' \eqn{L = I - D^{-\frac{1}{2}} A D^{-\frac{1}{2}}}{L = I - D^(-1/2) A D^(-1/2)}.
+#' - "left": Left-stochastic normalized Laplacian, \eqn{{L = I - D^{-1} A}}{L = I - D^-1 A}.
+#' - "rigth": Right-stochastic normalized Laplacian, \eqn{L = I - A D^{-1}}{L = I - A D^-1}.
+#'
 #' @examples
 #'
 #' g <- make_ring(10)
 #' laplacian_matrix(g)
-#' laplacian_matrix(g, norm = TRUE)
-#' laplacian_matrix(g, norm = TRUE, sparse = FALSE)
+#' laplacian_matrix(g, normalization = "unnormalized")
+#' laplacian_matrix(g, normalization = "unnormalized", sparse = FALSE)
 #'
-laplacian_matrix <- function(graph, normalized = FALSE, weights = NULL,
-                             sparse = igraph_opt("sparsematrices")) {
+#' @cdocs igraph_get_laplacian_sparse
+#' @cdocs igraph_get_laplacian
+laplacian_matrix <- function(graph, weights = NULL,
+                             sparse = igraph_opt("sparsematrices"), normalization = c("unnormalized", "symmetric", "left", "right"), normalized) {
   # Argument checks
+  if (lifecycle::is_present(normalized)) {
+    lifecycle::deprecate_soft(
+      "2.0.3",
+      "make_lattice(normalized = 'provide normalization instead')",
+      details = c("`normalized` is now deprecated, use `normalization` instead.")
+    )
+    normalized <- as.logical(normalized)
+
+    normalization <- "unnormalized"
+    if (normalized) {
+      if (is_directed(graph)) {
+        normalization <- "left"
+      } else {
+        normalization <- "symmetric"
+      }
+    }
+  }
   ensure_igraph(graph)
-  normalized <- as.logical(normalized)
   if (is.null(weights) && "weight" %in% edge_attr_names(graph)) {
     weights <- E(graph)$weight
   }
@@ -2534,7 +2604,11 @@ laplacian_matrix <- function(graph, normalized = FALSE, weights = NULL,
 
   on.exit(.Call(R_igraph_finalizer))
   # Function call
-  res <- .Call(R_igraph_laplacian, graph, normalized, weights, sparse)
+  if (sparse) {
+    res <- get_laplacian_sparse_impl(graph, "out", normalization, weights)
+  } else {
+    res <- get_laplacian_impl(graph, "out", normalization, weights)
+  }
   if (sparse) {
     res <- igraph.i.spMatrix(res)
   }
@@ -2727,6 +2801,7 @@ max_bipartite_match <- function(graph, types = NULL, weights = NULL,
 #' sum(which_mutual(g)) / 2 == dyad_census(g)$mut
 #' @family structural.properties
 #' @export
+#' @cdocs igraph_is_mutual
 which_mutual <- is_mutual_impl
 
 
@@ -2799,4 +2874,5 @@ which_mutual <- is_mutual_impl
 #' knn(g5)
 #' @family structural.properties
 #' @export
+#' @cdocs igraph_avg_nearest_neighbor_degree
 knn <- avg_nearest_neighbor_degree_impl

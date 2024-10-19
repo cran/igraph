@@ -236,7 +236,7 @@ disjoint_union <- function(...) {
   vertex.attributes(res) <- attr
 
   if ("name" %in% names(attr) && any(duplicated(attr$name))) {
-    warning("Duplicate vertex names in disjoint union")
+    cli::cli_warn("Duplicate vertex names in disjoint union.")
   }
 
   ## Edge attributes
@@ -249,13 +249,13 @@ disjoint_union <- function(...) {
     noattr <- setdiff(names(attr), names(ea)) # existint and missing
     newattr <- setdiff(names(ea), names(attr)) # new
     for (a in seq_along(exattr)) {
-      attr[[exattr[a]]] <- c(attr[[exattr[a]]], ea[[exattr[a]]])
+      attr[[exattr[a]]] <- vctrs::vec_c(attr[[exattr[a]]], ea[[exattr[a]]])
     }
     for (a in seq_along(noattr)) {
-      attr[[noattr[a]]] <- c(attr[[noattr[a]]], rep(NA, ec[i]))
+      attr[[noattr[a]]] <- vctrs::vec_c(attr[[noattr[a]]], vctrs::unspecified(ec[[i]]))
     }
     for (a in seq_along(newattr)) {
-      attr[[newattr[a]]] <- c(rep(NA, cumec[i]), ea[[newattr[a]]])
+      attr[[newattr[a]]] <- vctrs::vec_c(vctrs::unspecified(cumec[[i]]), ea[[newattr[a]]])
     }
   }
   edge.attributes(res) <- attr
@@ -283,7 +283,7 @@ disjoint_union <- function(...) {
   if (byname == "auto") {
     byname <- all(sapply(graphs, is_named))
     if (nonamed != 0 && nonamed != length(graphs)) {
-      warning("Some, but not all graphs are named, not using vertex names")
+      cli::cli_warn("Some, but not all graphs are named, not using vertex names.")
     }
   } else if (byname && nonamed != length(graphs)) {
     stop("Some graphs are not named")
@@ -619,7 +619,7 @@ difference.igraph <- function(big, small, byname = "auto", ...) {
   if (byname == "auto") {
     byname <- nonamed == 2
     if (nonamed == 1) {
-      warning("One, but not both graphs are named, not using vertex names")
+      cli::cli_warn("One, but not both graphs are named, not using vertex names.")
     }
   } else if (byname && nonamed != 2) {
     stop("Some graphs are not named")
@@ -768,7 +768,7 @@ compose <- function(g1, g2, byname = "auto") {
   if (byname == "auto") {
     byname <- nonamed == 2
     if (nonamed == 1) {
-      warning("One, but not both graphs are named, not using vertex names")
+      cli::cli_warn("One, but not both graphs are named, not using vertex names.")
     }
   } else if (byname && nonamed != 2) {
     stop("Some graphs are not named")
@@ -1267,6 +1267,7 @@ rep.igraph <- function(x, n, mark = TRUE, ...) {
 #' reverse_edges(g, 2)
 #' @family functions for manipulating graph structure
 #' @export
+#' @cdocs igraph_reverse_edges
 reverse_edges <- reverse_edges_impl
 
 #' @rdname reverse_edges

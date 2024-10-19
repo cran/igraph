@@ -154,7 +154,7 @@ sample_seq <- function(low, high, length) {
 #' @return A logical vector representing the resolved vertex type for each
 #'   vertex in the graph
 #' @author Tamas Nepusz \email{ntamas@@gmail.com}
-#' @keywords internal
+#' @dev
 #'
 handle_vertex_type_arg <- function(types, graph, required = T) {
   if (is.null(types) && "type" %in% vertex_attr_names(graph)) {
@@ -162,7 +162,7 @@ handle_vertex_type_arg <- function(types, graph, required = T) {
   }
   if (!is.null(types)) {
     if (!is.logical(types)) {
-      warning("vertex types converted to logical")
+      cli::cli_warn("vertex types converted to logical.")
     }
     types <- as.logical(types)
     if (any(is.na(types))) {
@@ -173,18 +173,6 @@ handle_vertex_type_arg <- function(types, graph, required = T) {
     stop("Not a bipartite graph, supply `types' argument or add a vertex attribute named `type'")
   }
   return(types)
-}
-
-igraph.match.arg <- function(arg, choices, several.ok = FALSE) {
-  if (missing(choices)) {
-    formal.args <- formals(sys.function(sys.parent()))
-    choices <- eval(formal.args[[deparse(substitute(arg))]])
-  }
-
-  arg <- tolower(arg)
-  choices <- tolower(choices)
-
-  match.arg(arg = arg, choices = choices, several.ok = several.ok)
 }
 
 igraph.i.spMatrix <- function(M) {
@@ -220,4 +208,5 @@ igraph.i.spMatrix <- function(M) {
 #' convex_hull(M)
 #' @family other
 #' @export
+#' @cdocs igraph_convex_hull
 convex_hull <- convex_hull_impl

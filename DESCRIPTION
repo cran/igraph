@@ -1,6 +1,6 @@
 Package: igraph
-Version: 2.0.3
 Title: Network Analysis and Visualization
+Version: 2.1.1
 Authors@R: c(
     person("Gábor", "Csárdi", , "csardi.gabor@gmail.com", role = "aut",
            comment = c(ORCID = "0000-0001-7098-9676")),
@@ -30,12 +30,13 @@ BugReports: https://github.com/igraph/rigraph/issues
 Depends: methods, R (>= 3.5.0)
 Imports: cli, graphics, grDevices, lifecycle, magrittr, Matrix,
         pkgconfig (>= 2.0.0), rlang, stats, utils, vctrs
-Suggests: ape (>= 5.7-0.1), callr, decor, digest, graph, igraphdata,
-        knitr, rgl, rmarkdown, scales, stats4, tcltk, testthat, vdiffr,
-        withr
-LinkingTo: cpp11 (>= 0.4.7)
+Suggests: ape (>= 5.7-0.1), callr, decor, digest, igraphdata, knitr,
+        rgl, rmarkdown, scales, stats4, tcltk, testthat, vdiffr, withr
+Enhances: graph
+LinkingTo: cpp11 (>= 0.5.0)
 VignetteBuilder: knitr
-Config/Needs/build: roxygen2, devtools, irlba, pkgconfig
+Config/Needs/build: roxygen2, devtools, irlba, pkgconfig,
+        igraph/igraph.r2cdocs, moodymudskipper/devtag
 Config/Needs/coverage: covr
 Config/Needs/website: readr
 Config/testthat/edition: 3
@@ -43,10 +44,10 @@ Config/testthat/parallel: true
 Config/testthat/start-first: vs-es, scan, vs-operators, weakref,
         watts.strogatz.game
 Encoding: UTF-8
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 SystemRequirements: libxml2 (optional), glpk (>= 4.57, optional)
 NeedsCompilation: yes
-Packaged: 2024-03-12 18:19:12 UTC; kirill
+Packaged: 2024-10-19 07:41:34 UTC; kirill
 Author: Gábor Csárdi [aut] (<https://orcid.org/0000-0001-7098-9676>),
   Tamás Nepusz [aut] (<https://orcid.org/0000-0002-1451-338X>),
   Vincent Traag [aut] (<https://orcid.org/0000-0003-3170-3879>),
@@ -59,4 +60,4 @@ Author: Gábor Csárdi [aut] (<https://orcid.org/0000-0001-7098-9676>),
   Chan Zuckerberg Initiative [fnd]
 Maintainer: Kirill Müller <kirill@cynkra.com>
 Repository: CRAN
-Date/Publication: 2024-03-13 07:30:02 UTC
+Date/Publication: 2024-10-19 23:40:02 UTC

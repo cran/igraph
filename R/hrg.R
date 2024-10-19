@@ -179,12 +179,7 @@ NULL
 #' in Networks. In E. M. Airoldi et al. (Eds.): ICML 2006 Ws, *Lecture
 #' Notes in Computer Science* 4503, 1--13. Springer-Verlag, Berlin Heidelberg
 #' (2007).
-#' @examples
-#' \dontrun{
-#' ## We are not running these examples any more, because they
-#' ## take a long time (~15 seconds) to run and this is against the CRAN
-#' ## repository policy. Copy and paste them by hand to your R prompt if
-#' ## you want to run them.
+#' @examplesIf rlang::is_interactive()
 #'
 #' ## A graph with two dense groups
 #' g <- sample_gnp(10, p = 1 / 2) + sample_gnp(10, p = 1 / 2)
@@ -198,7 +193,6 @@ NULL
 #' ## Prediction of missing edges
 #' g2 <- make_full_graph(4) + (make_full_graph(4) - path(1, 2))
 #' predict_edges(g2)
-#' }
 #' @export
 #' @family hierarchical random graph functions
 fit_hrg <- function(graph, hrg = NULL, start = FALSE, steps = 0) {
@@ -260,6 +254,7 @@ fit_hrg <- function(graph, hrg = NULL, start = FALSE, steps = 0) {
 #'     vertices. The order is the same as in the `parents` vector.}
 #' @family hierarchical random graph functions
 #' @export
+#' @cdocs igraph_hrg_consensus
 consensus_tree <- hrg_consensus_impl
 
 
@@ -277,6 +272,7 @@ consensus_tree <- hrg_consensus_impl
 #'
 #' @family hierarchical random graph functions
 #' @export
+#' @cdocs igraph_hrg_create
 hrg <- hrg_create_impl
 
 
@@ -290,6 +286,7 @@ hrg <- hrg_create_impl
 #'
 #' @family hierarchical random graph functions
 #' @export
+#' @cdocs igraph_from_hrg_dendrogram
 hrg_tree <- function(hrg) {
   out <- from_hrg_dendrogram_impl(hrg)
 
@@ -308,6 +305,7 @@ hrg_tree <- function(hrg) {
 #'
 #' @family hierarchical random graph functions
 #' @export
+#' @cdocs igraph_hrg_game
 sample_hrg <- hrg_game_impl
 
 #' Predict edges based on a hierarchical random graph model
@@ -346,12 +344,7 @@ sample_hrg <- hrg_game_impl
 #' in Networks. In E. M. Airoldi et al. (Eds.): ICML 2006 Ws, *Lecture
 #' Notes in Computer Science* 4503, 1--13. Springer-Verlag, Berlin Heidelberg
 #' (2007).
-#' @examples
-#' \dontrun{
-#' ## We are not running these examples any more, because they
-#' ## take a long time (~15 seconds) to run and this is against the CRAN
-#' ## repository policy. Copy and paste them by hand to your R prompt if
-#' ## you want to run them.
+#' @examplesIf rlang::is_interactive()
 #'
 #' ## A graph with two dense groups
 #' g <- sample_gnp(10, p = 1 / 2) + sample_gnp(10, p = 1 / 2)
@@ -364,7 +357,6 @@ sample_hrg <- hrg_game_impl
 #' ## Prediction of missing edges
 #' g2 <- make_full_graph(4) + (make_full_graph(4) - path(1, 2))
 #' predict_edges(g2)
-#' }
 #' @export
 #' @family hierarchical random graph functions
 predict_edges <- function(graph, hrg = NULL, start = FALSE, num.samples = 10000,

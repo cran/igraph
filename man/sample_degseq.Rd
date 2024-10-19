@@ -8,7 +8,8 @@
 sample_degseq(
   out.deg,
   in.deg = NULL,
-  method = c("simple", "vl", "simple.no.multiple", "simple.no.multiple.uniform")
+  method = c("configuration", "vl", "fast.heur.simple", "configuration.simple",
+    "edge.switching.simple")
 )
 
 degseq(..., deterministic = FALSE)
@@ -22,9 +23,7 @@ should be even. For directed graphs its sum should be the same as the sum of
 \item{in.deg}{For directed graph, the in-degree sequence. By default this is
 \code{NULL} and an undirected graph is created.}
 
-\item{method}{Character, the method for generating the graph. Right now the
-\dQuote{simple}, \dQuote{simple.no.multiple} and \dQuote{vl} methods are
-implemented.}
+\item{method}{Character, the method for generating the graph. See Details.}
 
 \item{...}{Passed to \code{realize_degseq()} if \sQuote{deterministic} is true,
 or to \code{sample_degseq()} otherwise.}
@@ -39,68 +38,157 @@ It is often useful to create a graph with given vertex degrees. This function
 creates such a graph in a randomized manner.
 }
 \details{
-The \dQuote{simple} method connects the out-stubs of the edges (undirected
-graphs) or the out-stubs and in-stubs (directed graphs) together. This way
-loop edges and also multiple edges may be generated. This method is not
-adequate if one needs to generate simple graphs with a given degree
-sequence. The multiple and loop edges can be deleted, but then the degree
-sequence is distorted and there is nothing to ensure that the graphs are
-sampled uniformly.
+The \dQuote{configuration} method (formerly called "simple") implements the
+configuration model. For undirected graphs, it puts all vertex IDs in a bag
+such that the multiplicity of a vertex in the bag is the same as its degree.
+Then it draws pairs from the bag until the bag becomes empty. This method may
+generate both loop (self) edges and multiple edges. For directed graphs,
+the algorithm is basically the same, but two separate bags are used
+for the in- and out-degrees. Undirected graphs are generated
+with probability proportional to \eqn{(\prod_{i<j} A_{ij} ! \prod_i A_{ii} !!)^{-1}},
+where A denotes the adjacency matrix and !! denotes the double factorial.
+Here A is assumed to have twice the number of self-loops on its diagonal.
+The corresponding expression for directed graphs is \eqn{(\prod_{i,j} A_{ij}!)^{-1}}.
+Thus the probability of all simple graphs
+(which only have 0s and 1s in the adjacency matrix)
+is the same, while that of non-simple ones depends on their edge and
+self-loop multiplicities.
 
-The \dQuote{simple.no.multiple} method is similar to \dQuote{simple}, but
-tries to avoid multiple and loop edges and restarts the generation from
-scratch if it gets stuck. It is not guaranteed to sample uniformly from the
-space of all possible graphs with the given sequence, but it is relatively
-fast and it will eventually succeed if the provided degree sequence is
-graphical, but there is no upper bound on the number of iterations.
+The \dQuote{fast.heur.simple} method (formerly called "simple.no.multiple")
+generates simple graphs.
+It is similar to \dQuote{configuration} but tries to avoid multiple and
+loop edges and restarts the generation from scratch if it gets stuck.
+It can generate all simple realizations of a degree sequence,
+but it is not guaranteed to sample them uniformly.
+This method is relatively fast and it will eventually succeed
+if the provided degree sequence is graphical, but there is no upper bound on
+the number of iterations.
 
-The \dQuote{simple.no.multiple.uniform} method is a variant of
-\dQuote{simple.no.multiple} with the added benefit of sampling uniformly
-from the set of all possible simple graphs with the given degree sequence.
-Ensuring uniformity has some performance implications, though.
+The \dQuote{configuration.simple} method (formerly called "simple.no.multiple.uniform")
+is
+identical to \dQuote{configuration}, but if the generated graph is not simple,
+it rejects it and re-starts the generation.
+It generates all simple graphs with the same probability.
 
-The \dQuote{vl} method is a more sophisticated generator. The algorithm and
-the implementation was done by Fabien Viger and Matthieu Latapy. This
-generator always generates undirected, connected simple graphs, it is an
-error to pass the \code{in.deg} argument to it.  The algorithm relies on
-first creating an initial (possibly unconnected) simple undirected graph
-with the given degree sequence (if this is possible at all). Then some
-rewiring is done to make the graph connected. Finally a Monte-Carlo
-algorithm is used to randomize the graph. The \dQuote{vl} samples from the
-undirected, connected simple graphs uniformly.
+The \dQuote{vl} method samples undirected connected graphs approximately uniformly.
+It is a Monte Carlo method based on degree-preserving edge switches.
+This generator should be favoured if undirected and connected graphs are to be
+generated and execution time is not a concern. igraph uses
+the original implementation of Fabien Viger; for the algorithm, see
+\url{https://www-complexnetworks.lip6.fr/~latapy/FV/generation.html}
+and the paper \url{https://arxiv.org/abs/cs/0502085}.
+
+The \dQuote{edge.switching.simple} is an MCMC sampler based on
+degree-preserving edge switches. It generates simple undirected or directed graphs.
 }
 \examples{
 
 ## The simple generator
-g <- sample_degseq(rep(2, 100))
-degree(g)
-is_simple(g) # sometimes TRUE, but can be FALSE
-g2 <- sample_degseq(1:10, 10:1)
-degree(g2, mode = "out")
-degree(g2, mode = "in")
+undirected_graph <- sample_degseq(rep(2, 100))
+degree(undirected_graph)
+is_simple(undirected_graph) # sometimes TRUE, but can be FALSE
+
+
+directed_graph <- sample_degseq(1:10, 10:1)
+degree(directed_graph, mode = "out")
+degree(directed_graph, mode = "in")
 
 ## The vl generator
-g3 <- sample_degseq(rep(2, 100), method = "vl")
-degree(g3)
-is_simple(g3) # always TRUE
+vl_graph <- sample_degseq(rep(2, 100), method = "vl")
+degree(vl_graph)
+is_simple(vl_graph) # always TRUE
 
 ## Exponential degree distribution
-## Note, that we correct the degree sequence if its sum is odd
-degs <- sample(1:100, 100, replace = TRUE, prob = exp(-0.5 * (1:100)))
-if (sum(degs) \%\% 2 != 0) {
-  degs[1] <- degs[1] + 1
+## We fix the seed as there's no guarantee
+##  that randomly picked integers will form a graphical degree sequence
+## (i.e. that there's a graph with these degrees)
+## withr::with_seed(42, {
+## exponential_degrees <- sample(1:100, 100, replace = TRUE, prob = exp(-0.5 * (1:100)))
+## })
+exponential_degrees <- c(
+  5L, 6L, 1L, 4L, 3L, 2L, 3L, 1L, 3L, 3L, 2L, 3L, 6L, 1L, 2L,
+  6L, 8L, 1L, 2L, 2L, 5L, 1L, 10L, 6L, 1L, 2L, 1L, 5L, 2L, 4L,
+  3L, 4L, 1L, 3L, 1L, 4L, 1L, 1L, 5L, 2L, 1L, 2L, 1L, 8L, 2L, 7L,
+  5L, 3L, 8L, 2L, 1L, 1L, 2L, 4L, 1L, 3L, 3L, 1L, 1L, 2L, 3L, 9L,
+  3L, 2L, 4L, 1L, 1L, 4L, 3L, 1L, 1L, 1L, 1L, 2L, 1L, 3L, 1L, 1L,
+  2L, 1L, 2L, 1L, 1L, 3L, 3L, 2L, 1L, 1L, 1L, 1L, 3L, 1L, 1L, 6L,
+  6L, 3L, 1L, 2L, 3L, 2L
+)
+## Note, that we'd have to correct the degree sequence if its sum is odd
+is_exponential_degrees_sum_odd <- (sum(exponential_degrees) \%\% 2 != 0)
+if (is_exponential_degrees_sum_odd) {
+  exponential_degrees[1] <- exponential_degrees[1] + 1
 }
-g4 <- sample_degseq(degs, method = "vl")
-all(degree(g4) == degs)
+exp_vl_graph <- sample_degseq(exponential_degrees, method = "vl")
+all(degree(exp_vl_graph) == exponential_degrees)
 
-## Power-law degree distribution
-## Note, that we correct the degree sequence if its sum is odd
-degs <- sample(1:100, 100, replace = TRUE, prob = (1:100)^-2)
-if (sum(degs) \%\% 2 != 0) {
-  degs[1] <- degs[1] + 1
+## An example that does not work
+\dontshow{if (rlang::is_interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+## withr::with_seed(11, {
+## exponential_degrees <- sample(1:100, 100, replace = TRUE, prob = exp(-0.5 * (1:100)))
+## })
+exponential_degrees <- c(
+  1L, 1L, 2L, 1L, 1L, 7L, 1L, 1L, 5L, 1L, 1L, 2L, 5L, 4L, 3L,
+  2L, 2L, 1L, 1L, 2L, 1L, 3L, 1L, 1L, 1L, 2L, 2L, 1L, 1L, 2L, 2L,
+  1L, 2L, 1L, 4L, 3L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 3L, 1L, 4L, 3L,
+  1L, 2L, 4L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 4L, 1L, 2L, 1L, 3L, 1L,
+  2L, 3L, 1L, 1L, 2L, 1L, 2L, 3L, 2L, 2L, 1L, 6L, 2L, 1L, 1L, 1L,
+  1L, 1L, 2L, 2L, 1L, 4L, 2L, 1L, 3L, 4L, 1L, 1L, 3L, 1L, 2L, 4L,
+  1L, 3L, 1L, 2L, 1L
+)
+## Note, that we'd have to correct the degree sequence if its sum is odd
+is_exponential_degrees_sum_odd <- (sum(exponential_degrees) \%\% 2 != 0)
+if (is_exponential_degrees_sum_odd) {
+  exponential_degrees[1] <- exponential_degrees[1] + 1
 }
-g5 <- sample_degseq(degs, method = "vl")
-all(degree(g5) == degs)
+exp_vl_graph <- sample_degseq(exponential_degrees, method = "vl")
+\dontshow{\}) # examplesIf}
+## Power-law degree distribution
+## We fix the seed as there's no guarantee
+##  that randomly picked integers will form a graphical degree sequence
+## (i.e. that there's a graph with these degrees)
+## withr::with_seed(1, {
+##  powerlaw_degrees <- sample(1:100, 100, replace = TRUE, prob = (1:100)^-2)
+## })
+powerlaw_degrees <- c(
+  1L, 1L, 1L, 6L, 1L, 6L, 10L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 3L,
+  1L, 2L, 43L, 1L, 3L, 9L, 1L, 2L, 1L, 1L, 1L, 1L, 1L, 4L, 1L,
+  1L, 1L, 1L, 1L, 3L, 2L, 3L, 1L, 2L, 1L, 3L, 2L, 3L, 1L, 1L, 3L,
+  1L, 1L, 2L, 2L, 1L, 4L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 1L, 7L, 1L,
+  1L, 1L, 2L, 1L, 1L, 3L, 1L, 5L, 1L, 4L, 1L, 1L, 1L, 5L, 4L, 1L,
+  3L, 13L, 1L, 2L, 1L, 1L, 2L, 1L, 2L, 1L, 1L, 1L, 1L, 1L, 2L,
+  5L, 3L, 3L, 1L, 1L, 3L, 1L
+)
+## Note, that we correct the degree sequence if its sum is odd
+is_exponential_degrees_sum_odd <- (sum(powerlaw_degrees) \%\% 2 != 0)
+if (is_exponential_degrees_sum_odd) {
+  powerlaw_degrees[1] <- powerlaw_degrees[1] + 1
+}
+powerlaw_vl_graph <- sample_degseq(powerlaw_degrees, method = "vl")
+all(degree(powerlaw_vl_graph) == powerlaw_degrees)
+
+## An example that does not work
+\dontshow{if (rlang::is_interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+## withr::with_seed(2, {
+##  powerlaw_degrees <- sample(1:100, 100, replace = TRUE, prob = (1:100)^-2)
+## })
+powerlaw_degrees <- c(
+  1L, 2L, 1L, 1L, 10L, 10L, 1L, 4L, 1L, 1L, 1L, 1L, 2L, 1L, 1L,
+  4L, 21L, 1L, 1L, 1L, 2L, 1L, 4L, 1L, 1L, 1L, 1L, 1L, 14L, 1L,
+  1L, 1L, 3L, 4L, 1L, 2L, 4L, 1L, 2L, 1L, 25L, 1L, 1L, 1L, 10L,
+  3L, 19L, 1L, 1L, 3L, 1L, 1L, 2L, 8L, 1L, 3L, 3L, 36L, 2L, 2L,
+  3L, 5L, 2L, 1L, 4L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L,
+  1L, 4L, 1L, 1L, 1L, 2L, 1L, 1L, 1L, 4L, 18L, 1L, 2L, 1L, 21L,
+  1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L
+)
+## Note, that we correct the degree sequence if its sum is odd
+is_exponential_degrees_sum_odd <- (sum(powerlaw_degrees) \%\% 2 != 0)
+if (is_exponential_degrees_sum_odd) {
+  powerlaw_degrees[1] <- powerlaw_degrees[1] + 1
+}
+powerlaw_vl_graph <- sample_degseq(powerlaw_degrees, method = "vl")
+all(degree(powerlaw_vl_graph) == powerlaw_degrees)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=simplify]{simplify()}} to get rid of the multiple and/or loops edges,
@@ -110,6 +198,7 @@ Random graph models (games)
 \code{\link{erdos.renyi.game}()},
 \code{\link{sample_}()},
 \code{\link{sample_bipartite}()},
+\code{\link{sample_chung_lu}()},
 \code{\link{sample_correlated_gnp}()},
 \code{\link{sample_correlated_gnp_pair}()},
 \code{\link{sample_dot_product}()},

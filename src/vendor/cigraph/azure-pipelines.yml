@@ -2,6 +2,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
+  CMAKE_COLOR_DIAGNOSTICS: ON
   CMAKE_GENERATOR: Ninja
   CCACHE_DIR: $(Pipeline.Workspace)/ccache
   CCACHE_MAXSIZE: 256M
@@ -76,21 +77,19 @@ jobs:
           extra_cmake_args: '-DBLA_VENDOR=OpenBLAS'
           build_shared: true
 
-  - job: linux_clang_18
-    pool:
-      vmImage: 'ubuntu-22.04'
+  - job: linux_clang_20
     steps:
       - script: |
           sudo apt-get install ninja-build ccache -y
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
-          sudo ./llvm.sh 18
+          sudo ./llvm.sh 20
         displayName: Install dependencies
 
       - template: .azure/build.yml
         parameters:
           build_type: Debug
-          extra_cmake_args: '-DUSE_SANITIZER=Address\;Undefined -DCMAKE_C_FLAGS="-Og -fno-sanitize-recover=undefined -fno-sanitize=float-divide-by-zero" -DCMAKE_CXX_FLAGS="-Og -fno-sanitize-recover=undefined -fno-sanitize=float-divide-by-zero" -DCMAKE_C_COMPILER=clang-18  -DCMAKE_CXX_COMPILER=clang++-18'
+          extra_cmake_args: '-DUSE_SANITIZER=Address\;Undefined -DCMAKE_C_FLAGS="-Og -fno-sanitize-recover=undefined -fno-sanitize=float-divide-by-zero" -DCMAKE_CXX_FLAGS="-Og -fno-sanitize-recover=undefined -fno-sanitize=float-divide-by-zero" -DCMAKE_C_COMPILER=clang-20  -DCMAKE_CXX_COMPILER=clang++-20'
 
   - job: linux_x87
     steps:
@@ -129,27 +128,24 @@ jobs:
 
   - job: windows_static
     pool:
-       vmImage: windows-2022
+       vmImage: windows-latest
 
     steps:
       - template: .azure/build-win.yml
 
   - job: windows_shared
     pool:
-       vmImage: windows-2022
+       vmImage: windows-latest
 
     steps:
       - template: .azure/build-win.yml
         parameters:
           build_shared: true
-          vsver: '14.29' # use VS 2019 instead of 2017
+          vsver: '14.4' # latest VS2022
           vcpkg_target_triplet: x64-windows
 
   - job: documentation
     steps:
-      - script: sudo apt-get update
-        displayName: Update package registry
-
       - script: sudo apt-get install ninja-build xmlto texinfo source-highlight libxml2-utils xsltproc fop docbook2x -y
         displayName: Install dependencies
 

@@ -502,7 +502,7 @@ as_bipartite <- function(...) layout_spec(layout_as_bipartite, ...)
 #' @return A matrix with two columns and as many rows as the number of vertices
 #'   in the input graph.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @seealso [layout()] and [layout.drl()] for other layout
+#' @seealso [layout()] and [layout_with_drl()] for other layout
 #' algorithms, [plot.igraph()] and [tkplot()] on how to
 #' plot graphs and [star()] on how to create ring graphs.
 #' @keywords graphs
@@ -634,9 +634,19 @@ layout_as_tree <- function(graph, root = numeric(), circular = FALSE,
 #' @export
 as_tree <- function(...) layout_spec(layout_as_tree, ...)
 
+
+#' The Reingold-Tilford graph layout algorithm
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `layout.reingold.tilford()` was renamed to `layout_as_tree()` to create a more
+#' consistent API.
+#' @param ... Passed to the new layout functions.
+#' @param params Passed to the new layout functions as arguments.
+#' @keywords internal
 #' @export
-#' @rdname layout.deprecated
 layout.reingold.tilford <- function(..., params = list()) {
+  lifecycle::deprecate_soft("2.1.0", "layout.reingold.tilford()", "layout_as_tree()")
   do_call(layout_as_tree, .args = c(list(...), params))
 }
 
@@ -659,7 +669,7 @@ layout.reingold.tilford <- function(..., params = list()) {
 #' @keywords graphs
 #' @export
 #' @family graph layouts
-#' @examplesIf igraph:::has_glpk()
+#' @examplesIf igraph:::has_glpk() && rlang::is_installed("igraphdata")
 #'
 #' ## Place vertices on a circle, order them according to their
 #' ## community
@@ -686,9 +696,18 @@ layout_in_circle <- function(graph, order = V(graph)) {
 #' @export
 in_circle <- function(...) layout_spec(layout_in_circle, ...)
 
+#' Graph layout with vertices on a circle
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `layout.circle()` was renamed to `layout_in_circle()` to create a more
+#' consistent API.
+#' @param ... Passed to the new layout functions.
+#' @param params Passed to the new layout functions as arguments.
+#' @keywords internal
 #' @export
-#' @rdname layout.deprecated
 layout.circle <- function(..., params = list()) {
+  lifecycle::deprecate_soft("2.1.0", "layout.circle()", "layout_in_circle()")
   do_call(layout_in_circle, .args = c(list(...), params))
 }
 
@@ -770,7 +789,7 @@ layout_nicely <- function(graph, dim = 2, ...) {
       if ("weight" %in% edge_attr_names(graph)) {
         weights <- E(graph)$weight
         if (any(weights <= 0, na.rm = TRUE)) {
-          warning("Non-positive edge weight found, ignoring all weights during graph layout.")
+          cli::cli_warn("Non-positive edge weight found, ignoring all weights during graph layout.")
           args$weights <- NA
         }
       }
@@ -805,7 +824,6 @@ nicely <- function(...) layout_spec(layout_nicely, ...)
 #' other. If you want to change the order of the vertices, then see the
 #' [permute()] function.
 #'
-#' @aliases layout.grid.3d
 #' @param graph The input graph.
 #' @param width The number of vertices in a single row of the grid. If this is
 #'   zero or negative, then for 2d layouts the width of the grid will be the
@@ -861,24 +879,17 @@ layout_on_grid <- function(graph, width = 0, height = 0, dim = 2) {
 on_grid <- function(...) layout_spec(layout_on_grid, ...)
 
 
-#' @rdname layout_on_grid
+#' Simple grid layout
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' Use [layout_on_grid()].
+#' @inheritParams layout_on_grid
+#' @export
 #' @export
 #' @keywords internal
 layout.grid.3d <- function(graph, width = 0, height = 0) {
-  .Deprecated("layout_on_grid", msg = paste0(
-    "layout.grid.3d is deprecated from\n",
-    "igraph 0.8.0, please use layout_on_grid instead"
-  ))
-  # Argument checks
-  ensure_igraph(graph)
-  width <- as.numeric(width)
-  height <- as.numeric(height)
-
-  on.exit(.Call(R_igraph_finalizer))
-  # Function call
-  res <- .Call(R_igraph_layout_grid_3d, graph, width, height)
-
-  res
+  lifecycle::deprecate_stop("2.1.0", "layout.grid.3d()", "layout_on_grid()")
 }
 
 ## ----------------------------------------------------------------
@@ -915,9 +926,18 @@ layout_on_sphere <- function(graph) {
 #' @export
 on_sphere <- function(...) layout_spec(layout_on_sphere, ...)
 
+#' Graph layout with vertices on the surface of a sphere
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `layout.sphere()` was renamed to `layout_on_sphere()` to create a more
+#' consistent API.
+#' @param ... Passed to the new layout functions.
+#' @param params Passed to the new layout functions as arguments.
+#' @keywords internal
 #' @export
-#' @rdname layout.deprecated
 layout.sphere <- function(..., params = list()) {
+  lifecycle::deprecate_soft("2.1.0", "layout.sphere()", "layout_on_sphere()")
   do_call(layout_on_sphere, .args = c(list(...), params))
 }
 
@@ -959,15 +979,18 @@ layout_randomly <- function(graph, dim = 2) {
 #' @export
 randomly <- function(...) layout_spec(layout_randomly, ...)
 
-#' Deprecated layout functions
+#' Randomly place vertices on a plane or in 3d space
+#' @description
+#' `r lifecycle::badge("deprecated")`
 #'
-#' Please use the new names, see [layout_()].
-#'
+#' `layout.random()` was renamed to `layout_randomly()` to create a more
+#' consistent API.
 #' @param ... Passed to the new layout functions.
 #' @param params Passed to the new layout functions as arguments.
+#' @keywords internal
 #' @export
-#' @rdname layout.deprecated
 layout.random <- function(..., params = list()) {
+  lifecycle::deprecate_soft("2.1.0", "layout.random()", "layout_randomly()")
   do_call(layout_randomly, .args = c(list(...), params))
 }
 
@@ -1166,8 +1189,9 @@ with_dh <- function(...) layout_spec(layout_with_dh, ...)
 #'   \sQuote{z} coordinates.
 #' @param maxz Similar to `minx`, but gives the upper boundaries of the
 #'   \sQuote{z} coordinates.
-#' @param coolexp,maxdelta,area,repulserad These arguments are not supported
-#'   from igraph version 0.8.0 and are ignored (with a warning).
+#' @param coolexp,maxdelta,area,repulserad `r lifecycle::badge("deprecated")` These
+#'  arguments are not supported from igraph version 0.8.0 and are ignored
+#'  (with a warning).
 #' @param maxiter A deprecated synonym of `niter`, for compatibility.
 #' @return A two- or three-column matrix, each row giving the coordinates of a
 #'   vertex, according to the ids of the vertex ids.
@@ -1206,7 +1230,9 @@ layout_with_fr <- function(graph, coords = NULL, dim = 2,
                            grid = c("auto", "grid", "nogrid"), weights = NULL,
                            minx = NULL, maxx = NULL, miny = NULL, maxy = NULL,
                            minz = NULL, maxz = NULL,
-                           coolexp, maxdelta, area, repulserad, maxiter) {
+                           coolexp = deprecated(), maxdelta = deprecated(),
+                           area = deprecated(), repulserad = deprecated(),
+                           maxiter = deprecated()) {
   # Argument checks
   ensure_igraph(graph)
   coords[] <- as.numeric(coords)
@@ -1242,17 +1268,17 @@ layout_with_fr <- function(graph, coords = NULL, dim = 2,
   if (!is.null(maxy)) maxy <- as.numeric(maxy)
   if (!is.null(minz)) minz <- as.numeric(minz)
   if (!is.null(maxz)) maxz <- as.numeric(maxz)
-  if (!missing(coolexp)) {
-    warning("Argument `coolexp' is deprecated and has no effect")
+  if (lifecycle::is_present(coolexp)) {
+    lifecycle::deprecate_warn("0.8.0", "layout_with_fr(coolexp = )")
   }
-  if (!missing(maxdelta)) {
-    warning("Argument `maxdelta' is deprecated and has no effect")
+  if (lifecycle::is_present(maxdelta)) {
+    lifecycle::deprecate_warn("0.8.0", "layout_with_fr(maxdelta = )")
   }
-  if (!missing(area)) {
-    warning("Argument `area' is deprecated and has no effect")
+  if (lifecycle::is_present(area)) {
+    lifecycle::deprecate_warn("0.8.0", "layout_with_fr(area = )")
   }
-  if (!missing(repulserad)) {
-    warning("Argument `repulserad' is deprecated and has no effect")
+  if (lifecycle::is_present(repulserad)) {
+    lifecycle::deprecate_warn("0.8.0", "layout_with_fr(repulserad = )")
   }
 
   on.exit(.Call(R_igraph_finalizer))
@@ -1277,9 +1303,18 @@ layout_with_fr <- function(graph, coords = NULL, dim = 2,
 #' @export
 with_fr <- function(...) layout_spec(layout_with_fr, ...)
 
+#' The Fruchterman-Reingold layout algorithm
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `layout.fruchterman.reingold()` was renamed to `layout_with_fr()` to create a more
+#' consistent API.
+#' @param ... Passed to the new layout functions.
+#' @param params Passed to the new layout functions as arguments.
+#' @keywords internal
 #' @export
-#' @rdname layout.deprecated
 layout.fruchterman.reingold <- function(..., params = list()) {
+  lifecycle::deprecate_soft("2.1.0", "layout.fruchterman.reingold()", "layout_with_fr()")
   do_call(layout_with_fr, .args = c(list(...), params))
 }
 
@@ -1471,8 +1506,8 @@ with_graphopt <- function(...) layout_spec(layout_with_graphopt, ...)
 #'   \sQuote{z} coordinates.
 #' @param maxz Similar to `minx`, but gives the upper boundaries of the
 #'   \sQuote{z} coordinates.
-#' @param niter,sigma,initemp,coolexp These arguments are not supported from
-#'   igraph version 0.8.0 and are ignored (with a warning).
+#' @param niter,sigma,initemp,coolexp `r lifecycle::badge("deprecated")` These
+#' arguments are not supported from igraph version 0.8.0 and are ignored (with a warning).
 #' @param start Deprecated synonym for `coords`, for compatibility.
 #' @return A numeric matrix with two (dim=2) or three (dim=3) columns, and as
 #'   many rows as the number of vertices, the x, y and potentially z coordinates
@@ -1496,7 +1531,11 @@ layout_with_kk <- function(graph, coords = NULL, dim = 2,
                            epsilon = 0.0, kkconst = max(vcount(graph), 1),
                            weights = NULL, minx = NULL, maxx = NULL,
                            miny = NULL, maxy = NULL, minz = NULL, maxz = NULL,
-                           niter, sigma, initemp, coolexp, start) {
+                           niter = deprecated(),
+                           sigma = deprecated(),
+                           initemp = deprecated(),
+                           coolexp = deprecated(),
+                           start = deprecated()) {
   # Argument checks
   if (!missing(coords) && !missing(start)) {
     stop("Both `coords' and `start' are given, give only one of them.")
@@ -1528,17 +1567,17 @@ layout_with_kk <- function(graph, coords = NULL, dim = 2,
   if (!is.null(minz)) minz <- as.numeric(minz)
   if (!is.null(maxz)) maxz <- as.numeric(maxz)
 
-  if (!missing(niter)) {
-    warning("Argument `niter' is deprecated and has no effect")
+  if (lifecycle::is_present(niter)) {
+    lifecycle::deprecate_warn("0.8.0", "layout_with_kk(niter = )")
   }
-  if (!missing(sigma)) {
-    warning("Argument `sigma' is deprecated and has no effect")
+  if (lifecycle::is_present(sigma)) {
+    lifecycle::deprecate_warn("0.8.0", "layout_with_kk(sigma = )")
   }
-  if (!missing(initemp)) {
-    warning("Argument `initemp' is deprecated and has no effect")
+  if (lifecycle::is_present(initemp)) {
+    lifecycle::deprecate_warn("0.8.0", "layout_with_kk(initemp = )")
   }
-  if (!missing(coolexp)) {
-    warning("Argument `coolexp' is deprecated and has no effect")
+  if (lifecycle::is_present(coolexp)) {
+    lifecycle::deprecate_warn("0.8.0", "layout_with_kk(coolexp = )")
   }
 
   on.exit(.Call(R_igraph_finalizer))
@@ -1566,9 +1605,18 @@ layout_with_kk <- function(graph, coords = NULL, dim = 2,
 #'
 with_kk <- function(...) layout_spec(layout_with_kk, ...)
 
+#' The Kamada-Kawai layout algorithm
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `layout.kamada.kawai()` was renamed to `layout_with_kk()` to create a more
+#' consistent API.
+#' @param ... Passed to the new layout functions.
+#' @param params Passed to the new layout functions as arguments.
+#' @keywords internal
 #' @export
-#' @rdname layout.deprecated
 layout.kamada.kawai <- function(..., params = list()) {
+  lifecycle::deprecate_soft("2.1.0", "layout.kamada.kawai()", "layout_with_kk()")
   do_call(layout_with_kk, .args = c(list(...), params))
 }
 
@@ -1628,9 +1676,18 @@ layout_with_lgl <- function(graph, maxiter = 150, maxdelta = vcount(graph),
 #' @export
 with_lgl <- function(...) layout_spec(layout_with_lgl, ...)
 
+#' Large Graph Layout
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `layout.lgl()` was renamed to `layout_with_lgl()` to create a more
+#' consistent API.
+#' @param ... Passed to the new layout functions.
+#' @param params Passed to the new layout functions as arguments.
+#' @keywords internal
 #' @export
-#' @rdname layout.deprecated
 layout.lgl <- function(..., params = list()) {
+  lifecycle::deprecate_soft("2.1.0", "layout.lgl()", "layout_with_lgl()")
   do_call(layout_with_lgl, .args = c(list(...), params))
 }
 
@@ -2183,46 +2240,60 @@ layout_components <- function(graph, layout = layout_with_kk, ...) {
 }
 
 #' Spring layout, this was removed from igraph
+
+#' @description
+#' `r lifecycle::badge("deprecated")`
 #'
-#' Now it calls the Fruchterman-Reingold layout, with a warning.
+#' Now it calls the Fruchterman-Reingold layout [layout_with_fr()].
 #'
 #' @param graph Input graph.
 #' @param ... Extra arguments are ignored.
 #' @return Layout coordinates, a two column matrix.
 #'
 #' @export
+#' @keywords internal
 layout.spring <- function(graph, ...) {
-  warning("Spring layout was removed, we use Fruchterman-Reingold instead.")
+  lifecycle::deprecate_warn("2.1.0", "layout.spring()", "layout_with_fr()")
   layout_with_fr(graph)
 }
 
 #' SVD layout, this was removed from igraph
 #'
-#' Now it calls the Fruchterman-Reingold layout, with a warning.
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' Now it calls the Fruchterman-Reingold layout [`layout_with_fr()`].
 #'
 #' @param graph Input graph.
 #' @param ... Extra arguments are ignored.
 #' @return Layout coordinates, a two column matrix.
 #'
+#' @keywords internal
 #' @export
 layout.svd <- function(graph, ...) {
-  warning("SVD layout was removed, we use Fruchterman-Reingold instead.")
+  lifecycle::deprecate_warn("2.1.0", "layout.svd()", "layout_with_fr()")
   layout_with_fr(graph)
 }
 
 #' Grid Fruchterman-Reingold layout, this was removed from igraph
 #'
-#' Now it calls the Fruchterman-Reingold layout, with a warning.
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#'
+#' Now it calls the Fruchterman-Reingold layout [`layout_with_fr()`].
 #'
 #' @param graph Input graph.
 #' @param ... Extra arguments are ignored.
 #' @return Layout coordinates, a two column matrix.
 #'
+#' @keywords internal
 #' @export
 layout.fruchterman.reingold.grid <- function(graph, ...) {
-  warning(
-    "Grid Fruchterman-Reingold layout was removed,\n",
-    "we use Fruchterman-Reingold instead."
+  lifecycle::deprecate_warn(
+    "2.1.0",
+    "layout.fruchterman.reingold.grid()",
+    "layout_with_fr()"
   )
   layout_with_fr(graph)
 }

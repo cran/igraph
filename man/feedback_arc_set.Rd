@@ -42,7 +42,7 @@ component is a tree).
 
 g <- sample_gnm(20, 40, directed = TRUE)
 feedback_arc_set(g)
-feedback_arc_set(g, algo = "approx")
+feedback_arc_set(g, algo = "approx_eades")
 }
 \references{
 Peter Eades, Xuemin Lin and W.F.Smyth: A fast and effective
@@ -84,3 +84,5 @@ Graph cycles
 \concept{cycles}
 \concept{structural.properties}
 \keyword{graphs}
+\section{Related documentation in the C library}{\href{https://igraph.org/c/html/latest/igraph-Structural.html#igraph_feedback_arc_set}{\code{igraph_feedback_arc_set()}}.}
+

@@ -3,8 +3,6 @@
 \encoding{UTF-8}
 \name{make_graph}
 \alias{make_graph}
-\alias{graph.famous}
-\alias{graph}
 \alias{make_directed_graph}
 \alias{make_undirected_graph}
 \alias{directed_graph}
@@ -199,6 +197,7 @@ Other deterministic constructors:
 \code{\link{graph_from_atlas}()},
 \code{\link{graph_from_edgelist}()},
 \code{\link{graph_from_literal}()},
+\code{\link{make_}()},
 \code{\link{make_chordal_ring}()},
 \code{\link{make_empty_graph}()},
 \code{\link{make_full_citation_graph}()},

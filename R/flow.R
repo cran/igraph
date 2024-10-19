@@ -423,7 +423,7 @@ min_cut <- function(graph, source = NULL, target = NULL, capacity = NULL, value.
 #' vertex_disjoint_paths(g2, 100, 1)
 #'
 #' g <- sample_gnp(50, 5 / 50)
-#' g <- as.directed(g)
+#' g <- as_directed(g)
 #' g <- induced_subgraph(g, subcomponent(g, 1))
 #' cohesion(g)
 #'
@@ -512,8 +512,9 @@ vertex_connectivity <- function(graph, source = NULL, target = NULL, checks = TR
 #'   thanks Peter.
 #' @return A scalar real value.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
-#' @references Douglas R. White and Frank Harary: The cohesiveness of blocks in
-#' social networks: node connectivity and conditional density, TODO: citation
+#' @references Douglas R. White and Frank Harary (2001): The cohesiveness of blocks in
+#' social networks: node connectivity and conditional density,
+#' Sociological Methodology, vol. 31, 2001, pp. 305–59.
 #' @family flow
 #' @export
 #' @keywords graphs
@@ -526,7 +527,7 @@ vertex_connectivity <- function(graph, source = NULL, target = NULL, checks = TR
 #' edge_disjoint_paths(g2, 100, 1)
 #'
 #' g <- sample_gnp(50, 5 / 50)
-#' g <- as.directed(g)
+#' g <- as_directed(g)
 #' g <- induced_subgraph(g, subcomponent(g, 1))
 #' adhesion(g)
 #'
@@ -648,6 +649,7 @@ cohesion.igraph <- function(x, checks = TRUE, ...) {
 #' st_cuts(g2, source = "s", target = "t")
 #' @family flow
 #' @export
+#' @cdocs igraph_all_st_cuts
 st_cuts <- all_st_cuts_impl
 
 
@@ -697,6 +699,7 @@ st_cuts <- all_st_cuts_impl
 #' st_min_cuts(g, source = "s", target = "t")
 #' @family flow
 #' @export
+#' @cdocs igraph_all_st_mincuts
 st_min_cuts <- all_st_mincuts_impl
 
 
@@ -829,6 +832,7 @@ dominator_tree <- function(graph, root, mode = c("out", "in", "all", "total")) {
 #' min_st_separators(g)
 #' ```
 #' @family flow
+#' @cdocs igraph_all_minimal_st_separators
 min_st_separators <- all_minimal_st_separators_impl
 
 
@@ -888,16 +892,17 @@ min_st_separators <- all_minimal_st_separators_impl
 #' max_flow(g1, source = V(g1)["1"], target = V(g1)["2"])
 #' @family flow
 #' @export
+#' @cdocs igraph_maxflow
 max_flow <- maxflow_impl
 
 
-#' Vertex separators
+#' Check whether removing this set of vertices would disconnect the graph.
 #'
-#' Check whether a given set of vertices is a vertex separator.
-#'
-#' `is_separator()` decides whether the supplied vertex set is a vertex
-#' separator. A vertex set is a vertex separator if its removal results a
-#' disconnected graph.
+#' `is_separator()` determines whether the supplied vertex set is a vertex
+#' separator:
+#' A vertex set \eqn{S} is a separator if there are vertices \eqn{u} and \eqn{v}
+#' in the graph such that all paths between \eqn{u} and \eqn{v} pass
+#' through some vertices in \eqn{S}.
 #'
 #' @param graph The input graph. It may be directed, but edge directions are
 #'   ignored.
@@ -907,7 +912,16 @@ max_flow <- maxflow_impl
 #'   vertex separator or not.
 #'   lists all vertex separator of minimum size.
 #' @family flow
+#' @examples
+#' ring <- make_ring(4)
+#' min_st_separators(ring)
+#' is_separator(ring, 1)
+#' is_separator(ring, c(1, 3))
+#' is_separator(ring, c(2, 4))
+#' is_separator(ring, c(2, 3))
+#'
 #' @export
+#' @cdocs igraph_is_separator
 is_separator <- is_separator_impl
 
 
@@ -956,6 +970,7 @@ is_separator <- is_separator_impl
 #'
 #' @family flow
 #' @export
+#' @cdocs igraph_is_minimal_separator
 is_min_separator <- is_minimal_separator_impl
 
 
@@ -1026,4 +1041,5 @@ is_min_separator <- is_minimal_separator_impl
 #'   John - Gery:Russ:Michael
 #' )
 #' min_separators(camp)
+#' @cdocs igraph_minimum_size_separators
 min_separators <- minimum_size_separators_impl

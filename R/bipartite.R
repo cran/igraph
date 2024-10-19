@@ -154,7 +154,7 @@ bipartite_projection <- function(graph, types = NULL,
     "true" = 2L
   )
   if (which != "both" && probe1 != -1) {
-    warning("`probe1' ignored if only one projection is requested")
+    cli::cli_warn("{.arg probe1} ignored if only one projection is requested.")
   }
 
   on.exit(.Call(R_igraph_finalizer))
@@ -192,6 +192,7 @@ bipartite_projection <- function(graph, types = NULL,
 
 #' @rdname bipartite_projection
 #' @export
+#' @cdocs igraph_bipartite_projection_size
 bipartite_projection_size <- bipartite_projection_size_impl
 
 #' Decide whether a graph is bipartite
@@ -237,4 +238,5 @@ bipartite_projection_size <- bipartite_projection_size_impl
 #' bipartite_mapping(g3)
 #' @family bipartite
 #' @export
+#' @cdocs igraph_is_bipartite
 bipartite_mapping <- is_bipartite_impl

@@ -1,4 +1,3 @@
-
 #   IGraph R package
 #   Copyright (C) 2005-2012  Gabor Csardi <csardi.gabor@gmail.com>
 #   334 Harvard street, Cambridge, MA 02139 USA
@@ -153,6 +152,46 @@ set_complete_iterator <- function(x, value = TRUE) {
   attr(x, "is_all") <- TRUE
   x
 }
+
+inside_square_error <- function(fn_name, call = rlang::caller_env()) {
+  cli::cli_abort(c(
+    "{.fun {fn_name}} must only be used inside index or vertex sequences like {.code E(g)[]} or {.code V(g)[]}.",
+    i = "See {.help [{.fun [.igraph.es}](igraph::`[.igraph.es`)} or {.help [{.fun [.igraph.vs}](igraph::`[.igraph.vs`)}."
+  ), call = call)
+}
+
+
+#' Helpers within vertex/index sequences
+#'
+#' Functions to be used only with `[.igraph.es` and `[.igraph.vs`
+#'
+#' @details
+#'
+#' See \code{\link[igraph]{[.igraph.vs}} and \code{\link[igraph]{[.igraph.es}}.
+#'
+#'
+#' @keywords internal
+#' @rdname inside-square-error
+#' @param ... Not used, here for compatibility.
+#' @return An error
+#' @export
+#'
+.nei <- function(...) inside_square_error(".nei")
+#' @rdname inside-square-error
+#' @export
+.innei <- function(...) inside_square_error(".innei")
+#' @rdname inside-square-error
+#' @export
+.outnei <- function(...) inside_square_error(".outnei")
+#' @rdname inside-square-error
+#' @export
+.inc <- function(...) inside_square_error(".inc")
+#' @rdname inside-square-error
+#' @export
+.from <- function(...) inside_square_error(".from")
+#' @rdname inside-square-error
+#' @export
+.to <- function(...) inside_square_error(".to")
 
 #' Vertices of a graph
 #'
@@ -479,7 +518,7 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
 #' V(g)[.env$x]
 #'
 `[.igraph.vs` <- function(x, ..., na_ok = FALSE) {
-  args <- lazy_dots(..., .follow_symbols = FALSE)
+  args <- rlang::enquos(..., .ignore_empty = "all")
 
   ## If indexing has no argument at all, then we still get one,
   ## but it is "empty", a name that is  ""
@@ -487,22 +526,24 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
   ## Special case, no argument (but we might get an artificial
   ## empty one
   if (length(args) < 1 ||
-    (length(args) == 1 && inherits(args[[1]]$expr, "name") &&
-      as.character(args[[1]]$expr) == "")) {
+    (length(args) == 1 && inherits(rlang::quo_get_expr(args[[1]]), "name") &&
+      !nzchar(as.character(rlang::quo_get_expr(args[[1]]))))) {
     return(x)
   }
 
   ## Special case: single numeric argument
-  if (length(args) == 1 && inherits(args[[1]]$expr, "numeric")) {
-    res <- simple_vs_index(x, args[[1]]$expr, na_ok)
+  first_arg_is_numericish <- inherits(rlang::quo_get_expr(args[[1]]), "numeric") ||
+    inherits(rlang::quo_get_expr(args[[1]]), "integer")
+  if (length(args) == 1 && first_arg_is_numericish) {
+    res <- simple_vs_index(x, rlang::quo_get_expr(args[[1]]), na_ok)
     return(add_vses_graph_ref(res, get_vs_graph(x)))
   }
 
   ## Special case: single symbol argument, no such attribute
-  if (length(args) == 1 && inherits(args[[1]]$expr, "name")) {
+  if (length(args) == 1 && inherits(rlang::quo_get_expr(args[[1]]), "name")) {
     graph <- get_vs_graph(x)
-    if (!(as.character(args[[1]]$expr) %in% vertex_attr_names(graph))) {
-      res <- simple_vs_index(x, lazy_eval(args[[1]]), na_ok)
+    if (!(as.character(rlang::quo_get_expr(args[[1]])) %in% vertex_attr_names(graph))) {
+      res <- simple_vs_index(x, rlang::eval_tidy(args[[1]]), na_ok)
       return(add_vses_graph_ref(res, graph))
     }
   }
@@ -529,22 +570,19 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
     tmp[as.numeric(x)]
   }
   nei <- function(...) {
-    .Deprecated(".nei")
-    .nei(...)
+    lifecycle::deprecate_stop("2.1.0", "nei()", ".nei()")
   }
   .innei <- function(v, mode = c("in", "all", "out", "total")) {
     .nei(v, mode = mode[1])
   }
   innei <- function(...) {
-    .Deprecated(".innei")
-    .innei(...)
+    lifecycle::deprecate_stop("2.1.0", "innei()", ".innei()")
   }
   .outnei <- function(v, mode = c("out", "all", "in", "total")) {
     .nei(v, mode = mode[1])
   }
   outnei <- function(...) {
-    .Deprecated(".outnei")
-    .outnei(...)
+    lifecycle::deprecate_stop("2.1.0", "outnei()", ".outnei()")
   }
   .inc <- function(e) {
     ## TRUE iff the vertex (in the vs) is incident
@@ -560,12 +598,10 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
     tmp[as.numeric(x)]
   }
   inc <- function(...) {
-    .Deprecated(".inc")
-    .inc(...)
+    lifecycle::deprecate_stop("2.1.0", "inc()", ".inc()")
   }
   adj <- function(...) {
-    .Deprecated(".inc")
-    .inc(...)
+    lifecycle::deprecate_stop("2.1.0", "adj()", ".inc()")
   }
   .from <- function(e) {
     ## TRUE iff the vertex is the source of at least one edge in e
@@ -580,8 +616,7 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
     tmp[as.numeric(x)]
   }
   from <- function(...) {
-    .Deprecated(".from")
-    .from(...)
+    lifecycle::deprecate_stop("2.1.0", "from()", ".from()")
   }
   .to <- function(e) {
     ## TRUE iff the vertex is the target of at least one edge in e
@@ -596,34 +631,46 @@ simple_vs_index <- function(x, i, na_ok = FALSE) {
     tmp[as.numeric(x)]
   }
   to <- function(...) {
-    .Deprecated(".to")
-    .to(...)
+    lifecycle::deprecate_stop("2.1.0", "to()", ".to()")
   }
 
   graph <- get_vs_graph(x)
 
   if (is.null(graph)) {
-    res <- lapply(lazy_eval(args), simple_vs_index, x = x, na_ok = na_ok)
+    res <- lapply(
+      lapply(args, rlang::eval_tidy),
+      simple_vs_index,
+      x = x,
+      na_ok = na_ok
+    )
   } else {
     attrs <- vertex_attr(graph)
     xvec <- as.vector(x)
     for (i in seq_along(attrs)) attrs[[i]] <- attrs[[i]][xvec]
 
     env <- parent.frame()
-    res <- lazy_eval(
-      args,
-      data = c(
-        attrs,
-        .nei = .nei, nei = nei,
-        .innei = .innei, innei = innei,
-        .outnei = .outnei, outnei = outnei,
-        .inc = .inc, inc = inc, adj = adj,
-        .from = .from, from = from,
-        .to = .to, to = to,
-        .env = env,
-        .data = list(attrs)
-      )
-    )
+
+    # Functions (only visible if called or if no duplicate)
+    top <- rlang::new_environment(list(
+      .nei = .nei, nei = nei,
+      .innei = .innei, innei = innei,
+      .outnei = .outnei, outnei = outnei,
+      .inc = .inc, inc = inc, adj = adj,
+      .from = .from, from = from,
+      .to = .to, to = to,
+      .data = list(attrs)
+    ))
+
+    # Data objects (visible by default)
+    bottom <- rlang::new_environment(parent = top, c(
+      attrs,
+      .env = env,
+      .data = list(attrs)
+    ))
+
+    data_mask <- rlang::new_data_mask(bottom, top)
+
+    res <- lapply(args, rlang::eval_tidy, data = data_mask)
 
     res <- lapply(res, function(ii) {
       if (is.null(ii)) {
@@ -856,14 +903,14 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
 #' E(g)[.env$x]
 #'
 `[.igraph.es` <- function(x, ...) {
-  args <- lazy_dots(..., .follow_symbols = TRUE)
+  args <- rlang::enquos(..., .ignore_empty = "all")
 
   ## If indexing has no argument at all, then we still get one,
   ## but it is "empty", a name that is ""
 
   if (length(args) < 1 ||
-    (length(args) == 1 && inherits(args[[1]]$expr, "name") &&
-      as.character(args[[1]]$expr) == "")) {
+    (length(args) == 1 && inherits(rlang::quo_get_expr(args[[1]]), "name") &&
+      !nzchar(as.character(rlang::quo_get_expr(args[[1]]))))) {
     return(x)
   }
 
@@ -877,12 +924,10 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
     tmp[as.numeric(x)]
   }
   adj <- function(...) {
-    .Deprecated(".inc")
-    .inc(...)
+    lifecycle::deprecate_stop("2.1.0", "adj()", ".inc()")
   }
   inc <- function(...) {
-    .Deprecated(".inc")
-    .inc(...)
+    lifecycle::deprecate_stop("2.1.0", "inc()", ".inc()")
   }
   .from <- function(v) {
     ## TRUE iff the edge originates from at least one vertex in v
@@ -894,8 +939,7 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
     tmp[as.numeric(x)]
   }
   from <- function(...) {
-    .Deprecated(".from")
-    .from(...)
+    lifecycle::deprecate_stop("2.1.0", "from()", ".from()")
   }
   .to <- function(v) {
     ## TRUE iff the edge points to at least one vertex in v
@@ -907,35 +951,41 @@ simple_es_index <- function(x, i, na_ok = FALSE) {
     tmp[as.numeric(x)]
   }
   to <- function(...) {
-    .Deprecated(".to")
-    .to(...)
+    lifecycle::deprecate_stop("2.1.0", "to()", ".to()")
   }
 
   graph <- get_es_graph(x)
 
   if (is.null(graph)) {
-    res <- lapply(lazy_eval(args), simple_es_index, x = x)
+    res <- lapply(lapply(args, rlang::eval_tidy), simple_es_index, x = x)
   } else {
     attrs <- edge_attr(graph)
     xvec <- as.vector(x)
     for (i in seq_along(attrs)) attrs[[i]] <- attrs[[i]][xvec]
 
     env <- parent.frame()
-    res <- lazy_eval(
-      args,
-      data = c(
-        attrs,
-        .inc = .inc, inc = inc, adj = adj,
-        .from = .from, from = from,
-        .to = .to, to = to,
-        .igraph.from = list(.Call(R_igraph_copy_from, graph)[as.numeric(x)]),
-        .igraph.to = list(.Call(R_igraph_copy_to, graph)[as.numeric(x)]),
-        .igraph.graph = list(graph),
-        `%--%` = `%--%`, `%->%` = `%->%`, `%<-%` = `%<-%`,
-        .env = env,
-        .data = list(attrs)
-      )
-    )
+
+    # Functions (only visible if called or if no duplicate)
+    top <- rlang::new_environment(list(
+      .inc = .inc, inc = inc, adj = adj,
+      .from = .from, from = from,
+      .to = .to, to = to,
+      `%--%` = `%--%`, `%->%` = `%->%`, `%<-%` = `%<-%`
+    ))
+
+    # Data objects (visible by default)
+    bottom <- rlang::new_environment(parent = top, c(
+      attrs,
+      .igraph.from = list(.Call(R_igraph_copy_from, graph)[as.numeric(x)]),
+      .igraph.to = list(.Call(R_igraph_copy_to, graph)[as.numeric(x)]),
+      .igraph.graph = list(graph),
+      .env = env,
+      .data = list(attrs)
+    ))
+
+    data_mask <- rlang::new_data_mask(bottom, top)
+
+    res <- lapply(args, rlang::eval_tidy, data = data_mask)
 
     res <- lapply(res, function(ii) {
       if (is.null(ii)) {
@@ -1416,7 +1466,7 @@ as_igraph_es <- function(graph, e) {
       if (!"name" %in% vertex_attr_names(graph)) {
         vp <- as.numeric(vp)
       }
-      res[Pairs] <- get.edge.ids(graph, vp)
+      res[Pairs] <- get_edge_ids(graph, vp)
     }
 
     ## Based on edge ids/names
@@ -1457,10 +1507,10 @@ parse_op_args <- function(..., what, is_fun, as_fun, check_graph = TRUE) {
     unique()
 
   if (length(graph_id) != 1) {
-    warning(
-      "Combining vertex/edge sequences from different graphs.\n",
-      "This will not work in future igraph versions"
-    )
+    cli::cli_warn(c(
+      "Combining vertex/edge sequences from different graphs.",
+      x = "This will not work in future igraph versions."
+    ))
   }
 
   graphs <- args %>%
@@ -1472,9 +1522,9 @@ parse_op_args <- function(..., what, is_fun, as_fun, check_graph = TRUE) {
     unique()
 
   if (check_graph && length(addresses) >= 2) {
-    warning(
-      "Combining vertex/edge sequences from different graphs.\n",
-      "This will not work in future igraph versions"
+    cli::cli_warn(
+      "Combining vertex/edge sequences from different graphs",
+      x = "This will not work in future igraph versions."
     )
   }
 
