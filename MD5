@@ -1,6 +1,6 @@
-7b5c8166c0b212e12cb24b2c17f9c57f *DESCRIPTION
+92257b8d7586a8dfbee3ff3394892976 *DESCRIPTION
 20210315a7133aa830bef8578fd7c09f *NAMESPACE
-b23e399cd275453ac96c54d2558a4dca *NEWS.md
+d77db572dcfe31c1855f39d6e20bbe2b *NEWS.md
 cfc5cc8ee430836cf548c58cf4c9be54 *R/aaa-auto.R
 776c3f10cf496d41c9cf6e30b33fe7e7 *R/adjacency.R
 68c7dada8343e6bb15dee3c3df5c9a42 *R/as_phylo.R
@@ -115,9 +115,9 @@ f864ca3d5dcd66af6f75b31fd00223a4 *inst/benchmarks/time_print.R
 56cacf3291bedc3596f2af9f2e664fa9 *inst/benchmarks/time_sir.R
 f074486d898d982a1b2e3e3e231896dc *inst/doc/igraph.R
 06a48518982a37166c8dc471dac163dd *inst/doc/igraph.Rmd
-2d260a61b690c973f86aceda9243175c *inst/doc/igraph.html
+c26a7aabba89c5dfaac78c79084fce4b *inst/doc/igraph.html
 060bc047911f202dda8624d764b1f876 *inst/doc/igraph_ES.R
-85592fa3e701d66f470c8619177376d3 *inst/doc/igraph_ES.html
+1dddfb8427b8dce50c99513a9ee77dfb *inst/doc/igraph_ES.html
 f58994cfdf8996612d89e3dfd34a32b8 *inst/doc/igraph_ES.rmd
 e6d18a50ae6584a89a501d8b85197930 *inst/lifecycle/deprecated-table-creation.R
 10faae7fd6798472ef016c7c4935f821 *inst/lifecycle/deprecated.csv
@@ -2245,7 +2245,7 @@ a023a11ea16e4fc760d8611e0e608579 *tests/testthat/test-graph.maxflow.R
 5e58b7a9a8602da2dbb77f26768859f6 *tests/testthat/test-graph.mincut.R
 e0720c669fac56e753eeb1cc607e2017 *tests/testthat/test-graph.subisomorphic.lad.R
 16b3664d0d4a722cca9992c6919adfa4 *tests/testthat/test-graph.subisomorphic.vf2.R
-5bcac44b485c92834eb8def37c5ca876 *tests/testthat/test-graphNEL.R
+0fbda1cdc1a1c8d8280fa9340c840727 *tests/testthat/test-graphNEL.R
 ca9bdf974bab04130280788f52bee0e7 *tests/testthat/test-graphlets.R
 092eb6ce1f0c1c7e341acde714b005ec *tests/testthat/test-handler.R
 3eb5fb692f5b1278e8204db16f97442c *tests/testthat/test-hrg.R
