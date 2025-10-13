@@ -62,7 +62,7 @@
  * All elements of the string vector are set to the empty string.
  *
  * \param sv Pointer to an initialized string vector.
- * \param len The (initial) length of the string vector.
+ * \param size The (initial) length of the string vector.
  * \return Error code.
  *
  * Time complexity: O(\p len).
@@ -266,7 +266,7 @@ igraph_error_t igraph_strvector_init_copy(igraph_strvector_t *to,
                 IGRAPH_FREE(to->stor_begin[j]);
             }
             IGRAPH_FREE(to->stor_begin);
-            IGRAPH_ERROR("Cannot copy string vector.", IGRAPH_ENOMEM); /* LCOV_EXCL_LINE */
+            IGRAPH_ERROR("Cannot copy string vector.", IGRAPH_ENOMEM);
             /* LCOV_EXCL_STOP */
         }
     }

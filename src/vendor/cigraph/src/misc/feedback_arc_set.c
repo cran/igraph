@@ -154,17 +154,17 @@ finish:
         while (VECTOR(vpath)[i-1] != va) i--;
         for (; i < depth; i++) {
             if (vertices) {
-                igraph_vector_int_push_back(vertices, VECTOR(vpath)[i]);
+                IGRAPH_CHECK(igraph_vector_int_push_back(vertices, VECTOR(vpath)[i]));
             }
             if (edges) {
-                igraph_vector_int_push_back(edges, VECTOR(epath)[i]);
+                IGRAPH_CHECK(igraph_vector_int_push_back(edges, VECTOR(epath)[i]));
             }
         }
         if (vertices) {
-            igraph_vector_int_push_back(vertices, va);
+            IGRAPH_CHECK(igraph_vector_int_push_back(vertices, va));
         }
         if (edges) {
-            igraph_vector_int_push_back(edges, ea);
+            IGRAPH_CHECK(igraph_vector_int_push_back(edges, ea));
         }
         if (found) {
             *found = true;
@@ -208,7 +208,8 @@ finish:
  * vertices and edges in the original input graph.
  *
  * \sa \ref igraph_is_acyclic() to determine if a graph is acyclic,
- * without returning a specific cycle.
+ * without returning a specific cycle; \ref igraph_simple_cycles()
+ * to list all cycles in a graph.
  */
 igraph_error_t igraph_find_cycle(const igraph_t *graph,
                                  igraph_vector_int_t *vertices,
@@ -219,6 +220,10 @@ igraph_error_t igraph_find_cycle(const igraph_t *graph,
 
     igraph_bool_t known_acyclic = false;
     igraph_bool_t found;
+
+    if (mode != IGRAPH_OUT && mode != IGRAPH_IN && mode != IGRAPH_ALL) {
+        IGRAPH_ERROR("Invalid mode for finding cycles.", IGRAPH_EINVAL);
+    }
 
     if (! igraph_is_directed(graph)) {
         mode = IGRAPH_ALL;

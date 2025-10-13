@@ -1,15 +1,19 @@
-
 #' Stochastic matrix of a graph
 #'
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `get.stochastic()` was renamed to `stochastic_matrix()` to create a more
+#' `get.stochastic()` was renamed to [stochastic_matrix()] to create a more
 #' consistent API.
 #' @inheritParams stochastic_matrix
 #' @keywords internal
 #' @export
-get.stochastic <- function(graph, column.wise = FALSE, sparse = igraph_opt("sparsematrices")) { # nocov start
+get.stochastic <- function(
+  graph,
+  column.wise = FALSE,
+  sparse = igraph_opt("sparsematrices")
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "get.stochastic()", "stochastic_matrix()")
   stochastic_matrix(graph = graph, column.wise = column.wise, sparse = sparse)
 } # nocov end
@@ -70,18 +74,25 @@ get.stochastic <- function(graph, column.wise = FALSE, sparse = igraph_opt("spar
 #' ## may not be exactly 1, due to numerical errors
 #' max(abs(rowSums(W)) - 1)
 #'
-stochastic_matrix <- function(graph, column.wise = FALSE,
-                              sparse = igraph_opt("sparsematrices")) {
+stochastic_matrix <- function(
+  graph,
+  column.wise = FALSE,
+  sparse = igraph_opt("sparsematrices")
+) {
   ensure_igraph(graph)
 
   column.wise <- as.logical(column.wise)
   if (length(column.wise) != 1) {
-    stop("`column.wise' must be a logical scalar")
+    cli::cli_abort(
+      "{.arg column.wise} must be a logical scalar, not {.obj_type_friendly {column.wise}}."
+    )
   }
 
   sparse <- as.logical(sparse)
   if (length(sparse) != 1) {
-    stop("`sparse' must be a logical scalar")
+    cli::cli_abort(
+      "{.arg sparse} must be a logical scalar, not {.obj_type_friendly {sparse}}."
+    )
   }
 
   on.exit(.Call(R_igraph_finalizer))

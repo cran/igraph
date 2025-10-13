@@ -1,15 +1,15 @@
-
 #' Intersection of two or more sets
 #'
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `graph.intersection()` was renamed to `intersection()` to create a more
+#' `graph.intersection()` was renamed to [intersection()] to create a more
 #' consistent API.
 #' @inheritParams intersection
 #' @keywords internal
 #' @export
-graph.intersection <- function(...) { # nocov start
+graph.intersection <- function(...) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "graph.intersection()", "intersection()")
   intersection(...)
 } # nocov end
@@ -19,12 +19,13 @@ graph.intersection <- function(...) { # nocov start
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `graph.union()` was renamed to `union.igraph()` to create a more
+#' `graph.union()` was renamed to [union.igraph()] to create a more
 #' consistent API.
 #' @inheritParams union.igraph
 #' @keywords internal
 #' @export
-graph.union <- function(..., byname = "auto") { # nocov start
+graph.union <- function(..., byname = "auto") {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "graph.union()", "union.igraph()")
   union.igraph(byname = byname, ...)
 } # nocov end
@@ -34,12 +35,13 @@ graph.union <- function(..., byname = "auto") { # nocov start
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `graph.difference()` was renamed to `difference()` to create a more
+#' `graph.difference()` was renamed to [difference()] to create a more
 #' consistent API.
 #' @inheritParams difference
 #' @keywords internal
 #' @export
-graph.difference <- function(...) { # nocov start
+graph.difference <- function(...) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "graph.difference()", "difference()")
   difference(...)
 } # nocov end
@@ -49,13 +51,18 @@ graph.difference <- function(...) { # nocov start
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `graph.disjoint.union()` was renamed to `disjoint_union()` to create a more
+#' `graph.disjoint.union()` was renamed to [disjoint_union()] to create a more
 #' consistent API.
 #' @inheritParams disjoint_union
 #' @keywords internal
 #' @export
-graph.disjoint.union <- function(...) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "graph.disjoint.union()", "disjoint_union()")
+graph.disjoint.union <- function(...) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "graph.disjoint.union()",
+    "disjoint_union()"
+  )
   disjoint_union(...)
 } # nocov end
 
@@ -64,12 +71,13 @@ graph.disjoint.union <- function(...) { # nocov start
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `graph.compose()` was renamed to `compose()` to create a more
+#' `graph.compose()` was renamed to [compose()] to create a more
 #' consistent API.
 #' @inheritParams compose
 #' @keywords internal
 #' @export
-graph.compose <- function(g1, g2, byname = "auto") { # nocov start
+graph.compose <- function(g1, g2, byname = "auto") {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "graph.compose()", "compose()")
   compose(g1 = g1, g2 = g2, byname = byname)
 } # nocov end
@@ -79,12 +87,13 @@ graph.compose <- function(g1, g2, byname = "auto") { # nocov start
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `graph.complementer()` was renamed to `complementer()` to create a more
+#' `graph.complementer()` was renamed to [complementer()] to create a more
 #' consistent API.
 #' @inheritParams complementer
 #' @keywords internal
 #' @export
-graph.complementer <- function(graph, loops = FALSE) { # nocov start
+graph.complementer <- function(graph, loops = FALSE) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "graph.complementer()", "complementer()")
   complementer(graph = graph, loops = loops)
 } # nocov end
@@ -109,19 +118,27 @@ graph.complementer <- function(graph, loops = FALSE) { # nocov start
 #
 ###################################################################
 
-rename.attr.if.needed <- function(type, graphs, newsize = NULL, maps = NULL,
-                                  maps2 = NULL, ignore = character()) {
-  listfun <- switch(type,
+rename.attr.if.needed <- function(
+  type = c("g", "v", "e"),
+  graphs,
+  newsize = NULL,
+  maps = NULL,
+  maps2 = NULL,
+  ignore = character()
+) {
+  type <- igraph.match.arg(type)
+
+  listfun <- switch(
+    type,
     "g" = graph_attr_names,
     "v" = vertex_attr_names,
-    "e" = edge_attr_names,
-    stop("Internal igraph error")
+    "e" = edge_attr_names
   )
-  getfun <- switch(type,
+  getfun <- switch(
+    type,
     "g" = graph_attr,
     "v" = vertex_attr,
-    "e" = edge_attr,
-    stop("Internal igraph error")
+    "e" = edge_attr
   )
   alist <- lapply(graphs, listfun)
   an <- unique(unlist(alist))
@@ -159,7 +176,6 @@ rename.attr.if.needed <- function(type, graphs, newsize = NULL, maps = NULL,
   }
   attr
 }
-
 
 
 #' Disjoint union of graphs
@@ -204,9 +220,12 @@ rename.attr.if.needed <- function(type, graphs, newsize = NULL, maps = NULL,
 #' print_all(g1 %du% g2)
 #' @export
 disjoint_union <- function(...) {
-  graphs <- unlist(recursive = FALSE, lapply(list(...), function(l) {
-    if (is_igraph(l)) list(l) else l
-  }))
+  graphs <- unlist(
+    recursive = FALSE,
+    lapply(list(...), function(l) {
+      if (is_igraph(l)) list(l) else l
+    })
+  )
   lapply(graphs, ensure_igraph)
 
   on.exit(.Call(R_igraph_finalizer))
@@ -225,13 +244,19 @@ disjoint_union <- function(...) {
     noattr <- setdiff(names(attr), names(va)) # existint and missing
     newattr <- setdiff(names(va), names(attr)) # new
     for (a in seq_along(exattr)) {
-      attr[[exattr[a]]] <- c(attr[[exattr[a]]], va[[exattr[a]]])
+      attr[[exattr[a]]] <- vctrs::vec_c(attr[[exattr[a]]], va[[exattr[a]]])
     }
     for (a in seq_along(noattr)) {
-      attr[[noattr[a]]] <- c(attr[[noattr[a]]], rep(NA, vc[i]))
+      attr[[noattr[a]]] <- vctrs::vec_c(
+        attr[[noattr[a]]],
+        vctrs::unspecified(vc[[i]])
+      )
     }
     for (a in seq_along(newattr)) {
-      attr[[newattr[a]]] <- c(rep(NA, cumvc[i]), va[[newattr[a]]])
+      attr[[newattr[a]]] <- vctrs::vec_c(
+        vctrs::unspecified(cumvc[[i]]),
+        va[[newattr[a]]]
+      )
     }
   }
   vertex.attributes(res) <- attr
@@ -253,10 +278,16 @@ disjoint_union <- function(...) {
       attr[[exattr[a]]] <- vctrs::vec_c(attr[[exattr[a]]], ea[[exattr[a]]])
     }
     for (a in seq_along(noattr)) {
-      attr[[noattr[a]]] <- vctrs::vec_c(attr[[noattr[a]]], vctrs::unspecified(ec[[i]]))
+      attr[[noattr[a]]] <- vctrs::vec_c(
+        attr[[noattr[a]]],
+        vctrs::unspecified(ec[[i]])
+      )
     }
     for (a in seq_along(newattr)) {
-      attr[[newattr[a]]] <- vctrs::vec_c(vctrs::unspecified(cumec[[i]]), ea[[newattr[a]]])
+      attr[[newattr[a]]] <- vctrs::vec_c(
+        vctrs::unspecified(cumec[[i]]),
+        ea[[newattr[a]]]
+      )
     }
   }
   edge.attributes(res) <- attr
@@ -271,23 +302,32 @@ disjoint_union <- function(...) {
   disjoint_union(x, y)
 }
 
-.igraph.graph.union.or.intersection <- function(call, ..., byname,
-                                                keep.all.vertices) {
-  graphs <- unlist(recursive = FALSE, lapply(list(...), function(l) {
-    if (is_igraph(l)) list(l) else l
-  }))
+.igraph.graph.union.or.intersection <- function(
+  call,
+  ...,
+  byname,
+  keep.all.vertices
+) {
+  graphs <- unlist(
+    recursive = FALSE,
+    lapply(list(...), function(l) {
+      if (is_igraph(l)) list(l) else l
+    })
+  )
   lapply(graphs, ensure_igraph)
   if (byname != "auto" && !is.logical(byname)) {
-    stop("`bynam' must be \"auto\", or logical")
+    cli::cli_abort("{.arg bynam} must be \"auto\", or \"logical\".")
   }
   nonamed <- sum(sapply(graphs, is_named))
   if (byname == "auto") {
     byname <- all(sapply(graphs, is_named))
     if (nonamed != 0 && nonamed != length(graphs)) {
-      cli::cli_warn("Some, but not all graphs are named, not using vertex names.")
+      cli::cli_warn(
+        "Some, but not all graphs are named, not using vertex names."
+      )
     }
   } else if (byname && nonamed != length(graphs)) {
-    stop("Some graphs are not named")
+    cli::cli_abort("Some graphs are not named.")
   }
 
   edgemaps <- length(unlist(lapply(graphs, edge_attr_names))) != 0
@@ -319,7 +359,9 @@ disjoint_union <- function(...) {
 
     ## We might need to rename all attributes
     graph.attributes(res) <- rename.attr.if.needed("g", newgraphs)
-    vertex.attributes(res) <- rename.attr.if.needed("v", newgraphs,
+    vertex.attributes(res) <- rename.attr.if.needed(
+      "v",
+      newgraphs,
       vcount(res),
       ignore = "name"
     )
@@ -327,7 +369,9 @@ disjoint_union <- function(...) {
 
     ## Edges are a bit more difficult, we need a mapping
     if (edgemaps) {
-      edge.attributes(res) <- rename.attr.if.needed("e", newgraphs,
+      edge.attributes(res) <- rename.attr.if.needed(
+        "e",
+        newgraphs,
         ecount(res),
         maps = maps
       )
@@ -356,13 +400,16 @@ disjoint_union <- function(...) {
     ## We might need to rename all attributes
     graph.attributes(res) <- rename.attr.if.needed("g", graphs)
     vertex.attributes(res) <- rename.attr.if.needed(
-      "v", graphs,
+      "v",
+      graphs,
       vcount(res)
     )
 
     ## Edges are a bit more difficult, we need a mapping
     if (edgemaps) {
-      edge.attributes(res) <- rename.attr.if.needed("e", graphs,
+      edge.attributes(res) <- rename.attr.if.needed(
+        "e",
+        graphs,
         ecount(res),
         maps = maps
       )
@@ -446,7 +493,9 @@ union.default <- function(...) {
 #' net2 <- graph_from_literal(D - A:F:Y, B - A - X - F - H - Z, F - Y)
 #' print_all(net1 %u% net2)
 union.igraph <- function(..., byname = "auto") {
-  .igraph.graph.union.or.intersection("union", ...,
+  .igraph.graph.union.or.intersection(
+    "union",
+    ...,
     byname = byname,
     keep.all.vertices = TRUE
   )
@@ -526,9 +575,14 @@ intersection <- function(...) {
 #' )
 #' net2 <- graph_from_literal(D - A:F:Y, B - A - X - F - H - Z, F - Y)
 #' print_all(net1 %s% net2)
-intersection.igraph <- function(..., byname = "auto",
-                                keep.all.vertices = TRUE) {
-  .igraph.graph.union.or.intersection("intersection", ...,
+intersection.igraph <- function(
+  ...,
+  byname = "auto",
+  keep.all.vertices = TRUE
+) {
+  .igraph.graph.union.or.intersection(
+    "intersection",
+    ...,
     byname = byname,
     keep.all.vertices = keep.all.vertices
   )
@@ -614,16 +668,18 @@ difference.igraph <- function(big, small, byname = "auto", ...) {
   ensure_igraph(big)
   ensure_igraph(small)
   if (byname != "auto" && !is.logical(byname)) {
-    stop("`bynam' must be \"auto\", or logical")
+    cli::cli_abort("{.arg bynam} must be \"auto\", or \"logical\".")
   }
   nonamed <- is_named(big) + is_named(small)
   if (byname == "auto") {
     byname <- nonamed == 2
     if (nonamed == 1) {
-      cli::cli_warn("One, but not both graphs are named, not using vertex names.")
+      cli::cli_warn(
+        "One, but not both graphs are named, not using vertex names."
+      )
     }
   } else if (byname && nonamed != 2) {
-    stop("Some graphs are not named")
+    cli::cli_abort("Some graphs are not named.")
   }
 
   if (byname) {
@@ -653,7 +709,6 @@ difference.igraph <- function(big, small, byname = "auto", ...) {
 "%m%" <- function(x, y) {
   difference(x, y)
 }
-
 
 
 #' Complementer of a graph
@@ -694,7 +749,6 @@ complementer <- function(graph, loops = FALSE) {
   on.exit(.Call(R_igraph_finalizer))
   .Call(R_igraph_complementer, graph, as.logical(loops))
 }
-
 
 
 #' Compose two graphs as binary relations
@@ -763,16 +817,18 @@ compose <- function(g1, g2, byname = "auto") {
   ensure_igraph(g2)
 
   if (byname != "auto" && !is.logical(byname)) {
-    stop("`byname' must be \"auto\", or logical")
+    cli::cli_abort("{.arg bynam} must be \"auto\", or \"logical\".")
   }
   nonamed <- is_named(g1) + is_named(g2)
   if (byname == "auto") {
     byname <- nonamed == 2
     if (nonamed == 1) {
-      cli::cli_warn("One, but not both graphs are named, not using vertex names.")
+      cli::cli_warn(
+        "One, but not both graphs are named, not using vertex names."
+      )
     }
   } else if (byname && nonamed != 2) {
-    stop("Some graphs are not named")
+    cli::cli_abort("Some graphs are not named.")
   }
 
   if (byname) {
@@ -809,13 +865,17 @@ compose <- function(g1, g2, byname = "auto") {
     V(res)$name <- uninames
   } else {
     vertex.attributes(res) <- rename.attr.if.needed(
-      "v", graphs,
+      "v",
+      graphs,
       vcount(res)
     )
   }
 
   if (edgemaps) {
-    edge.attributes(res) <- rename.attr.if.needed("e", graphs, ecount(res),
+    edge.attributes(res) <- rename.attr.if.needed(
+      "e",
+      graphs,
+      ecount(res),
       maps2 = maps
     )
   }
@@ -1116,7 +1176,7 @@ path <- function(...) {
     ## Adding named vertices
     res <- add_vertices(e1, length(e2), name = e2)
   } else {
-    stop("Cannot add unknown type to igraph graph")
+    cli::cli_abort("Cannot add {.obj_type_friendly {type}} to igraph graph.")
   }
   res
 }
@@ -1172,7 +1232,7 @@ path <- function(...) {
 #' @export
 `-.igraph` <- function(e1, e2) {
   if (missing(e2)) {
-    stop("Non-numeric argument to negation operator")
+    cli::cli_abort("Non-numeric argument to negation operator")
   }
   if (is_igraph(e2)) {
     res <- difference(e1, e2)
@@ -1196,7 +1256,9 @@ path <- function(...) {
   } else if (is.numeric(e2) || is.character(e2)) {
     res <- delete_vertices(e1, e2)
   } else {
-    stop("Cannot substract unknown type from igraph graph")
+    cli::cli_abort(
+      "Cannot substract {.obj_type_friendly {type}} from igraph graph."
+    )
   }
   res
 }
@@ -1221,14 +1283,15 @@ path <- function(...) {
 #' @examples
 #' rings <- make_ring(5) * 5
 rep.igraph <- function(x, n, mark = TRUE, ...) {
-  if (n < 0) stop("Number of replications must be positive")
+  if (n < 0) {
+    cli::cli_abort("Number of replications must be positive")
+  }
 
-  res <- do_call(disjoint_union,
-    .args =
-      replicate(n, x, simplify = FALSE)
-  )
+  res <- do_call(disjoint_union, .args = replicate(n, x, simplify = FALSE))
 
-  if (mark) V(res)$which <- rep(seq_len(n), each = gorder(x))
+  if (mark) {
+    V(res)$which <- rep(seq_len(n), each = gorder(x))
+  }
 
   res
 }
@@ -1246,7 +1309,9 @@ rep.igraph <- function(x, n, mark = TRUE, ...) {
   if (is.numeric(n) && length(n) == 1) {
     rep.igraph(x, n)
   } else {
-    stop("Cannot multiply igraph graph with this type")
+    cli::cli_abort(
+      "Cannot multiply igraph graph with {.obj_type_friendly {type}}."
+    )
   }
 }
 

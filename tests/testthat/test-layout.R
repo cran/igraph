@@ -17,7 +17,7 @@ test_that("layout_with_fr() works", {
 test_that("layout_with_fr() deprecated argument", {
   rlang::local_options(lifecycle_verbosity = "warning")
   g <- make_ring(10)
-  expect_snapshot(
+  expect_snapshot(error = TRUE, {
     l <- layout_with_fr(
       g,
       niter = 50,
@@ -27,8 +27,13 @@ test_that("layout_with_fr() deprecated argument", {
       area = 1,
       repulserad = 1
     )
-  )
+  })
+})
 
+test_that("layout_nicely() works with proper weights and small trees", {
+  g <- make_star(12, mode = "out")
+  E(g)$weight <- 5:15
+  expect_warning(layout_nicely(g), NA)
 })
 
 test_that("layout_nicely() works with negative weights", {
@@ -180,7 +185,9 @@ test_that("Kamada-Kawai layout generator works", {
       return(TRUE)
     }
 
-    dists <- apply(layout[-nrow(layout), ] - layout[-1, ], 1, function(x) sqrt(sum(x**2)))
+    dists <- apply(layout[-nrow(layout), ] - layout[-1, ], 1, function(x) {
+      sqrt(sum(x**2))
+    })
     norm_dists <- (dists - mean(dists)) / mean(dists)
     all(abs(norm_dists) < eps)
   }
@@ -191,7 +198,7 @@ test_that("Kamada-Kawai layout generator works", {
 
   g <- make_star(12)
   l <- layout_with_kk(g, maxiter = 500, coords = layout_in_circle(g))
-  expect_true(looks_circular(l[-1,]))
+  expect_true(looks_circular(l[-1, ]))
 
   g <- make_ring(10)
   E(g)$weight <- rep(1:2, length.out = ecount(g))
@@ -200,12 +207,12 @@ test_that("Kamada-Kawai layout generator works", {
 
   g <- make_star(30)
   l <- layout_with_kk(g, maxiter = 5000, dim = 3)
-  expect_true(looks_circular(l[-1,], check_dists = FALSE, eps = 1e-2))
+  expect_true(looks_circular(l[-1, ], check_dists = FALSE, eps = 1e-2))
 })
 
 test_that("layout_with_kk() deprecated arguments", {
   g <- make_ring(10)
-  expect_snapshot(
+  expect_snapshot(error = TRUE, {
     l <- layout_with_kk(
       g,
       maxiter = 50,
@@ -215,12 +222,11 @@ test_that("layout_with_kk() deprecated arguments", {
       initemp = 1,
       coolexp = 1
     )
-  )
-
+  })
 })
 
 test_that("layout_with_sugiyama() does not demote matrices to vectors in res$layout.dummy", {
-  ex <- graph_from_literal(A - +B:C, B - +C:D)
+  ex <- graph_from_literal(A -+ B:C, B -+ C:D)
   layex <- layout_with_sugiyama(ex, layers = NULL)
   expect_equal(nrow(layex$layout.dummy), 1)
 })
@@ -324,4 +330,48 @@ test_that("add_layout_ works", {
     add_layout_(as_star(center = 5)) %>%
     graph_attr("layout")
   expect_identical(l1, l3)
+})
+
+test_that("layout_randomly() errors well", {
+  g <- make_empty_graph(1)
+  expect_snapshot(error = TRUE, {
+    layout_randomly(g, dim = 4)
+  })
+})
+
+test_that("layout normalization handles all-NaN coordinates correctly", {
+  # Test the internal .layout.norm.col function directly
+  # This tests the fix for all-NaN coordinate normalization
+
+  # Test normal case
+  normal_coords <- c(1, 2, 3, 4, 5)
+  normalized <- igraph:::.layout.norm.col(normal_coords, 0, 1)
+  expect_equal(range(normalized), c(0, 1))
+
+  # Test all-NaN case (this was the bug that was fixed)
+  nan_coords <- rep(NaN, 5)
+  normalized_nan <- igraph:::.layout.norm.col(nan_coords, 0, 1)
+  expected_middle <- rep(0.5, 5) # Should return middle value (0+1)/2 = 0.5
+  expect_equal(normalized_nan, expected_middle)
+
+  # Test all-NaN case with different range
+  normalized_nan_range <- igraph:::.layout.norm.col(nan_coords, -10, 10)
+  expected_middle_range <- rep(0, 5) # Should return middle value (-10+10)/2 = 0
+  expect_equal(normalized_nan_range, expected_middle_range)
+
+  # Test constant values (difference is zero)
+  constant_coords <- rep(5, 5)
+  normalized_constant <- igraph:::.layout.norm.col(constant_coords, 0, 1)
+  expected_constant_middle <- rep(0.5, 5)
+  expect_equal(normalized_constant, expected_constant_middle)
+
+  # Test that norm_coords works with all-NaN layouts
+  layout_all_nan <- matrix(NaN, nrow = 5, ncol = 2)
+  normalized_layout <- norm_coords(layout_all_nan, 0, 1, 0, 1)
+  expect_equal(normalized_layout, matrix(c(rep(0.5, 5), rep(0.5, 5)), ncol = 2))
+
+  # Test 3D layout normalization with all-NaN coordinates
+  layout_3d_nan <- matrix(NaN, nrow = 3, ncol = 3)
+  normalized_3d <- norm_coords(layout_3d_nan, 0, 1, 0, 1, 0, 1)
+  expect_equal(normalized_3d, matrix(rep(0.5, 9), ncol = 3))
 })

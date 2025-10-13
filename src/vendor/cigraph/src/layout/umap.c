@@ -47,7 +47,7 @@
  *    igraph_layout_umap_compute_weights.
  * 3. Compute a layout for the graph, using its associated weights as edge
  *    weights. This step is exposed via igraph_layout_umap and its 3D counterpart.
- *    These two fuctions can also compute steps 2 and 3 in one go, since that's the
+ *    These two functions can also compute steps 2 and 3 in one go, since that's the
  *    most common use case: the argument "distances_are_weights" should be
  *    set to false.
  *
@@ -793,7 +793,7 @@ static igraph_error_t igraph_i_umap_apply_forces(
         /* we move all vertices on one end of the edges, then we come back for
          * the vertices on the other end. This way we don't move both ends at the
          * same time, which is almost a wasted move since they attract each other */
-        int swapflag = (int)(RNG_UNIF01() > 0.5);
+        int swapflag = (int)(RNG_BOOL());
         int swapflag_end = swapflag + 2;
         for (; swapflag < swapflag_end; swapflag++) {
 
@@ -1215,7 +1215,7 @@ static igraph_error_t igraph_i_layout_umap(
  *   typically a sparse graph with only edges for the shortest distances stored, e.g.
  *   a k-nearest neighbors graph.
  * \param res Pointer to the n by 2 matrix where the layout coordinates will be stored.
- * \param use_seed Logical, if \c true the supplied values in the \p res argument are
+ * \param use_seed If \c true the supplied values in the \p res argument are
  *   used as an initial layout, if \c false a random initial layout is used.
  * \param distances Pointer to a vector of distances associated with the graph edges.
  *   If this argument is \c NULL, all weights will be set to 1.
@@ -1259,7 +1259,7 @@ igraph_error_t igraph_layout_umap(const igraph_t *graph,
  *   vertex to its neighbors. However, it can also be an undirected graph. If the
  *   \p distances_are_weights is \c true, this is treated as an undirected graph.
  * \param res Pointer to the n by 3 matrix where the layout coordinates will be stored.
- * \param use_seed Logical, if true the supplied values in the \p res argument are used
+ * \param use_seed If true the supplied values in the \p res argument are used
  *   as an initial layout, if false a random initial layout is used.
  * \param distances Pointer to a vector of distances associated with the graph edges.
  *   If this argument is \c NULL, all edges are assumed to have the same distance.

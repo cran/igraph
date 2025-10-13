@@ -50,16 +50,22 @@
 #' g <- make_ring(5)
 #' similarity(g, method = "dice")
 #' similarity(g, method = "jaccard")
-similarity <- function(graph, vids = V(graph),
-                       mode = c(
-                         "all", "out", "in",
-                         "total"
-                       ),
-                       loops = FALSE,
-                       method = c(
-                         "jaccard",
-                         "dice", "invlogweighted"
-                       )) {
+similarity <- function(
+  graph,
+  vids = V(graph),
+  mode = c(
+    "all",
+    "out",
+    "in",
+    "total"
+  ),
+  loops = FALSE,
+  method = c(
+    "jaccard",
+    "dice",
+    "invlogweighted"
+  )
+) {
   method <- igraph.match.arg(method)
   if (method == "jaccard") {
     similarity_jaccard_impl(graph, vids, mode, loops)
@@ -75,19 +81,20 @@ similarity <- function(graph, vids = V(graph),
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' Please use [`similarity()`] with `method = "jaccard"` instead.
+#' Please use [similarity()] with `method = "jaccard"` instead.
 #' @inheritParams similarity
 #' @keywords internal
 #' @export
-similarity.jaccard <- function(graph,
-                               vids = V(graph),
-                               mode = c("all", "out", "in", "total"),
-                               loops = FALSE) {
-
+similarity.jaccard <- function(
+  graph,
+  vids = V(graph),
+  mode = c("all", "out", "in", "total"),
+  loops = FALSE
+) {
   lifecycle::deprecate_soft(
     "2.1.0",
     "similarity.jaccard()",
-    'similarity(method)',
+    "similarity(method)",
     details = 'similarity(method = "jaccard")'
   )
 
@@ -105,19 +112,20 @@ similarity.jaccard <- function(graph,
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' Please use [`similarity()`] with `method = "dice"` instead.
+#' Please use [similarity()] with `method = "dice"` instead.
 #' @inheritParams similarity
 #' @keywords internal
 #' @export
-similarity.dice <- function(graph,
-                               vids = V(graph),
-                               mode = c("all", "out", "in", "total"),
-                               loops = FALSE) {
-
+similarity.dice <- function(
+  graph,
+  vids = V(graph),
+  mode = c("all", "out", "in", "total"),
+  loops = FALSE
+) {
   lifecycle::deprecate_soft(
     "2.1.0",
     "similarity.dice()",
-    'similarity(method)',
+    "similarity(method)",
     details = 'similarity(method = "dice")'
   )
 
@@ -135,18 +143,19 @@ similarity.dice <- function(graph,
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' Please use [`similarity()`] with `method = "invlogweighted"` instead.
+#' Please use [similarity()] with `method = "invlogweighted"` instead.
 #' @inheritParams similarity
 #' @keywords internal
 #' @export
-similarity.invlogweighted <- function(graph,
-                               vids = V(graph),
-                               mode = c("all", "out", "in", "total")) {
-
+similarity.invlogweighted <- function(
+  graph,
+  vids = V(graph),
+  mode = c("all", "out", "in", "total")
+) {
   lifecycle::deprecate_soft(
     "2.1.0",
     "similarity.invlogweighted()",
-    'similarity(method)',
+    "similarity(method)",
     details = 'similarity(method = "invlogweighted")'
   )
 

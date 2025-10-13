@@ -11,7 +11,7 @@ graph_from_graphdb(
   nodes = NULL,
   pair = "A",
   which = 0,
-  base = "http://cneurocvs.rmki.kfki.hu/graphdb/gzip",
+  base = "https://github.com/igraph/graphsdb/raw/refs/heads/main",
   compressed = TRUE,
   directed = TRUE
 )
@@ -52,7 +52,7 @@ A new graph object.
 }
 \description{
 This function downloads a graph from a database created for the evaluation
-of graph isomorphism testing algothitms.
+of graph isomorphism testing algorithms.
 }
 \details{
 \code{graph_from_graphdb()} reads a graph from the graph database from an FTP or
@@ -68,7 +68,7 @@ assembled from the \code{base}, \code{prefix}, \code{type}, \code{nodes},
 
 Unfortunately the original graph database homepage is now defunct, but see
 its old version at
-\url{http://web.archive.org/web/20090215182331/http://amalfi.dis.unina.it/graph/db/doc/graphdbat.html}
+\url{https://web.archive.org/web/20090215182331/http://amalfi.dis.unina.it/graph/db/doc/graphdbat.html}
 for the actual format of a graph database file and other information.
 }
 \references{

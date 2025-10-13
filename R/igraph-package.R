@@ -1,20 +1,9 @@
-
 #' @useDynLib igraph, .registration = TRUE
 #' @import methods
 ## usethis namespace: start
 #' @importFrom lifecycle deprecated
 #' @importFrom magrittr %>%
-#' @importFrom rlang .data .env
-#' @importFrom rlang check_dots_empty
-#' @importFrom rlang check_installed
-#' @importFrom rlang inject
-#' @importFrom rlang warn
-#' @importFrom rlang %||%
-#' @importFrom rlang as_function
-#' @importFrom rlang global_env
-#' @importFrom rlang set_names
-#' @importFrom rlang is_logical
-#' @importFrom rlang is_true
+#' @import rlang
 ## usethis namespace: end
 NULL
 

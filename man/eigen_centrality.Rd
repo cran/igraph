@@ -37,11 +37,18 @@ weights spread the centrality better.}
 \code{\link[=arpack]{arpack()}} for details.}
 }
 \value{
-A named list with components: \item{vector}{A vector containing the
-centrality scores.} \item{value}{The eigenvalue corresponding to the
-calculated eigenvector, i.e. the centrality scores.} \item{options}{A named
-list, information about the underlying ARPACK computation. See
-\code{\link[=arpack]{arpack()}} for the details.}
+A named list with components:
+\describe{
+\item{vector}{
+A vector containing the centrality scores.
+}
+\item{value}{
+The eigenvalue corresponding to the calculated eigenvector, i.e. the centrality scores.
+}
+\item{options}{
+A named list, information about the underlying ARPACK computation. See \code{\link[=arpack]{arpack()}} for the details.
+}
+}
 }
 \description{
 \code{eigen_centrality()} takes a graph (\code{graph}) and returns the
@@ -117,10 +124,10 @@ Centrality measures
 }
 \author{
 Gabor Csardi \email{csardi.gabor@gmail.com} and Carter T. Butts
-(\url{http://www.faculty.uci.edu/profile.cfm?faculty_id=5057}) for the
+(\url{https://www.faculty.uci.edu/profile.cfm?faculty_id=5057}) for the
 manual page.
 }
 \concept{centrality}
 \keyword{graphs}
-\section{Related documentation in the C library}{\href{https://igraph.org/c/html/latest/igraph-Structural.html#igraph_eigenvector_centrality}{\code{igraph_eigenvector_centrality()}}.}
+\section{Related documentation in the C library}{\href{https://igraph.org/c/html/0.10.17/igraph-Structural.html#igraph_eigenvector_centrality}{\code{eigenvector_centrality()}}.}
 

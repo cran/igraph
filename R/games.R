@@ -1,17 +1,35 @@
-
 #' The Watts-Strogatz small-world model
 #'
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `watts.strogatz.game()` was renamed to `sample_smallworld()` to create a more
+#' `watts.strogatz.game()` was renamed to [sample_smallworld()] to create a more
 #' consistent API.
 #' @inheritParams sample_smallworld
 #' @keywords internal
 #' @export
-watts.strogatz.game <- function(dim, size, nei, p, loops = FALSE, multiple = FALSE) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "watts.strogatz.game()", "sample_smallworld()")
-  sample_smallworld(dim = dim, size = size, nei = nei, p = p, loops = loops, multiple = multiple)
+watts.strogatz.game <- function(
+  dim,
+  size,
+  nei,
+  p,
+  loops = FALSE,
+  multiple = FALSE
+) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "watts.strogatz.game()",
+    "sample_smallworld()"
+  )
+  sample_smallworld(
+    dim = dim,
+    size = size,
+    nei = nei,
+    p = p,
+    loops = loops,
+    multiple = multiple
+  )
 } # nocov end
 
 #' Scale-free random graphs, from vertex fitness scores
@@ -19,14 +37,35 @@ watts.strogatz.game <- function(dim, size, nei, p, loops = FALSE, multiple = FAL
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `static.power.law.game()` was renamed to `sample_fitness_pl()` to create a more
+#' `static.power.law.game()` was renamed to [sample_fitness_pl()] to create a more
 #' consistent API.
 #' @inheritParams sample_fitness_pl
 #' @keywords internal
 #' @export
-static.power.law.game <- function(no.of.nodes, no.of.edges, exponent.out, exponent.in = -1, loops = FALSE, multiple = FALSE, finite.size.correction = TRUE) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "static.power.law.game()", "sample_fitness_pl()")
-  sample_fitness_pl(no.of.nodes = no.of.nodes, no.of.edges = no.of.edges, exponent.out = exponent.out, exponent.in = exponent.in, loops = loops, multiple = multiple, finite.size.correction = finite.size.correction)
+static.power.law.game <- function(
+  no.of.nodes,
+  no.of.edges,
+  exponent.out,
+  exponent.in = -1,
+  loops = FALSE,
+  multiple = FALSE,
+  finite.size.correction = TRUE
+) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "static.power.law.game()",
+    "sample_fitness_pl()"
+  )
+  sample_fitness_pl(
+    no.of.nodes = no.of.nodes,
+    no.of.edges = no.of.edges,
+    exponent.out = exponent.out,
+    exponent.in = exponent.in,
+    loops = loops,
+    multiple = multiple,
+    finite.size.correction = finite.size.correction
+  )
 } # nocov end
 
 #' Random graphs from vertex fitness scores
@@ -34,14 +73,31 @@ static.power.law.game <- function(no.of.nodes, no.of.edges, exponent.out, expone
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `static.fitness.game()` was renamed to `sample_fitness()` to create a more
+#' `static.fitness.game()` was renamed to [sample_fitness()] to create a more
 #' consistent API.
 #' @inheritParams sample_fitness
 #' @keywords internal
 #' @export
-static.fitness.game <- function(no.of.edges, fitness.out, fitness.in = NULL, loops = FALSE, multiple = FALSE) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "static.fitness.game()", "sample_fitness()")
-  sample_fitness(no.of.edges = no.of.edges, fitness.out = fitness.out, fitness.in = fitness.in, loops = loops, multiple = multiple)
+static.fitness.game <- function(
+  no.of.edges,
+  fitness.out,
+  fitness.in = NULL,
+  loops = FALSE,
+  multiple = FALSE
+) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "static.fitness.game()",
+    "sample_fitness()"
+  )
+  sample_fitness(
+    no.of.edges = no.of.edges,
+    fitness.out = fitness.out,
+    fitness.in = fitness.in,
+    loops = loops,
+    multiple = multiple
+  )
 } # nocov end
 
 #' Sample stochastic block model
@@ -49,14 +105,27 @@ static.fitness.game <- function(no.of.edges, fitness.out, fitness.in = NULL, loo
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `sbm.game()` was renamed to `sample_sbm()` to create a more
+#' `sbm.game()` was renamed to [sample_sbm()] to create a more
 #' consistent API.
 #' @inheritParams sample_sbm
 #' @keywords internal
 #' @export
-sbm.game <- function(n, pref.matrix, block.sizes, directed = FALSE, loops = FALSE) { # nocov start
+sbm.game <- function(
+  n,
+  pref.matrix,
+  block.sizes,
+  directed = FALSE,
+  loops = FALSE
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "sbm.game()", "sample_sbm()")
-  sample_sbm(n = n, pref.matrix = pref.matrix, block.sizes = block.sizes, directed = directed, loops = loops)
+  sample_sbm(
+    n = n,
+    pref.matrix = pref.matrix,
+    block.sizes = block.sizes,
+    directed = directed,
+    loops = loops
+  )
 } # nocov end
 
 #' Trait-based random generation
@@ -64,14 +133,31 @@ sbm.game <- function(n, pref.matrix, block.sizes, directed = FALSE, loops = FALS
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `preference.game()` was renamed to `sample_pref()` to create a more
+#' `preference.game()` was renamed to [sample_pref()] to create a more
 #' consistent API.
 #' @inheritParams sample_pref
 #' @keywords internal
 #' @export
-preference.game <- function(nodes, types, type.dist = rep(1, types), fixed.sizes = FALSE, pref.matrix = matrix(1, types, types), directed = FALSE, loops = FALSE) { # nocov start
+preference.game <- function(
+  nodes,
+  types,
+  type.dist = rep(1, types),
+  fixed.sizes = FALSE,
+  pref.matrix = matrix(1, types, types),
+  directed = FALSE,
+  loops = FALSE
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "preference.game()", "sample_pref()")
-  sample_pref(nodes = nodes, types = types, type.dist = type.dist, fixed.sizes = fixed.sizes, pref.matrix = pref.matrix, directed = directed, loops = loops)
+  sample_pref(
+    nodes = nodes,
+    types = types,
+    type.dist = type.dist,
+    fixed.sizes = fixed.sizes,
+    pref.matrix = pref.matrix,
+    directed = directed,
+    loops = loops
+  )
 } # nocov end
 
 #' Random citation graphs
@@ -79,14 +165,27 @@ preference.game <- function(nodes, types, type.dist = rep(1, types), fixed.sizes
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `lastcit.game()` was renamed to `sample_last_cit()` to create a more
+#' `lastcit.game()` was renamed to [sample_last_cit()] to create a more
 #' consistent API.
 #' @inheritParams sample_last_cit
 #' @keywords internal
 #' @export
-lastcit.game <- function(n, edges = 1, agebins = n / 7100, pref = (1:(agebins + 1))^-3, directed = TRUE) { # nocov start
+lastcit.game <- function(
+  n,
+  edges = 1,
+  agebins = n / 7100,
+  pref = (1:(agebins + 1))^-3,
+  directed = TRUE
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "lastcit.game()", "sample_last_cit()")
-  sample_last_cit(n = n, edges = edges, agebins = agebins, pref = pref, directed = directed)
+  sample_last_cit(
+    n = n,
+    edges = edges,
+    agebins = agebins,
+    pref = pref,
+    directed = directed
+  )
 } # nocov end
 
 #' Create a random regular graph
@@ -94,14 +193,20 @@ lastcit.game <- function(n, edges = 1, agebins = n / 7100, pref = (1:(agebins + 
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `k.regular.game()` was renamed to `sample_k_regular()` to create a more
+#' `k.regular.game()` was renamed to [sample_k_regular()] to create a more
 #' consistent API.
 #' @inheritParams sample_k_regular
 #' @keywords internal
 #' @export
-k.regular.game <- function(no.of.nodes, k, directed = FALSE, multiple = FALSE) { # nocov start
+k.regular.game <- function(no.of.nodes, k, directed = FALSE, multiple = FALSE) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "k.regular.game()", "sample_k_regular()")
-  sample_k_regular(no.of.nodes = no.of.nodes, k = k, directed = directed, multiple = multiple)
+  sample_k_regular(
+    no.of.nodes = no.of.nodes,
+    k = k,
+    directed = directed,
+    multiple = multiple
+  )
 } # nocov end
 
 #' A graph with subgraphs that are each a random graph.
@@ -109,14 +214,29 @@ k.regular.game <- function(no.of.nodes, k, directed = FALSE, multiple = FALSE) {
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `interconnected.islands.game()` was renamed to `sample_islands()` to create a more
+#' `interconnected.islands.game()` was renamed to [sample_islands()] to create a more
 #' consistent API.
 #' @inheritParams sample_islands
 #' @keywords internal
 #' @export
-interconnected.islands.game <- function(islands.n, islands.size, islands.pin, n.inter) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "interconnected.islands.game()", "sample_islands()")
-  sample_islands(islands.n = islands.n, islands.size = islands.size, islands.pin = islands.pin, n.inter = n.inter)
+interconnected.islands.game <- function(
+  islands.n,
+  islands.size,
+  islands.pin,
+  n.inter
+) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "interconnected.islands.game()",
+    "sample_islands()"
+  )
+  sample_islands(
+    islands.n = islands.n,
+    islands.size = islands.size,
+    islands.pin = islands.pin,
+    n.inter = n.inter
+  )
 } # nocov end
 
 #' Geometric random graphs
@@ -124,12 +244,13 @@ interconnected.islands.game <- function(islands.n, islands.size, islands.pin, n.
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `grg.game()` was renamed to `sample_grg()` to create a more
+#' `grg.game()` was renamed to [sample_grg()] to create a more
 #' consistent API.
 #' @inheritParams sample_grg
 #' @keywords internal
 #' @export
-grg.game <- function(nodes, radius, torus = FALSE, coords = FALSE) { # nocov start
+grg.game <- function(nodes, radius, torus = FALSE, coords = FALSE) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "grg.game()", "sample_grg()")
   sample_grg(nodes = nodes, radius = radius, torus = torus, coords = coords)
 } # nocov end
@@ -139,13 +260,18 @@ grg.game <- function(nodes, radius, torus = FALSE, coords = FALSE) { # nocov sta
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `growing.random.game()` was renamed to `sample_growing()` to create a more
+#' `growing.random.game()` was renamed to [sample_growing()] to create a more
 #' consistent API.
 #' @inheritParams sample_growing
 #' @keywords internal
 #' @export
-growing.random.game <- function(n, m = 1, directed = TRUE, citation = FALSE) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "growing.random.game()", "sample_growing()")
+growing.random.game <- function(n, m = 1, directed = TRUE, citation = FALSE) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "growing.random.game()",
+    "sample_growing()"
+  )
   sample_growing(n = n, m = m, directed = directed, citation = citation)
 } # nocov end
 
@@ -154,14 +280,31 @@ growing.random.game <- function(n, m = 1, directed = TRUE, citation = FALSE) { #
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `forest.fire.game()` was renamed to `sample_forestfire()` to create a more
+#' `forest.fire.game()` was renamed to [sample_forestfire()] to create a more
 #' consistent API.
 #' @inheritParams sample_forestfire
 #' @keywords internal
 #' @export
-forest.fire.game <- function(nodes, fw.prob, bw.factor = 1, ambs = 1, directed = TRUE) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "forest.fire.game()", "sample_forestfire()")
-  sample_forestfire(nodes = nodes, fw.prob = fw.prob, bw.factor = bw.factor, ambs = ambs, directed = directed)
+forest.fire.game <- function(
+  nodes,
+  fw.prob,
+  bw.factor = 1,
+  ambs = 1,
+  directed = TRUE
+) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "forest.fire.game()",
+    "sample_forestfire()"
+  )
+  sample_forestfire(
+    nodes = nodes,
+    fw.prob = fw.prob,
+    bw.factor = bw.factor,
+    ambs = ambs,
+    directed = directed
+  )
 } # nocov end
 
 #' Graph generation based on different vertex types
@@ -169,14 +312,29 @@ forest.fire.game <- function(nodes, fw.prob, bw.factor = 1, ambs = 1, directed =
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `establishment.game()` was renamed to `sample_traits()` to create a more
+#' `establishment.game()` was renamed to [sample_traits()] to create a more
 #' consistent API.
 #' @inheritParams sample_traits
 #' @keywords internal
 #' @export
-establishment.game <- function(nodes, types, k = 1, type.dist = rep(1, types), pref.matrix = matrix(1, types, types), directed = FALSE) { # nocov start
+establishment.game <- function(
+  nodes,
+  types,
+  k = 1,
+  type.dist = rep(1, types),
+  pref.matrix = matrix(1, types, types),
+  directed = FALSE
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "establishment.game()", "sample_traits()")
-  sample_traits(nodes = nodes, types = types, k = k, type.dist = type.dist, pref.matrix = pref.matrix, directed = directed)
+  sample_traits(
+    nodes = nodes,
+    types = types,
+    k = k,
+    type.dist = type.dist,
+    pref.matrix = pref.matrix,
+    directed = directed
+  )
 } # nocov end
 
 #' Generate random graphs with a given degree sequence
@@ -184,13 +342,22 @@ establishment.game <- function(nodes, types, k = 1, type.dist = rep(1, types), p
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `degree.sequence.game()` was renamed to `sample_degseq()` to create a more
+#' `degree.sequence.game()` was renamed to [sample_degseq()] to create a more
 #' consistent API.
 #' @inheritParams sample_degseq
 #' @keywords internal
 #' @export
-degree.sequence.game <- function(out.deg, in.deg = NULL, method = c("simple", "vl", "simple.no.multiple", "simple.no.multiple.uniform")) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "degree.sequence.game()", "sample_degseq()")
+degree.sequence.game <- function(
+  out.deg,
+  in.deg = NULL,
+  method = c("simple", "vl", "simple.no.multiple", "simple.no.multiple.uniform")
+) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "degree.sequence.game()",
+    "sample_degseq()"
+  )
   sample_degseq(out.deg = out.deg, in.deg = in.deg, method = method)
 } # nocov end
 
@@ -199,12 +366,17 @@ degree.sequence.game <- function(out.deg, in.deg = NULL, method = c("simple", "v
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `connect.neighborhood()` was renamed to `connect()` to create a more
+#' `connect.neighborhood()` was renamed to [connect()] to create a more
 #' consistent API.
 #' @inheritParams connect
 #' @keywords internal
 #' @export
-connect.neighborhood <- function(graph, order, mode = c("all", "out", "in", "total")) { # nocov start
+connect.neighborhood <- function(
+  graph,
+  order,
+  mode = c("all", "out", "in", "total")
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "connect.neighborhood()", "connect()")
   connect(graph = graph, order = order, mode = mode)
 } # nocov end
@@ -214,14 +386,33 @@ connect.neighborhood <- function(graph, order, mode = c("all", "out", "in", "tot
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `citing.cited.type.game()` was renamed to `sample_cit_cit_types()` to create a more
+#' `citing.cited.type.game()` was renamed to [sample_cit_cit_types()] to create a more
 #' consistent API.
 #' @inheritParams sample_cit_cit_types
 #' @keywords internal
 #' @export
-citing.cited.type.game <- function(n, edges = 1, types = rep(0, n), pref = matrix(1, nrow = length(types), ncol = length(types)), directed = TRUE, attr = TRUE) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "citing.cited.type.game()", "sample_cit_cit_types()")
-  sample_cit_cit_types(n = n, edges = edges, types = types, pref = pref, directed = directed, attr = attr)
+citing.cited.type.game <- function(
+  n,
+  edges = 1,
+  types = rep(0, n),
+  pref = matrix(1, nrow = length(types), ncol = length(types)),
+  directed = TRUE,
+  attr = TRUE
+) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "citing.cited.type.game()",
+    "sample_cit_cit_types()"
+  )
+  sample_cit_cit_types(
+    n = n,
+    edges = edges,
+    types = types,
+    pref = pref,
+    directed = directed,
+    attr = attr
+  )
 } # nocov end
 
 #' Random citation graphs
@@ -229,14 +420,29 @@ citing.cited.type.game <- function(n, edges = 1, types = rep(0, n), pref = matri
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `cited.type.game()` was renamed to `sample_cit_types()` to create a more
+#' `cited.type.game()` was renamed to [sample_cit_types()] to create a more
 #' consistent API.
 #' @inheritParams sample_cit_types
 #' @keywords internal
 #' @export
-cited.type.game <- function(n, edges = 1, types = rep(0, n), pref = rep(1, length(types)), directed = TRUE, attr = TRUE) { # nocov start
+cited.type.game <- function(
+  n,
+  edges = 1,
+  types = rep(0, n),
+  pref = rep(1, length(types)),
+  directed = TRUE,
+  attr = TRUE
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "cited.type.game()", "sample_cit_types()")
-  sample_cit_types(n = n, edges = edges, types = types, pref = pref, directed = directed, attr = attr)
+  sample_cit_types(
+    n = n,
+    edges = edges,
+    types = types,
+    pref = pref,
+    directed = directed,
+    attr = attr
+  )
 } # nocov end
 
 #' Graph generation based on different vertex types
@@ -244,14 +450,33 @@ cited.type.game <- function(n, edges = 1, types = rep(0, n), pref = rep(1, lengt
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `callaway.traits.game()` was renamed to `sample_traits_callaway()` to create a more
+#' `callaway.traits.game()` was renamed to [sample_traits_callaway()] to create a more
 #' consistent API.
 #' @inheritParams sample_traits_callaway
 #' @keywords internal
 #' @export
-callaway.traits.game <- function(nodes, types, edge.per.step = 1, type.dist = rep(1, types), pref.matrix = matrix(1, types, types), directed = FALSE) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "callaway.traits.game()", "sample_traits_callaway()")
-  sample_traits_callaway(nodes = nodes, types = types, edge.per.step = edge.per.step, type.dist = type.dist, pref.matrix = pref.matrix, directed = directed)
+callaway.traits.game <- function(
+  nodes,
+  types,
+  edge.per.step = 1,
+  type.dist = rep(1, types),
+  pref.matrix = matrix(1, types, types),
+  directed = FALSE
+) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "callaway.traits.game()",
+    "sample_traits_callaway()"
+  )
+  sample_traits_callaway(
+    nodes = nodes,
+    types = types,
+    edge.per.step = edge.per.step,
+    type.dist = type.dist,
+    pref.matrix = pref.matrix,
+    directed = directed
+  )
 } # nocov end
 
 #' Bipartite random graphs
@@ -259,14 +484,35 @@ callaway.traits.game <- function(nodes, types, edge.per.step = 1, type.dist = re
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `bipartite.random.game()` was renamed to `sample_bipartite()` to create a more
+#' `bipartite.random.game()` was renamed to [sample_bipartite()] to create a more
 #' consistent API.
 #' @inheritParams sample_bipartite
 #' @keywords internal
 #' @export
-bipartite.random.game <- function(n1, n2, type = c("gnp", "gnm"), p, m, directed = FALSE, mode = c("out", "in", "all")) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "bipartite.random.game()", "sample_bipartite()")
-  sample_bipartite(n1 = n1, n2 = n2, type = type, p = p, m = m, directed = directed, mode = mode)
+bipartite.random.game <- function(
+  n1,
+  n2,
+  type = c("gnp", "gnm"),
+  p,
+  m,
+  directed = FALSE,
+  mode = c("out", "in", "all")
+) {
+  # nocov start
+  lifecycle::deprecate_warn(
+    "2.0.0",
+    "bipartite.random.game()",
+    details = "Use sample_bipartite_gnp() or sample_bipartite_gnm()"
+  )
+  sample_bipartite(
+    n1 = n1,
+    n2 = n2,
+    type = type,
+    p = p,
+    m = m,
+    directed = directed,
+    mode = mode
+  )
 } # nocov end
 
 #' Generate random graphs using preferential attachment
@@ -274,14 +520,37 @@ bipartite.random.game <- function(n1, n2, type = c("gnp", "gnm"), p, m, directed
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `barabasi.game()` was renamed to `sample_pa()` to create a more
+#' `barabasi.game()` was renamed to [sample_pa()] to create a more
 #' consistent API.
 #' @inheritParams sample_pa
 #' @keywords internal
 #' @export
-barabasi.game <- function(n, power = 1, m = NULL, out.dist = NULL, out.seq = NULL, out.pref = FALSE, zero.appeal = 1, directed = TRUE, algorithm = c("psumtree", "psumtree-multiple", "bag"), start.graph = NULL) { # nocov start
+barabasi.game <- function(
+  n,
+  power = 1,
+  m = NULL,
+  out.dist = NULL,
+  out.seq = NULL,
+  out.pref = FALSE,
+  zero.appeal = 1,
+  directed = TRUE,
+  algorithm = c("psumtree", "psumtree-multiple", "bag"),
+  start.graph = NULL
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "barabasi.game()", "sample_pa()")
-  sample_pa(n = n, power = power, m = m, out.dist = out.dist, out.seq = out.seq, out.pref = out.pref, zero.appeal = zero.appeal, directed = directed, algorithm = algorithm, start.graph = start.graph)
+  sample_pa(
+    n = n,
+    power = power,
+    m = m,
+    out.dist = out.dist,
+    out.seq = out.seq,
+    out.pref = out.pref,
+    zero.appeal = zero.appeal,
+    directed = directed,
+    algorithm = algorithm,
+    start.graph = start.graph
+  )
 } # nocov end
 
 #' Generate random graphs using preferential attachment
@@ -289,14 +558,37 @@ barabasi.game <- function(n, power = 1, m = NULL, out.dist = NULL, out.seq = NUL
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `ba.game()` was renamed to `sample_pa()` to create a more
+#' `ba.game()` was renamed to [sample_pa()] to create a more
 #' consistent API.
 #' @inheritParams sample_pa
 #' @keywords internal
 #' @export
-ba.game <- function(n, power = 1, m = NULL, out.dist = NULL, out.seq = NULL, out.pref = FALSE, zero.appeal = 1, directed = TRUE, algorithm = c("psumtree", "psumtree-multiple", "bag"), start.graph = NULL) { # nocov start
+ba.game <- function(
+  n,
+  power = 1,
+  m = NULL,
+  out.dist = NULL,
+  out.seq = NULL,
+  out.pref = FALSE,
+  zero.appeal = 1,
+  directed = TRUE,
+  algorithm = c("psumtree", "psumtree-multiple", "bag"),
+  start.graph = NULL
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "ba.game()", "sample_pa()")
-  sample_pa(n = n, power = power, m = m, out.dist = out.dist, out.seq = out.seq, out.pref = out.pref, zero.appeal = zero.appeal, directed = directed, algorithm = algorithm, start.graph = start.graph)
+  sample_pa(
+    n = n,
+    power = power,
+    m = m,
+    out.dist = out.dist,
+    out.seq = out.seq,
+    out.pref = out.pref,
+    zero.appeal = zero.appeal,
+    directed = directed,
+    algorithm = algorithm,
+    start.graph = start.graph
+  )
 } # nocov end
 
 #' Trait-based random generation
@@ -304,14 +596,31 @@ ba.game <- function(n, power = 1, m = NULL, out.dist = NULL, out.seq = NULL, out
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `asymmetric.preference.game()` was renamed to `sample_asym_pref()` to create a more
+#' `asymmetric.preference.game()` was renamed to [sample_asym_pref()] to create a more
 #' consistent API.
 #' @inheritParams sample_asym_pref
 #' @keywords internal
 #' @export
-asymmetric.preference.game <- function(nodes, types, type.dist.matrix = matrix(1, types, types), pref.matrix = matrix(1, types, types), loops = FALSE) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "asymmetric.preference.game()", "sample_asym_pref()")
-  sample_asym_pref(nodes = nodes, types = types, type.dist.matrix = type.dist.matrix, pref.matrix = pref.matrix, loops = loops)
+asymmetric.preference.game <- function(
+  nodes,
+  types,
+  type.dist.matrix = matrix(1, types, types),
+  pref.matrix = matrix(1, types, types),
+  loops = FALSE
+) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "asymmetric.preference.game()",
+    "sample_asym_pref()"
+  )
+  sample_asym_pref(
+    nodes = nodes,
+    types = types,
+    type.dist.matrix = type.dist.matrix,
+    pref.matrix = pref.matrix,
+    loops = loops
+  )
 } # nocov end
 
 #' Generate an evolving random graph with preferential attachment and aging
@@ -319,14 +628,45 @@ asymmetric.preference.game <- function(nodes, types, type.dist.matrix = matrix(1
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `aging.barabasi.game()` was renamed to `sample_pa_age()` to create a more
+#' `aging.barabasi.game()` was renamed to [sample_pa_age()] to create a more
 #' consistent API.
 #' @inheritParams sample_pa_age
 #' @keywords internal
 #' @export
-aging.barabasi.game <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300, out.dist = NULL, out.seq = NULL, out.pref = FALSE, directed = TRUE, zero.deg.appeal = 1, zero.age.appeal = 0, deg.coef = 1, age.coef = 1, time.window = NULL) { # nocov start
+aging.barabasi.game <- function(
+  n,
+  pa.exp,
+  aging.exp,
+  m = NULL,
+  aging.bin = 300,
+  out.dist = NULL,
+  out.seq = NULL,
+  out.pref = FALSE,
+  directed = TRUE,
+  zero.deg.appeal = 1,
+  zero.age.appeal = 0,
+  deg.coef = 1,
+  age.coef = 1,
+  time.window = NULL
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "aging.barabasi.game()", "sample_pa_age()")
-  sample_pa_age(n = n, pa.exp = pa.exp, aging.exp = aging.exp, m = m, aging.bin = aging.bin, out.dist = out.dist, out.seq = out.seq, out.pref = out.pref, directed = directed, zero.deg.appeal = zero.deg.appeal, zero.age.appeal = zero.age.appeal, deg.coef = deg.coef, age.coef = age.coef, time.window = time.window)
+  sample_pa_age(
+    n = n,
+    pa.exp = pa.exp,
+    aging.exp = aging.exp,
+    m = m,
+    aging.bin = aging.bin,
+    out.dist = out.dist,
+    out.seq = out.seq,
+    out.pref = out.pref,
+    directed = directed,
+    zero.deg.appeal = zero.deg.appeal,
+    zero.age.appeal = zero.age.appeal,
+    deg.coef = deg.coef,
+    age.coef = age.coef,
+    time.window = time.window
+  )
 } # nocov end
 
 #' Generate an evolving random graph with preferential attachment and aging
@@ -334,14 +674,45 @@ aging.barabasi.game <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300,
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `aging.ba.game()` was renamed to `sample_pa_age()` to create a more
+#' `aging.ba.game()` was renamed to [sample_pa_age()] to create a more
 #' consistent API.
 #' @inheritParams sample_pa_age
 #' @keywords internal
 #' @export
-aging.ba.game <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300, out.dist = NULL, out.seq = NULL, out.pref = FALSE, directed = TRUE, zero.deg.appeal = 1, zero.age.appeal = 0, deg.coef = 1, age.coef = 1, time.window = NULL) { # nocov start
+aging.ba.game <- function(
+  n,
+  pa.exp,
+  aging.exp,
+  m = NULL,
+  aging.bin = 300,
+  out.dist = NULL,
+  out.seq = NULL,
+  out.pref = FALSE,
+  directed = TRUE,
+  zero.deg.appeal = 1,
+  zero.age.appeal = 0,
+  deg.coef = 1,
+  age.coef = 1,
+  time.window = NULL
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "aging.ba.game()", "sample_pa_age()")
-  sample_pa_age(n = n, pa.exp = pa.exp, aging.exp = aging.exp, m = m, aging.bin = aging.bin, out.dist = out.dist, out.seq = out.seq, out.pref = out.pref, directed = directed, zero.deg.appeal = zero.deg.appeal, zero.age.appeal = zero.age.appeal, deg.coef = deg.coef, age.coef = age.coef, time.window = time.window)
+  sample_pa_age(
+    n = n,
+    pa.exp = pa.exp,
+    aging.exp = aging.exp,
+    m = m,
+    aging.bin = aging.bin,
+    out.dist = out.dist,
+    out.seq = out.seq,
+    out.pref = out.pref,
+    directed = directed,
+    zero.deg.appeal = zero.deg.appeal,
+    zero.age.appeal = zero.age.appeal,
+    deg.coef = deg.coef,
+    age.coef = age.coef,
+    time.window = time.window
+  )
 } # nocov end
 
 #' Generate an evolving random graph with preferential attachment and aging
@@ -349,14 +720,45 @@ aging.ba.game <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300, out.d
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `aging.prefatt.game()` was renamed to `sample_pa_age()` to create a more
+#' `aging.prefatt.game()` was renamed to [sample_pa_age()] to create a more
 #' consistent API.
 #' @inheritParams sample_pa_age
 #' @keywords internal
 #' @export
-aging.prefatt.game <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300, out.dist = NULL, out.seq = NULL, out.pref = FALSE, directed = TRUE, zero.deg.appeal = 1, zero.age.appeal = 0, deg.coef = 1, age.coef = 1, time.window = NULL) { # nocov start
+aging.prefatt.game <- function(
+  n,
+  pa.exp,
+  aging.exp,
+  m = NULL,
+  aging.bin = 300,
+  out.dist = NULL,
+  out.seq = NULL,
+  out.pref = FALSE,
+  directed = TRUE,
+  zero.deg.appeal = 1,
+  zero.age.appeal = 0,
+  deg.coef = 1,
+  age.coef = 1,
+  time.window = NULL
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "aging.prefatt.game()", "sample_pa_age()")
-  sample_pa_age(n = n, pa.exp = pa.exp, aging.exp = aging.exp, m = m, aging.bin = aging.bin, out.dist = out.dist, out.seq = out.seq, out.pref = out.pref, directed = directed, zero.deg.appeal = zero.deg.appeal, zero.age.appeal = zero.age.appeal, deg.coef = deg.coef, age.coef = age.coef, time.window = time.window)
+  sample_pa_age(
+    n = n,
+    pa.exp = pa.exp,
+    aging.exp = aging.exp,
+    m = m,
+    aging.bin = aging.bin,
+    out.dist = out.dist,
+    out.seq = out.seq,
+    out.pref = out.pref,
+    directed = directed,
+    zero.deg.appeal = zero.deg.appeal,
+    zero.age.appeal = zero.age.appeal,
+    deg.coef = deg.coef,
+    age.coef = age.coef,
+    time.window = time.window
+  )
 } # nocov end
 
 ## -----------------------------------------------------------------
@@ -472,20 +874,33 @@ aging.prefatt.game <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300, 
 #' g <- sample_pa(10000)
 #' degree_distribution(g)
 #'
-sample_pa <- function(n, power = 1, m = NULL, out.dist = NULL, out.seq = NULL,
-                      out.pref = FALSE, zero.appeal = 1,
-                      directed = TRUE, algorithm = c(
-                        "psumtree",
-                        "psumtree-multiple", "bag"
-                      ),
-                      start.graph = NULL) {
+sample_pa <- function(
+  n,
+  power = 1,
+  m = NULL,
+  out.dist = NULL,
+  out.seq = NULL,
+  out.pref = FALSE,
+  zero.appeal = 1,
+  directed = TRUE,
+  algorithm = c(
+    "psumtree",
+    "psumtree-multiple",
+    "bag"
+  ),
+  start.graph = NULL
+) {
   if (!is.null(start.graph) && !is_igraph(start.graph)) {
-    stop("`start.graph' not an `igraph' object")
+    cli::cli_abort(
+      "{.arg start.graph} must be an {.cls igraph} object, not {.obj_type_friendly {start.graph}}."
+    )
   }
 
   # Checks
   if (!is.null(out.seq) && (!is.null(m) || !is.null(out.dist))) {
-    cli::cli_warn("if {.arg out.seq} is given {.arg m} and {.arg out.dist} should be {.code NULL}.")
+    cli::cli_warn(
+      "if {.arg out.seq} is given {.arg m} and {.arg out.dist} should be {.code NULL}."
+    )
     m <- out.dist <- NULL
   }
   if (is.null(out.seq) && !is.null(out.dist) && !is.null(m)) {
@@ -515,8 +930,11 @@ sample_pa <- function(n, power = 1, m = NULL, out.dist = NULL, out.seq = NULL,
 
   if (!is.null(out.dist)) {
     nn <- if (is.null(start.graph)) n else n - vcount(start.graph)
-    out.seq <- as.numeric(sample(0:(length(out.dist) - 1), nn,
-      replace = TRUE, prob = out.dist
+    out.seq <- as.numeric(sample(
+      0:(length(out.dist) - 1),
+      nn,
+      replace = TRUE,
+      prob = out.dist
     ))
   }
 
@@ -525,7 +943,8 @@ sample_pa <- function(n, power = 1, m = NULL, out.dist = NULL, out.seq = NULL,
   }
 
   algorithm <- igraph.match.arg(algorithm)
-  algorithm1 <- switch(algorithm,
+  algorithm1 <- switch(
+    algorithm,
     "psumtree" = 1,
     "psumtree-multiple" = 2,
     "bag" = 0
@@ -533,8 +952,16 @@ sample_pa <- function(n, power = 1, m = NULL, out.dist = NULL, out.seq = NULL,
 
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_barabasi_game, n, power, m, out.seq, out.pref,
-    zero.appeal, directed, algorithm1, start.graph
+    R_igraph_barabasi_game,
+    n,
+    power,
+    m,
+    out.seq,
+    out.pref,
+    zero.appeal,
+    directed,
+    algorithm1,
+    start.graph
   )
 
   if (igraph_opt("add.params")) {
@@ -555,7 +982,6 @@ pa <- function(...) constructor_spec(sample_pa, ...)
 
 
 ## -----------------------------------------------------------------
-
 
 #' Generate random graphs according to the \eqn{G(n,p)} Erdős-Rényi model
 #'
@@ -594,15 +1020,15 @@ pa <- function(...) constructor_spec(sample_pa, ...)
 #' plot(sample_gnp(6, 0.5))
 sample_gnp <- function(n, p, directed = FALSE, loops = FALSE) {
   type <- "gnp"
-  type1 <- switch(type,
-    "gnp" = 0,
-    "gnm" = 1
-  )
+  type1 <- switch(type, "gnp" = 0, "gnm" = 1)
 
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_erdos_renyi_game_gnp, as.numeric(n),
-    as.numeric(p), as.logical(directed), as.logical(loops)
+    R_igraph_erdos_renyi_game_gnp,
+    as.numeric(n),
+    as.numeric(p),
+    as.logical(directed),
+    as.logical(loops)
   )
 
   if (igraph_opt("add.params")) {
@@ -620,8 +1046,6 @@ sample_gnp <- function(n, p, directed = FALSE, loops = FALSE) {
 gnp <- function(...) constructor_spec(sample_gnp, ...)
 
 ## -----------------------------------------------------------------
-
-
 
 #' Generate random graphs according to the \eqn{G(n,m)} Erdős-Rényi model
 #'
@@ -649,15 +1073,15 @@ gnp <- function(...) constructor_spec(sample_gnp, ...)
 #' degree_distribution(g)
 sample_gnm <- function(n, m, directed = FALSE, loops = FALSE) {
   type <- "gnm"
-  type1 <- switch(type,
-    "gnp" = 0,
-    "gnm" = 1
-  )
+  type1 <- switch(type, "gnp" = 0, "gnm" = 1)
 
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_erdos_renyi_game_gnm, as.numeric(n),
-    as.numeric(m), as.logical(directed), as.logical(loops)
+    R_igraph_erdos_renyi_game_gnm,
+    as.numeric(n),
+    as.numeric(m),
+    as.logical(directed),
+    as.logical(loops)
   )
 
   if (igraph_opt("add.params")) {
@@ -711,8 +1135,13 @@ gnm <- function(...) constructor_spec(sample_gnm, ...)
 #' g <- erdos.renyi.game(1000, 1 / 1000)
 #' degree_distribution(g)
 #'
-erdos.renyi.game <- function(n, p.or.m, type = c("gnp", "gnm"),
-                             directed = FALSE, loops = FALSE) {
+erdos.renyi.game <- function(
+  n,
+  p.or.m,
+  type = c("gnp", "gnm"),
+  directed = FALSE,
+  loops = FALSE
+) {
   type <- igraph.match.arg(type)
 
   if (type == "gnp") {
@@ -726,8 +1155,13 @@ erdos.renyi.game <- function(n, p.or.m, type = c("gnp", "gnm"),
 
 #' @family games
 #' @export
-random.graph.game <- function(n, p.or.m, type = c("gnp", "gnm"),
-                             directed = FALSE, loops = FALSE) {
+random.graph.game <- function(
+  n,
+  p.or.m,
+  type = c("gnp", "gnm"),
+  directed = FALSE,
+  loops = FALSE
+) {
   type <- igraph.match.arg(type)
 
   if (type == "gnp") {
@@ -912,37 +1346,61 @@ random.graph.game <- function(n, p.or.m, type = c("gnp", "gnm"),
 #' powerlaw_vl_graph <- sample_degseq(powerlaw_degrees, method = "vl")
 #' all(degree(powerlaw_vl_graph) == powerlaw_degrees)
 #'
-sample_degseq <- function(out.deg, in.deg = NULL,
-                          method = c("configuration", "vl", "fast.heur.simple", "configuration.simple", "edge.switching.simple")) {
+sample_degseq <- function(
+  out.deg,
+  in.deg = NULL,
+  method = c(
+    "configuration",
+    "vl",
+    "fast.heur.simple",
+    "configuration.simple",
+    "edge.switching.simple"
+  )
+) {
   if (missing(method)) {
     method <- method[1]
   }
   method <- igraph.match.arg(
     method,
     values = c(
-      "configuration", "vl", "fast.heur.simple",
-      "configuration.simple", "edge.switching.simple",
-      "simple", "simple.no.multiple", "simple.no.multiple.uniform" # old names
+      "configuration",
+      "vl",
+      "fast.heur.simple",
+      "configuration.simple",
+      "edge.switching.simple",
+      "simple",
+      "simple.no.multiple",
+      "simple.no.multiple.uniform" # old names
     )
   )
 
   if (method == "simple") {
-    lifecycle::deprecate_warn("2.1.0", "sample_degseq(method = 'must be configuration instead of simple')")
+    lifecycle::deprecate_warn(
+      "2.1.0",
+      "sample_degseq(method = 'must be configuration instead of simple')"
+    )
     method <- "configuration"
   }
 
   if (method == "simple.no.multiple") {
-    lifecycle::deprecate_warn("2.1.0", "sample_degseq(method = 'must be fast.heur.simple instead of simple.no.multiple')")
+    lifecycle::deprecate_warn(
+      "2.1.0",
+      "sample_degseq(method = 'must be fast.heur.simple instead of simple.no.multiple')"
+    )
     method <- "fast.heur.simple"
   }
 
   if (method == "simple.no.multiple.uniform") {
-    lifecycle::deprecate_warn("2.1.0", "sample_degseq(method = 'must be configuration.simple instead of simple.no.multiple.uniform')")
+    lifecycle::deprecate_warn(
+      "2.1.0",
+      "sample_degseq(method = 'must be configuration.simple instead of simple.no.multiple.uniform')"
+    )
     method <- "configuration.simple"
   }
 
   # numbers from https://github.com/igraph/igraph/blob/640083c88bf85fd322ff7b748b9b4e16ebe32aa2/include/igraph_constants.h#L94
-  method1 <- switch(method,
+  method1 <- switch(
+    method,
     "configuration" = 0,
     "vl" = 1,
     "fast.heur.simple" = 2,
@@ -955,8 +1413,10 @@ sample_degseq <- function(out.deg, in.deg = NULL,
 
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_degree_sequence_game, as.numeric(out.deg),
-    in.deg, as.numeric(method1)
+    R_igraph_degree_sequence_game,
+    as.numeric(out.deg),
+    in.deg,
+    as.numeric(method1)
   )
   if (igraph_opt("add.params")) {
     res$name <- "Degree sequence random graph"
@@ -972,7 +1432,8 @@ sample_degseq <- function(out.deg, in.deg = NULL,
 #' @export
 degseq <- function(..., deterministic = FALSE) {
   constructor_spec(
-    if (deterministic) realize_degseq else sample_degseq, ...
+    if (deterministic) realize_degseq else sample_degseq,
+    ...
   )
 }
 
@@ -1012,7 +1473,6 @@ sample_growing <- growing_random_game_impl
 growing <- function(...) constructor_spec(sample_growing, ...)
 
 ## -----------------------------------------------------------------
-
 
 #' Generate an evolving random graph with preferential attachment and aging
 #'
@@ -1108,15 +1568,27 @@ growing <- function(...) constructor_spec(sample_growing, ...)
 #' max(degree(g1))
 #' max(degree(g2))
 #' max(degree(g3))
-sample_pa_age <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300,
-                          out.dist = NULL, out.seq = NULL,
-                          out.pref = FALSE, directed = TRUE,
-                          zero.deg.appeal = 1, zero.age.appeal = 0,
-                          deg.coef = 1, age.coef = 1,
-                          time.window = NULL) {
+sample_pa_age <- function(
+  n,
+  pa.exp,
+  aging.exp,
+  m = NULL,
+  aging.bin = 300,
+  out.dist = NULL,
+  out.seq = NULL,
+  out.pref = FALSE,
+  directed = TRUE,
+  zero.deg.appeal = 1,
+  zero.age.appeal = 0,
+  deg.coef = 1,
+  age.coef = 1,
+  time.window = NULL
+) {
   # Checks
   if (!is.null(out.seq) && (!is.null(m) || !is.null(out.dist))) {
-    cli::cli_warn("if {.arg out.seq} is given {.arg m} and {.arg out.dist} should be {.code NULL}.")
+    cli::cli_warn(
+      "if {.arg out.seq} is given {.arg m} and {.arg out.dist} should be {.code NULL}."
+    )
     m <- out.dist <- NULL
   }
   if (is.null(out.seq) && !is.null(out.dist) && !is.null(m)) {
@@ -1124,16 +1596,18 @@ sample_pa_age <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300,
     m <- NULL
   }
   if (!is.null(out.seq) && length(out.seq) != n) {
-    stop("`out.seq' should be of length `n'")
+    cli::cli_abort(
+      "{.arg out.seq} must have length {.val n}, not {.val {length( out.seq)}}.'"
+    )
   }
   if (!is.null(out.seq) && min(out.seq) < 0) {
-    stop("negative elements in `out.seq'")
+    cli::cli_abort("{.arg out.seq} must not contain negative elements.")
   }
   if (!is.null(m) && m < 0) {
-    stop("`m' is negative")
+    cli::cli_abort("{.arg m} must be positive or 0.")
   }
   if (!is.null(time.window) && time.window <= 0) {
-    stop("time window size should be positive")
+    cli::cli_abort("{.arg time.window} must be positive.")
   }
   if (!is.null(m) && m == 0) {
     cli::cli_warn("{.arg m} is zero, graph will be empty.")
@@ -1142,7 +1616,9 @@ sample_pa_age <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300,
     cli::cli_warn("Aging exponent {.arg aging.exp} is positive.")
   }
   if (zero.deg.appeal <= 0) {
-    cli::cli_warn("Initial attractiveness {.arg zero.deg.appeal} is not positive.")
+    cli::cli_warn(
+      "Initial attractiveness {.arg zero.deg.appeal} is not positive."
+    )
   }
 
   if (is.null(m) && is.null(out.dist) && is.null(out.seq)) {
@@ -1162,8 +1638,11 @@ sample_pa_age <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300,
   out.pref <- as.logical(out.pref)
 
   if (!is.null(out.dist)) {
-    out.seq <- as.numeric(sample(0:(length(out.dist) - 1), n,
-      replace = TRUE, prob = out.dist
+    out.seq <- as.numeric(sample(
+      0:(length(out.dist) - 1),
+      n,
+      replace = TRUE,
+      prob = out.dist
     ))
   }
 
@@ -1174,18 +1653,33 @@ sample_pa_age <- function(n, pa.exp, aging.exp, m = NULL, aging.bin = 300,
   on.exit(.Call(R_igraph_finalizer))
   res <- if (is.null(time.window)) {
     .Call(
-      R_igraph_barabasi_aging_game, as.numeric(n),
-      as.numeric(pa.exp), as.numeric(aging.exp),
-      as.numeric(aging.bin), m, out.seq,
-      out.pref, as.numeric(zero.deg.appeal), as.numeric(zero.age.appeal),
-      as.numeric(deg.coef), as.numeric(age.coef), directed
+      R_igraph_barabasi_aging_game,
+      as.numeric(n),
+      as.numeric(pa.exp),
+      as.numeric(aging.exp),
+      as.numeric(aging.bin),
+      m,
+      out.seq,
+      out.pref,
+      as.numeric(zero.deg.appeal),
+      as.numeric(zero.age.appeal),
+      as.numeric(deg.coef),
+      as.numeric(age.coef),
+      directed
     )
   } else {
     .Call(
-      R_igraph_recent_degree_aging_game, as.numeric(n),
-      as.numeric(pa.exp), as.numeric(aging.exp),
-      as.numeric(aging.bin), m, out.seq, out.pref, as.numeric(zero.deg.appeal),
-      directed, time.window
+      R_igraph_recent_degree_aging_game,
+      as.numeric(n),
+      as.numeric(pa.exp),
+      as.numeric(aging.exp),
+      as.numeric(aging.bin),
+      m,
+      out.seq,
+      out.pref,
+      as.numeric(zero.deg.appeal),
+      directed,
+      time.window
     )
   }
   if (igraph_opt("add.params")) {
@@ -1249,16 +1743,24 @@ pa_age <- function(...) constructor_spec(sample_pa_age, ...)
 #' # two types of vertices, they like only themselves
 #' g1 <- sample_traits_callaway(1000, 2, pref.matrix = matrix(c(1, 0, 0, 1), ncol = 2))
 #' g2 <- sample_traits(1000, 2, k = 2, pref.matrix = matrix(c(1, 0, 0, 1), ncol = 2))
-sample_traits_callaway <- function(nodes, types, edge.per.step = 1,
-                                   type.dist = rep(1, types),
-                                   pref.matrix = matrix(1, types, types),
-                                   directed = FALSE) {
+sample_traits_callaway <- function(
+  nodes,
+  types,
+  edge.per.step = 1,
+  type.dist = rep(1, types),
+  pref.matrix = matrix(1, types, types),
+  directed = FALSE
+) {
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_callaway_traits_game, as.double(nodes),
-    as.double(types), as.double(edge.per.step),
-    as.double(type.dist), matrix(
-      as.double(pref.matrix), types,
+    R_igraph_callaway_traits_game,
+    as.double(nodes),
+    as.double(types),
+    as.double(edge.per.step),
+    as.double(type.dist),
+    matrix(
+      as.double(pref.matrix),
+      types,
       types
     ),
     as.logical(directed)
@@ -1281,13 +1783,21 @@ traits_callaway <- function(...) constructor_spec(sample_traits_callaway, ...)
 
 #' @rdname sample_traits_callaway
 #' @export
-sample_traits <- function(nodes, types, k = 1, type.dist = rep(1, types),
-                          pref.matrix = matrix(1, types, types),
-                          directed = FALSE) {
+sample_traits <- function(
+  nodes,
+  types,
+  k = 1,
+  type.dist = rep(1, types),
+  pref.matrix = matrix(1, types, types),
+  directed = FALSE
+) {
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_establishment_game, as.double(nodes),
-    as.double(types), as.double(k), as.double(type.dist),
+    R_igraph_establishment_game,
+    as.double(nodes),
+    as.double(types),
+    as.double(k),
+    as.double(type.dist),
     matrix(as.double(pref.matrix), types, types),
     as.logical(directed)
   )
@@ -1327,7 +1837,7 @@ traits <- function(...) constructor_spec(sample_traits, ...)
 #' @return A graph object. If `coords` is `TRUE` then with vertex
 #'   attributes \sQuote{`x`} and \sQuote{`y`}.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}, first version was
-#' written by Keith Briggs (<http://keithbriggs.info/>).
+#' written by Keith Briggs (<https://keithbriggs.info/>).
 #' @family games
 #' @export
 #' @keywords graphs
@@ -1339,8 +1849,11 @@ traits <- function(...) constructor_spec(sample_traits, ...)
 sample_grg <- function(nodes, radius, torus = FALSE, coords = FALSE) {
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_grg_game, as.double(nodes), as.double(radius),
-    as.logical(torus), as.logical(coords)
+    R_igraph_grg_game,
+    as.double(nodes),
+    as.double(radius),
+    as.logical(torus),
+    as.logical(coords)
   )
   if (coords) {
     V(res[[1]])$x <- res[[2]]
@@ -1360,7 +1873,6 @@ sample_grg <- function(nodes, radius, torus = FALSE, coords = FALSE) {
 grg <- function(...) constructor_spec(sample_grg, ...)
 
 ## -----------------------------------------------------------------
-
 
 #' Trait-based random generation
 #'
@@ -1420,20 +1932,32 @@ grg <- function(...) constructor_spec(sample_grg, ...)
 #' @examplesIf rlang::is_installed("tcltk") && rlang::is_interactive()
 #' tkplot(g, layout = layout_in_circle)
 #'
-sample_pref <- function(nodes, types, type.dist = rep(1, types),
-                        fixed.sizes = FALSE,
-                        pref.matrix = matrix(1, types, types),
-                        directed = FALSE, loops = FALSE) {
+sample_pref <- function(
+  nodes,
+  types,
+  type.dist = rep(1, types),
+  fixed.sizes = FALSE,
+  pref.matrix = matrix(1, types, types),
+  directed = FALSE,
+  loops = FALSE
+) {
   if (nrow(pref.matrix) != types || ncol(pref.matrix) != types) {
-    stop("Invalid size for preference matrix")
+    cli::cli_abort(c(
+      "{.arg pref.matrix} must have {.arg types} rows and columns.",
+      i = "See {.fun igraph::sample_pref}'s manual."
+    ))
   }
 
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_preference_game, as.numeric(nodes), as.numeric(types),
-    as.double(type.dist), as.logical(fixed.sizes),
+    R_igraph_preference_game,
+    as.numeric(nodes),
+    as.numeric(types),
+    as.double(type.dist),
+    as.logical(fixed.sizes),
     matrix(as.double(pref.matrix), types, types),
-    as.logical(directed), as.logical(loops)
+    as.logical(directed),
+    as.logical(loops)
   )
   V(res[[1]])$type <- res[[2]] + 1
   if (igraph_opt("add.params")) {
@@ -1455,21 +1979,32 @@ pref <- function(...) constructor_spec(sample_pref, ...)
 
 #' @rdname sample_pref
 #' @export
-sample_asym_pref <- function(nodes, types,
-                             type.dist.matrix = matrix(1, types, types),
-                             pref.matrix = matrix(1, types, types),
-                             loops = FALSE) {
+sample_asym_pref <- function(
+  nodes,
+  types,
+  type.dist.matrix = matrix(1, types, types),
+  pref.matrix = matrix(1, types, types),
+  loops = FALSE
+) {
   if (nrow(pref.matrix) != types || ncol(pref.matrix) != types) {
-    stop("Invalid size for preference matrix")
+    cli::cli_abort(c(
+      "{.arg pref.matrix} must have {.arg types} rows and columns.",
+      i = "See {.fun igraph::sample_asym_pref}'s manual."
+    ))
   }
   if (nrow(type.dist.matrix) != types || ncol(type.dist.matrix) != types) {
-    stop("Invalid size for type distribution matrix")
+    cli::cli_abort(c(
+      "{.arg type.dist.matrix} must have {.arg types} rows and columns.",
+      i = "See {.fun igraph::sample_asym_pref}'s manual."
+    ))
   }
 
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
     R_igraph_asymmetric_preference_game,
-    as.numeric(nodes), as.numeric(types), as.numeric(types),
+    as.numeric(nodes),
+    as.numeric(types),
+    as.numeric(types),
     matrix(as.double(type.dist.matrix), types, types),
     matrix(as.double(pref.matrix), types, types),
     as.logical(loops)
@@ -1493,23 +2028,19 @@ asym_pref <- function(...) constructor_spec(sample_asym_pref, ...)
 
 ## -----------------------------------------------------------------
 
-
 #' @rdname ego
 #' @export
 #' @family functions for manipulating graph structure
 connect <- function(graph, order, mode = c("all", "out", "in", "total")) {
   ensure_igraph(graph)
   mode <- igraph.match.arg(mode)
-  mode <- switch(mode,
-    "out" = 1,
-    "in" = 2,
-    "all" = 3,
-    "total" = 3
-  )
+  mode <- switch(mode, "out" = 1, "in" = 2, "all" = 3, "total" = 3)
 
   on.exit(.Call(R_igraph_finalizer))
   .Call(
-    R_igraph_connect_neighborhood, graph, as.numeric(order),
+    R_igraph_connect_neighborhood,
+    graph,
+    as.numeric(order),
     as.numeric(mode)
   )
 }
@@ -1560,13 +2091,23 @@ connect <- function(graph, order, mode = c("all", "out", "in", "total")) {
 #' mean_distance(g)
 #' transitivity(g, type = "average")
 #'
-sample_smallworld <- function(dim, size, nei, p, loops = FALSE,
-                              multiple = FALSE) {
+sample_smallworld <- function(
+  dim,
+  size,
+  nei,
+  p,
+  loops = FALSE,
+  multiple = FALSE
+) {
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_watts_strogatz_game, as.numeric(dim),
-    as.numeric(size), as.numeric(nei), as.numeric(p),
-    as.logical(loops), as.logical(multiple)
+    R_igraph_watts_strogatz_game,
+    as.numeric(dim),
+    as.numeric(size),
+    as.numeric(nei),
+    as.numeric(p),
+    as.logical(loops),
+    as.logical(multiple)
   )
   if (igraph_opt("add.params")) {
     res$name <- "Watts-Strogatz random graph"
@@ -1616,13 +2157,21 @@ smallworld <- function(...) constructor_spec(sample_smallworld, ...)
 #' @keywords graphs
 #' @family games
 #' @export
-sample_last_cit <- function(n, edges = 1, agebins = n / 7100, pref = (1:(agebins + 1))^-3,
-                            directed = TRUE) {
+sample_last_cit <- function(
+  n,
+  edges = 1,
+  agebins = n / 7100,
+  pref = (1:(agebins + 1))^-3,
+  directed = TRUE
+) {
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_lastcit_game, as.numeric(n), as.numeric(edges),
+    R_igraph_lastcit_game,
+    as.numeric(n),
+    as.numeric(edges),
     as.numeric(agebins),
-    as.numeric(pref), as.logical(directed)
+    as.numeric(pref),
+    as.logical(directed)
   )
   if (igraph_opt("add.params")) {
     res$name <- "Random citation graph based on last citation"
@@ -1639,13 +2188,22 @@ last_cit <- function(...) constructor_spec(sample_last_cit, ...)
 
 #' @rdname sample_last_cit
 #' @export
-sample_cit_types <- function(n, edges = 1, types = rep(0, n),
-                             pref = rep(1, length(types)),
-                             directed = TRUE, attr = TRUE) {
+sample_cit_types <- function(
+  n,
+  edges = 1,
+  types = rep(0, n),
+  pref = rep(1, length(types)),
+  directed = TRUE,
+  attr = TRUE
+) {
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_cited_type_game, as.numeric(n), as.numeric(edges),
-    as.numeric(types), as.numeric(pref), as.logical(directed)
+    R_igraph_cited_type_game,
+    as.numeric(n),
+    as.numeric(edges),
+    as.numeric(types),
+    as.numeric(pref),
+    as.logical(directed)
   )
   if (attr) {
     V(res)$type <- types
@@ -1663,17 +2221,22 @@ cit_types <- function(...) constructor_spec(sample_cit_types, ...)
 
 #' @rdname sample_last_cit
 #' @export
-sample_cit_cit_types <- function(n, edges = 1, types = rep(0, n),
-                                 pref = matrix(1,
-                                   nrow = length(types),
-                                   ncol = length(types)
-                                 ),
-                                 directed = TRUE, attr = TRUE) {
+sample_cit_cit_types <- function(
+  n,
+  edges = 1,
+  types = rep(0, n),
+  pref = matrix(1, nrow = length(types), ncol = length(types)),
+  directed = TRUE,
+  attr = TRUE
+) {
   pref[] <- as.numeric(pref)
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_citing_cited_type_game, as.numeric(n),
-    as.numeric(types), pref, as.numeric(edges),
+    R_igraph_citing_cited_type_game,
+    as.numeric(n),
+    as.numeric(types),
+    pref,
+    as.numeric(edges),
     as.logical(directed)
   )
   if (attr) {
@@ -1692,16 +2255,10 @@ cit_cit_types <- function(...) constructor_spec(sample_cit_cit_types, ...)
 
 ## -----------------------------------------------------------------
 
-
 #' Bipartite random graphs
 #'
-#' Generate bipartite graphs using the Erdős-Rényi model
-#'
-#' Similarly to unipartite (one-mode) networks, we can define the \eqn{G(n,p)}, and
-#' \eqn{G(n,m)} graph classes for bipartite graphs, via their generating process.
-#' In \eqn{G(n,p)} every possible edge between top and bottom vertices is realized
-#' with probability \eqn{p}, independently of the rest of the edges. In \eqn{G(n,m)}, we
-#' uniformly choose \eqn{m} edges to realize.
+#' `r lifecycle::badge("deprecated")` Generate bipartite graphs using the Erdős-Rényi model.
+#' Use [sample_bipartite_gnm()] and [sample_bipartite_gnp()] instead.
 #'
 #' @param n1 Integer scalar, the number of bottom vertices.
 #' @param n2 Integer scalar, the number of top vertices.
@@ -1739,57 +2296,169 @@ cit_cit_types <- function(...) constructor_spec(sample_cit_cit_types, ...)
 #' ## directed bipartite graph, G(n,m)
 #' sample_bipartite(10, 5, type = "Gnm", m = 20, directed = TRUE, mode = "all")
 #'
-sample_bipartite <- function(n1, n2, type = c("gnp", "gnm"), p, m,
-                             directed = FALSE, mode = c("out", "in", "all")) {
-  n1 <- as.numeric(n1)
-  n2 <- as.numeric(n2)
+sample_bipartite <- function(
+  n1,
+  n2,
+  type = c("gnp", "gnm"),
+  p,
+  m,
+  directed = FALSE,
+  mode = c("out", "in", "all")
+) {
   type <- igraph.match.arg(type)
-  if (!missing(p)) {
-    p <- as.numeric(p)
-  }
-  if (!missing(m)) {
-    m <- as.numeric(m)
-  }
-  directed <- as.logical(directed)
-  mode <- switch(igraph.match.arg(mode),
-    "out" = 1,
-    "in" = 2,
-    "all" = 3
-  )
+  mode <- igraph.match.arg(mode)
 
-  if (type == "gnp" && missing(p)) {
-    stop("Connection probability `p' is not given for Gnp graph")
-  }
-  if (type == "gnp" && !missing(m)) {
-    cli::cli_warn("Number of edges {.arg m} is ignored for Gnp graph.")
-  }
-  if (type == "gnm" && missing(m)) {
-    stop("Number of edges `m' is not given for Gnm graph")
-  }
-  if (type == "gnm" && !missing(p)) {
-    cli::cli_warn("Connection probability {.arg p} is ignored for Gnp graph.")
-  }
-
-  on.exit(.Call(R_igraph_finalizer))
   if (type == "gnp") {
-    res <- .Call(R_igraph_bipartite_game_gnp, n1, n2, p, directed, mode)
-    res <- set_vertex_attr(res$graph, "type", value = res$types)
-    res$name <- "Bipartite Gnp random graph"
-    res$p <- p
+    lifecycle::deprecate_soft(
+      "2.2.0",
+      "sample_bipartite()",
+      "sample_bipartite_gnp()"
+    )
+    sample_bipartite_gnp(n1, n2, p, directed = directed, mode = mode)
   } else if (type == "gnm") {
-    res <- .Call(R_igraph_bipartite_game_gnm, n1, n2, m, directed, mode)
-    res <- set_vertex_attr(res$graph, "type", value = res$types)
-    res$name <- "Bipartite Gnm random graph"
-    res$m <- m
+    lifecycle::deprecate_soft(
+      "2.2.0",
+      "sample_bipartite()",
+      "sample_bipartite_gnm()"
+    )
+    sample_bipartite_gnm(n1, n2, m, directed = directed, mode = mode)
+  } else {
+    cli::cli_abort("Unreachable", .internal = TRUE)
   }
-
-  res
 }
 
 #' @rdname sample_bipartite
 #' @param ... Passed to `sample_bipartite()`.
 #' @export
-bipartite <- function(...) constructor_spec(sample_bipartite, ...)
+bipartite <- function(..., type = NULL) {
+  if (is.null(type) || type == "gnp") {
+    lifecycle::deprecate_soft(
+      "2.1.3",
+      "bipartite()",
+      "bipartite_gnp()"
+    )
+    bipartite_gnp(...)
+  } else if (type == "gnm") {
+    lifecycle::deprecate_soft(
+      "2.1.3",
+      "bipartite()",
+      "bipartite_gnm()"
+    )
+    bipartite_gnm(...)
+  } else {
+    cli::cli_abort(
+      "{.arg type} must be 'gnp' or 'gnm'.",
+      "Use {.fun bipartite_gnp} or {.fun bipartite_gnm}."
+    )
+  }
+}
+
+#' @rdname sample_bipartite_gnm
+#' @param ... Passed to `sample_bipartite_gnm()`.
+#' @export
+bipartite_gnm <- function(...) constructor_spec(sample_bipartite_gnm, ...)
+
+#' @rdname sample_bipartite_gnm
+#' @param ... Passed to `sample_bipartite_gnp()`.
+#' @export
+bipartite_gnp <- function(...) constructor_spec(sample_bipartite_gnp, ...)
+
+#' Bipartite random graphs
+#'
+#' Generate bipartite graphs using the Erdős-Rényi model
+#'
+#' Similarly to unipartite (one-mode) networks, we can define the \eqn{G(n,p)}, and
+#' \eqn{G(n,m)} graph classes for bipartite graphs, via their generating process.
+#' In \eqn{G(n,p)} every possible edge between top and bottom vertices is realized
+#' with probability \eqn{p}, independently of the rest of the edges. In \eqn{G(n,m)}, we
+#' uniformly choose \eqn{m} edges to realize.
+#'
+#'
+#' @param n1 Integer scalar, the number of bottom vertices.
+#' @param n2 Integer scalar, the number of top vertices.
+#' @param p Real scalar, connection probability for \eqn{G(n,p)} graphs.
+#' @param m Integer scalar, the number of edges for \eqn{G(n,m)} graphs.
+#' @param directed Logical scalar, whether to create a directed graph. See also
+#'   the `mode` argument.
+#' @param mode Character scalar, specifies how to direct the edges in directed
+#'   graphs. If it is \sQuote{out}, then directed edges point from bottom
+#'   vertices to top vertices. If it is \sQuote{in}, edges point from top
+#'   vertices to bottom vertices. \sQuote{out} and \sQuote{in} do not generate
+#'   mutual edges. If this argument is \sQuote{all}, then each edge direction is
+#'   considered independently and mutual edges might be generated. This argument
+#'   is ignored for undirected graphs.
+#' @examples
+#'
+#' ## empty graph
+#' sample_bipartite_gnp(10, 5, p = 0)
+#'
+#' ## full graph
+#' sample_bipartite_gnp(10, 5, p = 1)
+#'
+#' ## random bipartite graph
+#' sample_bipartite_gnp(10, 5, p = .1)
+#'
+#' ## directed bipartite graph, G(n,m)
+#' sample_bipartite_gnm(10, 5, m = 20, directed = TRUE, mode = "all")
+#'
+#' @family games
+#' @export
+sample_bipartite_gnm <- function(
+  n1,
+  n2,
+  m,
+  ...,
+  directed = FALSE,
+  mode = c("out", "in", "all")
+) {
+  check_dots_empty()
+  mode <- igraph.match.arg(mode)
+  m <- as.numeric(m)
+
+  res <- bipartite_game_gnm_impl(
+    n1 = n1,
+    n2 = n2,
+    m = m,
+    directed = directed,
+    mode = mode
+  )
+
+  out <- set_vertex_attr(res$graph, "type", value = res$types)
+
+  out$name <- "Bipartite Gnm random graph"
+  out$m <- m
+
+  out
+}
+#' @rdname sample_bipartite_gnm
+#' @export
+sample_bipartite_gnp <- function(
+  n1,
+  n2,
+  p,
+  ...,
+  directed = FALSE,
+  mode = c("out", "in", "all")
+) {
+  check_dots_empty()
+  mode <- igraph.match.arg(mode)
+  p <- as.numeric(p)
+
+  res <- bipartite_game_gnp_impl(
+    n1 = n1,
+    n2 = n2,
+    p = p,
+    directed = directed,
+    mode = mode
+  )
+
+  out <- set_vertex_attr(res$graph, "type", value = res$types)
+
+  out$name <- "Bipartite Gnp random graph"
+  out$p <- p
+
+  out
+}
 
 
 #' Sample stochastic block model
@@ -1869,9 +2538,10 @@ sbm <- function(...) constructor_spec(sample_sbm, ...)
 #' ), nrow = 3)
 #' g <- sample_hierarchical_sbm(100, 10, rho = c(3, 3, 4) / 10, C = C, p = 1 / 20)
 #' g
-#' if (require(Matrix)) {
-#'   image(g[])
-#' }
+#'
+#' @examplesIf rlang::is_installed("Matrix")
+#' library("Matrix")
+#' image(g[])
 #' @family games
 #' @export
 #' @cdocs igraph_hsbm_game
@@ -1888,7 +2558,7 @@ sample_hierarchical_sbm <- function(n, m, rho, C, p) {
   } else {
     commonlen <- setdiff(commonlen, 1)
     if (length(commonlen) != 1) {
-      stop("Lengths of `m', `rho' and `C' must match")
+      cli::cli_abort("Lengths of {.arg m}, {.arg rho} and {.arg C} must match.")
     }
     m <- rep(m, length.out = commonlen)
     rho <- if (is.list(rho)) {
@@ -1913,7 +2583,6 @@ hierarchical_sbm <- function(...) {
 }
 
 ## -----------------------------------------------------------------
-
 
 #' Generate random graphs according to the random dot product graph model
 #'
@@ -2142,10 +2811,16 @@ sample_k_regular <- k_regular_game_impl
 #'   \eqn{q_{ij} = \frac{w_i w_j}{S}}{q_ij = w_i w_j / S}, the following
 #'   formulations are available:
 #'   \describe{
-#'     \item{\dQuote{original}}{the original Chung-Lu model, \eqn{p_{ij} = \min(q_{ij}, 1)}{p_ij = min(q_ij, 1)}.}
-#'     \item{\dQuote{maxent}}{maximum entropy model with fixed expected degrees,
-#'       \eqn{p_{ij} = \frac{q_{ij}}{1 + q_{ij}}}{p_ij = q_ij / (1 + q_ij)}.}
-#'     \item{\dQuote{nr}}{Norros and Reittu's model, \eqn{p_{ij} = 1 - \exp(-q_{ij})}{p_ij = 1 - exp(-q_ij)}.}
+#'     \item{\dQuote{original}}{
+#'       the original Chung-Lu model, \eqn{p_{ij} = \min(q_{ij}, 1)}{p_ij = min(q_ij, 1)}.
+#'     }
+#'     \item{\dQuote{maxent}}{
+#'       maximum entropy model with fixed expected degrees,
+#'       \eqn{p_{ij} = \frac{q_{ij}}{1 + q_{ij}}}{p_ij = q_ij / (1 + q_ij)}.
+#'     }
+#'     \item{\dQuote{nr}}{
+#'       Norros and Reittu's model, \eqn{p_{ij} = 1 - \exp(-q_{ij})}{p_ij = 1 - exp(-q_ij)}.
+#'     }
 #'   }
 #' @return An igraph graph.
 #' @seealso [sample_fitness()] implements a similar model with a sharp
@@ -2165,7 +2840,7 @@ sample_k_regular <- k_regular_game_impl
 #'
 #' rowMeans(replicate(
 #'   100,
-#'   degree(sample_chung_lu(c(1, 3, 2, 1), c(2, 1, 2, 2), variant = "maxent"), mode='out')
+#'   degree(sample_chung_lu(c(1, 3, 2, 1), c(2, 1, 2, 2), variant = "maxent"), mode = "out")
 #' ))
 #' @export
 #' @cdocs igraph_chung_lu_game
@@ -2174,11 +2849,11 @@ sample_chung_lu <- chung_lu_game_impl
 #' @rdname sample_chung_lu
 #' @export
 chung_lu <- function(
-    out.weights,
-    in.weights = NULL,
-    ...,
-    loops = TRUE,
-    variant = c("original", "maxent", "nr")
+  out.weights,
+  in.weights = NULL,
+  ...,
+  loops = TRUE,
+  variant = c("original", "maxent", "nr")
 ) {
   variant <- rlang::arg_match(variant)
   constructor_spec(
@@ -2356,7 +3031,7 @@ sample_fitness_pl <- static_power_law_game_impl
 #' @note The version of the model in the published paper is incorrect in the
 #' sense that it cannot generate the kind of graphs the authors claim. A
 #' corrected version is available from
-#' <http://www.cs.cmu.edu/~jure/pubs/powergrowth-tkdd.pdf>, our
+#' <https://www.cs.cmu.edu/~jure/pubs/powergrowth-tkdd.pdf>, our
 #' implementation is based on this.
 #' @author Gabor Csardi \email{csardi.gabor@@gmail.com}
 #' @seealso [sample_pa()] for the basic preferential attachment

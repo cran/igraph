@@ -16,7 +16,7 @@
       IGRAPH UNWB 8 7 -- 
       + attr: type (v/l), name (v/c), weight (e/n)
       + edges (vertex names):
-      [1] A--c A--d B--b B--c B--e C--b C--d
+      [1] B--b C--b A--c B--c A--d C--d B--e
 
 # graph_from_biadjacency_matrix() works -- dense + multiple
 
@@ -84,4 +84,12 @@
       Error in `graph_from_biadjacency_matrix()`:
       ! `multiple` and `weighted` cannot be both `TRUE`.
       igraph either interprets numbers larger than 1 as weights or as multiplicities, but it cannot be both.
+
+# graph_from_biadjacency_matrix errors for NAs
+
+    Code
+      graph_from_biadjacency_matrix(A)
+    Condition
+      Error in `graph_from_biadjacency_matrix()`:
+      ! Cannot create a graph object because the biadjacency matrix contains NAs.
 

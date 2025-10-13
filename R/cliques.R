@@ -1,16 +1,20 @@
-
 #' Independent vertex sets
 #'
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `maximal.independent.vertex.sets()` was renamed to `max_ivs()` to create a more
+#' `maximal.independent.vertex.sets()` was renamed to [max_ivs()] to create a more
 #' consistent API.
 #' @inheritParams max_ivs
 #' @keywords internal
 #' @export
-maximal.independent.vertex.sets <- function(graph) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "maximal.independent.vertex.sets()", "max_ivs()")
+maximal.independent.vertex.sets <- function(graph) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "maximal.independent.vertex.sets()",
+    "max_ivs()"
+  )
   max_ivs(graph = graph)
 } # nocov end
 
@@ -19,13 +23,23 @@ maximal.independent.vertex.sets <- function(graph) { # nocov start
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `maximal.cliques.count()` was renamed to `count_max_cliques()` to create a more
+#' `maximal.cliques.count()` was renamed to [count_max_cliques()] to create a more
 #' consistent API.
 #' @inheritParams count_max_cliques
 #' @keywords internal
 #' @export
-maximal.cliques.count <- function(graph, min = NULL, max = NULL, subset = NULL) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "maximal.cliques.count()", "count_max_cliques()")
+maximal.cliques.count <- function(
+  graph,
+  min = NULL,
+  max = NULL,
+  subset = NULL
+) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "maximal.cliques.count()",
+    "count_max_cliques()"
+  )
   count_max_cliques(graph = graph, min = min, max = max, subset = subset)
 } # nocov end
 
@@ -34,12 +48,19 @@ maximal.cliques.count <- function(graph, min = NULL, max = NULL, subset = NULL) 
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `maximal.cliques()` was renamed to `max_cliques()` to create a more
+#' `maximal.cliques()` was renamed to [max_cliques()] to create a more
 #' consistent API.
 #' @inheritParams max_cliques
 #' @keywords internal
 #' @export
-maximal.cliques <- function(graph, min = NULL, max = NULL, subset = NULL, file = NULL) { # nocov start
+maximal.cliques <- function(
+  graph,
+  min = NULL,
+  max = NULL,
+  subset = NULL,
+  file = NULL
+) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "maximal.cliques()", "max_cliques()")
   max_cliques(graph = graph, min = min, max = max, subset = subset, file = file)
 } # nocov end
@@ -49,13 +70,18 @@ maximal.cliques <- function(graph, min = NULL, max = NULL, subset = NULL, file =
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `largest.independent.vertex.sets()` was renamed to `largest_ivs()` to create a more
+#' `largest.independent.vertex.sets()` was renamed to [largest_ivs()] to create a more
 #' consistent API.
 #' @inheritParams largest_ivs
 #' @keywords internal
 #' @export
-largest.independent.vertex.sets <- function(graph) { # nocov start
-  lifecycle::deprecate_soft("2.0.0", "largest.independent.vertex.sets()", "largest_ivs()")
+largest.independent.vertex.sets <- function(graph) {
+  # nocov start
+  lifecycle::deprecate_soft(
+    "2.0.0",
+    "largest.independent.vertex.sets()",
+    "largest_ivs()"
+  )
   largest_ivs(graph = graph)
 } # nocov end
 
@@ -64,12 +90,13 @@ largest.independent.vertex.sets <- function(graph) { # nocov start
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `largest.cliques()` was renamed to `largest_cliques()` to create a more
+#' `largest.cliques()` was renamed to [largest_cliques()] to create a more
 #' consistent API.
 #' @inheritParams largest_cliques
 #' @keywords internal
 #' @export
-largest.cliques <- function(graph) { # nocov start
+largest.cliques <- function(graph) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "largest.cliques()", "largest_cliques()")
   largest_cliques(graph = graph)
 } # nocov end
@@ -79,12 +106,13 @@ largest.cliques <- function(graph) { # nocov start
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `independent.vertex.sets()` was renamed to `ivs()` to create a more
+#' `independent.vertex.sets()` was renamed to [ivs()] to create a more
 #' consistent API.
 #' @inheritParams ivs
 #' @keywords internal
 #' @export
-independent.vertex.sets <- function(graph, min = NULL, max = NULL) { # nocov start
+independent.vertex.sets <- function(graph, min = NULL, max = NULL) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "independent.vertex.sets()", "ivs()")
   ivs(graph = graph, min = min, max = max)
 } # nocov end
@@ -94,12 +122,13 @@ independent.vertex.sets <- function(graph, min = NULL, max = NULL) { # nocov sta
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `independence.number()` was renamed to `ivs_size()` to create a more
+#' `independence.number()` was renamed to [ivs_size()] to create a more
 #' consistent API.
 #' @inheritParams ivs_size
 #' @keywords internal
 #' @export
-independence.number <- function(graph) { # nocov start
+independence.number <- function(graph) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "independence.number()", "ivs_size()")
   ivs_size(graph = graph)
 } # nocov end
@@ -109,12 +138,13 @@ independence.number <- function(graph) { # nocov start
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `clique.number()` was renamed to `clique_num()` to create a more
+#' `clique.number()` was renamed to [clique_num()] to create a more
 #' consistent API.
 #' @inheritParams clique_num
 #' @keywords internal
 #' @export
-clique.number <- function(graph) { # nocov start
+clique.number <- function(graph) {
+  # nocov start
   lifecycle::deprecate_soft("2.0.0", "clique.number()", "clique_num()")
   clique_num(graph = graph)
 } # nocov end
@@ -139,8 +169,6 @@ clique.number <- function(graph) { # nocov start
 #
 ###################################################################
 
-
-
 #' Functions to find cliques, i.e. complete subgraphs in a graph
 #'
 #' These functions find all, the largest or all the maximal cliques in an
@@ -164,6 +192,8 @@ clique.number <- function(graph) { # nocov start
 #' `clique_size_counts()` returns a numeric vector representing a histogram
 #' of clique sizes, between the given minimum and maximum clique size.
 #'
+#' `is_clique()` tests whether all pairs within a vertex set are connected.
+#'
 #' @inheritParams weighted_cliques
 #' @param graph The input graph, directed graphs will be considered as
 #'   undirected ones, multiple edges and loops are ignored.
@@ -173,7 +203,7 @@ clique.number <- function(graph) { # nocov start
 #'   `NULL` means no limit.
 #' @return `cliques()`, `largest_cliques()` and `clique_num()`
 #'   return a list containing numeric vectors of vertex ids. Each list element is
-#'   a clique, i.e. a vertex sequence of class [`igraph.vs()`][V].
+#'   a clique, i.e. a vertex sequence of class [igraph.vs][V].
 #'
 #'   `max_cliques()` returns `NULL`, invisibly, if its `file`
 #'   argument is not `NULL`. The output is written to the specified file in
@@ -205,6 +235,9 @@ clique.number <- function(graph) { # nocov start
 #' # To have a bit less maximal cliques, about 100-200 usually
 #' g <- sample_gnp(100, 0.03)
 #' max_cliques(g)
+#'
+#' # Check that all returned vertex sets are indeed cliques
+#' all(sapply(max_cliques(g), function (c) is_clique(g, c)))
 #' @cdocs igraph_cliques
 cliques <- cliques_impl
 
@@ -225,7 +258,13 @@ largest_cliques <- largest_cliques_impl
 #'   in the file, given with the numeric ids of its vertices, separated by
 #'   whitespace.
 #' @export
-max_cliques <- function(graph, min = NULL, max = NULL, subset = NULL, file = NULL) {
+max_cliques <- function(
+  graph,
+  min = NULL,
+  max = NULL,
+  subset = NULL,
+  file = NULL
+) {
   ensure_igraph(graph)
 
   if (is.null(min)) {
@@ -240,9 +279,11 @@ max_cliques <- function(graph, min = NULL, max = NULL, subset = NULL, file = NUL
   }
 
   if (!is.null(file)) {
-    if (!is.character(file) ||
-      length(grep("://", file, fixed = TRUE)) > 0 ||
-      length(grep("~", file, fixed = TRUE)) > 0) {
+    if (
+      !is.character(file) ||
+        length(grep("://", file, fixed = TRUE)) > 0 ||
+        length(grep("~", file, fixed = TRUE)) > 0
+    ) {
       tmpfile <- TRUE
       origfile <- file
       file <- tempfile()
@@ -251,8 +292,12 @@ max_cliques <- function(graph, min = NULL, max = NULL, subset = NULL, file = NUL
     }
     on.exit(.Call(R_igraph_finalizer))
     res <- .Call(
-      R_igraph_maximal_cliques_file, graph, subset, file,
-      as.numeric(min), as.numeric(max)
+      R_igraph_maximal_cliques_file,
+      graph,
+      subset,
+      file,
+      as.numeric(min),
+      as.numeric(max)
     )
     if (tmpfile) {
       buffer <- read.graph.toraw(file)
@@ -262,8 +307,11 @@ max_cliques <- function(graph, min = NULL, max = NULL, subset = NULL, file = NUL
   } else {
     on.exit(.Call(R_igraph_finalizer))
     res <- .Call(
-      R_igraph_maximal_cliques, graph, subset,
-      as.numeric(min), as.numeric(max)
+      R_igraph_maximal_cliques,
+      graph,
+      subset,
+      as.numeric(min),
+      as.numeric(max)
     )
     res <- lapply(res, function(x) x + 1)
 
@@ -277,8 +325,7 @@ max_cliques <- function(graph, min = NULL, max = NULL, subset = NULL, file = NUL
 
 #' @rdname cliques
 #' @export
-count_max_cliques <- function(graph, min = NULL, max = NULL,
-                              subset = NULL) {
+count_max_cliques <- function(graph, min = NULL, max = NULL, subset = NULL) {
   # Argument checks
   ensure_igraph(graph)
 
@@ -339,7 +386,7 @@ clique_num <- clique_number_impl
 #'   or only the maximal ones (`TRUE`).
 #' @return `weighted_cliques()` and `largest_weighted_cliques()` return a
 #'   list containing numeric vectors of vertex IDs. Each list element is a weighted
-#'   clique, i.e. a vertex sequence of class [`igraph.vs()`][V].
+#'   clique, i.e. a vertex sequence of class [igraph.vs][V].
 #'
 #'   `weighted_clique_num()` returns an integer scalar.
 #'
@@ -395,6 +442,8 @@ weighted_clique_num <- weighted_clique_number_impl
 #' These functions use the algorithm described by Tsukiyama et al., see
 #' reference below.
 #'
+#' `is_ivs()` tests if no pairs within a vertex set are connected.
+#'
 #' @param graph The input graph, directed graphs are considered as undirected,
 #'   loop edges and multiple edges are ignored.
 #' @param min Numeric constant, limit for the minimum size of the independent
@@ -408,7 +457,7 @@ weighted_clique_num <- weighted_clique_number_impl
 #'
 #'   `ivs_size()` returns an integer constant.
 #' @author Tamas Nepusz \email{ntamas@@gmail.com} ported it from the Very Nauty
-#' Graph Library by Keith Briggs (<http://keithbriggs.info/>) and Gabor
+#' Graph Library by Keith Briggs (<https://keithbriggs.info/>) and Gabor
 #' Csardi \email{csardi.gabor@@gmail.com} wrote the R interface and this manual
 #' page.
 #' @references S. Tsukiyama, M. Ide, H. Ariyoshi and I. Shirawaka. A new
@@ -444,7 +493,9 @@ ivs <- function(graph, min = NULL, max = NULL) {
 
   on.exit(.Call(R_igraph_finalizer))
   res <- .Call(
-    R_igraph_independent_vertex_sets, graph, as.numeric(min),
+    R_igraph_independent_vertex_sets,
+    graph,
+    as.numeric(min),
     as.numeric(max)
   )
   res <- lapply(res, `+`, 1)
@@ -493,7 +544,7 @@ max_ivs <- function(graph) {
 #' @description
 #' `r lifecycle::badge("deprecated")`
 #'
-#' `maximal_ivs()` was renamed to `max_ivs()` to create a more
+#' `maximal_ivs()` was renamed to [max_ivs()] to create a more
 #' consistent API.
 #' @export
 #' @inheritParams max_ivs
@@ -527,3 +578,53 @@ clique_size_counts <- function(graph, min = 0, max = 0, maximal = FALSE) {
     clique_size_hist_impl(graph, min, max)
   }
 }
+
+#' Is this a complete graph?
+#'
+#' A graph is considered complete if there is an edge between all distinct
+#' directed pairs of vertices. igraph considers both the singleton graph
+#' and the null graph complete.
+#'
+#' @param graph The input graph.
+#' @return True if the graph is complete.
+#' @family cliques
+#' @keywords graphs
+#' @seealso [make_full_graph()]
+#' @export
+#' @cdocs igraph_is_complete
+#' @examples
+#'
+#' g <- make_full_graph(6, directed = TRUE)
+#' is_complete(g)
+#' g <- delete_edges(g, 1)
+#' is_complete(g)
+#' g <- as_undirected(g)
+#' is_complete(g)
+is_complete <- is_complete_impl
+
+#' @rdname cliques
+#'
+#' @description
+#' Tests if all pairs within a set of vertices are adjacent, i.e. whether they
+#' form a clique. An empty set and singleton set are considered to be a clique.
+#'
+#' @param graph The input graph.
+#' @param candidate The vertex set to test for being a clique.
+#' @param directed Whether to consider edge directions.
+#' @return `is_clique()` returns `TRUE` if the candidate vertex set forms
+#'   a clique.
+#' @keywords graphs
+#' @export
+#' @cdocs igraph_is_clique
+is_clique <- is_clique_impl
+
+#' @rdname ivs
+#'
+#' @param graph The input graph.
+#' @param candidate The vertex set to test for being an independent set.
+#' @return `is_ivs()` returns `TRUE` if the candidate vertex set forms an
+#'   independent set.
+#' @keywords graphs
+#' @export
+#' @cdocs igraph_is_independent_vertex_set
+is_ivs <- is_independent_vertex_set_impl

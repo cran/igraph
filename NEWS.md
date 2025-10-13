@@ -1,5 +1,150 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# igraph 2.2.0
+
+Update C core to version 0.10.17. See <https://github.com/igraph/rigraph/blob/20552ef94aed6ae4b23465ae8c7e4d3b0e558c71/src/vendor/cigraph/CHANGELOG.md> for a complete changelog, in particular the section "Breaking changes".
+
+## Features
+
+- Generate almost all R implementations (#2047).
+
+- Expose `align_layout()` and add to `layout_nicely()` to align layout with axis automatically (#1907, #1957, #1958).
+
+- Expose `simple_cycles()` which lists all simple cycles (#1573, #1580).
+
+- Expose `is_complete()`, `is_clique()` and `is_ivs()` (#1316, #1388, #1581).
+
+- Expose `find_cycle()` (#1471, #1571).
+
+- Expose `feedback_vertex_set()` to find a minimum feedback vertex set in a graph (#1446, #1447, #1560).
+
+- Add `weights` parameter to `local_scan()` (#1082, #1448, #1982).
+
+- Add more layouts to `tkplot()` (#160, #1967).
+
+- Add `plot(mark.lwd = )` to change line width of mark.groups (#306, #1898).
+
+- Add `plot(vertex.label.angle = , vertex.label.adj = )` arguments to rotate vertex labels (#106, #1899).
+
+- Add relative size scaling to vertices in `plot()` (@gvegayon, #172).
+
+- Split `sample_bipartite()` into two functions for the G(n, m) and G(n, p) case (#630, #1692).
+
+- Implement multi attribute assignment (#55, #1916) and adding attributes via data frames (#1373, #1669, #1716). Support factors in `graph_from_data_frame()` (#34, #1829).
+
+- All `_hrg()` functions check their argument (#1074, #1699).
+
+- HRG printing with `type = "auto"` uses `"plain"` for large trees (#1879).
+
+- `get_edge_ids()` accepts data frames and matrices (#1663).
+
+- `igraph_version()` returns version of C core in an attribute (#1208, #1781).
+
+## Breaking changes
+
+- Breaking change: change arguments default and order for `graph_from_lcf()` (#1858, #1872).
+
+- Breaking change: Subset assignment of a graph avoids addition of double edges and ignores loops unless the new `loops` argument is set to `TRUE` (#1662, #1661).
+
+- Breaking change: remove deprecated `neimode` parameter from `bfs()` and `dfs()` (#1105, #1526).
+
+- Breaking change: stricter deprecation of non-functional parameters of `layout_with_kk()` and `layout_with_fr()` (#1108, #1628).
+
+## Bug fixes
+
+- `NA` attribute values are replaced with default values in `plot()` (#293, #1707).
+
+- `NA` checking only in from/to columns of edge data frame (#1906).
+
+- Keep vertex attribute type for `disjoint_union()` (#1640, #1909).
+
+- Error in bipartite projection if `type` is not a vertex attribute (#898, #1889).
+
+- Do not try to destroy non-initialized SIR objects upon error (#1888).
+
+- Added proper `NA` handling for matrix inputs (#917, #918, #1828).
+
+- Remove string matrix support from functions operating on biadjacency matrices (#1540, #1542, #1803).
+
+- Integer vectors are validated before transferring them to the C library (#1434, #1582).
+
+- Changed base location for `graph_from_graphdb()` and added tests (#1712, #1732).
+
+- Recycling of logical vectors when indexing into edge/vertex selectors now throws an error (#848, #1731).
+
+- Use `function()` instead of `(x)` in `arrow.mode` (#1722).
+
+- Temporarily disable generating an interface for `igraph_simple_cycles_callback()` as the framework for handling callback functions is not yet present.
+
+## Plotting bug fixes
+
+- Adjust loop position to vertex size in `plot()` (#1980).
+
+- Don't rescale plot coordinates to `[-1,1] x [-1,1]` by default (#1492, #1956, #1962).
+
+- Fail if `"layout"` attribute doesn't match the number of vertices (#1880).
+
+- Automatically arrange loops in `plot()` (#407, #556, #1881).
+
+- Vectorized drawing of arrows in `plot()` (#257, #1904).
+
+- Allow more than one edge label font family in `plot()` (#37, #1896).
+
+- Pie shapes now work as intended (#1882, #1883).
+
+- Loops not plotted on canvas (#1799, #1800).
+
+- Replace `NA` values in `label` attributes in `plot()` with default values (#1796, #1797).
+
+- Removed duplicated plotting of arrow heads (#640, #1709).
+
+- Correct mapping of edge label properties in plots when loops are present (#157, #1706).
+
+## Documentation
+
+- Welcome Maëlle Salmon and David Schoch as authors (#1733), add author links (#1821).
+
+- Remove demos (#2008).
+
+- Add 2023 preprint (#1240, #1984).
+
+- Update allcontributors info (#1975).
+
+- Link to replacements of deprecated functions (#1823).
+
+- Add documentation of all file formats to `read_graph()` and `write_graph()` (#777, #1969). Recommend `saveRDS()` and `readRDS()` for saving and loading graphs (#1242, #1700).
+
+- Document return value of `make_clusters()` (#1794).
+
+- Clarify that `girth()` returns `Inf` for acyclic graphs (@eqmooring, #1831).
+
+- Clarify the use of weights in `layout_with_kk()`.
+
+- Refer to current latest version of R in troubleshooting page.
+
+- Fix typos in `laplacian_matrix()` documentation.
+
+- Document ellipsis in `cohesion()` (#971, #1985).
+
+- Correct the description of the `weights` parameter of `hits_scores()`.
+
+- Better describe output of `all_shortest_paths()` (#1029, #1778).
+
+- `make_graph()` now supports `"Groetzsch"` as an alias of `"Grotzsch"`. This change was implemented in the C core.
+
+- Update description of `order` parameter of `ego()` and related functions (#1746).
+
+- Added lifecycle table (#1525).
+
+- Add more about igraph.r2cdocs in the contributing guide (#1686, #1697).
+
+## Performance
+
+- Accelerate check if an index sequence corresponds to the entire list of vertices (#1427, #1818).
+
+- Faster single bracket querying of a graph (#1465, #1658).
+
+
 # igraph 2.1.4
 
 ## Testing
@@ -88,7 +233,7 @@ See <https://github.com/igraph/rigraph/blob/9828d7b11be330f994f07ae93a071b356ece
 
 See <https://github.com/igraph/rigraph/blob/05973441b83decdeab8cc9c500a642c00b924770/src/vendor/cigraph/CHANGELOG.md> for a complete changelog, in particular the section "Breaking changes".
 
-## Lifecycle 
+## Lifecycle
 
 ### Breaking changes
 
@@ -533,7 +678,7 @@ The internal format of graph objects has changed in a mostly backward-compatible
 This graph was created by an old(er) igraph version.
   Call upgrade_graph() on it to use with the current igraph version
   For now we convert it on the fly...
-Error in is_directed(object) : 
+Error in is_directed(object) :
   REAL() can only be applied to a 'numeric', not a 'NULL'
 ```
 
