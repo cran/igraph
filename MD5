@@ -1,7 +1,7 @@
-d52758ebdac9daf6e384ea97c4c24513 *DESCRIPTION
+d6e680991d7649b02a0f8fb2ae38967f *DESCRIPTION
 6d94b44f717b32e6be67b97e1fa65f61 *NAMESPACE
-4c86ac960dfd267d34d2c036ed5c5631 *NEWS.md
-6a726a0f3833af94ca6cb67627d380ab *R/aaa-auto.R
+e7ce5b856c76e899e278e6e54cf3ec15 *NEWS.md
+d1cdbd8de01f8fc43d7054ebb7c5aac6 *R/aaa-auto.R
 b1ca3ed27208a4f88897c55020a7b442 *R/adjacency.R
 68c7dada8343e6bb15dee3c3df5c9a42 *R/as_phylo.R
 b7e4defec221eaffdf315d6a1dc31442 *R/assortativity.R
@@ -107,9 +107,9 @@ c783f29de720ab405611fe94eeb8decf *inst/benchmarks/time_sgm.R
 56fea11f6c3c02d4e9f6cb156536b1c6 *inst/benchmarks/time_sir.R
 f074486d898d982a1b2e3e3e231896dc *inst/doc/igraph.R
 6818ba3b60e438997f7347c6f59a7a5d *inst/doc/igraph.Rmd
-a6555671c5c7744ec977f982322f8ac4 *inst/doc/igraph.html
+2a9fe20f0ccde9681d0afe6af38c0b52 *inst/doc/igraph.html
 060bc047911f202dda8624d764b1f876 *inst/doc/igraph_ES.R
-dd746865b1033b597d7413ff66634727 *inst/doc/igraph_ES.html
+b6f80fc65944f02670045a252f109041 *inst/doc/igraph_ES.html
 8d0d6c36bad9cd882bbd144ec2a9e1bd *inst/doc/igraph_ES.rmd
 dcda57f1cad19e33c668edf81b583b06 *inst/lifecycle/deprecated-table-creation.R
 10faae7fd6798472ef016c7c4935f821 *inst/lifecycle/deprecated.csv
@@ -781,7 +781,7 @@ a2c02d74e3e5de72f60a5ef82dca76ca *src/CMakeLists.txt
 901c69c7850dd1f0fafc365e864dc723 *src/Makevars.win
 cb5244874edaee7420a9d081aa407b44 *src/README.md
 ed9754682235a2408cb82b195ff42f5d *src/config.h.in
-4b0e8e6ac06058d24223c6ca33dbba20 *src/cpp11.cpp
+79c7b10c419cb2c4618e7be300d90ba2 *src/cpp11.cpp
 1afbf3eba1b2f8a0ec424cbcec6d563b *src/cpp11.dd
 bbf4ccf5e7ce01daed0e76ef7e22c15f *src/cpprinterface.cpp
 e3f112eba6f9ebe6dfc5e52047c00dbe *src/cpprinterface.dd
@@ -794,7 +794,7 @@ cc3e4f6df6f29bfeaaa4f9eed19f6ea5 *src/mkfile.plan9
 93c1af3ff1d5d8df1916944257f5f48f *src/rinterface.c
 405ced905f12392258e5ae517db25b02 *src/rinterface.dd
 e56ddc4d5c91326b66d50378024317ba *src/rinterface.h
-66133197f83ea39c904c7d944dc337e4 *src/rinterface_extra.c
+78090b07944038642eabfd3ab84e78d1 *src/rinterface_extra.c
 c3461ff2ea57af4809ca5f92bbe049cb *src/rinterface_extra.dd
 8db3d823e2c97062dd7e8086918cd43e *src/rrandom.c
 d3d8c0908d3957bbf3e5b4fdbcb35388 *src/rrandom.dd
@@ -2142,7 +2142,7 @@ aad9fd83e8f3cc7eb80e2ab0b2c4f84c *src/vendor/uuid/uuidd.h
 348667c547670084e7fef097fba9761d *tests/testthat/_snaps/aaa-auto.md
 5c7727db77398ca68a35aa866423fe98 *tests/testthat/_snaps/adjacency.md
 9d77f15a9773f0ff08bc48a244ba7a9a *tests/testthat/_snaps/attributes.md
-a3bb4bb64d48d22479ed6c743e0bd5b5 *tests/testthat/_snaps/centrality.md
+8b06f510ba5368b4445c9df1bc0d9550 *tests/testthat/_snaps/centrality.md
 10bab4fb330c528d42b678f128b81620 *tests/testthat/_snaps/community.md
 0b52234ff832204d68b9bc37a7923554 *tests/testthat/_snaps/conversion.md
 96df0bc7e6ad39bf65379f4ad74a39b5 *tests/testthat/_snaps/fit.md
@@ -2206,12 +2206,12 @@ d3963022cc59023cefbc1194bd869b03 *tests/testthat/_snaps/versions.md
 f004272dd6538b9cf850b31f182c0539 *tests/testthat/helper-unvs.R
 f011dbf01aa2ea3f8aca6b4ba9c0c68b *tests/testthat/helper.R
 157659d4b0f46abf1b2893b2e52a9fc1 *tests/testthat/power.gml.gz
-ba3f5d1c4897ff413233140dc2f6daef *tests/testthat/test-aaa-auto.R
+95f631376840d132984f656b72445378 *tests/testthat/test-aaa-auto.R
 ecc5f085807aace9e838e150d4568fb8 *tests/testthat/test-adjacency.R
 26b1fdd2c4ebc660bb3dd787b93404f9 *tests/testthat/test-assortativity.R
 53da3df250bf027a14c881baa86b5872 *tests/testthat/test-attributes.R
 dbf693b538bc56a9497012d47ed3e3b9 *tests/testthat/test-bipartite.R
-abc84b5830bb19d811f7668dd1fdc61b *tests/testthat/test-centrality.R
+13b796507dd8d549ddbd5b917f56b820 *tests/testthat/test-centrality.R
 b1d0cfea409d258febedf69b11048d8d *tests/testthat/test-centralization.R
 11d1aeb8347fbe3a1bd1bbb8b1b60d3f *tests/testthat/test-cliques.R
 5be244d96f5190d98a22ed3b75fe8970 *tests/testthat/test-cocitation.R
