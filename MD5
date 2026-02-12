@@ -1,6 +1,6 @@
-d6e680991d7649b02a0f8fb2ae38967f *DESCRIPTION
+cb58a74b8f7f08b58415909a375f7ede *DESCRIPTION
 6d94b44f717b32e6be67b97e1fa65f61 *NAMESPACE
-e7ce5b856c76e899e278e6e54cf3ec15 *NEWS.md
+7ac71fe09725eed8372ec8f6ba9fa866 *NEWS.md
 d1cdbd8de01f8fc43d7054ebb7c5aac6 *R/aaa-auto.R
 b1ca3ed27208a4f88897c55020a7b442 *R/adjacency.R
 68c7dada8343e6bb15dee3c3df5c9a42 *R/as_phylo.R
@@ -30,7 +30,7 @@ bd2236bb2e12e8cb683608e13ca7da97 *R/degseq.R
 2bfee2c7482f7077de5c52ea96bc32ce *R/fit.R
 ee12b4076848a78a9110059f86c8e8a3 *R/flow.R
 26b49e0adc255e8fc1d3f34105c338f1 *R/foreign.R
-79a5856520b4f76a844feb61eaf92f42 *R/games.R
+275f76113f3be8161981b34e4d8168a3 *R/games.R
 a755b78921e90b5773ff58f7bb0e0d3d *R/glet.R
 ef787927d57049631f3f4384f19dcbc3 *R/has.R
 0970b2c2673699a791829d52aac67ae6 *R/hrg.R
@@ -85,11 +85,11 @@ db2715720c45cf2b604a1a2dcea5b04e *R/utils-assert-args.R
 1c94aebfe2b00935431493a2b219f162 *R/utils-s3.R
 0194280d581b9081f25e764e7091c43f *R/utils.R
 e777383e91a8abe148d2b3df5a086bee *R/uuid.R
-97543513a412d10c40c102fb16c2548b *R/versions.R
+47b44f7500a7fc14374a3dd6ea6013e7 *R/versions.R
 7ff77cbbcd673ebc2fc00f5ebac1f40e *R/weakref.R
 6ac01868bed0e5f84c2d0b93f106642e *R/zzz.R
-1bf18d9c216b8d95033f0bd2fe2906b2 *build/partial.rdb
-f1eb0cd89322e0330222621cf6898f9a *build/vignette.rds
+76e123f5dcc8dee07678412adc0a2a84 *build/partial.rdb
+80e3d28d0714e107f649b0c91820cd27 *build/vignette.rds
 dd0496ea97ab0fa41436265648783fb8 *cleanup
 dd0496ea97ab0fa41436265648783fb8 *cleanup.win
 5b7332a8e79bd3676cf789694ded3951 *configure
@@ -107,9 +107,9 @@ c783f29de720ab405611fe94eeb8decf *inst/benchmarks/time_sgm.R
 56fea11f6c3c02d4e9f6cb156536b1c6 *inst/benchmarks/time_sir.R
 f074486d898d982a1b2e3e3e231896dc *inst/doc/igraph.R
 6818ba3b60e438997f7347c6f59a7a5d *inst/doc/igraph.Rmd
-2a9fe20f0ccde9681d0afe6af38c0b52 *inst/doc/igraph.html
+652a64db1b495424f964fba5029ab5a9 *inst/doc/igraph.html
 060bc047911f202dda8624d764b1f876 *inst/doc/igraph_ES.R
-b6f80fc65944f02670045a252f109041 *inst/doc/igraph_ES.html
+6b35248ff7065d83147f7009ad1cb2d8 *inst/doc/igraph_ES.html
 8d0d6c36bad9cd882bbd144ec2a9e1bd *inst/doc/igraph_ES.rmd
 dcda57f1cad19e33c668edf81b583b06 *inst/lifecycle/deprecated-table-creation.R
 10faae7fd6798472ef016c7c4935f821 *inst/lifecycle/deprecated.csv
@@ -655,7 +655,7 @@ c6254ec5413313a82e713e98e72ebaf8 *man/roxygen/meta.R
 b4d79f177bd23b60cb5e68d772ef1cf1 *man/sample_chung_lu.Rd
 fdad9df220d24f97d67bb93da6b0f443 *man/sample_correlated_gnp.Rd
 f60dc6420f051bc4d64054f581b48f8b *man/sample_correlated_gnp_pair.Rd
-0081252a07afc3de6a6a2cad06961932 *man/sample_degseq.Rd
+fe52ed6cf79526d7d275dae52740e9cf *man/sample_degseq.Rd
 d76c25e2ac6e3fb8a4140c3b334bd0d4 *man/sample_dirichlet.Rd
 e287ab274ff00aba19cd256d611bdab8 *man/sample_dot_product.Rd
 75881bd65e04a8c359096c791e057759 *man/sample_fitness.Rd
@@ -794,7 +794,7 @@ cc3e4f6df6f29bfeaaa4f9eed19f6ea5 *src/mkfile.plan9
 93c1af3ff1d5d8df1916944257f5f48f *src/rinterface.c
 405ced905f12392258e5ae517db25b02 *src/rinterface.dd
 e56ddc4d5c91326b66d50378024317ba *src/rinterface.h
-78090b07944038642eabfd3ab84e78d1 *src/rinterface_extra.c
+d3a304e6b2ddadf593d3cfe6c3ddb0f3 *src/rinterface_extra.c
 c3461ff2ea57af4809ca5f92bbe049cb *src/rinterface_extra.dd
 8db3d823e2c97062dd7e8086918cd43e *src/rrandom.c
 d3d8c0908d3957bbf3e5b4fdbcb35388 *src/rrandom.dd
