@@ -1,6 +1,6 @@
-cb58a74b8f7f08b58415909a375f7ede *DESCRIPTION
+269588a18d70b69732f46d36ea4c1118 *DESCRIPTION
 6d94b44f717b32e6be67b97e1fa65f61 *NAMESPACE
-7ac71fe09725eed8372ec8f6ba9fa866 *NEWS.md
+96ab2842de57fadca610659fa2706f02 *NEWS.md
 d1cdbd8de01f8fc43d7054ebb7c5aac6 *R/aaa-auto.R
 b1ca3ed27208a4f88897c55020a7b442 *R/adjacency.R
 68c7dada8343e6bb15dee3c3df5c9a42 *R/as_phylo.R
@@ -88,8 +88,8 @@ e777383e91a8abe148d2b3df5a086bee *R/uuid.R
 47b44f7500a7fc14374a3dd6ea6013e7 *R/versions.R
 7ff77cbbcd673ebc2fc00f5ebac1f40e *R/weakref.R
 6ac01868bed0e5f84c2d0b93f106642e *R/zzz.R
-76e123f5dcc8dee07678412adc0a2a84 *build/partial.rdb
-80e3d28d0714e107f649b0c91820cd27 *build/vignette.rds
+f51ba7c8bc94d8cf1fd072b85c6e53ab *build/partial.rdb
+6b1b61de4ee5deef336a13f96279c185 *build/vignette.rds
 dd0496ea97ab0fa41436265648783fb8 *cleanup
 dd0496ea97ab0fa41436265648783fb8 *cleanup.win
 5b7332a8e79bd3676cf789694ded3951 *configure
@@ -106,11 +106,11 @@ f47efb2d2776223b1a80fc381de7fecf *inst/benchmarks/time_fr_layout.R
 c783f29de720ab405611fe94eeb8decf *inst/benchmarks/time_sgm.R
 56fea11f6c3c02d4e9f6cb156536b1c6 *inst/benchmarks/time_sir.R
 f074486d898d982a1b2e3e3e231896dc *inst/doc/igraph.R
-6818ba3b60e438997f7347c6f59a7a5d *inst/doc/igraph.Rmd
-652a64db1b495424f964fba5029ab5a9 *inst/doc/igraph.html
+89b42b6d3b8aac70123fe037f567c232 *inst/doc/igraph.Rmd
+654d7a682190e049d18fcbc0960e8dd1 *inst/doc/igraph.html
 060bc047911f202dda8624d764b1f876 *inst/doc/igraph_ES.R
-6b35248ff7065d83147f7009ad1cb2d8 *inst/doc/igraph_ES.html
-8d0d6c36bad9cd882bbd144ec2a9e1bd *inst/doc/igraph_ES.rmd
+4b36ef14ae8e1ab4a275536b83771ca6 *inst/doc/igraph_ES.html
+ae917ca1a4109d08d22d3325f3491741 *inst/doc/igraph_ES.rmd
 dcda57f1cad19e33c668edf81b583b06 *inst/lifecycle/deprecated-table-creation.R
 10faae7fd6798472ef016c7c4935f821 *inst/lifecycle/deprecated.csv
 b50cf907f16e3133e8eea1440f9ac8a5 *man/E.Rd
@@ -794,7 +794,7 @@ cc3e4f6df6f29bfeaaa4f9eed19f6ea5 *src/mkfile.plan9
 93c1af3ff1d5d8df1916944257f5f48f *src/rinterface.c
 405ced905f12392258e5ae517db25b02 *src/rinterface.dd
 e56ddc4d5c91326b66d50378024317ba *src/rinterface.h
-d3a304e6b2ddadf593d3cfe6c3ddb0f3 *src/rinterface_extra.c
+e7cb301f10733ac6ab03078609d2b1f5 *src/rinterface_extra.c
 c3461ff2ea57af4809ca5f92bbe049cb *src/rinterface_extra.dd
 8db3d823e2c97062dd7e8086918cd43e *src/rrandom.c
 d3d8c0908d3957bbf3e5b4fdbcb35388 *src/rrandom.dd
@@ -844,7 +844,7 @@ fe5d0443d770f0b89808353a4689ff4b *src/vendor/cigraph/ACKNOWLEDGEMENTS.md
 30cfaa99cc3eb4b9ab48d2105e47cef6 *src/vendor/cigraph/CHANGELOG.md
 c5ca27c260adff82f9dc98e7414a5ccc *src/vendor/cigraph/CMakeLists.txt
 3986d57978a4a22a0fd8362d1a80c2d1 *src/vendor/cigraph/CONTRIBUTING.md
-f61ca67682ed65b97850a6b5d10ca74e *src/vendor/cigraph/CONTRIBUTORS.md
+3e5ac2a985ce290acda40bae102d197f *src/vendor/cigraph/CONTRIBUTORS.md
 593e0c8c86cc394f38f328076849cd62 *src/vendor/cigraph/CONTRIBUTORS.txt
 12f884d2ae1ff87c09e5b7ccc2c4ca7e *src/vendor/cigraph/COPYING
 f11ad9f4fcb8790543539fae7129045a *src/vendor/cigraph/ChangeLog
@@ -2264,5 +2264,5 @@ ebec5bbe8cc83313f1c9dcc765bb14af *tests/testthat/test-topology.R
 8bf1a1f55e1a183410b4de444b0738d6 *tests/testthat/test-versions.R
 b5cc2be2004abf31fae1895bc30a9e92 *tests/testthat/test-weakref.R
 352e9de6c8a7c945ed82e02a78735d22 *tests/testthat/zachary.graphml.gz
-6818ba3b60e438997f7347c6f59a7a5d *vignettes/igraph.Rmd
-8d0d6c36bad9cd882bbd144ec2a9e1bd *vignettes/igraph_ES.rmd
+89b42b6d3b8aac70123fe037f567c232 *vignettes/igraph.Rmd
+ae917ca1a4109d08d22d3325f3491741 *vignettes/igraph_ES.rmd

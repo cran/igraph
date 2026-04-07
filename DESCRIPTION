@@ -1,6 +1,6 @@
 Package: igraph
 Title: Network Analysis and Visualization
-Version: 2.2.2
+Version: 2.2.3
 Authors@R: c(
     person("Gábor", "Csárdi", , "csardi.gabor@gmail.com", role = "aut",
            comment = c(ORCID = "0000-0001-7098-9676")),
@@ -56,7 +56,7 @@ Encoding: UTF-8
 RoxygenNote: 7.3.3.9000
 SystemRequirements: libxml2 (optional), glpk (>= 4.57, optional)
 NeedsCompilation: yes
-Packaged: 2026-02-12 09:58:29 UTC; kirill
+Packaged: 2026-04-07 03:24:11 UTC; kirill
 Author: Gábor Csárdi [aut] (ORCID: <https://orcid.org/0000-0001-7098-9676>),
   Tamás Nepusz [aut] (ORCID: <https://orcid.org/0000-0002-1451-338X>),
   Vincent Traag [aut] (ORCID: <https://orcid.org/0000-0003-3170-3879>),
@@ -71,4 +71,4 @@ Author: Gábor Csárdi [aut] (ORCID: <https://orcid.org/0000-0001-7098-9676>),
   Maëlle Salmon [aut] (ORCID: <https://orcid.org/0000-0002-2815-0399>)
 Maintainer: Kirill Müller <kirill@cynkra.com>
 Repository: CRAN
-Date/Publication: 2026-02-12 14:00:12 UTC
+Date/Publication: 2026-04-07 06:40:02 UTC
