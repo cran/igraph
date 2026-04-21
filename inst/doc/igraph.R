@@ -67,12 +67,12 @@ plot(g)
 
 ## -----------------------------------------------------------------------------
 g1 <- graph_from_literal(
-  A - B:C:I, B - A:C:D, 
-  C - A:B:E:H, 
+  A - B:C:I, B - A:C:D,
+  C - A:B:E:H,
   D - B:E:F,
-  E - C:D:F:H, 
-  F - D:E:G, 
-  G - F:H, 
+  E - C:D:F:H,
+  F - D:E:G,
+  G - F:H,
   H - C:E:G:I,
   I - A:H
 )

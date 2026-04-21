@@ -43,8 +43,8 @@ g <- add_edges(g, edges = c(38, 37))
 })
 
 ## ----echo = TRUE--------------------------------------------------------------
-g <- g %>% 
-  add_edges(edges = c(1, 34)) %>% 
+g <- g %>%
+  add_edges(edges = c(1, 34)) %>%
   add_vertices(3) %>%
   add_edges(edges = c(38, 39, 39, 40, 40, 38, 40, 37))
 g
@@ -67,13 +67,13 @@ plot(g)
 
 ## -----------------------------------------------------------------------------
 g1 <- graph_from_literal(
-  A-B:C:I, 
-  B-A:C:D, 
-  C-A:B:E:H, 
+  A-B:C:I,
+  B-A:C:D,
+  C-A:B:E:H,
   D-B:E:F,
-  E-C:D:F:H, 
-  F-D:E:G, 
-  G-F:H, 
+  E-C:D:F:H,
+  F-D:E:G,
+  G-F:H,
   H-C:E:G:I,
   I-A:H
 )
@@ -111,12 +111,12 @@ isomorphic(graph1, graph2)
 g <- make_graph(
   ~ Alice-Boris:Himari:Moshe,
   Himari-Alice:Nang:Moshe:Samira,
-  Ibrahim-Nang:Moshe, 
+  Ibrahim-Nang:Moshe,
   Nang-Samira
 )
 
 ## ----echo = TRUE--------------------------------------------------------------
-V(g)$age <- c(25, 31, 18, 23, 47, 22, 50) 
+V(g)$age <- c(25, 31, 18, 23, 47, 22, 50)
 V(g)$gender <- c("f", "m", "f", "m", "m", "f", "m")
 E(g)$is_formal <- c(FALSE, FALSE, TRUE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE)
 summary(g)
@@ -249,7 +249,7 @@ plot(g, layout = layout, main = "Red social con el algoritmo de diseño Kamada-K
 
 ## -----------------------------------------------------------------------------
 plot(
-  g, 
+  g,
   layout = layout_with_fr,
   main = "Red social con el algoritmo de disposición Fruchterman-Reingold"
 )
@@ -257,17 +257,17 @@ plot(
 ## -----------------------------------------------------------------------------
 V(g)$color <- ifelse(V(g)$gender == "m", "yellow", "red")
 plot(
-  g, 
-  layout = layout, 
+  g,
+  layout = layout,
   vertex.label.dist = 3.5,
   main = "Red social - con los géneros como colores"
 )
 
 ## -----------------------------------------------------------------------------
 plot(
-  g, 
-  layout = layout, 
-  vertex.label.dist = 3.5, 
+  g,
+  layout = layout,
+  vertex.label.dist = 3.5,
   vertex.color = as.factor(V(g)$gender))
 
 ## -----------------------------------------------------------------------------
