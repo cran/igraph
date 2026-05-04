@@ -1,5 +1,12 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# igraph 2.3.1
+
+## Bug fixes
+
+- Fix mismatches between C function signatures and function calls. This only affects private functions that are defined but not yet used (#2620).
+
+
 # igraph 2.3.0
 
 ## New features

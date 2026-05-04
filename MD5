@@ -1,7 +1,7 @@
-f83c6eb86415dcfbd69831ec644d355a *DESCRIPTION
+9cefe12b69b421db65f7d939339a0e02 *DESCRIPTION
 37e5aa040d3ae01b3f6ed6836f0d8dec *NAMESPACE
-7ba83164366928ec0eed7a68170dc491 *NEWS.md
-e394210bf3157d610aa472a6badb4ebd *R/aaa-auto.R
+7161eb2bf6d7ac53f1ab2ea846a44aab *NEWS.md
+4b6baccd2f77052237bbeb7c6d030291 *R/aaa-auto.R
 36eb8980fb948f83d7008e7038479a82 *R/adjacency.R
 68c7dada8343e6bb15dee3c3df5c9a42 *R/as_phylo.R
 2707a43fe2af2dad3666d1730994d35c *R/assortativity.R
@@ -107,9 +107,9 @@ c783f29de720ab405611fe94eeb8decf *inst/benchmarks/time_sgm.R
 56fea11f6c3c02d4e9f6cb156536b1c6 *inst/benchmarks/time_sir.R
 545acb49cd04f85dd0d80c7b182eb8f0 *inst/doc/igraph.R
 61be68034b6afc10f05d59e341b2ea83 *inst/doc/igraph.Rmd
-11f4a04fb2410269003c960dcfaf9a42 *inst/doc/igraph.html
+ff65edd8ef9b68136757197e33d262b1 *inst/doc/igraph.html
 e9255be2be90fd0f1efdf642163c8149 *inst/doc/igraph_ES.R
-f3e04c7ac7165b0c8a232f0672c74108 *inst/doc/igraph_ES.html
+733c97c65608bff276f3149a6d1be161 *inst/doc/igraph_ES.html
 80e3a4a5bf3475fb253ed309ff4697ea *inst/doc/igraph_ES.rmd
 dcda57f1cad19e33c668edf81b583b06 *inst/lifecycle/deprecated-table-creation.R
 10faae7fd6798472ef016c7c4935f821 *inst/lifecycle/deprecated.csv
@@ -789,7 +789,7 @@ a2c02d74e3e5de72f60a5ef82dca76ca *src/CMakeLists.txt
 b5a26e037328f62f6c1d092f19ef5473 *src/Makevars.win
 afe9bc442b609266459965d9f7ba87c9 *src/README.md
 ed9754682235a2408cb82b195ff42f5d *src/config.h.in
-11bc993a99b0fe1656a0f1c681ab77f3 *src/cpp11.cpp
+8556c2bb4cf934f9130cfb9a8c9162d8 *src/cpp11.cpp
 1afbf3eba1b2f8a0ec424cbcec6d563b *src/cpp11.dd
 bbf4ccf5e7ce01daed0e76ef7e22c15f *src/cpprinterface.cpp
 e3f112eba6f9ebe6dfc5e52047c00dbe *src/cpprinterface.dd
